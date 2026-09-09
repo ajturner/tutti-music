@@ -1,0 +1,33 @@
+{
+  "name": "tutti-music",
+  "version": "0.1.0",
+  "description": "Tutti — a symphonic tracker: compose orchestral music in a tracker-style grid and export to MIDI. Single-file browser app with no dependencies.",
+  "homepage": "https://ajturner.github.io/tutti-music/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ajturner/tutti-music.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ajturner/tutti-music/issues"
+  },
+  "author": "Andrew Turner <ajturner@highearthorbit.com>",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "keywords": [
+    "music",
+    "tracker",
+    "midi",
+    "orchestra",
+    "symphonic",
+    "sequencer",
+    "web-audio"
+  ],
+  "scripts": {
+    "start": "npx --yes serve -l 3000 .",
+    "dev": "npx --yes serve -l 3000 ."
+  },
+  "files": [
+    "index.html"
+  ]
+}

@@ -1,0 +1,1642 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tutti — symphonic tracker</title>
+<style>
+  :root {
+    --bg: #151A2E;
+    --panel: #1B2140;
+    --field: #0F1327;
+    --line: #2A3258;
+    --text: #D7DBEA;
+    --dim: #6C7597;
+    --accent: #F2E8C6;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text); font: 13px/1.4 var(--mono); }
+  body { display: flex; flex-direction: column; }
+  header { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; padding: 8px 14px; border-bottom: 1px solid var(--line); background: var(--panel); }
+  h1 { font: italic 500 19px/1 "Iowan Old Style", "Palatino Linotype", Georgia, serif; margin: 0 6px 0 0; color: var(--accent); }
+  h1 small { font: 12px/1 var(--mono); color: var(--dim); font-style: normal; margin-left: 8px; }
+  .group { display: flex; gap: 6px; align-items: center; }
+  .group > label { color: var(--dim); }
+  button, select, input { font: inherit; color: var(--text); background: var(--field); border: 1px solid var(--line); border-radius: 3px; padding: 3px 8px; }
+  input[type=number] { width: 4.5em; }
+  input[type=text] { width: 9em; }
+  button { cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  button.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 600; }
+  .spacer { flex: 1; }
+  main { flex: 1; min-height: 0; position: relative; }
+  canvas { display: block; width: 100%; height: 100%; outline: none; }
+  footer { border-top: 1px solid var(--line); background: var(--panel); padding: 6px 14px; font-size: 12px; }
+  #notes { color: var(--dim); font-style: italic; margin-bottom: 3px; }
+  #notes:empty { display: none; }
+  #status { display: flex; gap: 22px; flex-wrap: wrap; color: var(--dim); min-height: 1.4em; }
+  #status b { color: var(--text); font-weight: 500; }
+  #status .warn { color: #E9A26B; }
+  details summary { cursor: pointer; color: var(--dim); margin-top: 4px; }
+  #help { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 4px 28px; margin-top: 8px; color: var(--dim); }
+  #help p { margin: 2px 0; }
+  #help kbd { color: var(--text); background: var(--field); border: 1px solid var(--line); border-radius: 3px; padding: 0 4px; }
+  #help h3 { font: inherit; color: var(--text); margin: 8px 0 3px; }
+  #help table.keys { border-collapse: collapse; }
+  #help table.keys td { padding: 1px 0; vertical-align: top; }
+  #help table.keys td:first-child { white-space: nowrap; padding-right: 10px; }
+  #help .alt { opacity: .7; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Tutti<small>symphonic tracker</small></h1>
+  <div class="group">
+    <label for="song">song</label><select id="song"></select>
+    <button id="newSong" title="Start an empty song">New</button>
+    <input id="title" type="text" placeholder="title" title="Song title">
+  </div>
+  <div class="group">
+    <button id="playPat" class="primary" title="Space">Play pattern</button>
+    <button id="playSong" title="Enter">Play song</button>
+    <button id="stop" title="Esc">Stop</button>
+  </div>
+  <div class="group"><label for="bpm">bpm</label><input id="bpm" type="number" min="20" max="300" value="100"></div>
+  <div class="group">
+    <label for="pattern">pattern</label><select id="pattern"></select>
+    <button id="addPattern" title="Add a pattern">+</button>
+    <label for="rows">rows</label><input id="rows" type="number" min="1" max="512" value="64">
+    <label for="tpr">row</label>
+    <select id="tpr">
+      <option value="480">1/8</option>
+      <option value="320">1/8 triplet</option>
+      <option value="240" selected>1/16</option>
+      <option value="160">1/16 triplet</option>
+      <option value="120">1/32</option>
+    </select>
+    <label for="meterNum">meter</label><input id="meterNum" type="number" min="1" max="16" value="4" style="width:3em" title="Beats per bar">
+    <select id="meterDen" title="Beat unit"><option value="2">/2</option><option value="4" selected>/4</option><option value="8">/8</option></select>
+    <label for="order">order</label><input id="order" type="text" value="0" title="Pattern indices played in sequence">
+  </div>
+  <div class="group">
+    <label for="octave">octave</label><input id="octave" type="number" min="0" max="8" value="4">
+    <label for="step">step</label><input id="step" type="number" min="0" max="64" value="4">
+    <label><input id="follow" type="checkbox" checked> follow</label>
+  </div>
+  <div class="spacer"></div>
+  <div class="group">
+    <label><input id="preview" type="checkbox" checked> audio preview</label>
+    <button id="midiEnable">Enable MIDI out</button>
+    <select id="midiOut" hidden><option value="">MIDI: off</option></select>
+  </div>
+  <div class="group">
+    <button id="exportMidi">Export .mid</button>
+    <button id="save">Save .json</button>
+    <button id="load">Load .json</button>
+    <input id="file" type="file" accept=".json,application/json" hidden>
+  </div>
+</header>
+<main><canvas id="grid" tabindex="0" aria-label="Pattern grid"></canvas></main>
+<footer>
+  <div id="notes"></div>
+  <div id="status"></div>
+  <details>
+    <summary>Keys and MIDI setup</summary>
+    <div id="help">
+      <div>
+        <h3>Moving the cursor</h3>
+        <table class="keys">
+          <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>row</td></tr>
+          <tr><td><kbd>⇧</kbd><kbd>↑</kbd> <kbd>⇧</kbd><kbd>↓</kbd></td><td>bar &nbsp;<span class="alt">(or <kbd>PgUp</kbd>/<kbd>PgDn</kbd>)</span></td></tr>
+          <tr><td><kbd>⌘</kbd><kbd>↑</kbd> <kbd>⌘</kbd><kbd>↓</kbd></td><td>first / last row &nbsp;<span class="alt">(or <kbd>Home</kbd>/<kbd>End</kbd>)</span></td></tr>
+          <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>field</td></tr>
+          <tr><td><kbd>⇧</kbd><kbd>←</kbd> <kbd>⇧</kbd><kbd>→</kbd></td><td>track &nbsp;<span class="alt">(or <kbd>Tab</kbd>/<kbd>⇧</kbd><kbd>Tab</kbd>)</span></td></tr>
+        </table>
+        <h3>Transport</h3>
+        <table class="keys">
+          <tr><td><kbd>Space</kbd></td><td>loop the pattern / stop</td></tr>
+          <tr><td><kbd>⇧</kbd><kbd>Space</kbd></td><td>loop from the cursor row</td></tr>
+          <tr><td><kbd>Return</kbd></td><td>play the song order</td></tr>
+          <tr><td><kbd>Esc</kbd></td><td>stop</td></tr>
+        </table>
+      </div>
+      <div>
+        <h3>Entering music</h3>
+        <table class="keys">
+          <tr><td><kbd>Z</kbd>–<kbd>M</kbd></td><td>notes, lower octave (piano layout)</td></tr>
+          <tr><td><kbd>Q</kbd>–<kbd>P</kbd></td><td>notes, octave above</td></tr>
+          <tr><td><kbd>-</kbd> <kbd>=</kbd></td><td>octave down / up</td></tr>
+          <tr><td><kbd>_</kbd> <kbd>+</kbd></td><td>step down / up</td></tr>
+          <tr><td><kbd>[</kbd> <kbd>]</kbd></td><td>note under cursor: shorter / longer</td></tr>
+          <tr><td><kbd>{</kbd> <kbd>}</kbd></td><td>note columns on this track (divisi)</td></tr>
+          <tr><td><kbd>1</kbd>–<kbd>9</kbd></td><td>articulation, in an art field</td></tr>
+          <tr><td><kbd>L</kbd> <kbd>S</kbd></td><td>ramp / hold, in a dyn or tempo field</td></tr>
+          <tr><td><kbd>Delete</kbd></td><td>clear the field</td></tr>
+          <tr><td><kbd>⌘</kbd><kbd>Z</kbd> <kbd>⌘</kbd><kbd>⇧</kbd><kbd>Z</kbd></td><td>undo / redo</td></tr>
+        </table>
+        <p>A new note lasts <em>step</em> rows. Velocity and dynamics take two hex digits; tempo takes up to three decimal digits. Click any cell, or a track name to mute it.</p>
+        <p class="alt">On Windows and Linux use <kbd>Ctrl</kbd> wherever <kbd>⌘</kbd> is shown. Control and Option are never used as modifiers here, because macOS reserves Control with the arrow keys for Mission Control and Spaces, and Option for special characters.</p>
+      </div>
+      <div>
+        <h3>Songs</h3>
+        <p>The song list holds the built-in examples plus anything you create or load. Everything lives in memory until you save: <em>Save .json</em> writes the whole song (patterns, tracks, lanes) as a file; <em>Load .json</em> adds a saved file to the list. Reloading the page discards unsaved songs.</p>
+        <p>Changing the row size rescales the grid, not the music: ticks stay where they are. Meter sets the bar lines and the exported time signature; 6/8 and 9/8 highlight every third beat.</p>
+        <p>Examples are written in code with <code>line()</code>, a compact note syntax near the end of the core script. Copy one to sketch a piece in text.</p>
+      </div>
+      <div>
+        <h3>MIDI out to Bitwig and others</h3>
+        <p>Works in Chromium browsers (Chrome, Edge, Arc). Open this file directly; no server needed.</p>
+        <p>macOS: Audio MIDI Setup → IAC Driver → check "Device is online". Windows: install loopMIDI and add a port.</p>
+        <p>Bitwig: Settings → Controllers → Add → Generic → MIDI Keyboard, input = the IAC bus. On each instrument track set the note input to that controller, channel as shown in the track header, and arm the track. Or drop the exported .mid onto the arranger.</p>
+        <p>Keyswitches default to C1–G1 (Kontakt displays these as C0–G0). Edit <code>INSTRUMENTS</code> in this file to match your library.</p>
+        <p>The audio preview is a simple synth for checking voice leading. It is not the sound.</p>
+      </div>
+    </div>
+  </details>
+</footer>
+
+<script id="core">
+'use strict';
+// ============================================================================
+// Tutti core: data model, instrument definitions, rendering to MIDI events,
+// tempo-aware timing, output sinks (WebAudio preview, WebMIDI), MIDI file writer.
+// Everything in this block is UI-free so it can be tested headless.
+// ============================================================================
+
+const PPQ = 960;                           // ticks per quarter note
+const NOTE_NAMES = ['C-','C#','D-','D#','E-','F-','F#','G-','G#','A-','A#','B-'];
+const noteName = p => p == null ? '---' : NOTE_NAMES[p % 12] + Math.floor(p / 12 - 1);   // 60 -> C-4
+const hex2 = v => (v & 0xFF).toString(16).toUpperCase().padStart(2, '0');
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+
+const FAMILIES = {
+  woodwind:   { label: 'Woodwinds',  color: '#86B58F' },
+  brass:      { label: 'Brass',      color: '#D9A441' },
+  percussion: { label: 'Percussion', color: '#D0715B' },
+  strings:    { label: 'Strings',    color: '#8FA6E6' },
+  electronic: { label: 'Electronic', color: '#B48EE0' },
+};
+
+// Articulation codes shown in the grid. The first entry in an instrument's list is its default.
+const ART = { sus: 'sustain', leg: 'legato', stc: 'staccato', mrc: 'marcato', trm: 'tremolo', piz: 'pizzicato', mut: 'muted', rll: 'roll' };
+
+// Instrument definitions. Pitches are MIDI numbers with 60 = C4 (Kontakt shows 60 as C3).
+// keyswitches: articulation -> MIDI note sent just before a note whose articulation changed.
+// dynCC / exprCC: controllers driven by the dynamics lane (most libraries: CC1 = timbre layer, CC11 = level).
+// speakDelayMs: playback-only nudge so slow-speaking sections sit behind the beat like real players.
+// program: General MIDI program used in the exported file.
+function inst(id, name, family, range, arts, opts = {}) {
+  const keyswitches = {};
+  arts.forEach((a, i) => { keyswitches[a] = 24 + i; });
+  return Object.assign({ id, name, family, range, articulations: arts, keyswitches, dynCC: 1, exprCC: 11, speakDelayMs: 0, program: 0 }, opts);
+}
+const INSTRUMENTS = [
+  inst('flute',     'Flute',      'woodwind',   [60, 96],  ['sus','leg','stc'],                   { speakDelayMs: 8,  program: 73 }),
+  inst('oboe',      'Oboe',       'woodwind',   [58, 91],  ['sus','leg','stc'],                   { speakDelayMs: 10, program: 68 }),
+  inst('clarinet',  'Clarinet',   'woodwind',   [50, 94],  ['sus','leg','stc'],                   { speakDelayMs: 10, program: 71 }),
+  inst('bassoon',   'Bassoon',    'woodwind',   [34, 75],  ['sus','leg','stc'],                   { speakDelayMs: 14, program: 70 }),
+  inst('horns',     'Horns',      'brass',      [41, 77],  ['sus','leg','stc','mrc','mut'],       { speakDelayMs: 16, program: 60 }),
+  inst('trumpets',  'Trumpets',   'brass',      [55, 82],  ['sus','leg','stc','mrc','mut'],       { speakDelayMs: 8,  program: 56 }),
+  inst('trombones', 'Trombones',  'brass',      [40, 72],  ['sus','leg','stc','mrc','mut'],       { speakDelayMs: 14, program: 57 }),
+  inst('timpani',   'Timpani',    'percussion', [40, 55],  ['sus','rll','stc'],                   { speakDelayMs: 0,  program: 47 }),
+  inst('violins-1', 'Violins I',  'strings',    [55, 103], ['sus','leg','stc','piz','trm','mrc'], { speakDelayMs: 24, program: 48 }),
+  inst('violins-2', 'Violins II', 'strings',    [55, 100], ['sus','leg','stc','piz','trm','mrc'], { speakDelayMs: 24, program: 48 }),
+  inst('violas',    'Violas',     'strings',    [48, 91],  ['sus','leg','stc','piz','trm','mrc'], { speakDelayMs: 26, program: 48 }),
+  inst('cellos',    'Cellos',     'strings',    [36, 76],  ['sus','leg','stc','piz','trm','mrc'], { speakDelayMs: 30, program: 48 }),
+  inst('basses',    'Basses',     'strings',    [28, 60],  ['sus','leg','stc','piz','trm','mrc'], { speakDelayMs: 36, program: 48 }),
+  // Synths: no keyswitches; route these channels to whatever you like in Bitwig (the Microfreak, a Massive patch).
+  inst('synth-bass', 'Synth bass', 'electronic', [24, 60], ['sus','stc','leg'], { keyswitches: {}, program: 38 }),
+  inst('synth-arp',  'Synth arp',  'electronic', [48, 96], ['sus','stc','leg'], { keyswitches: {}, program: 81 }),
+];
+const INST = Object.fromEntries(INSTRUMENTS.map(i => [i.id, i]));
+
+// Score-order track list. channel is 1-based; 10 is skipped so GM players don't treat anything as drums.
+const DEFAULT_TRACKS = [
+  ['fl', 'Flute',      'flute',     1, 1],
+  ['ob', 'Oboe',       'oboe',      2, 1],
+  ['cl', 'Clarinet',   'clarinet',  3, 1],
+  ['bn', 'Bassoon',    'bassoon',   4, 1],
+  ['hn', 'Horns',      'horns',     5, 2],
+  ['tp', 'Trumpets',   'trumpets',  6, 1],
+  ['tb', 'Trombones',  'trombones', 7, 1],
+  ['ti', 'Timpani',    'timpani',   8, 1],
+  ['v1', 'Violins I',  'violins-1', 9, 2],
+  ['v2', 'Violins II', 'violins-2', 11, 1],
+  ['va', 'Violas',     'violas',    12, 1],
+  ['vc', 'Cellos',     'cellos',    13, 1],
+  ['cb', 'Basses',     'basses',    14, 1],
+].map(([id, name, instrument, channel, columns]) => ({ id, name, instrument, channel, columns, mute: false }));
+// Extra tracks a song can add (see addTracks below). Channels 15 and 16.
+const SYNTH_TRACKS = [
+  ['sb', 'Synth bass', 'synth-bass', 15, 1],
+  ['sa', 'Synth arp',  'synth-arp',  16, 1],
+].map(([id, name, instrument, channel, columns]) => ({ id, name, instrument, channel, columns, mute: false }));
+function addTracks(song, tracks) { for (const t of tracks) if (!song.tracks.some(x => x.id === t.id)) song.tracks.push(Object.assign({}, t)); return song; }
+
+// ---- Song model ------------------------------------------------------------
+// song    { title, bpm, order:[patternIndex...], patterns:[...], tracks:[...] }
+// pattern { name, rows, ticksPerRow, meter:[beats, unit], tempo:[point], tracks:{ trackId: { events:[event], dyn:[point], expr:[point] } } }
+// event   { tick, len, pitch, vel, col, art }   tick/len in ticks relative to the pattern; col = note column
+// point   { tick, value, interp }               interp 'lin' ramps to the next point, 'step' holds
+function newPattern(name, rows = 64, ticksPerRow = 240, meter = [4, 4]) {
+  return { name, rows, ticksPerRow, meter: meter.slice(), tempo: [], tracks: {} };
+}
+const patMeter = pat => pat.meter || [4, 4];
+function newSong() {
+  return { title: 'Untitled', notes: '', bpm: 100, order: [0], patterns: [newPattern('A')], tracks: DEFAULT_TRACKS.map(t => Object.assign({}, t)) };
+}
+function patTrack(pat, trackId) {
+  return pat.tracks[trackId] || (pat.tracks[trackId] = { events: [], dyn: [], expr: [] });
+}
+
+// ---- Lanes (continuous controllers, tempo) ---------------------------------
+function laneValueAt(points, tick, dflt = null) {
+  if (!points.length) return dflt;
+  let i = -1;
+  for (let k = 0; k < points.length; k++) { if (points[k].tick <= tick) i = k; else break; }
+  if (i < 0) return points[0].value;
+  const p = points[i], q = points[i + 1];
+  if (p.interp === 'lin' && q && q.tick > p.tick) return p.value + (q.value - p.value) * (tick - p.tick) / (q.tick - p.tick);
+  return p.value;
+}
+function laneSet(points, tick, value, interp) {
+  const p = points.find(x => x.tick === tick);
+  if (p) { p.value = value; if (interp) p.interp = interp; }
+  else { points.push({ tick, value, interp: interp || 'lin' }); points.sort((a, b) => a.tick - b.tick); }
+}
+function laneRemove(points, tick) {
+  const i = points.findIndex(x => x.tick === tick);
+  if (i >= 0) points.splice(i, 1);
+}
+
+// ---- Render: song -> flat, absolute-tick event list --------------------------
+// Event types: 'ks' keyswitch, 'cc' controller, 'off' note off, 'on' note on. Order at equal tick matters:
+// keyswitch and dynamics land before the note, offs before ons so repeated pitches retrigger cleanly.
+const TYPE_ORDER = { ks: 0, cc: 1, off: 2, on: 3 };
+const CC_SAMPLE_TICKS = 30;   // resolution of rendered ramps (15 ms at 120 bpm)
+const KS_LEAD_TICKS = 20;
+
+function renderLane(points, laneLen, offset, emit, fmt) {
+  if (!points.length) return;
+  let last = null;
+  const push = (tick, v) => { v = fmt(v); if (v !== last) { emit(offset + tick, v); last = v; } };
+  push(0, laneValueAt(points, 0));
+  for (let i = 0; i < points.length; i++) {
+    const p = points[i], q = points[i + 1];
+    if (p.tick >= laneLen) break;
+    push(p.tick, p.value);
+    if (p.interp === 'lin' && q && q.value !== p.value) {
+      const end = Math.min(q.tick, laneLen);
+      for (let t = p.tick + CC_SAMPLE_TICKS; t < end; t += CC_SAMPLE_TICKS) push(t, laneValueAt(points, t));
+    }
+  }
+}
+const fmtCC = v => clamp(Math.round(v), 0, 127);
+const fmtBpm = v => clamp(Math.round(v), 20, 300);
+
+function renderSong(song, opts = {}) {
+  const seq = (opts.patterns || song.order).filter(i => song.patterns[i]);
+  const events = [], tempo = [{ tick: 0, bpm: song.bpm }], starts = [];
+  let offset = 0;
+  for (const pi of seq) {
+    const pat = song.patterns[pi];
+    const len = pat.rows * pat.ticksPerRow;
+    starts.push({ pattern: pi, tick: offset, rows: pat.rows, ticksPerRow: pat.ticksPerRow });
+    renderLane(pat.tempo, len, offset, (t, v) => tempo.push({ tick: t, bpm: v }), fmtBpm);
+    for (const tr of song.tracks) {
+      const pt = pat.tracks[tr.id];
+      if (!pt) continue;
+      const ins = INST[tr.instrument];
+      const evs = pt.events.slice().sort((a, b) => a.tick - b.tick || a.col - b.col);
+      const open = {};            // pitch -> the pending 'off' event, so same-pitch overlaps truncate
+      let lastArt = null;
+      for (const e of evs) {
+        if (e.tick >= len || e.len <= 0) continue;
+        const end = Math.min(e.tick + e.len, len);
+        const art = e.art || ins.articulations[0];
+        const ks = ins.keyswitches[art];
+        if (art !== lastArt && ks != null) {
+          events.push({ tick: offset + Math.max(0, e.tick - KS_LEAD_TICKS), type: 'ks', track: tr.id, pitch: ks });
+          lastArt = art;
+        }
+        if (open[e.pitch] && open[e.pitch].tick > offset + e.tick) open[e.pitch].tick = offset + e.tick;
+        const off = { tick: offset + end, type: 'off', track: tr.id, pitch: e.pitch };
+        events.push({ tick: offset + e.tick, type: 'on', track: tr.id, pitch: e.pitch, vel: e.vel, art });
+        events.push(off);
+        open[e.pitch] = off;
+      }
+      renderLane(pt.dyn,  len, offset, (t, v) => events.push({ tick: t, type: 'cc', track: tr.id, cc: ins.dynCC,  value: v }), fmtCC);
+      renderLane(pt.expr, len, offset, (t, v) => events.push({ tick: t, type: 'cc', track: tr.id, cc: ins.exprCC, value: v }), fmtCC);
+    }
+    offset += len;
+  }
+  events.sort((a, b) => a.tick - b.tick || TYPE_ORDER[a.type] - TYPE_ORDER[b.type]);
+  return { events, tempo, starts, lengthTicks: offset };
+}
+
+// ---- TimeMap: ticks <-> milliseconds under a changing tempo ------------------
+// Integrates tempo in 30-tick chunks, matching the ramp resolution above.
+class TimeMap {
+  constructor(tempoPoints, lengthTicks, baseBpm = 120) {
+    this.chunk = CC_SAMPLE_TICKS;
+    const pts = tempoPoints.slice().sort((a, b) => a.tick - b.tick);
+    const n = Math.ceil(Math.max(lengthTicks, this.chunk) / this.chunk);
+    this.n = n;
+    this.ms = new Float64Array(n + 1);
+    let pi = 0, bpm = baseBpm, acc = 0;
+    for (let k = 0; k < n; k++) {
+      const t0 = k * this.chunk;
+      while (pi < pts.length && pts[pi].tick <= t0) { bpm = pts[pi].bpm; pi++; }
+      this.ms[k] = acc;
+      acc += this.chunk * 60000 / (PPQ * bpm);
+    }
+    this.ms[n] = acc;
+    this.lastBpm = bpm;
+  }
+  msAt(tick) {
+    const k = Math.floor(tick / this.chunk);
+    if (k >= this.n) return this.ms[this.n] + (tick - this.n * this.chunk) * 60000 / (PPQ * this.lastBpm);
+    if (k < 0) return 0;
+    const f = (tick - k * this.chunk) / this.chunk;
+    return this.ms[k] + (this.ms[k + 1] - this.ms[k]) * f;
+  }
+  tickAt(ms) {
+    let lo = 0, hi = this.n;
+    while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (this.ms[mid] <= ms) lo = mid; else hi = mid - 1; }
+    if (lo >= this.n) return this.n * this.chunk + (ms - this.ms[this.n]) * PPQ * this.lastBpm / 60000;
+    const span = this.ms[lo + 1] - this.ms[lo];
+    return lo * this.chunk + (span > 0 ? (ms - this.ms[lo]) / span * this.chunk : 0);
+  }
+}
+
+// ---- Scheduler: lookahead loop in the performance.now() domain ------------------
+// Sinks receive (event, atMs) where atMs is an absolute performance.now() timestamp,
+// which is what MIDIOutput.send() takes directly; the synth converts to AudioContext time.
+class Scheduler {
+  constructor(getSinks) {
+    this.getSinks = getSinks;
+    this.LOOKAHEAD = 120; this.INTERVAL = 25;
+    this.playing = false; this.timer = null; this.onStop = null;
+  }
+  play(song, rendered, { loop = false, startTick = 0 } = {}) {
+    this.stop();
+    const tm = new TimeMap(rendered.tempo, rendered.lengthTicks, song.bpm);
+    const byId = Object.fromEntries(song.tracks.map(t => [t.id, t]));
+    const list = rendered.events.map(ev => {
+      const tr = byId[ev.track], ins = INST[tr.instrument];
+      const delay = (ev.type === 'on' || ev.type === 'off') ? (ins.speakDelayMs || 0) : 0;
+      return Object.assign({ ms: tm.msAt(ev.tick) + delay, channel: tr.channel - 1, family: ins.family, trackRef: tr }, ev);
+    }).sort((a, b) => a.ms - b.ms || TYPE_ORDER[a.type] - TYPE_ORDER[b.type]);
+    this.tm = tm; this.list = list; this.loop = loop; this.song = song; this.rendered = rendered;
+    this.lengthMs = Math.max(1, tm.msAt(rendered.lengthTicks));
+    const startMs = tm.msAt(startTick);
+    const now = performance.now();
+    this.origin = now + 60 - startMs;               // absolute time = origin + ev.ms
+    // Catch up controller and keyswitch state for events we skip when starting mid-pattern.
+    const carry = new Map();
+    let i = 0;
+    while (i < list.length && list[i].ms < startMs) {
+      const ev = list[i++];
+      if (ev.type === 'cc') carry.set(ev.track + ':' + ev.cc, ev);
+      else if (ev.type === 'ks') carry.set(ev.track + ':ks', ev);
+    }
+    this.playing = true;
+    for (const ev of carry.values()) this.dispatch(ev, now + 20);
+    this.idx = i;
+    this.timer = setInterval(() => this.tick(), this.INTERVAL);
+    this.tick();
+  }
+  tick() {
+    const now = performance.now(), horizon = now + this.LOOKAHEAD;
+    for (let guard = 0; guard < 20000 && this.playing; guard++) {
+      if (this.idx >= this.list.length) {
+        const endAt = this.origin + this.lengthMs;
+        if (!this.loop) { if (now >= endAt) this.stop(); break; }
+        if (endAt > horizon) break;
+        this.origin = endAt; this.idx = 0;
+        continue;
+      }
+      const ev = this.list[this.idx], at = this.origin + ev.ms;
+      if (at > horizon) break;
+      this.dispatch(ev, at);
+      this.idx++;
+    }
+  }
+  dispatch(ev, at) {
+    if (ev.trackRef.mute && ev.type !== 'off') return;
+    for (const s of this.getSinks()) s.send(ev, at);
+  }
+  positionTick() {
+    if (!this.playing) return null;
+    let ms = performance.now() - this.origin;
+    if (this.loop) ms = ((ms % this.lengthMs) + this.lengthMs) % this.lengthMs;
+    return this.tm.tickAt(Math.max(0, ms));
+  }
+  stop() {
+    if (this.timer) clearInterval(this.timer);
+    this.timer = null;
+    const was = this.playing;
+    this.playing = false;
+    for (const s of this.getSinks()) s.allOff();
+    if (was && this.onStop) this.onStop();
+  }
+}
+
+// ---- SynthSink: WebAudio preview ---------------------------------------------
+// One bus per track: voices -> lowpass (opened by the dynamics lane) -> gain -> compressor.
+// Family and articulation pick waveforms and envelope; CC1 brightens and lifts, CC11 scales level.
+function voiceParams(family, art) {
+  const base = {
+    strings:    { waves: [['sawtooth', -6, 0.5], ['sawtooth', 6, 0.5]], a: 0.14, d: 0.25, s: 0.85, r: 0.35, level: 0.28 },
+    brass:      { waves: [['sawtooth', 0, 0.6], ['square', -3, 0.25]],  a: 0.05, d: 0.12, s: 0.90, r: 0.18, level: 0.30 },
+    woodwind:   { waves: [['triangle', 0, 0.7], ['sine', 0, 0.4]],      a: 0.05, d: 0.10, s: 0.90, r: 0.15, level: 0.35 },
+    percussion: { waves: [['sine', 0, 1.0], ['triangle', 0, 0.3]],      a: 0.003, d: 0.5, s: 0, r: 0.3, level: 0.6, drop: 1.6, noise: true, oneShot: true },
+    electronic: { waves: [['sawtooth', 0, 0.45], ['square', -1200, 0.3]], a: 0.005, d: 0.15, s: 0.7, r: 0.12, level: 0.26 },
+  }[family] || { waves: [['sine', 0, 1]], a: 0.02, d: 0.1, s: 0.8, r: 0.2, level: 0.3 };
+  const p = Object.assign({}, base);
+  switch (art) {
+    case 'leg': p.a = Math.max(0.03, p.a * 0.5); p.r *= 0.7; break;
+    case 'stc': p.a = 0.01; p.d = 0.12; p.s = 0.25; p.r = 0.08; break;
+    case 'mrc': p.a = 0.01; p.d = 0.15; p.s = 0.7; p.level *= 1.2; break;
+    case 'piz': p.waves = [['triangle', 0, 0.8]]; p.a = 0.003; p.d = 0.22; p.s = 0; p.r = 0.1; p.oneShot = true; p.level *= 1.4; break;
+    case 'trm': p.lfo = 7.5; break;
+    case 'rll': p.lfo = 13; p.s = 0.8; p.d = 0.3; p.oneShot = false; p.drop = undefined; p.noise = false; break;
+    case 'mut': p.waves = [['sawtooth', 0, 0.35]]; p.level *= 0.7; break;
+  }
+  return p;
+}
+
+class SynthSink {
+  constructor() { this.ctx = null; this.enabled = true; this.buses = new Map(); this.voices = new Set(); this.active = new Map(); }
+  ensure() {
+    if (!this.ctx) {
+      const ctx = this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const comp = ctx.createDynamicsCompressor();
+      comp.threshold.value = -18; comp.ratio.value = 4; comp.attack.value = 0.005; comp.release.value = 0.2;
+      const out = ctx.createGain(); out.gain.value = 0.5;
+      comp.connect(out).connect(ctx.destination);
+      this.master = comp;
+      const len = Math.floor(ctx.sampleRate * 0.3), buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+      this.noise = buf;
+    }
+    if (this.ctx.state !== 'running') this.ctx.resume();
+    return this.ctx;
+  }
+  bus(track) {
+    let b = this.buses.get(track);
+    if (!b) {
+      const ctx = this.ctx;
+      const filter = ctx.createBiquadFilter(); filter.type = 'lowpass'; filter.Q.value = 0.7;
+      const gain = ctx.createGain();
+      filter.connect(gain).connect(this.master);
+      b = { filter, gain, dyn: 100, expr: 127 };
+      this.buses.set(track, b);
+      this.applyBus(b, ctx.currentTime);
+    }
+    return b;
+  }
+  applyBus(b, t) {
+    const d = b.dyn / 127, e = b.expr / 127;
+    b.gain.gain.setTargetAtTime(0.6 * e * (0.12 + 0.88 * Math.pow(d, 1.6)), t, 0.02);
+    b.filter.frequency.setTargetAtTime(350 * Math.pow(18, d), t, 0.03);     // 350 Hz at pp, ~6.3 kHz at ff
+  }
+  when(atMs) {
+    const ts = this.ctx.getOutputTimestamp ? this.ctx.getOutputTimestamp() : null;
+    if (ts && ts.contextTime != null) return Math.max(this.ctx.currentTime, ts.contextTime + (atMs - ts.performanceTime) / 1000);
+    return this.ctx.currentTime + Math.max(0, (atMs - performance.now()) / 1000);
+  }
+  send(ev, atMs) {
+    if (!this.enabled) return;
+    this.ensure();
+    const t = this.when(atMs);
+    if (ev.type === 'on') this.noteOn(ev.track, ev.family, ev.pitch, ev.vel, ev.art, t);
+    else if (ev.type === 'off') this.noteOff(ev.track, ev.pitch, t);
+    else if (ev.type === 'cc') this.control(ev.track, ev.cc, ev.value, t);
+  }
+  control(track, cc, value, t) {
+    const b = this.bus(track);
+    if (cc === 1) b.dyn = value; else if (cc === 11) b.expr = value; else return;
+    this.applyBus(b, t);
+  }
+  noteOn(track, family, pitch, vel, art, t) {
+    const ctx = this.ctx, b = this.bus(track), key = track + ':' + pitch;
+    if (this.active.has(key)) this.release(this.active.get(key), t, 0.05);
+    const P = voiceParams(family, art);
+    const f = 440 * Math.pow(2, (pitch - 69) / 12);
+    const vg = ctx.createGain(); vg.gain.value = 0;
+    let tail = vg;
+    const extra = [];
+    if (P.lfo) {
+      const tg = ctx.createGain(); tg.gain.value = 0.6;
+      const lfo = ctx.createOscillator(); lfo.frequency.value = P.lfo;
+      const la = ctx.createGain(); la.gain.value = 0.4;
+      lfo.connect(la).connect(tg.gain); lfo.start(t);
+      vg.connect(tg); tail = tg; extra.push(lfo);
+    }
+    tail.connect(b.filter);
+    const oscs = [];
+    for (const [type, detune, g] of P.waves) {
+      const o = ctx.createOscillator(); o.type = type; o.detune.value = detune;
+      if (P.drop) { o.frequency.setValueAtTime(f * P.drop, t); o.frequency.exponentialRampToValueAtTime(f, t + 0.08); }
+      else o.frequency.setValueAtTime(f, t);
+      const og = ctx.createGain(); og.gain.value = g;
+      o.connect(og).connect(vg); o.start(t); oscs.push(o);
+    }
+    if (P.noise) {
+      const n = ctx.createBufferSource(); n.buffer = this.noise;
+      const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = Math.max(80, f * 1.5); bp.Q.value = 1.2;
+      const ng = ctx.createGain(); ng.gain.setValueAtTime(0.5, t); ng.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+      n.connect(bp).connect(ng).connect(vg); n.start(t); n.stop(t + 0.1);
+    }
+    const peak = P.level * (0.3 + 0.7 * vel / 127);
+    vg.gain.setValueAtTime(0, t);
+    vg.gain.linearRampToValueAtTime(peak, t + P.a);
+    vg.gain.setTargetAtTime(peak * P.s, t + P.a, P.d / 3);
+    const v = { key, oscs, extra, vg, tail, start: t, r: P.r, released: false };
+    if (P.oneShot) { const stopAt = t + P.a + P.d * 4 + 0.3; v.released = true; oscs.forEach(o => o.stop(stopAt)); extra.forEach(o => o.stop(stopAt)); }
+    this.voices.add(v); this.active.set(key, v);
+    oscs[0].onended = () => { this.voices.delete(v); try { v.tail.disconnect(); } catch (e) {} };
+  }
+  release(v, t, r = v.r) {
+    if (this.active.get(v.key) === v) this.active.delete(v.key);
+    if (v.released) return;
+    v.released = true;
+    const g = v.vg.gain;
+    if (g.cancelAndHoldAtTime) g.cancelAndHoldAtTime(t); else g.cancelScheduledValues(t);
+    g.setTargetAtTime(0, t, r / 3);
+    const stopAt = t + r * 2 + 0.1;
+    v.oscs.forEach(o => o.stop(stopAt)); v.extra.forEach(o => o.stop(stopAt));
+  }
+  noteOff(track, pitch, t) {
+    const v = this.active.get(track + ':' + pitch);
+    if (v) this.release(v, t);
+  }
+  audition(family, pitch, art) {
+    const t = this.ensure().currentTime + 0.01;
+    this.noteOn('_audition', family, pitch, 100, art, t);
+    this.noteOff('_audition', pitch, t + 0.35);
+  }
+  allOff() {
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    for (const v of Array.from(this.voices)) {
+      if (v.start > now + 0.005) { try { v.tail.disconnect(); } catch (e) {} v.oscs.forEach(o => o.stop(v.start)); v.extra.forEach(o => o.stop(v.start)); v.released = true; }
+      else this.release(v, now, 0.08);
+    }
+    this.active.clear();
+  }
+}
+
+// ---- MidiSink: WebMIDI output ---------------------------------------------------
+class MidiSink {
+  constructor() { this.access = null; this.out = null; }
+  async enable() {
+    if (!navigator.requestMIDIAccess) throw new Error('WebMIDI is not available in this browser');
+    this.access = await navigator.requestMIDIAccess({ sysex: false });
+    return this.outputs();
+  }
+  outputs() { return this.access ? Array.from(this.access.outputs.values()) : []; }
+  select(id) { this.out = (this.access && id && this.access.outputs.get(id)) || null; return this.out; }
+  send(ev, at) {
+    const o = this.out; if (!o) return;
+    const ch = ev.channel & 15;
+    switch (ev.type) {
+      case 'on':  o.send([0x90 | ch, ev.pitch & 127, clamp(ev.vel | 0, 1, 127)], at); break;
+      case 'off': o.send([0x80 | ch, ev.pitch & 127, 0], at); break;
+      case 'cc':  o.send([0xB0 | ch, ev.cc & 127, ev.value & 127], at); break;
+      case 'ks':  o.send([0x90 | ch, ev.pitch & 127, 100], at); o.send([0x80 | ch, ev.pitch & 127, 0], at + 8); break;
+    }
+  }
+  audition(channel, pitch) {
+    const at = performance.now();
+    this.send({ type: 'on', channel, pitch, vel: 100 }, at);
+    this.send({ type: 'off', channel, pitch }, at + 350);
+  }
+  allOff() {
+    const o = this.out; if (!o) return;
+    try { o.clear(); } catch (e) {}
+    for (let ch = 0; ch < 16; ch++) { o.send([0xB0 | ch, 123, 0]); o.send([0xB0 | ch, 120, 0]); }
+  }
+}
+
+// ---- Standard MIDI File writer (type 1, one track per instrument) ----------------
+function vlq(n) { const b = [n & 0x7F]; n >>>= 7; while (n > 0) { b.unshift((n & 0x7F) | 0x80); n >>>= 7; } return b; }
+const strBytes = s => Array.from(String(s), c => c.charCodeAt(0) & 255);
+class TrackWriter {
+  constructor() { this.ev = []; }
+  event(tick, bytes) { this.ev.push({ tick: Math.max(0, Math.round(tick)), bytes }); }
+  meta(tick, type, bytes) { this.event(tick, [0xFF, type, ...vlq(bytes.length), ...bytes]); }
+  bytes(endTick) {
+    const last = this.ev.reduce((m, e) => Math.max(m, e.tick), 0);
+    this.meta(Math.max(endTick, last), 0x2F, []);
+    this.ev.sort((a, b) => a.tick - b.tick);
+    const out = []; let t = 0;
+    for (const e of this.ev) { out.push(...vlq(e.tick - t)); out.push(...e.bytes); t = e.tick; }
+    return out;
+  }
+}
+function midiFileBytes(song) {
+  const r = renderSong(song);
+  const tracks = [];
+  const t0 = new TrackWriter();
+  t0.meta(0, 0x03, strBytes(song.title));
+  let lastMeter = '';
+  for (const st of r.starts) {
+    const [beats, unit] = patMeter(song.patterns[st.pattern]), key = beats + '/' + unit;
+    if (key === lastMeter) continue;
+    lastMeter = key;
+    t0.meta(st.tick, 0x58, [beats, Math.round(Math.log2(unit)), 24, 8]);
+  }
+  let lastUs = null;
+  for (const p of r.tempo) {
+    const us = Math.round(60000000 / p.bpm);
+    if (us === lastUs) continue;
+    lastUs = us;
+    t0.meta(p.tick, 0x51, [(us >> 16) & 255, (us >> 8) & 255, us & 255]);
+  }
+  tracks.push(t0.bytes(r.lengthTicks));
+  for (const tr of song.tracks) {
+    const ins = INST[tr.instrument], ch = (tr.channel - 1) & 15;
+    const w = new TrackWriter();
+    w.meta(0, 0x03, strBytes(tr.name));
+    w.event(0, [0xC0 | ch, ins.program & 127]);
+    for (const e of r.events) {
+      if (e.track !== tr.id) continue;
+      switch (e.type) {
+        case 'on':  w.event(e.tick, [0x90 | ch, e.pitch & 127, clamp(e.vel | 0, 1, 127)]); break;
+        case 'off': w.event(e.tick, [0x80 | ch, e.pitch & 127, 0]); break;
+        case 'cc':  w.event(e.tick, [0xB0 | ch, e.cc & 127, e.value & 127]); break;
+        case 'ks':  w.event(e.tick, [0x90 | ch, e.pitch & 127, 100]); w.event(e.tick + 10, [0x80 | ch, e.pitch & 127, 0]); break;
+      }
+    }
+    tracks.push(w.bytes(r.lengthTicks));
+  }
+  const be16 = n => [(n >> 8) & 255, n & 255];
+  const be32 = n => [(n >>> 24) & 255, (n >> 16) & 255, (n >> 8) & 255, n & 255];
+  const bytes = [...strBytes('MThd'), ...be32(6), ...be16(1), ...be16(tracks.length), ...be16(PPQ)];
+  for (const t of tracks) bytes.push(...strBytes('MTrk'), ...be32(t.length), ...t);
+  return new Uint8Array(bytes);
+}
+
+// ---- Seed: four bars so Play makes sound immediately ---------------------------
+function seedSong() {
+  const song = newSong();
+  song.title = 'Sketch in C'; song.bpm = 84;
+  song.notes = 'Four bars in C: sustained string chords under a long crescendo, horns entering in bar 3, a trumpet figure, timpani roll and flute line, with a ritardando through the last bar.';
+  const pat = song.patterns[0], tpr = pat.ticksPerRow;
+  const put = (id, row, pitch, lenRows, col = 0, art = null, vel = 100) =>
+    patTrack(pat, id).events.push({ tick: row * tpr, len: lenRows * tpr, pitch, vel, col, art });
+  const dyn = (id, row, value, interp = 'lin') => laneSet(patTrack(pat, id).dyn, row * tpr, value, interp);
+  // Steady, then a ritardando across the last bar.
+  laneSet(pat.tempo, 0, 84, 'step'); laneSet(pat.tempo, 48 * tpr, 84, 'lin'); laneSet(pat.tempo, 63 * tpr, 62, 'step');
+  // Strings: C  Am  F  G, one chord per bar, long crescendo. [v1 top, v1 second, v2, va, vc, cb]
+  const chords = [[79, 76, 72, 67, 48, 36], [81, 76, 72, 69, 45, 33], [81, 77, 72, 69, 41, 29], [79, 74, 71, 67, 43, 31]];
+  chords.forEach(([a, b, c, d, e, f], i) => {
+    const r = i * 16;
+    put('v1', r, a, 16, 0); put('v1', r, b, 16, 1); put('v2', r, c, 16); put('va', r, d, 16); put('vc', r, e, 16); put('cb', r, f, 16);
+  });
+  for (const t of ['v1', 'v2', 'va', 'vc', 'cb']) { dyn(t, 0, 36); dyn(t, 48, 110); dyn(t, 63, 60, 'step'); }
+  // Horns enter in bar 3, marcato on the last downbeat.
+  put('hn', 32, 55, 16, 0); put('hn', 32, 60, 16, 1); put('hn', 48, 55, 16, 0, 'mrc'); put('hn', 48, 62, 16, 1, 'mrc');
+  dyn('hn', 32, 64); dyn('hn', 48, 104, 'step');
+  // Trumpets: short figure into a held note.
+  [[48, 67, 2], [50, 67, 2], [52, 67, 4], [56, 69, 8]].forEach(([r, p, l]) => put('tp', r, p, l, 0, l <= 2 ? 'stc' : 'sus'));
+  dyn('tp', 48, 96, 'step');
+  // Timpani on downbeats, roll under the last bar.
+  put('ti', 0, 48, 4); put('ti', 16, 45, 4); put('ti', 32, 41, 4); put('ti', 48, 43, 16, 0, 'rll');
+  dyn('ti', 0, 70, 'step'); dyn('ti', 48, 60); dyn('ti', 63, 118, 'step');
+  // Flute line over the last two bars, legato after the first note.
+  [[32, 88, 8], [40, 86, 4], [44, 84, 4], [48, 86, 8], [56, 84, 8]].forEach(([r, p, l], i) => put('fl', r, p, l, 0, i ? 'leg' : 'sus'));
+  dyn('fl', 32, 80); dyn('fl', 56, 100, 'step');
+  return song;
+}
+
+// ---- Compact notation for writing songs in code ---------------------------------------------
+// line(pat, trackId, col, startRow, step, tokens, { art, vel, transpose })
+//   token: NOTE[:rows][@art][!vel]   NOTE like C4, F#3, Bb2 (60 = C4)
+//   '.' rests one step, '-' extends the previous note by one step, '|' is ignored (bar marker).
+//   A note without :rows lasts one step; the cursor advances by the note's length.
+// lane(points, "row:value[~|_] ...", ticksPerRow)   ~ ramps to the next point (default), _ holds
+// rep(n, tokens) repeats a token string n times.
+function parsePitch(s) {
+  const m = /^([A-Ga-g])([#b]?)(-?\d)$/.exec(s); if (!m) return null;
+  const base = { c: 0, d: 2, e: 4, f: 5, g: 7, a: 9, b: 11 }[m[1].toLowerCase()];
+  return (parseInt(m[3], 10) + 1) * 12 + base + (m[2] === '#' ? 1 : m[2] === 'b' ? -1 : 0);
+}
+function line(pat, trackId, col, startRow, step, tokens, opts = {}) {
+  const pt = patTrack(pat, trackId), tpr = pat.ticksPerRow;
+  let row = startRow, last = null;
+  for (const tok of tokens.trim().split(/\s+/)) {
+    if (tok === '|' || !tok) continue;
+    if (tok === '.') { row += step; last = null; continue; }
+    if (tok === '-') { if (last) last.len += step * tpr; row += step; continue; }
+    const m = /^([A-Ga-g][#b]?-?\d)(?::(\d+))?(?:@(\w+))?(?:!(\d+))?$/.exec(tok);
+    if (!m) throw new Error('line(): bad token "' + tok + '"');
+    const rows = m[2] ? parseInt(m[2], 10) : step;
+    last = { tick: row * tpr, len: rows * tpr, pitch: parsePitch(m[1]) + (opts.transpose || 0), vel: m[4] ? parseInt(m[4], 10) : (opts.vel || 100), col, art: m[3] || opts.art || null };
+    pt.events.push(last);
+    row += rows;
+  }
+  return row;
+}
+function lane(points, spec, tpr) {
+  for (const tok of spec.trim().split(/\s+/)) {
+    const m = /^(\d+):(\d+)([~_])?$/.exec(tok); if (!m) throw new Error('lane(): bad token "' + tok + '"');
+    laneSet(points, parseInt(m[1], 10) * tpr, parseInt(m[2], 10), m[3] === '_' ? 'step' : 'lin');
+  }
+}
+const rep = (n, tokens) => Array(n).fill(tokens).join(' ');
+function fitColumns(song) {
+  for (const tr of song.tracks) {
+    let max = tr.columns;
+    for (const pat of song.patterns) { const pt = pat.tracks[tr.id]; if (pt) for (const e of pt.events) max = Math.max(max, e.col + 1); }
+    tr.columns = max;
+  }
+  return song;
+}
+
+// ---- Example songs ------------------------------------------------------------------------------
+function exBrassChorale() {
+  const song = newSong(); song.title = 'Brass chorale'; song.bpm = 66;
+  song.notes = 'Divisi horns, trumpets and trombones in six parts, timpani under each chord. Two patterns played in order, with a ritardando into the final chord.';
+  const A = song.patterns[0], B = newPattern('B'); song.patterns.push(B); song.order = [0, 1];
+  const tpr = A.ticksPerRow;
+  line(A, 'tp', 0, 0, 8, 'F5 G5 A5 F5 G5 G5 A5:16');
+  line(A, 'tp', 1, 0, 8, 'D5 Eb5 C5 D5 D5 Eb5 F5:16');
+  line(A, 'hn', 0, 0, 8, 'Bb4 Bb4 A4 Bb4 Bb4 Bb4 C5:16');
+  line(A, 'hn', 1, 0, 8, 'F4 G4 F4 F4 G4 G4 A4:16');
+  line(A, 'tb', 0, 0, 8, 'D4 Eb4 C4 D4 D4 Eb4 F4:16');
+  line(A, 'tb', 1, 0, 8, 'Bb2 Eb3 F2 Bb2 G2 Eb3 F2:16');
+  line(A, 'ti', 0, 0, 4, 'Bb2 . Eb3 . F2 . Bb2 . G2 . Eb3 . F2:16@rll');
+  line(B, 'tp', 0, 0, 8, 'G5 F5 G5 A5 G5 G5 F5:16');
+  line(B, 'tp', 1, 0, 8, 'Eb5 D5 Eb5 F5 D5 Eb5 D5:16');
+  line(B, 'hn', 0, 0, 8, 'Bb4 Bb4 C5 C5 Bb4 Bb4 Bb4:16');
+  line(B, 'hn', 1, 0, 8, 'G4 F4 G4 A4 G4 G4 F4:16');
+  line(B, 'tb', 0, 0, 8, 'Eb4 D4 Eb4 F4 D4 Eb4 D4:16');
+  line(B, 'tb', 1, 0, 8, 'Eb3 D3 C3 F2 G2 Eb3 Bb2:16');
+  line(B, 'ti', 0, 0, 4, 'Eb3 . Bb2 . C3 . F2 . G2 . Eb3 . Bb2:16@rll');
+  for (const t of ['tp', 'hn', 'tb']) { lane(patTrack(A, t).dyn, '0:64 48:100_ 63:110', tpr); lane(patTrack(B, t).dyn, '0:92 32:72 48:100 63:70', tpr); }
+  lane(patTrack(A, 'ti').dyn, '0:60_ 48:50 63:110', tpr);
+  lane(patTrack(B, 'ti').dyn, '0:60_ 48:50 63:100', tpr);
+  lane(B.tempo, '0:66_ 48:66 63:46', tpr);
+  return fitColumns(song);
+}
+function exScherzo() {
+  const song = newSong(); song.title = 'Scherzo (pizzicato)'; song.bpm = 132;
+  song.notes = 'Pizzicato strings and staccato bassoon under flute and oboe in thirds. Articulations come from each line\'s default plus per-note @ markers; the held notes at the end switch back to sustain.';
+  const A = song.patterns[0], tpr = A.ticksPerRow;
+  line(A, 'cb', 0, 0, 4, 'G1 . D2 . C2 . G2 . D2 . A2 . G1 . D2 .', { art: 'piz' });
+  line(A, 'vc', 0, 0, 4, '. B2 . D3 . E3 . G3 . F#3 . A3 . B2 . D3', { art: 'piz' });
+  line(A, 'va', 0, 0, 4, 'D4 B3 D4 B3 E4 C4 E4 C4 F#4 D4 F#4 D4 D4 B3 D4 B3', { art: 'piz' });
+  line(A, 'v2', 0, 0, 4, '. B4 . B4 . C5 . C5 . A4 . A4 . B4 . B4', { art: 'piz' });
+  line(A, 'v1', 0, 0, 4, '. D5 . D5 . E5 . E5 . D5 . D5 . D5 . D5', { art: 'piz' });
+  line(A, 'bn', 0, 0, 4, 'G2 . D3 . C3 . G3 . D3 . A3 . G2 . D3 .', { art: 'stc' });
+  line(A, 'fl', 0, 0, 2, 'G5 . B5 . D6 D6 B5 . | E6 . C6 . G5 G5 E6 . | F#5 . A5 . D6 C6 A5 . | G5:8@sus . . . .', { art: 'stc' });
+  line(A, 'ob', 0, 0, 2, 'E5 . G5 . B5 B5 G5 . | C6 . A5 . E5 E5 C6 . | D5 . F#5 . B5 A5 F#5 . | D5:8@sus . . . .', { art: 'stc' });
+  for (const t of ['v1', 'v2', 'va', 'vc', 'cb', 'bn']) lane(patTrack(A, t).dyn, '0:72_', tpr);
+  for (const t of ['fl', 'ob']) lane(patTrack(A, t).dyn, '0:84_ 48:84 63:100', tpr);
+  return fitColumns(song);
+}
+function exAdagio() {
+  const song = newSong(); song.title = 'Adagio for strings'; song.bpm = 56;
+  song.notes = 'Eighth-note grid, so 8 rows make a bar. Legato first violins over sustained divisi, viola tremolo at the climax, a long dynamic arch and a ritardando. Horns and a timpani roll enter late.';
+  const A = song.patterns[0]; A.ticksPerRow = 480; const tpr = 480;
+  line(A, 'v1', 0, 0, 4, 'D5:6@sus E5:2 F5 D5 G5 Bb5 A5:8 D6 C#6:2 D6:2 F5 D5 G5 E5 D5:8', { art: 'leg' });
+  line(A, 'v1', 1, 0, 8, 'F5 Bb4 D5 E5 F5 Bb4 Bb4:4 C#5:4 F5');
+  line(A, 'v2', 0, 0, 8, 'A4 F4 Bb4 C#5 A4 F4 G4:4 A4:4 A4');
+  line(A, 'va', 0, 0, 8, 'D4 D4 G4 A3 D4@trm D4@trm D4:4 E4:4 D4');
+  line(A, 'vc', 0, 0, 8, 'D3 Bb2 G2 A2 D3 Bb2 G2:4 A2:4 D3');
+  line(A, 'cb', 0, 0, 8, 'D2 Bb1 G1 A1 D2 Bb1 G1:4 A1:4 D2');
+  line(A, 'hn', 0, 24, 8, 'E4 F4'); line(A, 'hn', 1, 24, 8, 'A3 A3');
+  line(A, 'ti', 0, 56, 8, 'D3@rll');
+  for (const t of ['v1', 'v2', 'va', 'vc', 'cb']) lane(patTrack(A, t).dyn, '0:30 24:72 32:100 40:64 56:40 63:24', tpr);
+  lane(patTrack(A, 'hn').dyn, '24:40 32:78 40:30', tpr);
+  lane(patTrack(A, 'ti').dyn, '56:30 63:96', tpr);
+  lane(A.tempo, '0:56_ 56:56 63:42', tpr);
+  return fitColumns(song);
+}
+function exFanfare() {
+  const song = newSong(); song.title = 'Fanfare'; song.bpm = 116;
+  song.notes = 'Marcato and staccato brass over timpani, low strings doubling the trombones, tremolo upper strings joining for the last two bars. The rhythm is written with explicit :rows lengths.';
+  const A = song.patterns[0], tpr = A.ticksPerRow;
+  line(A, 'tp', 0, 0, 4, 'Bb4:3 Bb4:1@stc Bb4:4 F5:8@sus | Eb5:3 Eb5:1@stc Eb5:4 D5:8@sus | C5:3 C5:1@stc C5:4 F5:8@sus | F5:2@stc G5:2@stc A5:2@stc F5:2@stc Bb5:8@sus', { art: 'mrc' });
+  line(A, 'tp', 1, 0, 4, 'F4:3 F4:1@stc F4:4 D5:8@sus | Bb4:3 Bb4:1@stc Bb4:4 Bb4:8@sus | A4:3 A4:1@stc A4:4 D5:8@sus | D5:2@stc Eb5:2@stc F5:2@stc D5:2@stc F5:8@sus', { art: 'mrc' });
+  line(A, 'hn', 0, 0, 8, 'D4:16 Eb4 D4 C4 D4 F4:4@stc F4:4@stc D4');
+  line(A, 'hn', 1, 0, 8, 'Bb3:16 G3 F3 A3 F3 A3:4@stc A3:4@stc Bb3');
+  line(A, 'tb', 0, 0, 4, 'Bb2 . Bb2 . | Eb3 . Bb2 . | F3 . Bb2 . | F3:2@stc F3:2@stc F3:2@stc F3:2@stc Bb2:8', { art: 'mrc' });
+  line(A, 'tb', 1, 0, 4, 'D3 . D3 . | G3 . D3 . | A3 . D3 . | A3:2@stc A3:2@stc A3:2@stc A3:2@stc D3:8', { art: 'mrc' });
+  line(A, 'ti', 0, 0, 4, 'Bb2:2 Bb2:2 Bb2 F2:8@rll | Eb3 . Bb2 . | F2 . Bb2 . | F2:2@stc F2:2@stc F2:2@stc F2:2@stc Bb2:8@rll');
+  line(A, 'vc', 0, 0, 4, 'Bb2 . Bb2 . | Eb3 . Bb2 . | F2 . Bb2 . | F2:2 F2:2 F2:2 F2:2 Bb2:8', { art: 'mrc' });
+  line(A, 'cb', 0, 0, 4, 'Bb1 . Bb1 . | Eb2 . Bb1 . | F1 . Bb1 . | F1:2 F1:2 F1:2 F1:2 Bb1:8', { art: 'mrc' });
+  line(A, 'v1', 0, 32, 8, 'F5 F5 Eb5 F5', { art: 'trm' });
+  line(A, 'v2', 0, 32, 8, 'A4 Bb4 A4 Bb4', { art: 'trm' });
+  line(A, 'va', 0, 32, 8, 'C4 D4 C4 D4', { art: 'trm' });
+  for (const t of ['tp', 'hn', 'tb', 'ti', 'vc', 'cb']) lane(patTrack(A, t).dyn, '0:112_', tpr);
+  for (const t of ['v1', 'v2', 'va']) lane(patTrack(A, t).dyn, '32:56 63:112', tpr);
+  return fitColumns(song);
+}
+function exPulse() {
+  const song = newSong(); song.title = 'Pulse'; song.bpm = 144;
+  song.notes = 'Minimalist pattern piece in the order A A B B: sixteenth-note flute, eighth-note clarinet, pizzicato bass and viola, sustained horns, tremolo violins. Repeated figures are built with rep().';
+  const A = song.patterns[0], B = newPattern('B'); song.patterns.push(B); song.order = [0, 0, 1, 1];
+  const tpr = A.ticksPerRow;
+  line(A, 'fl', 0, 0, 1, rep(8, 'A5 C6 E6 C6') + ' ' + rep(8, 'A5 C6 F6 C6'), { art: 'stc' });
+  line(A, 'cl', 0, 0, 2, rep(8, 'C5 E5') + ' ' + rep(8, 'C5 F5'), { art: 'stc' });
+  line(A, 'ob', 0, 0, 16, 'E5 A5 F5 C6', { art: 'leg' });
+  line(A, 'bn', 0, 0, 4, rep(4, 'A2 E3') + ' ' + rep(4, 'F2 C3'), { art: 'stc' });
+  line(A, 'hn', 0, 0, 64, 'E4'); line(A, 'hn', 1, 0, 32, 'A3 C4');
+  line(A, 'v1', 0, 0, 32, 'C6 C6', { art: 'trm' }); line(A, 'v2', 0, 0, 32, 'E5 F5', { art: 'trm' });
+  line(A, 'va', 0, 0, 4, rep(2, '. C4 . E4') + ' ' + rep(2, '. C4 . F4'), { art: 'piz' });
+  line(A, 'vc', 0, 0, 4, rep(2, 'A2 . E3 .') + ' ' + rep(2, 'F2 . C3 .'), { art: 'piz' });
+  line(A, 'cb', 0, 0, 4, rep(2, 'A1 . E2 .') + ' ' + rep(2, 'F1 . C2 .'), { art: 'piz' });
+  line(B, 'fl', 0, 0, 1, rep(8, 'A5 D6 F6 D6') + ' ' + rep(8, 'B5 D6 G6 D6'), { art: 'stc' });
+  line(B, 'cl', 0, 0, 2, rep(8, 'D5 F5') + ' ' + rep(8, 'D5 G5'), { art: 'stc' });
+  line(B, 'ob', 0, 0, 16, 'F5 A5 G5 B5', { art: 'leg' });
+  line(B, 'bn', 0, 0, 4, rep(4, 'D3 A2') + ' ' + rep(4, 'G2 D3'), { art: 'stc' });
+  line(B, 'hn', 0, 0, 64, 'D4'); line(B, 'hn', 1, 0, 32, 'A3 B3');
+  line(B, 'v1', 0, 0, 32, 'D6 D6', { art: 'trm' }); line(B, 'v2', 0, 0, 32, 'F5 G5', { art: 'trm' });
+  line(B, 'va', 0, 0, 4, rep(2, '. F4 . A4') + ' ' + rep(2, '. B3 . D4'), { art: 'piz' });
+  line(B, 'vc', 0, 0, 4, rep(2, 'D3 . A2 .') + ' ' + rep(2, 'G2 . D3 .'), { art: 'piz' });
+  line(B, 'cb', 0, 0, 4, rep(2, 'D2 . A1 .') + ' ' + rep(2, 'G1 . D2 .'), { art: 'piz' });
+  for (const p of [A, B]) {
+    for (const t of ['fl', 'cl', 'ob', 'bn', 'va', 'vc', 'cb']) lane(patTrack(p, t).dyn, '0:80_', tpr);
+    lane(patTrack(p, 'hn').dyn, '0:40 63:64', tpr);
+    for (const t of ['v1', 'v2']) lane(patTrack(p, t).dyn, '0:36 63:72', tpr);
+  }
+  return fitColumns(song);
+}
+function exNeonCorridor() {
+  const song = addTracks(newSong(), SYNTH_TRACKS); song.title = 'Neon corridor (Tron-style)'; song.bpm = 128;
+  song.notes = 'Hybrid electronic and orchestral, order A A B B. Octave synth bass and a sixteenth-note arp on channels 15 and 16, low strings hammering the root, brass and tremolo strings swelling, trumpet stabs into the fourth bar.';
+  const A = song.patterns[0], B = newPattern('B'); song.patterns.push(B); song.order = [0, 0, 1, 1];
+  const tpr = A.ticksPerRow;
+  // A: Em Em C D
+  line(A, 'sb', 0, 0, 2, rep(8, 'E1 E2') + ' ' + rep(4, 'C1 C2') + ' ' + rep(4, 'D1 D2'), { art: 'stc' });
+  line(A, 'sa', 0, 0, 1, rep(8, 'E4 G4 B4 D5') + ' ' + rep(4, 'C4 E4 G4 B4') + ' ' + rep(4, 'D4 F#4 A4 C5'), { art: 'stc' });
+  line(A, 'vc', 0, 0, 2, rep(16, 'E2') + ' ' + rep(8, 'C2') + ' ' + rep(8, 'D2'), { art: 'stc' });
+  line(A, 'cb', 0, 0, 2, rep(16, 'E1') + ' ' + rep(8, 'C2') + ' ' + rep(8, 'D2'), { art: 'stc' });
+  line(A, 'ti', 0, 0, 4, 'E2 . E2 . | E2 . E2 . | C3 . C3 . | D3:16@rll');
+  line(A, 'hn', 0, 0, 16, 'E4 E4 C4 D4'); line(A, 'hn', 1, 0, 16, 'B3 B3 G3 A3');
+  line(A, 'tb', 0, 0, 16, 'E3 E3 E3 F#3'); line(A, 'tb', 1, 0, 16, 'B2 B2 C3 D3');
+  line(A, 'tp', 0, 48, 2, 'D5@stc . D5@stc . D5@stc . A5:4@mrc');
+  line(A, 'v1', 0, 0, 16, 'G5 G5 G5 A5', { art: 'trm' }); line(A, 'v2', 0, 0, 16, 'E5 E5 E5 F#5', { art: 'trm' }); line(A, 'va', 0, 0, 16, 'B4 B4 C5 D5', { art: 'trm' });
+  // B: Am G C B
+  line(B, 'sb', 0, 0, 2, rep(4, 'A1 A2') + ' ' + rep(4, 'G1 G2') + ' ' + rep(4, 'C1 C2') + ' ' + rep(4, 'B1 B2'), { art: 'stc' });
+  line(B, 'sa', 0, 0, 1, rep(4, 'A4 C5 E5 C5') + ' ' + rep(4, 'G4 B4 D5 B4') + ' ' + rep(4, 'C5 E5 G5 E5') + ' ' + rep(4, 'B4 D#5 F#5 D#5'), { art: 'stc' });
+  line(B, 'vc', 0, 0, 2, rep(8, 'A2') + ' ' + rep(8, 'G2') + ' ' + rep(8, 'C2') + ' ' + rep(8, 'B2'), { art: 'stc' });
+  line(B, 'cb', 0, 0, 2, rep(8, 'A1') + ' ' + rep(8, 'G1') + ' ' + rep(8, 'C2') + ' ' + rep(8, 'B1'), { art: 'stc' });
+  line(B, 'ti', 0, 0, 4, 'A2 . A2 . | G2 . G2 . | C3 . C3 . | B2:16@rll');
+  line(B, 'hn', 0, 0, 16, 'C4 B3 C4 D#4'); line(B, 'hn', 1, 0, 16, 'A3 G3 G3 B3');
+  line(B, 'tb', 0, 0, 16, 'E3 D3 E3 F#3'); line(B, 'tb', 1, 0, 16, 'A2 G2 C3 B2');
+  line(B, 'tp', 0, 48, 2, 'D#5@stc . D#5@stc . D#5@stc . F#5:4@mrc');
+  line(B, 'v1', 0, 0, 16, 'E5 D5 E5 D#5', { art: 'trm' }); line(B, 'v2', 0, 0, 16, 'C5 B4 C5 B4', { art: 'trm' }); line(B, 'va', 0, 0, 16, 'A4 G4 G4 F#4', { art: 'trm' });
+  for (const t of ['v1', 'v2', 'va']) { lane(patTrack(A, t).dyn, '0:30 63:90', tpr); lane(patTrack(B, t).dyn, '0:96_', tpr); }
+  for (const t of ['hn', 'tb']) { lane(patTrack(A, t).dyn, '0:40 48:100_', tpr); lane(patTrack(B, t).dyn, '0:100_', tpr); }
+  for (const t of ['sb', 'sa', 'vc', 'cb', 'ti']) { lane(patTrack(A, t).dyn, '0:96_', tpr); lane(patTrack(B, t).dyn, '0:110_', tpr); }
+  lane(patTrack(A, 'tp').dyn, '48:110_', tpr); lane(patTrack(B, 'tp').dyn, '48:118_', tpr);
+  return fitColumns(song);
+}
+function exAfterglow() {
+  const song = addTracks(newSong(), SYNTH_TRACKS); song.title = 'Afterglow (Tron-style)'; song.bpm = 72;
+  song.notes = 'Slow hybrid cue on an eighth-note grid: long synth bass, an eighth-note arp that never stops, string chorale on top, horns and flute for the second half, timpani roll and ritardando to close.';
+  const A = song.patterns[0]; A.ticksPerRow = 480; const tpr = 480;
+  // Am F C G | Am F Dm E
+  line(A, 'sb', 0, 0, 8, 'A1 F1 C2 G1 A1 F1 D2 E2');
+  line(A, 'sa', 0, 0, 1, [rep(2, 'A4 E5 C5 E5'), rep(2, 'A4 F5 C5 F5'), rep(2, 'G4 E5 C5 E5'), rep(2, 'G4 D5 B4 D5'), rep(2, 'A4 E5 C5 E5'), rep(2, 'A4 F5 C5 F5'), rep(2, 'A4 F5 D5 F5'), rep(2, 'G#4 E5 B4 E5')].join(' '), { art: 'stc' });
+  line(A, 'v1', 0, 0, 8, 'E5 E5 E5 D5 C5 C5 D5 B4');
+  line(A, 'v2', 0, 0, 8, 'C5 C5 G4 G4 A4 A4 A4 G#4');
+  line(A, 'va', 0, 0, 8, 'A4 F4 E4 D4 E4 F4 F4 E4');
+  line(A, 'vc', 0, 0, 8, 'A2 F2 C3 G2 A2 F2 D3 E3');
+  line(A, 'cb', 0, 0, 8, 'A1 F1 C2 G1 A1 F1 D2 E2');
+  line(A, 'hn', 0, 32, 8, 'E4 F4 F4 E4'); line(A, 'hn', 1, 32, 8, 'A3 A3 A3 G#3');
+  line(A, 'fl', 0, 32, 2, 'E6:6 D6:2 C6:8 A5:4 D6:4 B5:8', { art: 'leg' });
+  line(A, 'ti', 0, 56, 8, 'E2@rll');
+  for (const t of ['v1', 'v2', 'va', 'vc', 'cb']) lane(patTrack(A, t).dyn, '0:36 32:80 56:96 63:60', tpr);
+  lane(patTrack(A, 'hn').dyn, '32:40 56:90', tpr);
+  lane(patTrack(A, 'fl').dyn, '32:70 63:90', tpr);
+  lane(patTrack(A, 'sb').dyn, '0:90_', tpr);
+  lane(patTrack(A, 'sa').dyn, '0:60 32:96', tpr);
+  lane(patTrack(A, 'ti').dyn, '56:30 63:90', tpr);
+  lane(A.tempo, '0:72_ 56:72 63:58', tpr);
+  return fitColumns(song);
+}
+function exReel() {
+  const song = newSong(); song.title = 'Reel (folk)'; song.bpm = 112;
+  song.notes = 'A fiddle reel in D, AABB with 128-row patterns (8 bars each). Violins I carry the tune, flute doubles an octave up, clarinet joins on the B part, viola chops on 2 and 4, pizzicato cello and bass alternate root and fifth.';
+  const A = newPattern('A', 128), B = newPattern('B', 128); song.patterns = [A, B]; song.order = [0, 0, 1, 1];
+  const tpr = A.ticksPerRow;
+  const tuneA = 'D4 F#4 A4 F#4 D5 A4 F#4 D4 | E4 F#4 G4 E4 A4 G4 F#4 E4 | D4 F#4 A4 F#4 D5 A4 F#4 D4 | E4 C#4 D4 E4 F#4 G4 A4 B4 | ' +
+                'D5 B4 A4 F#4 D5 B4 A4 F#4 | E5 C#5 A4 C#5 E5 C#5 B4 A4 | D5 B4 A4 F#4 G4 F#4 E4 D4 | E4 C#4 A3 C#4 D4:8';
+  const tuneB = 'F#5 A5 A5 F#5 D5 F#5 A5 F#5 | G5 F#5 E5 D5 C#5 D5 E5 C#5 | F#5 A5 A5 F#5 D5 F#5 A5 F#5 | G5 E5 C#5 E5 A4 C#5 E5 G5 | ' +
+                'F#5 D5 B4 D5 G5 E5 C#5 E5 | D5 F#5 A5 F#5 G5 B5 A5 G5 | F#5 D5 B4 D5 E5 C#5 A4 C#5 | D5 F#5 E5 C#5 D5:8';
+  const bassA = 'D2 . A1 . | A1 . E2 . | D2 . A1 . | A1 . E2 . | D2 . A1 . | A1 . E2 . | D2 . G1 . | A1 . D2 .';
+  const bassB = 'D2 . A1 . | A1 . E2 . | D2 . A1 . | A1 . E2 . | D2 . A1 . | D2 . G1 . | D2 . A1 . | D2 . A1 .';
+  line(A, 'v1', 0, 0, 2, tuneA); line(B, 'v1', 0, 0, 2, tuneB);
+  line(A, 'fl', 0, 0, 2, tuneA, { transpose: 12 }); line(B, 'fl', 0, 0, 2, tuneB, { transpose: 12 });
+  line(B, 'cl', 0, 0, 2, tuneB);
+  line(A, 'cb', 0, 0, 4, bassA, { art: 'piz' }); line(B, 'cb', 0, 0, 4, bassB, { art: 'piz' });
+  line(A, 'vc', 0, 0, 4, bassA, { art: 'piz', transpose: 12 }); line(B, 'vc', 0, 0, 4, bassB, { art: 'piz', transpose: 12 });
+  line(A, 'va', 0, 0, 4, '. F#4 . F#4 | . C#4 . C#4 | . F#4 . F#4 | . C#4 . C#4 | . F#4 . F#4 | . C#4 . C#4 | . F#4 . B3 | . C#4 . F#4', { art: 'stc' });
+  line(A, 'va', 1, 0, 4, '. A4 . A4 | . E4 . E4 | . A4 . A4 | . E4 . E4 | . A4 . A4 | . E4 . E4 | . A4 . D4 | . E4 . A4', { art: 'stc' });
+  line(B, 'va', 0, 0, 4, '. F#4 . F#4 | . C#4 . C#4 | . F#4 . F#4 | . C#4 . C#4 | . F#4 . C#4 | . F#4 . B3 | . F#4 . C#4 | . F#4 . F#4', { art: 'stc' });
+  line(B, 'va', 1, 0, 4, '. A4 . A4 | . E4 . E4 | . A4 . A4 | . E4 . E4 | . A4 . E4 | . A4 . D4 | . A4 . E4 | . A4 . A4', { art: 'stc' });
+  line(A, 'v2', 0, 0, 16, 'D4 A3 D4 A3 D4 A3 D4:8 G3:8 A3:8 D4:8'); line(A, 'v2', 1, 0, 16, 'A4 E4 A4 E4 A4 E4 A4:8 D4:8 E4:8 A4:8');
+  line(B, 'v2', 0, 0, 16, 'D4 A3 D4 A3 D4:8 A3:8 D4:8 G3:8 D4:8 A3:8 D4'); line(B, 'v2', 1, 0, 16, 'A4 E4 A4 E4 A4:8 E4:8 A4:8 D4:8 A4:8 E4:8 A4');
+  for (const p of [A, B]) {
+    lane(patTrack(p, 'v1').dyn, '0:96_', tpr); lane(patTrack(p, 'fl').dyn, '0:84_', tpr); lane(patTrack(p, 'cl').dyn, '0:80_', tpr);
+    lane(patTrack(p, 'va').dyn, '0:72_', tpr); lane(patTrack(p, 'v2').dyn, '0:46_', tpr);
+    lane(patTrack(p, 'vc').dyn, '0:88_', tpr); lane(patTrack(p, 'cb').dyn, '0:88_', tpr);
+  }
+  return fitColumns(song);
+}
+function exWaltz() {
+  const song = newSong(); song.title = 'Waltz (folk, 3/4)'; song.bpm = 126;
+  song.notes = 'A 3/4 folk waltz in G on an eighth-note grid: 6 rows to a bar, 16 bars. Oboe and clarinet share the tune, flute an octave up for the second half, bass on one, viola on two and three, horns holding root and fifth. Ritardando at the end.';
+  const A = newPattern('A', 96, 480, [3, 4]); song.patterns = [A];
+  const tpr = 480;
+  const half1 = 'G4 B4 D5 | G5:4 D5 | E5 G5 E5 | D5:6 | F#4 A4 C5 | E5:4 C5 | B4 G4 B4 | D5:6';
+  const half2 = 'B4 D5 G5 | B5:4 A5 | G5 E5 C5 | G5:4 E5 | A4 C5 E5 | F#5:4 D5 | G5 B4 D5 | G4:6';
+  const tune = half1 + ' | ' + half2;
+  line(A, 'ob', 0, 0, 2, tune); line(A, 'cl', 0, 0, 2, tune);
+  line(A, 'v1', 0, 0, 2, tune, { art: 'leg' });
+  line(A, 'fl', 0, 48, 2, half2, { transpose: 12 });
+  const bass = 'G1 . . | G1 . . | C2 . . | G1 . . | D2 . . | D2 . . | G1 . . | G1 . . | G1 . . | G1 . . | C2 . . | E2 . . | A1 . . | D2 . . | G1 . . | G1 . .';
+  line(A, 'cb', 0, 0, 2, bass, { art: 'piz' }); line(A, 'vc', 0, 0, 2, bass, { art: 'piz', transpose: 12 });
+  line(A, 'va', 0, 0, 2, '. B3 B3 | . B3 B3 | . C4 C4 | . B3 B3 | . F#4 F#4 | . F#4 F#4 | . B3 B3 | . B3 B3 | . B3 B3 | . B3 B3 | . C4 C4 | . B3 B3 | . C4 C4 | . F#4 F#4 | . B3 B3 | . B3 B3', { art: 'stc' });
+  line(A, 'va', 1, 0, 2, '. D4 D4 | . D4 D4 | . E4 E4 | . D4 D4 | . A4 A4 | . A4 A4 | . D4 D4 | . D4 D4 | . D4 D4 | . D4 D4 | . E4 E4 | . E4 E4 | . E4 E4 | . A4 A4 | . D4 D4 | . D4 D4', { art: 'stc' });
+  line(A, 'hn', 0, 0, 6, 'G3 G3 C4 G3 D4 D4 G3 G3 G3 G3 C4 E4 A3 D4 G3 G3');
+  line(A, 'hn', 1, 0, 6, 'D4 D4 G4 D4 A4 A4 D4 D4 D4 D4 G4 B4 E4 A4 D4 D4');
+  for (const t of ['ob', 'cl']) lane(patTrack(A, t).dyn, '0:84_', tpr);
+  lane(patTrack(A, 'v1').dyn, '0:60_', tpr); lane(patTrack(A, 'fl').dyn, '48:72_', tpr);
+  for (const t of ['va', 'vc', 'cb']) lane(patTrack(A, t).dyn, '0:76_', tpr);
+  lane(patTrack(A, 'hn').dyn, '0:40_', tpr);
+  lane(A.tempo, '0:126_ 84:126 95:92', tpr);
+  return fitColumns(song);
+}
+function exLament() {
+  const song = newSong(); song.title = 'Lament (folk, A Dorian)'; song.bpm = 60;
+  song.notes = 'A slow air over a drone: bass, cellos, bassoon and clarinet hold A and E while the oboe sings in A Dorian. Violins join the tune in unison for the second half, horns move under it, and a timpani roll closes.';
+  const A = song.patterns[0]; A.ticksPerRow = 480; const tpr = 480;
+  const half1 = 'A4:4 C5:2 D5:2 | E5:4 D5:2 C5:2 | D5:2 C5:2 A4:2 G4:2 | A4:8';
+  const half2 = 'E5:4 G5:2 E5:2 | D5:4 C5:2 D5:2 | E5:2 D5:2 C5:2 B4:2 | A4:8';
+  line(A, 'ob', 0, 0, 2, half1 + ' | ' + half2, { art: 'leg' });
+  line(A, 'v1', 0, 32, 2, half2, { art: 'leg' });
+  line(A, 'cb', 0, 0, 64, 'A1'); line(A, 'vc', 0, 0, 64, 'A2'); line(A, 'vc', 1, 0, 64, 'E3');
+  line(A, 'bn', 0, 0, 64, 'A2'); line(A, 'cl', 0, 0, 64, 'A3'); line(A, 'va', 0, 0, 64, 'E4');
+  line(A, 'hn', 0, 32, 8, 'E4 D4 C4 A3'); line(A, 'hn', 1, 32, 8, 'B3 A3 A3 E4');
+  line(A, 'ti', 0, 56, 8, 'A2@rll');
+  for (const t of ['cb', 'vc', 'bn', 'cl', 'va']) lane(patTrack(A, t).dyn, '0:40_', tpr);
+  lane(patTrack(A, 'ob').dyn, '0:60 24:80 32:96 48:70 63:40', tpr);
+  lane(patTrack(A, 'v1').dyn, '32:56 63:48', tpr);
+  lane(patTrack(A, 'hn').dyn, '32:50 63:64', tpr);
+  lane(patTrack(A, 'ti').dyn, '56:20 63:64', tpr);
+  lane(A.tempo, '0:60_ 56:60 63:44', tpr);
+  return fitColumns(song);
+}
+const EXAMPLES = [
+  { title: 'Sketch in C', build: seedSong },
+  { title: 'Brass chorale', build: exBrassChorale },
+  { title: 'Scherzo (pizzicato)', build: exScherzo },
+  { title: 'Adagio for strings', build: exAdagio },
+  { title: 'Fanfare', build: exFanfare },
+  { title: 'Pulse', build: exPulse },
+  { title: 'Neon corridor (Tron-style)', build: exNeonCorridor },
+  { title: 'Afterglow (Tron-style)', build: exAfterglow },
+  { title: 'Reel (folk)', build: exReel },
+  { title: 'Waltz (folk, 3/4)', build: exWaltz },
+  { title: 'Lament (folk, A Dorian)', build: exLament },
+];
+
+if (typeof module !== 'undefined') module.exports = { PPQ, INST, FAMILIES, newSong, newPattern, patTrack, laneSet, laneValueAt, renderSong, TimeMap, midiFileBytes, seedSong, noteName, line, lane, rep, EXAMPLES, patMeter };
+</script>
+
+<script id="ui">
+'use strict';
+// ============================================================================
+// Tutti UI: canvas grid, keyboard entry, transport, file I/O.
+// ============================================================================
+
+const ROW_H = 18, PAD = 10;
+const FONT = '13px ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace';
+const COLORS = { bg: '#151A2E', beat: '#191F3A', bar: '#3A4370', text: '#D7DBEA', dim: '#4C5478', num: '#6C7597',
+                 accent: '#F2E8C6', cursorText: '#151A2E', play: 'rgba(242,232,198,0.10)', header: '#1B2140', line: '#2A3258' };
+
+// Piano-style key map: offsets in semitones from C of the chosen octave.
+const KEYMAP = {
+  z: 0, s: 1, x: 2, d: 3, c: 4, v: 5, g: 6, b: 7, h: 8, n: 9, j: 10, m: 11, ',': 12, l: 13, '.': 14, ';': 15, '/': 16,
+  q: 12, '2': 13, w: 14, '3': 15, e: 16, r: 17, '5': 18, t: 19, '6': 20, y: 21, '7': 22, u: 23, i: 24, '9': 25, o: 26, '0': 27, p: 28,
+};
+
+const state = {
+  songs: EXAMPLES.map(e => e.build()), songIndex: 0, song: null, pat: 0,
+  cursor: { row: 0, track: 8, cell: 0 },        // track -1 = tempo column
+  octave: 4, step: 4, follow: true, preview: true,
+  scrollX: 0, typing: null, undo: [], redo: [], dirty: true, message: '',
+};
+state.song = state.songs[0];
+
+const synth = new SynthSink();
+const midi = new MidiSink();
+const sched = new Scheduler(() => {
+  const s = [];
+  if (state.preview) s.push(synth);
+  if (midi.out) s.push(midi);
+  return s;
+});
+sched.onStop = () => { state.dirty = true; };
+
+const $ = id => document.getElementById(id);
+const canvas = $('grid'), ctx = canvas.getContext('2d');
+let charW = 8;
+
+const curPat = () => state.song.patterns[state.pat];
+const curTrack = () => state.cursor.track >= 0 ? state.song.tracks[state.cursor.track] : null;
+const rowsPerBeat = () => { const [, unit] = patMeter(curPat()); return Math.max(1, Math.round(PPQ * 4 / unit / curPat().ticksPerRow)); };
+const rowsPerBar = () => patMeter(curPat())[0] * rowsPerBeat();
+// In compound meters (6/8, 9/8, 12/8) the felt beat is every three written beats.
+const rowsPerStrongBeat = () => { const [beats, unit] = patMeter(curPat()); return rowsPerBeat() * (unit === 8 && beats % 3 === 0 ? 3 : 1); };
+
+// ---- Layout -----------------------------------------------------------------------
+function computeLayout() {
+  const cw = charW;
+  const gutter = { rowX: PAD, tempoX: PAD + cw * 4.5, w: PAD + cw * 10 };
+  let x = gutter.w;
+  const tracks = state.song.tracks.map(tr => {
+    const cells = []; let cx = x;
+    for (let c = 0; c < tr.columns; c++) {
+      cells.push({ kind: 'note', col: c, x: cx, w: 3 * cw }); cx += 3.5 * cw;
+      cells.push({ kind: 'vel', col: c, x: cx, w: 2 * cw }); cx += 3 * cw;
+    }
+    cells.push({ kind: 'art', col: 0, x: cx, w: 3 * cw }); cx += 4 * cw;
+    cells.push({ kind: 'dyn', col: 0, x: cx, w: 3 * cw }); cx += 4.5 * cw;
+    const lay = { x, w: cx - x, cells, track: tr };
+    x = cx;
+    return lay;
+  });
+  return { gutter, tracks, totalW: x };
+}
+function currentCell(L) {
+  if (state.cursor.track < 0) return { kind: 'tempo', col: 0 };
+  const lay = (L || computeLayout()).tracks[state.cursor.track];
+  return lay.cells[clamp(state.cursor.cell, 0, lay.cells.length - 1)];
+}
+
+// ---- Pattern indexing for drawing and editing ---------------------------------------
+function indexTrack(pat, trackId) {
+  const pt = pat.tracks[trackId], tpr = pat.ticksPerRow;
+  const starts = new Map(), spans = new Map();
+  if (pt) for (const ev of pt.events) {
+    const r0 = Math.floor(ev.tick / tpr), r1 = Math.min(pat.rows - 1, Math.ceil((ev.tick + ev.len) / tpr) - 1);
+    if (r0 >= pat.rows) continue;
+    if (!starts.has(r0)) starts.set(r0, {});
+    starts.get(r0)[ev.col] = ev;
+    for (let r = r0 + 1; r <= r1; r++) { if (!spans.has(r)) spans.set(r, {}); spans.get(r)[ev.col] = ev; }
+  }
+  return { starts, spans, dyn: pt ? pt.dyn : [] };
+}
+function noteAt(pat, trackId, col, row) {
+  const pt = pat.tracks[trackId]; if (!pt) return null;
+  return pt.events.find(e => e.col === col && Math.floor(e.tick / pat.ticksPerRow) === row) || null;
+}
+function noteCovering(pat, trackId, col, row) {
+  const pt = pat.tracks[trackId]; if (!pt) return null;
+  const tpr = pat.ticksPerRow;
+  return pt.events.filter(e => e.col === col && Math.floor(e.tick / tpr) <= row && Math.ceil((e.tick + e.len) / tpr) - 1 >= row)
+    .sort((a, b) => b.tick - a.tick)[0] || null;
+}
+function notesStartingAt(pat, trackId, row) {
+  const pt = pat.tracks[trackId]; if (!pt) return [];
+  return pt.events.filter(e => Math.floor(e.tick / pat.ticksPerRow) === row);
+}
+
+// ---- Undo ---------------------------------------------------------------------------
+function withUndo(fn) {
+  state.undo.push({ pat: state.pat, json: JSON.stringify(curPat()) });
+  if (state.undo.length > 200) state.undo.shift();
+  state.redo.length = 0;
+  fn();
+  state.dirty = true;
+}
+function undo() { swapHistory(state.undo, state.redo); }
+function redo() { swapHistory(state.redo, state.undo); }
+function swapHistory(from, to) {
+  const h = from.pop(); if (!h) return;
+  to.push({ pat: h.pat, json: JSON.stringify(state.song.patterns[h.pat]) });
+  state.song.patterns[h.pat] = JSON.parse(h.json);
+  state.pat = h.pat; syncPatternUI(); state.typing = null; state.dirty = true;
+}
+
+// ---- Editing --------------------------------------------------------------------------
+// A note column holds non-overlapping notes: a new note cuts off any note still sounding in that column,
+// and a note can't be lengthened past the next note in its column. Overlaps across columns are fine (divisi).
+function setNote(pat, trackId, col, tick, pitch) {
+  const pt = patTrack(pat, trackId);
+  const existing = pt.events.find(e => e.col === col && e.tick === tick);
+  if (existing) { existing.pitch = pitch; return; }
+  for (const e of pt.events) if (e.col === col && e.tick < tick && e.tick + e.len > tick) e.len = tick - e.tick;
+  const next = pt.events.filter(e => e.col === col && e.tick > tick).sort((a, b) => a.tick - b.tick)[0];
+  const len = Math.min(Math.max(1, state.step) * pat.ticksPerRow, next ? next.tick - tick : Infinity);
+  pt.events.push({ tick, len, pitch, vel: 100, col, art: null });
+}
+function audition(track, pitch, art) {
+  const ins = INST[track.instrument];
+  if (state.preview) synth.audition(ins.family, pitch, art || ins.articulations[0]);
+  if (midi.out) midi.audition(track.channel - 1, pitch);
+}
+function typingFor(cell, digits) {
+  const c = state.cursor, key = c.row + ':' + c.track + ':' + c.cell;
+  if (state.typing && state.typing.key === key && state.typing.count < digits) return state.typing;
+  state.typing = { key, count: 0, value: 0 };
+  return state.typing;
+}
+function typeHex(cell, k, get, set) {
+  if (!/^[0-9a-f]$/i.test(k)) return false;
+  const ty = typingFor(cell, 2);
+  ty.value = ((ty.count ? ty.value : 0) << 4 | parseInt(k, 16)) & 0xFF; ty.count++;
+  withUndo(() => set(ty.value));
+  return true;
+}
+function typeIntoCell(k) {
+  const pat = curPat(), tr = curTrack(), cell = currentCell(), row = state.cursor.row, tick = row * pat.ticksPerRow;
+  const lower = k.toLowerCase();
+  switch (cell.kind) {
+    case 'note': {
+      const off = KEYMAP[lower]; if (off == null) return false;
+      const pitch = clamp((state.octave + 1) * 12 + off, 0, 127);
+      withUndo(() => setNote(pat, tr.id, cell.col, tick, pitch));
+      const ins = INST[tr.instrument];
+      if (pitch < ins.range[0] || pitch > ins.range[1]) state.message = noteName(pitch) + ' is outside the ' + ins.name + ' range ' + noteName(ins.range[0]) + '–' + noteName(ins.range[1]);
+      else state.message = '';
+      audition(tr, pitch, (noteAt(pat, tr.id, cell.col, row) || {}).art);
+      moveRow(state.step);
+      return true;
+    }
+    case 'vel': {
+      const ev = noteAt(pat, tr.id, cell.col, row);
+      if (!ev) { state.message = 'No note starts on this row'; return true; }
+      return typeHex(cell, k, () => ev.vel, v => { ev.vel = clamp(v, 1, 127); });
+    }
+    case 'art': {
+      if (!/^[1-9]$/.test(k)) return false;
+      const ins = INST[tr.instrument], art = ins.articulations[parseInt(k, 10) - 1];
+      if (!art) { state.message = ins.name + ' has ' + ins.articulations.length + ' articulations'; return true; }
+      const evs = notesStartingAt(pat, tr.id, row);
+      if (!evs.length) { state.message = 'No note starts on this row'; return true; }
+      withUndo(() => evs.forEach(e => { e.art = art; }));
+      audition(tr, evs[0].pitch, art);
+      return true;
+    }
+    case 'dyn': {
+      const pt = patTrack(pat, tr.id);
+      if (lower === 'l' || lower === 's') {
+        const p = pt.dyn.find(x => x.tick === tick);
+        if (p) withUndo(() => { p.interp = lower === 'l' ? 'lin' : 'step'; });
+        return true;
+      }
+      return typeHex(cell, k, () => 0, v => laneSet(pt.dyn, tick, clamp(v, 0, 127)));
+    }
+    case 'tempo': {
+      if (lower === 'l' || lower === 's') {
+        const p = pat.tempo.find(x => x.tick === tick);
+        if (p) withUndo(() => { p.interp = lower === 'l' ? 'lin' : 'step'; });
+        return true;
+      }
+      if (!/^[0-9]$/.test(k)) return false;
+      const ty = typingFor(cell, 3);
+      ty.value = ((ty.count ? ty.value : 0) * 10 + parseInt(k, 10)) % 1000; ty.count++;
+      const v = ty.value;
+      withUndo(() => laneSet(pat.tempo, tick, clamp(v, 20, 300)));
+      return true;
+    }
+  }
+  return false;
+}
+function clearCell() {
+  const pat = curPat(), tr = curTrack(), cell = currentCell(), row = state.cursor.row, tick = row * pat.ticksPerRow;
+  withUndo(() => {
+    if (cell.kind === 'tempo') laneRemove(pat.tempo, tick);
+    else if (cell.kind === 'dyn') laneRemove(patTrack(pat, tr.id).dyn, tick);
+    else if (cell.kind === 'art') notesStartingAt(pat, tr.id, row).forEach(e => { e.art = null; });
+    else { const pt = pat.tracks[tr.id]; if (pt) pt.events = pt.events.filter(e => !(e.col === cell.col && Math.floor(e.tick / pat.ticksPerRow) === row)); }
+  });
+  state.typing = null;
+}
+function changeLength(d) {
+  const pat = curPat(), tr = curTrack(); if (!tr) return;
+  const ev = noteCovering(pat, tr.id, currentCell().col, state.cursor.row);
+  if (!ev) return;
+  const next = pat.tracks[tr.id].events.filter(e => e.col === ev.col && e.tick > ev.tick).sort((a, b) => a.tick - b.tick)[0];
+  const maxLen = next ? next.tick - ev.tick : Infinity;
+  withUndo(() => { ev.len = clamp(ev.len + d * pat.ticksPerRow, pat.ticksPerRow, maxLen); });
+}
+function changeColumns(d) {
+  const tr = curTrack(); if (!tr) return;
+  tr.columns = clamp(tr.columns + d, 1, 4);
+  state.cursor.cell = clamp(state.cursor.cell, 0, tr.columns * 2 + 1);
+  state.dirty = true;
+}
+
+// ---- Cursor movement -------------------------------------------------------------------
+function setRow(r) { const n = curPat().rows; state.cursor.row = ((r % n) + n) % n; state.typing = null; state.message = ''; state.dirty = true; }
+function moveRow(d) { setRow(state.cursor.row + d); }
+function moveCell(d) {
+  const c = state.cursor, n = state.song.tracks.length;
+  const cellsOf = i => i < 0 ? 1 : state.song.tracks[i].columns * 2 + 2;
+  let cell = c.cell + d, track = c.track;
+  while (cell < 0) { track = track <= -1 ? n - 1 : track - 1; cell += cellsOf(track); }
+  while (cell >= cellsOf(track)) { cell -= cellsOf(track); track = track >= n - 1 ? -1 : track + 1; }
+  c.track = track; c.cell = cell; state.typing = null; state.message = ''; state.dirty = true;
+}
+function moveTrack(d) {
+  const n = state.song.tracks.length; let t = state.cursor.track + d;
+  if (t < -1) t = n - 1; if (t >= n) t = -1;
+  state.cursor.track = t; state.cursor.cell = 0; state.typing = null; state.message = ''; state.dirty = true;
+}
+function setOctave(o) { state.octave = clamp(o, 0, 8); $('octave').value = state.octave; state.dirty = true; }
+function setStep(s) { state.step = clamp(s, 0, 64); $('step').value = state.step; state.dirty = true; }
+
+// ---- Transport ----------------------------------------------------------------------------
+function playPattern(fromCursor) {
+  if (state.preview) synth.ensure();
+  const r = renderSong(state.song, { patterns: [state.pat] });
+  sched.play(state.song, r, { loop: true, startTick: fromCursor ? state.cursor.row * curPat().ticksPerRow : 0 });
+  state.dirty = true;
+}
+function playSong() {
+  if (state.preview) synth.ensure();
+  const r = renderSong(state.song);
+  const oi = state.song.order.indexOf(state.pat);
+  sched.play(state.song, r, { loop: false, startTick: oi >= 0 && r.starts[oi] ? r.starts[oi].tick : 0 });
+  state.dirty = true;
+}
+function stopAll() { sched.stop(); state.dirty = true; }
+
+// ---- Keyboard -----------------------------------------------------------------------------
+// macOS constraints this scheme is built around:
+//   * Control + arrows are Mission Control and Spaces. The browser never sees them, so
+//     Control is not used as a modifier at all.
+//   * Option + almost any printable key produces a dead key or a special character, so
+//     Option is left alone entirely.
+//   * Command is used only where it already means the same thing natively: undo/redo, and
+//     Cmd + Up/Down for start and end of the document. Unrecognised Command combinations
+//     fall through so Cmd+R, Cmd+L, Cmd+W and friends keep working.
+//   * Laptop keyboards have no PageUp/PageDown/Home/End without Fn, so every one of those
+//     has a Shift+arrow or Cmd+arrow equivalent.
+// Punctuation is matched on e.code (physical position) as well as e.key, so the bindings
+// land on the same physical keys on a non-US layout.
+window.addEventListener('keydown', e => {
+  const tag = e.target.tagName;
+  if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') { if (e.key === 'Escape' || e.key === 'Enter') e.target.blur(); return; }
+  if (handleKey(e)) e.preventDefault();
+});
+function handleKey(e) {
+  if (e.altKey) return false;                                  // Option/Alt belongs to the OS
+  const k = e.key, code = e.code, sh = e.shiftKey;
+  if (e.ctrlKey || e.metaKey) {
+    const lower = k.toLowerCase();
+    if (lower === 'z' && !sh) { undo(); return true; }
+    if ((lower === 'z' && sh) || lower === 'y') { redo(); return true; }
+    if (k === 'ArrowUp') { setRow(0); return true; }                    // native: top of document
+    if (k === 'ArrowDown') { setRow(curPat().rows - 1); return true; }  // native: end of document
+    return false;                                              // let the browser have the rest
+  }
+  // Octave and step: the two keys to the right of 0. Shift switches from octave to step.
+  if (code === 'Minus' || k === '-' || k === '_') {
+    if (sh) { setStep(state.step - 1); state.message = 'Step ' + state.step; }
+    else { setOctave(state.octave - 1); state.message = 'Octave ' + state.octave; }
+    return true;
+  }
+  if (code === 'Equal' || k === '=' || k === '+') {
+    if (sh) { setStep(state.step + 1); state.message = 'Step ' + state.step; }
+    else { setOctave(state.octave + 1); state.message = 'Octave ' + state.octave; }
+    return true;
+  }
+  // Brackets: note length. Shift switches to note columns (divisi) on the track.
+  if (code === 'BracketLeft' || k === '[' || k === '{') { sh ? changeColumns(-1) : changeLength(-1); return true; }
+  if (code === 'BracketRight' || k === ']' || k === '}') { sh ? changeColumns(1) : changeLength(1); return true; }
+  switch (k) {
+    case 'ArrowUp': moveRow(sh ? -rowsPerBar() : -1); return true;
+    case 'ArrowDown': moveRow(sh ? rowsPerBar() : 1); return true;
+    case 'ArrowLeft': sh ? moveTrack(-1) : moveCell(-1); return true;
+    case 'ArrowRight': sh ? moveTrack(1) : moveCell(1); return true;
+    case 'PageUp': moveRow(-rowsPerBar()); return true;
+    case 'PageDown': moveRow(rowsPerBar()); return true;
+    case 'Home': setRow(0); return true;
+    case 'End': setRow(curPat().rows - 1); return true;
+    case 'Tab': moveTrack(sh ? -1 : 1); return true;
+    case ' ': if (sched.playing) stopAll(); else playPattern(sh); return true;
+    case 'Enter': playSong(); return true;
+    case 'Escape': stopAll(); return true;
+    case 'Delete': case 'Backspace': clearCell(); return true;
+  }
+  if (k.length === 1) return typeIntoCell(k);
+  return false;
+}
+
+// ---- Mouse --------------------------------------------------------------------------------
+let lastDraw = null;
+canvas.addEventListener('mousedown', e => {
+  canvas.focus();
+  if (!lastDraw) return;
+  const { L, top, headerH } = lastDraw;
+  const x = e.offsetX, y = e.offsetY;
+  if (y < headerH) {
+    const gx = x + state.scrollX;
+    const ti = L.tracks.findIndex(t => gx >= t.x && gx < t.x + t.w);
+    if (ti >= 0 && x >= L.gutter.w) { state.song.tracks[ti].mute = !state.song.tracks[ti].mute; state.dirty = true; }
+    return;
+  }
+  const row = top + Math.floor((y - headerH) / ROW_H);
+  if (row < 0 || row >= curPat().rows) return;
+  state.cursor.row = row;
+  if (x < L.gutter.w) { state.cursor.track = -1; state.cursor.cell = 0; }
+  else {
+    const gx = x + state.scrollX;
+    const ti = L.tracks.findIndex(t => gx >= t.x && gx < t.x + t.w);
+    if (ti < 0) return;
+    const lay = L.tracks[ti];
+    let ci = lay.cells.findIndex((c, i) => gx < c.x + c.w + (i + 1 < lay.cells.length ? (lay.cells[i + 1].x - c.x - c.w) / 2 : 0));
+    if (ci < 0) ci = lay.cells.length - 1;
+    state.cursor.track = ti; state.cursor.cell = ci;
+  }
+  state.typing = null; state.dirty = true;
+});
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  if (e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) { state.scrollX = Math.max(0, state.scrollX + (e.deltaX || e.deltaY)); state.dirty = true; return; }
+  moveRow(Math.sign(e.deltaY) * Math.max(1, Math.round(Math.abs(e.deltaY) / ROW_H)));
+}, { passive: false });
+
+// ---- Drawing ---------------------------------------------------------------------------------
+function resize() {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.floor(canvas.clientWidth * dpr); canvas.height = Math.floor(canvas.clientHeight * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.font = FONT; charW = ctx.measureText('0').width;
+  state.dirty = true;
+}
+window.addEventListener('resize', resize);
+
+function draw() {
+  const dpr = window.devicePixelRatio || 1;
+  if (canvas.width !== Math.floor(canvas.clientWidth * dpr) || canvas.height !== Math.floor(canvas.clientHeight * dpr)) resize();
+  const W = canvas.clientWidth, H = canvas.clientHeight;
+  ctx.font = FONT; ctx.textBaseline = 'middle';
+  const song = state.song;
+  const playTick = sched.positionTick();
+  let playRow = null, playPat = null;
+  if (playTick != null && sched.rendered) {
+    for (const s of sched.rendered.starts) if (playTick >= s.tick && playTick < s.tick + s.rows * s.ticksPerRow) { playPat = s.pattern; playRow = Math.floor((playTick - s.tick) / s.ticksPerRow); }
+    if (state.follow && playPat != null && playPat !== state.pat) { state.pat = playPat; syncPatternUI(); }
+  }
+  const pat = curPat();
+  const L = computeLayout();
+  const headerH = ROW_H * 2 + 8;
+  const visible = Math.max(1, Math.floor((H - headerH) / ROW_H));
+  const centerRow = (playRow != null && state.follow && playPat === state.pat) ? playRow : state.cursor.row;
+  const top = centerRow - Math.floor(visible / 2);
+
+  // Keep the cursor's track on screen.
+  if (state.cursor.track >= 0) {
+    const lay = L.tracks[state.cursor.track];
+    if (lay.x - state.scrollX < L.gutter.w) state.scrollX = lay.x - L.gutter.w;
+    if (lay.x + lay.w - state.scrollX > W) state.scrollX = lay.x + lay.w - W;
+  }
+  state.scrollX = clamp(state.scrollX, 0, Math.max(0, L.totalW - W));
+
+  ctx.fillStyle = COLORS.bg; ctx.fillRect(0, 0, W, H);
+  const rpb = rowsPerBar(), rpBeat = rowsPerStrongBeat();
+  const rowY = r => headerH + (r - top) * ROW_H;
+
+  // Row backgrounds
+  for (let r = Math.max(0, top); r < Math.min(pat.rows, top + visible + 1); r++) {
+    const y = rowY(r);
+    if (r % rpBeat === 0) { ctx.fillStyle = COLORS.beat; ctx.fillRect(0, y, W, ROW_H); }
+    if (r === playRow && playPat === state.pat) { ctx.fillStyle = COLORS.play; ctx.fillRect(0, y, W, ROW_H); }
+  }
+  // Grid content, scrolled horizontally
+  ctx.save();
+  ctx.beginPath(); ctx.rect(L.gutter.w, headerH, W - L.gutter.w, H - headerH); ctx.clip();
+  ctx.translate(-state.scrollX, 0);
+  const cur = state.cursor;
+  const cursorCell = cur.track >= 0 ? L.tracks[cur.track].cells[clamp(cur.cell, 0, L.tracks[cur.track].cells.length - 1)] : null;
+  for (let r = Math.max(0, top); r < Math.min(pat.rows, top + visible + 1); r++) {
+    const y = rowY(r);
+    if (r % rpb === 0) { ctx.fillStyle = COLORS.bar; ctx.fillRect(L.gutter.w + state.scrollX, y, L.totalW, 1); }
+  }
+  for (let ti = 0; ti < L.tracks.length; ti++) {
+    const lay = L.tracks[ti];
+    if (lay.x + lay.w < state.scrollX || lay.x > state.scrollX + W) continue;
+    const tr = lay.track, ins = INST[tr.instrument], fam = FAMILIES[ins.family];
+    const idx = indexTrack(pat, tr.id);
+    ctx.fillStyle = COLORS.line; ctx.fillRect(lay.x - charW * 0.75, headerH, 1, H - headerH);
+    for (let r = Math.max(0, top); r < Math.min(pat.rows, top + visible + 1); r++) {
+      const y = rowY(r), ym = y + ROW_H / 2;
+      const starts = idx.starts.get(r) || {}, spans = idx.spans.get(r) || {};
+      for (const cell of lay.cells) {
+        const isCursor = cur.track === ti && cell === cursorCell && r === cur.row;
+        if (isCursor) { ctx.fillStyle = COLORS.accent; ctx.fillRect(cell.x - 2, y + 1, cell.w + 4, ROW_H - 2); }
+        const textColor = isCursor ? COLORS.cursorText : COLORS.text;
+        if (cell.kind === 'note') {
+          const ev = starts[cell.col];
+          if (ev) { ctx.fillStyle = isCursor ? COLORS.cursorText : (tr.mute ? COLORS.num : fam.color); ctx.fillText(noteName(ev.pitch), cell.x, ym); }
+          else if (spans[cell.col]) { ctx.fillStyle = isCursor ? COLORS.cursorText : fam.color; ctx.globalAlpha = isCursor ? 1 : 0.45; ctx.fillRect(cell.x + charW * 1.35, y, 2, ROW_H); ctx.globalAlpha = 1; }
+          else { ctx.fillStyle = isCursor ? COLORS.cursorText : COLORS.dim; ctx.fillText('···', cell.x, ym); }
+        } else if (cell.kind === 'vel') {
+          const ev = starts[cell.col];
+          ctx.fillStyle = ev ? textColor : (isCursor ? COLORS.cursorText : COLORS.dim);
+          ctx.fillText(ev ? hex2(ev.vel) : '··', cell.x, ym);
+        } else if (cell.kind === 'art') {
+          const evs = Object.values(starts), a = evs.find(e => e.art);
+          ctx.fillStyle = a ? textColor : (isCursor ? COLORS.cursorText : COLORS.dim);
+          ctx.fillText(a ? a.art : (evs.length ? ins.articulations[0] : '·'), cell.x, ym);
+          if (!a && evs.length && !isCursor) { ctx.fillStyle = COLORS.num; ctx.fillText(ins.articulations[0], cell.x, ym); }
+        } else if (cell.kind === 'dyn') {
+          const v = laneValueAt(idx.dyn, r * pat.ticksPerRow, null);
+          if (v != null && !isCursor) { ctx.fillStyle = fam.color; ctx.globalAlpha = 0.16; ctx.fillRect(cell.x, y + 2, cell.w * v / 127, ROW_H - 4); ctx.globalAlpha = 1; }
+          const p = idx.dyn.find(x => x.tick === r * pat.ticksPerRow);
+          ctx.fillStyle = p ? textColor : (isCursor ? COLORS.cursorText : COLORS.dim);
+          ctx.fillText(p ? hex2(p.value) + (p.interp === 'lin' ? '~' : ' ') : '·', cell.x, ym);
+        }
+      }
+    }
+  }
+  ctx.restore();
+
+  // Gutter: row numbers and tempo lane (fixed)
+  ctx.fillStyle = COLORS.bg; ctx.fillRect(0, headerH, L.gutter.w - charW * 0.5, H - headerH);
+  for (let r = Math.max(0, top); r < Math.min(pat.rows, top + visible + 1); r++) {
+    const y = rowY(r), ym = y + ROW_H / 2;
+    if (r % rpBeat === 0) { ctx.fillStyle = COLORS.beat; ctx.fillRect(0, y, L.gutter.w - charW * 0.5, ROW_H); }
+    if (r === playRow && playPat === state.pat) { ctx.fillStyle = COLORS.play; ctx.fillRect(0, y, L.gutter.w - charW * 0.5, ROW_H); }
+    ctx.fillStyle = r % rpb === 0 ? COLORS.accent : COLORS.num;
+    ctx.fillText(String(r).padStart(3, '0'), L.gutter.rowX, ym);
+    const isCursor = cur.track === -1 && r === cur.row;
+    if (isCursor) { ctx.fillStyle = COLORS.accent; ctx.fillRect(L.gutter.tempoX - 2, y + 1, charW * 4 + 4, ROW_H - 2); }
+    const p = pat.tempo.find(x => x.tick === r * pat.ticksPerRow);
+    ctx.fillStyle = isCursor ? COLORS.cursorText : (p ? COLORS.text : COLORS.dim);
+    ctx.fillText(p ? String(p.value).padStart(3, ' ') + (p.interp === 'lin' ? '~' : ' ') : '  ·', L.gutter.tempoX, ym);
+  }
+  ctx.fillStyle = COLORS.line; ctx.fillRect(L.gutter.w - charW * 0.5, headerH, 1, H - headerH);
+
+  // Header
+  ctx.fillStyle = COLORS.header; ctx.fillRect(0, 0, W, headerH);
+  ctx.fillStyle = COLORS.line; ctx.fillRect(0, headerH - 1, W, 1);
+  ctx.save();
+  ctx.beginPath(); ctx.rect(L.gutter.w, 0, W - L.gutter.w, headerH); ctx.clip();
+  ctx.translate(-state.scrollX, 0);
+  const bandY = 8 + ROW_H / 2, nameY = ROW_H + 8 + ROW_H / 2;
+  const labelEnd = new Map();          // first track of each family group -> where its label ends
+  let i = 0;
+  while (i < L.tracks.length) {
+    const fam = INST[L.tracks[i].track.instrument].family;
+    let j = i; while (j + 1 < L.tracks.length && INST[L.tracks[j + 1].track.instrument].family === fam) j++;
+    const x0 = L.tracks[i].x, x1 = L.tracks[j].x + L.tracks[j].w - charW;
+    ctx.fillStyle = FAMILIES[fam].color; ctx.fillRect(x0, 4, x1 - x0, 2);
+    ctx.globalAlpha = 0.75; ctx.fillText(FAMILIES[fam].label, x0, bandY); ctx.globalAlpha = 1;
+    labelEnd.set(i, x0 + ctx.measureText(FAMILIES[fam].label).width + charW);
+    i = j + 1;
+  }
+  L.tracks.forEach((lay, ti) => {
+    const tr = lay.track, fam = FAMILIES[INST[tr.instrument].family];
+    ctx.fillStyle = tr.mute ? COLORS.num : fam.color;
+    ctx.fillText(tr.name, lay.x, nameY);
+    if (tr.mute) ctx.fillRect(lay.x, nameY, ctx.measureText(tr.name).width, 1);
+    const tag = 'ch' + tr.channel, tagX = lay.x + lay.w - charW * (tag.length + 1.5);
+    if (!labelEnd.has(ti) || labelEnd.get(ti) <= tagX) { ctx.fillStyle = COLORS.num; ctx.fillText(tag, tagX, bandY); }
+  });
+  ctx.restore();
+  ctx.fillStyle = COLORS.header; ctx.fillRect(0, 0, L.gutter.w - charW * 0.5, headerH);
+  ctx.fillStyle = COLORS.num;
+  ctx.fillText('row', L.gutter.rowX, ROW_H + 8 + ROW_H / 2);
+  ctx.fillText('bpm', L.gutter.tempoX, ROW_H + 8 + ROW_H / 2);
+
+  lastDraw = { L, top, headerH };
+  updateStatus(playRow);
+}
+
+let lastStatus = '';
+function updateStatus(playRow) {
+  const pat = curPat(), tr = curTrack(), cell = currentCell(), row = state.cursor.row;
+  const parts = [];
+  if (tr) {
+    const ins = INST[tr.instrument];
+    let s = '<b>' + tr.name + '</b> col ' + ((cell.col | 0) + 1) + ' row ' + row;
+    const ev = noteCovering(pat, tr.id, cell.col | 0, row);
+    if (ev) s += ' <b>' + noteName(ev.pitch) + '</b> vel ' + ev.vel + ' len ' + (ev.len / pat.ticksPerRow) + ' rows ' + (ev.art || ins.articulations[0]);
+    parts.push(s);
+    parts.push('articulations ' + ins.articulations.map((a, i) => '<b>' + (i + 1) + '</b>' + a).join(' '));
+    parts.push('range ' + noteName(ins.range[0]) + '–' + noteName(ins.range[1]));
+  } else parts.push('<b>tempo</b> row ' + row + ' (digits, L ramp, S hold)');
+  parts.push('octave <b>' + state.octave + '</b>');
+  parts.push('preview ' + (state.preview ? 'on' : 'off') + ' | MIDI ' + (midi.out ? '<b>' + midi.out.name + '</b>' : 'off'));
+  if (sched.playing) parts.push('<b>playing</b>' + (sched.loop ? ' (loop)' : '') + (playRow != null ? ' row ' + playRow : ''));
+  if (state.message) parts.push('<span class="warn">' + state.message + '</span>');
+  const html = parts.map(p => '<span>' + p + '</span>').join('');
+  if (html !== lastStatus) { $('status').innerHTML = html; lastStatus = html; }
+}
+
+function frame() {
+  if (state.dirty || sched.playing) { state.dirty = false; draw(); }
+  requestAnimationFrame(frame);
+}
+
+// ---- Toolbar wiring -------------------------------------------------------------------------
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function syncSongUI() {
+  const sel = $('song');
+  sel.innerHTML = state.songs.map((s, i) => '<option value="' + i + '">' + esc(s.title || 'Untitled') + '</option>').join('');
+  sel.value = state.songIndex;
+  $('title').value = state.song.title || '';
+  $('notes').textContent = state.song.notes || '';
+}
+function selectSong(i) {
+  stopAll();
+  state.songIndex = i; state.song = state.songs[i]; state.pat = 0;
+  state.undo.length = 0; state.redo.length = 0;
+  state.cursor = { row: 0, track: 0, cell: 0 }; state.scrollX = 0; state.typing = null; state.message = '';
+  syncSongUI(); syncPatternUI(); state.dirty = true;
+}
+function addSong(song) { state.songs.push(song); selectSong(state.songs.length - 1); }
+$('song').onchange = e => selectSong(parseInt(e.target.value, 10));
+$('newSong').onclick = () => addSong(Object.assign(newSong(), { title: 'Untitled ' + (state.songs.length + 1) }));
+$('title').onchange = e => { state.song.title = e.target.value.trim() || 'Untitled'; syncSongUI(); };
+function syncPatternUI() {
+  const sel = $('pattern');
+  sel.innerHTML = state.song.patterns.map((p, i) => '<option value="' + i + '">' + i + ' ' + p.name + '</option>').join('');
+  sel.value = state.pat;
+  $('rows').value = curPat().rows;
+  $('tpr').value = curPat().ticksPerRow;
+  $('meterNum').value = patMeter(curPat())[0];
+  $('meterDen').value = patMeter(curPat())[1];
+  $('order').value = state.song.order.join(' ');
+  $('bpm').value = state.song.bpm;
+  state.cursor.row = clamp(state.cursor.row, 0, curPat().rows - 1);
+}
+$('playPat').onclick = () => playPattern(false);
+$('playSong').onclick = () => playSong();
+$('stop').onclick = () => stopAll();
+$('bpm').onchange = e => { state.song.bpm = clamp(parseInt(e.target.value, 10) || 100, 20, 300); state.dirty = true; };
+$('pattern').onchange = e => { state.pat = parseInt(e.target.value, 10); syncPatternUI(); state.dirty = true; };
+$('addPattern').onclick = () => {
+  const p = state.song.patterns;
+  p.push(newPattern(String.fromCharCode(65 + (p.length % 26)), curPat().rows, curPat().ticksPerRow, patMeter(curPat())));
+  state.song.order.push(p.length - 1); state.pat = p.length - 1; syncPatternUI(); state.dirty = true;
+};
+$('rows').onchange = e => { const n = clamp(parseInt(e.target.value, 10) || 64, 1, 512); withUndo(() => { curPat().rows = n; }); syncPatternUI(); };
+$('tpr').onchange = e => { const n = parseInt(e.target.value, 10); withUndo(() => { curPat().ticksPerRow = n; }); };
+$('meterNum').onchange = e => { const n = clamp(parseInt(e.target.value, 10) || 4, 1, 16); withUndo(() => { curPat().meter = [n, patMeter(curPat())[1]]; }); syncPatternUI(); };
+$('meterDen').onchange = e => { const n = parseInt(e.target.value, 10); withUndo(() => { curPat().meter = [patMeter(curPat())[0], n]; }); };
+$('order').onchange = e => {
+  const o = e.target.value.split(/[\s,]+/).map(s => parseInt(s, 10)).filter(n => Number.isInteger(n) && state.song.patterns[n]);
+  state.song.order = o.length ? o : [0]; e.target.value = state.song.order.join(' ');
+};
+$('octave').onchange = e => setOctave(parseInt(e.target.value, 10) || 0);
+$('step').onchange = e => setStep(parseInt(e.target.value, 10) || 0);
+$('follow').onchange = e => { state.follow = e.target.checked; };
+$('preview').onchange = e => { state.preview = e.target.checked; synth.enabled = state.preview; if (!state.preview) synth.allOff(); state.dirty = true; };
+$('midiEnable').onclick = async () => {
+  try {
+    const outs = await midi.enable();
+    const sel = $('midiOut');
+    sel.innerHTML = '<option value="">MIDI: off</option>' + outs.map(o => '<option value="' + o.id + '">' + o.name + '</option>').join('');
+    sel.hidden = false; $('midiEnable').hidden = true;
+    if (outs.length === 1) { sel.value = outs[0].id; midi.select(outs[0].id); }
+    state.message = outs.length ? '' : 'No MIDI outputs found. Turn on the IAC Driver (macOS) or loopMIDI (Windows), then reload.';
+    midi.access.onstatechange = () => { $('midiEnable').onclick(); };
+  } catch (err) { state.message = 'MIDI: ' + err.message; }
+  state.dirty = true;
+};
+$('midiOut').onchange = e => { midi.allOff(); midi.select(e.target.value); state.dirty = true; };
+function download(name, blob) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+$('exportMidi').onclick = () => download((state.song.title || 'tutti').replace(/[^\w.-]+/g, '_') + '.mid', new Blob([midiFileBytes(state.song)], { type: 'audio/midi' }));
+$('save').onclick = () => download((state.song.title || 'tutti').replace(/[^\w.-]+/g, '_') + '.json', new Blob([JSON.stringify(state.song, null, 1)], { type: 'application/json' }));
+$('load').onclick = () => $('file').click();
+$('file').onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const s = JSON.parse(await f.text());
+    if (!s.patterns || !s.tracks) throw new Error('not a Tutti song');
+    if (!s.title) s.title = f.name.replace(/\.json$/i, '');
+    addSong(s);
+  } catch (err) { state.message = 'Load failed: ' + err.message; }
+  e.target.value = ''; state.dirty = true;
+};
+document.querySelectorAll('button').forEach(b => b.addEventListener('click', () => b.blur()));
+document.querySelectorAll('select, input').forEach(el => el.addEventListener('change', () => el.blur()));
+
+syncSongUI();
+syncPatternUI();
+resize();
+canvas.focus();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
