@@ -1598,17 +1598,30 @@ $('octave').onchange = e => setOctave(parseInt(e.target.value, 10) || 0);
 $('step').onchange = e => setStep(parseInt(e.target.value, 10) || 0);
 $('follow').onchange = e => { state.follow = e.target.checked; };
 $('preview').onchange = e => { state.preview = e.target.checked; synth.enabled = state.preview; if (!state.preview) synth.allOff(); state.dirty = true; };
+// Rebuild the output list from the current ports, keeping whatever is selected if it still exists.
+// Chrome fires statechange whenever any port opens or closes (including our own on first send),
+// so this must not reset the selection.
+function refreshMidiOutputs() {
+  const outs = midi.outputs();
+  const sel = $('midiOut');
+  const want = (midi.out && midi.out.id) || sel.value;
+  const ids = outs.map(o => o.id).join('\n');
+  if (sel.dataset.ids !== ids) {
+    sel.innerHTML = '<option value="">MIDI: off</option>' + outs.map(o => '<option value="' + o.id + '">' + o.name + '</option>').join('');
+    sel.dataset.ids = ids;
+  }
+  const pick = outs.some(o => o.id === want) ? want : (outs.length === 1 ? outs[0].id : '');
+  sel.value = pick; midi.select(pick);
+  state.message = outs.length ? '' : 'No MIDI outputs found. Turn on the IAC Driver (macOS) or loopMIDI (Windows), then reload.';
+  state.dirty = true;
+}
 $('midiEnable').onclick = async () => {
   try {
-    const outs = await midi.enable();
-    const sel = $('midiOut');
-    sel.innerHTML = '<option value="">MIDI: off</option>' + outs.map(o => '<option value="' + o.id + '">' + o.name + '</option>').join('');
-    sel.hidden = false; $('midiEnable').hidden = true;
-    if (outs.length === 1) { sel.value = outs[0].id; midi.select(outs[0].id); }
-    state.message = outs.length ? '' : 'No MIDI outputs found. Turn on the IAC Driver (macOS) or loopMIDI (Windows), then reload.';
-    midi.access.onstatechange = () => { $('midiEnable').onclick(); };
-  } catch (err) { state.message = 'MIDI: ' + err.message; }
-  state.dirty = true;
+    await midi.enable();
+    $('midiOut').hidden = false; $('midiEnable').hidden = true;
+    refreshMidiOutputs();
+    midi.access.onstatechange = refreshMidiOutputs;
+  } catch (err) { state.message = 'MIDI: ' + err.message; state.dirty = true; }
 };
 $('midiOut').onchange = e => { midi.allOff(); midi.select(e.target.value); state.dirty = true; };
 function download(name, blob) {
