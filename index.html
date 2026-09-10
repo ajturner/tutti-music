@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Tutti — symphonic tracker</title>
+<link rel="icon" href="data:,">
 <style>
   :root {
     --bg: #151A2E;
@@ -15,7 +16,8 @@
     --accent: #F2E8C6;
     --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   }
-  html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text); font: 13px/1.4 var(--mono); }
+  html { height: 100%; }
+  body { height: 100vh; height: 100dvh; margin: 0; background: var(--bg); color: var(--text); font: 13px/1.4 var(--mono); }
   body { display: flex; flex-direction: column; }
   header { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; padding: 8px 14px; border-bottom: 1px solid var(--line); background: var(--panel); }
   h1 { font: italic 500 19px/1 "Iowan Old Style", "Palatino Linotype", Georgia, serif; margin: 0 6px 0 0; color: var(--accent); }
@@ -31,7 +33,7 @@
   button.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 600; }
   .spacer { flex: 1; }
   main { flex: 1; min-height: 0; position: relative; }
-  canvas { display: block; width: 100%; height: 100%; outline: none; }
+  canvas { display: block; width: 100%; height: 100%; outline: none; touch-action: none; }
   footer { border-top: 1px solid var(--line); background: var(--panel); padding: 6px 14px; font-size: 12px; }
   #notes { color: var(--dim); font-style: italic; margin-bottom: 3px; }
   #notes:empty { display: none; }
@@ -47,6 +49,48 @@
   #help table.keys td { padding: 1px 0; vertical-align: top; }
   #help table.keys td:first-child { white-space: nowrap; padding-right: 10px; }
   #help .alt { opacity: .7; }
+  /* Header: the transport stays in the first row; everything else lives in #more, which is inline on
+     wide screens and folds behind the ☰ button on narrow ones. */
+  h1 { order: -2; }
+  #more { display: contents; }
+  .songgrp { order: -1; }
+  #menuToggle { display: none; }
+  .short { display: none; }
+  /* Touch pad under the grid */
+  #pad { display: none; border-top: 1px solid var(--line); background: var(--panel); padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); user-select: none; -webkit-user-select: none; }
+  body.padon #pad { display: block; }
+  .padrow { display: flex; gap: 4px; margin-top: 4px; }
+  .padrow:first-child { margin-top: 0; }
+  #padKeys { display: grid; grid-template-columns: repeat(var(--cols, 8), 1fr); grid-auto-rows: 40px; }
+  #padKeys button { grid-column: span 2; }
+  #padKeys button.black { grid-row: 1; }
+  #padKeys button.white { grid-row: 2; }
+  .padrow button { flex: 1 1 0; min-width: 0; min-height: 40px; padding: 0 2px; touch-action: manipulation; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .padrow button.black { background: #0A0D1C; color: var(--dim); }
+  .padrow button.act { color: var(--accent); }
+  .padrow button.small { font-size: 12px; }
+  @media (pointer: coarse) {
+    button, select, input { min-height: 36px; padding: 4px 10px; font-size: 14px; }
+    input[type=checkbox] { width: 20px; height: 20px; min-height: 0; }
+  }
+  @media (max-width: 760px) {
+    header { gap: 6px 8px; padding: 6px 8px; }
+    h1 small, .full, .spacer { display: none; }
+    .short { display: inline; }
+    label[for=pattern] { display: none; }
+    header > .group { gap: 4px; }
+    #more .group { flex-wrap: wrap; }
+    #title { flex: 1 1 8em; min-width: 0; }
+    #notes { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #menuToggle { display: inline-block; margin-left: auto; }
+    #more { display: none; flex-basis: 100%; flex-wrap: wrap; gap: 6px 14px; padding-top: 6px; border-top: 1px solid var(--line); }
+    header.open #more { display: flex; }
+    footer { padding: 4px 8px calc(4px + env(safe-area-inset-bottom)); }
+    body.padon footer { padding-bottom: 4px; }
+    #status { display: block; white-space: nowrap; overflow-x: auto; }
+    #status > span { margin-right: 18px; }
+    #help { grid-template-columns: 1fr; }
+  }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
@@ -54,51 +98,61 @@
 <header>
   <h1>Tutti<small>symphonic tracker</small></h1>
   <div class="group">
-    <label for="song">song</label><select id="song"></select>
-    <button id="newSong" title="Start an empty song">New</button>
-    <input id="title" type="text" placeholder="title" title="Song title">
-  </div>
-  <div class="group">
-    <button id="playPat" class="primary" title="Space">Play pattern</button>
-    <button id="playSong" title="Enter">Play song</button>
+    <button id="playPat" class="primary" title="Space"><span class="full">Play pattern</span><span class="short">Play</span></button>
+    <button id="playSong" title="Enter"><span class="full">Play song</span><span class="short">Song</span></button>
     <button id="stop" title="Esc">Stop</button>
   </div>
-  <div class="group"><label for="bpm">bpm</label><input id="bpm" type="number" min="20" max="300" value="100"></div>
-  <div class="group">
-    <label for="pattern">pattern</label><select id="pattern"></select>
-    <button id="addPattern" title="Add a pattern">+</button>
-    <label for="rows">rows</label><input id="rows" type="number" min="1" max="512" value="64">
-    <label for="tpr">row</label>
-    <select id="tpr">
-      <option value="480">1/8</option>
-      <option value="320">1/8 triplet</option>
-      <option value="240" selected>1/16</option>
-      <option value="160">1/16 triplet</option>
-      <option value="120">1/32</option>
-    </select>
-    <label for="meterNum">meter</label><input id="meterNum" type="number" min="1" max="16" value="4" style="width:3em" title="Beats per bar">
-    <select id="meterDen" title="Beat unit"><option value="2">/2</option><option value="4" selected>/4</option><option value="8">/8</option></select>
-    <label for="order">order</label><input id="order" type="text" value="0" title="Pattern indices played in sequence">
-  </div>
-  <div class="group">
-    <label for="octave">octave</label><input id="octave" type="number" min="0" max="8" value="4">
-    <label for="step">step</label><input id="step" type="number" min="0" max="64" value="4">
-    <label><input id="follow" type="checkbox" checked> follow</label>
-  </div>
-  <div class="spacer"></div>
-  <div class="group">
-    <label><input id="preview" type="checkbox" checked> audio preview</label>
-    <button id="midiEnable">Enable MIDI out</button>
-    <select id="midiOut" hidden><option value="">MIDI: off</option></select>
-  </div>
-  <div class="group">
-    <button id="exportMidi">Export .mid</button>
-    <button id="save">Save .json</button>
-    <button id="load">Load .json</button>
-    <input id="file" type="file" accept=".json,application/json" hidden>
+  <div class="group"><label for="pattern">pattern</label><select id="pattern" title="Pattern"></select></div>
+  <button id="menuToggle" aria-expanded="false" aria-controls="more" title="More controls">☰</button>
+  <div id="more">
+    <div class="group songgrp">
+      <label for="song">song</label><select id="song"></select>
+      <button id="newSong" title="Start an empty song">New</button>
+      <input id="title" type="text" placeholder="title" title="Song title">
+    </div>
+    <div class="group"><label for="bpm">bpm</label><input id="bpm" type="number" min="20" max="300" value="100" title="Tempo"></div>
+    <div class="group">
+      <button id="addPattern" title="Add a pattern">+ pattern</button>
+      <label for="rows">rows</label><input id="rows" type="number" min="1" max="512" value="64">
+      <label for="tpr">row</label>
+      <select id="tpr">
+        <option value="480">1/8</option>
+        <option value="320">1/8 triplet</option>
+        <option value="240" selected>1/16</option>
+        <option value="160">1/16 triplet</option>
+        <option value="120">1/32</option>
+      </select>
+      <label for="meterNum">meter</label><input id="meterNum" type="number" min="1" max="16" value="4" style="width:3em" title="Beats per bar">
+      <select id="meterDen" title="Beat unit"><option value="2">/2</option><option value="4" selected>/4</option><option value="8">/8</option></select>
+      <label for="order">order</label><input id="order" type="text" value="0" title="Pattern indices played in sequence">
+    </div>
+    <div class="group">
+      <label for="octave">octave</label><input id="octave" type="number" min="0" max="8" value="4">
+      <label for="step">step</label><input id="step" type="number" min="0" max="64" value="4">
+      <label><input id="follow" type="checkbox" checked> follow</label>
+    </div>
+    <div class="spacer"></div>
+    <div class="group">
+      <label><input id="preview" type="checkbox" checked> audio preview</label>
+      <label title="On-screen entry pad under the grid"><input id="padToggle" type="checkbox"> pad</label>
+      <button id="midiEnable">Enable MIDI</button>
+      <select id="midiOut" hidden title="MIDI output"><option value="">MIDI out: off</option></select>
+      <select id="midiIn" hidden title="MIDI input for step recording"><option value="">MIDI in: off</option></select>
+    </div>
+    <div class="group">
+      <button id="exportMidi">Export .mid</button>
+      <button id="save">Save .json</button>
+      <button id="load">Load .json</button>
+      <input id="file" type="file" accept=".json,application/json" hidden>
+    </div>
   </div>
 </header>
 <main><canvas id="grid" tabindex="0" aria-label="Pattern grid"></canvas></main>
+<div id="pad" aria-label="Entry pad">
+  <div class="padrow" id="padKeys"></div>
+  <div class="padrow" id="padNav"></div>
+  <div class="padrow" id="padCtl"></div>
+</div>
 <footer>
   <div id="notes"></div>
   <div id="status"></div>
@@ -152,6 +206,12 @@
         <p>Bitwig: Settings → Controllers → Add → Generic → MIDI Keyboard, input = the IAC bus. On each instrument track set the note input to that controller, channel as shown in the track header, and arm the track. Or drop the exported .mid onto the arranger.</p>
         <p>Keyswitches default to C1–G1 (Kontakt displays these as C0–G0). Edit <code>INSTRUMENTS</code> in this file to match your library.</p>
         <p>The audio preview is a simple synth for checking voice leading. It is not the sound.</p>
+      </div>
+      <div>
+        <h3>Touch, game controller, MIDI in</h3>
+        <p>Touch: tap a cell to move the cursor, drag to scroll, long-press to clear a cell. The pad under the grid enters notes and values and appears on touch screens, or tick <em>pad</em> in the menu.</p>
+        <p>Game controller (Bluetooth or USB; works on iPhone and iPad): d-pad or stick moves the cursor. Hold <kbd>A</kbd> and press up/down to nudge the value under the cursor, left/right for an octave. Tap <kbd>A</kbd> to enter a note or audition one. <kbd>B</kbd> clears, <kbd>X</kbd> auditions, <kbd>Y</kbd> cycles articulation, bumpers change track, triggers jump a bar. <kbd>Start</kbd> plays or stops the pattern, <kbd>Back</kbd>+<kbd>Start</kbd> plays the song, <kbd>Back</kbd> alone undoes. Press any button after pairing so the browser lists it.</p>
+        <p>MIDI in: choose an input after enabling MIDI. Played notes go into the cursor cell with their velocity and advance by <em>step</em>; chords spread across the track's note columns. Sustain pedal skips a step; mod wheel writes dynamics. Not available on iOS, which has no WebMIDI.</p>
       </div>
     </div>
   </details>
@@ -592,14 +652,21 @@ class SynthSink {
 
 // ---- MidiSink: WebMIDI output ---------------------------------------------------
 class MidiSink {
-  constructor() { this.access = null; this.out = null; }
+  constructor() { this.access = null; this.out = null; this.in = null; }
   async enable() {
     if (!navigator.requestMIDIAccess) throw new Error('WebMIDI is not available in this browser');
     this.access = await navigator.requestMIDIAccess({ sysex: false });
     return this.outputs();
   }
   outputs() { return this.access ? Array.from(this.access.outputs.values()) : []; }
+  inputs() { return this.access ? Array.from(this.access.inputs.values()) : []; }
   select(id) { this.out = (this.access && id && this.access.outputs.get(id)) || null; return this.out; }
+  selectIn(id, handler) {
+    if (this.in) this.in.onmidimessage = null;
+    this.in = (this.access && id && this.access.inputs.get(id)) || null;
+    if (this.in) this.in.onmidimessage = handler;
+    return this.in;
+  }
   send(ev, at) {
     const o = this.out; if (!o) return;
     const ch = ev.channel & 15;
@@ -1019,8 +1086,16 @@ if (typeof module !== 'undefined') module.exports = { PPQ, INST, FAMILIES, newSo
 // Tutti UI: canvas grid, keyboard entry, transport, file I/O.
 // ============================================================================
 
-const ROW_H = 18, PAD = 10;
-const FONT = '13px ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace';
+const PAD = 10;
+let ROW_H = 18, FONT = '';
+const coarsePointer = () => window.matchMedia && matchMedia('(pointer: coarse)').matches;
+// Touch screens get taller rows and a larger font so a fingertip lands on one cell.
+function applyDensity() {
+  const coarse = coarsePointer();
+  ROW_H = coarse ? 30 : 18;
+  FONT = (coarse ? 15 : 13) + 'px ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace';
+}
+applyDensity();
 const COLORS = { bg: '#151A2E', beat: '#191F3A', bar: '#3A4370', text: '#D7DBEA', dim: '#4C5478', num: '#6C7597',
                  accent: '#F2E8C6', cursorText: '#151A2E', play: 'rgba(242,232,198,0.10)', header: '#1B2140', line: '#2A3258' };
 
@@ -1035,6 +1110,9 @@ const state = {
   cursor: { row: 0, track: 8, cell: 0 },        // track -1 = tempo column
   octave: 4, step: 4, follow: true, preview: true,
   scrollX: 0, typing: null, undo: [], redo: [], dirty: true, message: '',
+  ensureVisible: true,   // scroll horizontally to the cursor's track on the next draw
+  lastPitch: 60,         // what the controller's A button enters on an empty cell
+  pad: false,
 };
 state.song = state.songs[0];
 
@@ -1166,10 +1244,7 @@ function typeIntoCell(k) {
     case 'note': {
       const off = KEYMAP[lower]; if (off == null) return false;
       const pitch = clamp((state.octave + 1) * 12 + off, 0, 127);
-      withUndo(() => setNote(pat, tr.id, cell.col, tick, pitch));
-      const ins = INST[tr.instrument];
-      if (pitch < ins.range[0] || pitch > ins.range[1]) state.message = noteName(pitch) + ' is outside the ' + ins.name + ' range ' + noteName(ins.range[0]) + '–' + noteName(ins.range[1]);
-      else state.message = '';
+      enterPitch(pitch, null, cell.col);
       audition(tr, pitch, (noteAt(pat, tr.id, cell.col, row) || {}).art);
       moveRow(state.step);
       return true;
@@ -1214,6 +1289,74 @@ function typeIntoCell(k) {
   }
   return false;
 }
+// Write a pitch (and optionally a velocity) into the cursor row of the current track. Shared by the
+// keyboard, the touch pad, MIDI in and the game controller.
+function enterPitch(pitch, vel, col) {
+  const pat = curPat(), tr = curTrack(); if (!tr) return false;
+  const row = state.cursor.row, tick = row * pat.ticksPerRow;
+  const c = col == null ? (currentCell().col | 0) : col;
+  withUndo(() => {
+    setNote(pat, tr.id, c, tick, pitch);
+    if (vel != null) { const ev = noteAt(pat, tr.id, c, row); if (ev) ev.vel = clamp(vel, 1, 127); }
+  });
+  state.lastPitch = pitch;
+  const ins = INST[tr.instrument];
+  state.message = (pitch < ins.range[0] || pitch > ins.range[1]) ? noteName(pitch) + ' is outside the ' + ins.name + ' range ' + noteName(ins.range[0]) + '–' + noteName(ins.range[1]) : '';
+  return true;
+}
+function nudgeArticulation(d) {
+  const pat = curPat(), tr = curTrack(); if (!tr) return;
+  const evs = notesStartingAt(pat, tr.id, state.cursor.row);
+  if (!evs.length) { state.message = 'No note starts on this row'; state.dirty = true; return; }
+  const arts = INST[tr.instrument].articulations;
+  const i = Math.max(0, arts.indexOf(evs[0].art || arts[0]));
+  const art = arts[((i + Math.sign(d)) % arts.length + arts.length) % arts.length];
+  withUndo(() => evs.forEach(e => { e.art = art; }));
+  audition(tr, evs[0].pitch, art);
+}
+// Nudge whatever is under the cursor by d: semitones, velocity, dynamics, bpm, or the articulation list.
+function nudgeCell(d) {
+  const pat = curPat(), tr = curTrack(), cell = currentCell(), row = state.cursor.row, tick = row * pat.ticksPerRow;
+  switch (cell.kind) {
+    case 'note': {
+      const ev = noteAt(pat, tr.id, cell.col, row);
+      if (!ev) { const p = clamp(state.lastPitch + d, 0, 127); enterPitch(p, null, cell.col); audition(tr, p, null); return; }
+      withUndo(() => { ev.pitch = clamp(ev.pitch + d, 0, 127); });
+      state.lastPitch = ev.pitch; audition(tr, ev.pitch, ev.art); return;
+    }
+    case 'vel': {
+      const ev = noteAt(pat, tr.id, cell.col, row);
+      if (!ev) { state.message = 'No note starts on this row'; state.dirty = true; return; }
+      withUndo(() => { ev.vel = clamp(ev.vel + d, 1, 127); }); return;
+    }
+    case 'art': nudgeArticulation(d); return;
+    case 'dyn': {
+      const pts = patTrack(pat, tr.id).dyn, p = pts.find(x => x.tick === tick);
+      const v = clamp((p ? p.value : 96) + d, 0, 127);
+      withUndo(() => laneSet(pts, tick, v)); return;
+    }
+    case 'tempo': {
+      const p = pat.tempo.find(x => x.tick === tick);
+      const v = clamp((p ? p.value : state.song.bpm) + d, 20, 300);
+      withUndo(() => laneSet(pat.tempo, tick, v)); return;
+    }
+  }
+}
+// Create a value where there is none, otherwise audition what is there.
+function tapCell() {
+  const pat = curPat(), tr = curTrack(), cell = currentCell(), row = state.cursor.row, tick = row * pat.ticksPerRow;
+  switch (cell.kind) {
+    case 'note': {
+      const ev = noteAt(pat, tr.id, cell.col, row);
+      if (ev) audition(tr, ev.pitch, ev.art);
+      else { enterPitch(state.lastPitch, null, cell.col); audition(tr, state.lastPitch, null); moveRow(state.step); }
+      return;
+    }
+    case 'vel': case 'art': { const ev = noteAt(pat, tr.id, cell.col | 0, row); if (ev) audition(tr, ev.pitch, ev.art); return; }
+    case 'dyn': { const pts = patTrack(pat, tr.id).dyn; if (!pts.find(x => x.tick === tick)) withUndo(() => laneSet(pts, tick, 96)); return; }
+    case 'tempo': { if (!pat.tempo.find(x => x.tick === tick)) withUndo(() => laneSet(pat.tempo, tick, state.song.bpm)); return; }
+  }
+}
 function clearCell() {
   const pat = curPat(), tr = curTrack(), cell = currentCell(), row = state.cursor.row, tick = row * pat.ticksPerRow;
   withUndo(() => {
@@ -1248,12 +1391,12 @@ function moveCell(d) {
   let cell = c.cell + d, track = c.track;
   while (cell < 0) { track = track <= -1 ? n - 1 : track - 1; cell += cellsOf(track); }
   while (cell >= cellsOf(track)) { cell -= cellsOf(track); track = track >= n - 1 ? -1 : track + 1; }
-  c.track = track; c.cell = cell; state.typing = null; state.message = ''; state.dirty = true;
+  c.track = track; c.cell = cell; state.typing = null; state.message = ''; state.ensureVisible = true; state.dirty = true;
 }
 function moveTrack(d) {
   const n = state.song.tracks.length; let t = state.cursor.track + d;
   if (t < -1) t = n - 1; if (t >= n) t = -1;
-  state.cursor.track = t; state.cursor.cell = 0; state.typing = null; state.message = ''; state.dirty = true;
+  state.cursor.track = t; state.cursor.cell = 0; state.typing = null; state.message = ''; state.ensureVisible = true; state.dirty = true;
 }
 function setOctave(o) { state.octave = clamp(o, 0, 8); $('octave').value = state.octave; state.dirty = true; }
 function setStep(s) { state.step = clamp(s, 0, 64); $('step').value = state.step; state.dirty = true; }
@@ -1336,34 +1479,60 @@ function handleKey(e) {
   return false;
 }
 
-// ---- Mouse --------------------------------------------------------------------------------
-let lastDraw = null;
-canvas.addEventListener('mousedown', e => {
-  canvas.focus();
-  if (!lastDraw) return;
+// ---- Pointer: tap places the cursor, drag scrolls, long-press clears --------------------------
+let lastDraw = null, drag = null;
+function hitTest(x, y) {
+  if (!lastDraw) return null;
   const { L, top, headerH } = lastDraw;
-  const x = e.offsetX, y = e.offsetY;
-  if (y < headerH) {
-    const gx = x + state.scrollX;
-    const ti = L.tracks.findIndex(t => gx >= t.x && gx < t.x + t.w);
-    if (ti >= 0 && x >= L.gutter.w) { state.song.tracks[ti].mute = !state.song.tracks[ti].mute; state.dirty = true; }
-    return;
-  }
+  const gx = x + state.scrollX;
+  const ti = L.tracks.findIndex(t => gx >= t.x && gx < t.x + t.w);
+  if (y < headerH) return { header: true, track: x >= L.gutter.w ? ti : -1 };
   const row = top + Math.floor((y - headerH) / ROW_H);
-  if (row < 0 || row >= curPat().rows) return;
-  state.cursor.row = row;
-  if (x < L.gutter.w) { state.cursor.track = -1; state.cursor.cell = 0; }
-  else {
-    const gx = x + state.scrollX;
-    const ti = L.tracks.findIndex(t => gx >= t.x && gx < t.x + t.w);
-    if (ti < 0) return;
-    const lay = L.tracks[ti];
-    let ci = lay.cells.findIndex((c, i) => gx < c.x + c.w + (i + 1 < lay.cells.length ? (lay.cells[i + 1].x - c.x - c.w) / 2 : 0));
-    if (ci < 0) ci = lay.cells.length - 1;
-    state.cursor.track = ti; state.cursor.cell = ci;
-  }
-  state.typing = null; state.dirty = true;
+  if (row < 0 || row >= curPat().rows) return null;
+  if (x < L.gutter.w) return { row, track: -1, cell: 0 };
+  if (ti < 0) return null;
+  const lay = L.tracks[ti];
+  let ci = lay.cells.findIndex((c, i) => gx < c.x + c.w + (i + 1 < lay.cells.length ? (lay.cells[i + 1].x - c.x - c.w) / 2 : 0));
+  if (ci < 0) ci = lay.cells.length - 1;
+  return { row, track: ti, cell: ci };
+}
+function placeCursor(hit) {
+  state.cursor.row = hit.row; state.cursor.track = hit.track; state.cursor.cell = hit.cell;
+  state.typing = null; state.message = ''; state.dirty = true;
+}
+canvas.addEventListener('pointerdown', e => {
+  if (e.pointerType === 'mouse' && e.button !== 0) return;
+  canvas.focus(); e.preventDefault();
+  try { canvas.setPointerCapture(e.pointerId); } catch (_) { /* synthetic events have no capturable id */ }
+  drag = { id: e.pointerId, x0: e.offsetX, y0: e.offsetY, scrollX0: state.scrollX, row0: state.cursor.row, moved: false, done: false, timer: 0 };
+  if (e.pointerType !== 'mouse') drag.timer = setTimeout(() => {
+    if (!drag || drag.moved) return;
+    const hit = hitTest(drag.x0, drag.y0);
+    if (hit && !hit.header) { placeCursor(hit); clearCell(); drag.done = true; if (navigator.vibrate) navigator.vibrate(15); }
+  }, 500);
 });
+canvas.addEventListener('pointermove', e => {
+  if (!drag || e.pointerId !== drag.id) return;
+  const dx = e.offsetX - drag.x0, dy = e.offsetY - drag.y0;
+  if (!drag.moved && Math.hypot(dx, dy) < (e.pointerType === 'mouse' ? 4 : 10)) return;
+  if (!drag.moved) { drag.moved = true; clearTimeout(drag.timer); }
+  state.scrollX = Math.max(0, drag.scrollX0 - dx);
+  const r = clamp(drag.row0 - Math.round(dy / ROW_H), 0, curPat().rows - 1);
+  if (r !== state.cursor.row) { state.cursor.row = r; state.typing = null; }
+  state.dirty = true;
+});
+function endDrag(e) {
+  if (!drag || e.pointerId !== drag.id) return;
+  clearTimeout(drag.timer);
+  if (!drag.moved && !drag.done && e.type === 'pointerup') {
+    const hit = hitTest(e.offsetX, e.offsetY);
+    if (hit && hit.header) { if (hit.track >= 0) { state.song.tracks[hit.track].mute = !state.song.tracks[hit.track].mute; state.dirty = true; } }
+    else if (hit) placeCursor(hit);
+  }
+  drag = null;
+}
+canvas.addEventListener('pointerup', endDrag);
+canvas.addEventListener('pointercancel', endDrag);
 canvas.addEventListener('wheel', e => {
   e.preventDefault();
   if (e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) { state.scrollX = Math.max(0, state.scrollX + (e.deltaX || e.deltaY)); state.dirty = true; return; }
@@ -1372,6 +1541,7 @@ canvas.addEventListener('wheel', e => {
 
 // ---- Drawing ---------------------------------------------------------------------------------
 function resize() {
+  applyDensity();
   const dpr = window.devicePixelRatio || 1;
   canvas.width = Math.floor(canvas.clientWidth * dpr); canvas.height = Math.floor(canvas.clientHeight * dpr);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -1399,12 +1569,13 @@ function draw() {
   const centerRow = (playRow != null && state.follow && playPat === state.pat) ? playRow : state.cursor.row;
   const top = centerRow - Math.floor(visible / 2);
 
-  // Keep the cursor's track on screen.
-  if (state.cursor.track >= 0) {
+  // Bring the cursor's track on screen after the cursor moved, but leave a hand-scrolled view alone.
+  if (state.cursor.track >= 0 && state.ensureVisible) {
     const lay = L.tracks[state.cursor.track];
     if (lay.x - state.scrollX < L.gutter.w) state.scrollX = lay.x - L.gutter.w;
     if (lay.x + lay.w - state.scrollX > W) state.scrollX = lay.x + lay.w - W;
   }
+  state.ensureVisible = false;
   state.scrollX = clamp(state.scrollX, 0, Math.max(0, L.totalW - W));
 
   ctx.fillStyle = COLORS.bg; ctx.fillRect(0, 0, W, H);
@@ -1515,6 +1686,7 @@ function draw() {
   ctx.fillText('bpm', L.gutter.tempoX, ROW_H + 8 + ROW_H / 2);
 
   lastDraw = { L, top, headerH };
+  syncPad();
   updateStatus(playRow);
 }
 
@@ -1532,16 +1704,147 @@ function updateStatus(playRow) {
     parts.push('range ' + noteName(ins.range[0]) + '–' + noteName(ins.range[1]));
   } else parts.push('<b>tempo</b> row ' + row + ' (digits, L ramp, S hold)');
   parts.push('octave <b>' + state.octave + '</b>');
-  parts.push('preview ' + (state.preview ? 'on' : 'off') + ' | MIDI ' + (midi.out ? '<b>' + midi.out.name + '</b>' : 'off'));
+  parts.push('preview ' + (state.preview ? 'on' : 'off') + ' | MIDI ' + (midi.out ? '<b>' + esc(midi.out.name) + '</b>' : 'off'));
+  if (midi.in) parts.push('MIDI in <b>' + esc(midi.in.name) + '</b>');
+  if (gamepad.name) parts.push('\u{1F3AE} <b>' + esc(gamepad.name.replace(/\s*\(.*$/, '')) + '</b>');
   if (sched.playing) parts.push('<b>playing</b>' + (sched.loop ? ' (loop)' : '') + (playRow != null ? ' row ' + playRow : ''));
   if (state.message) parts.push('<span class="warn">' + state.message + '</span>');
   const html = parts.map(p => '<span>' + p + '</span>').join('');
   if (html !== lastStatus) { $('status').innerHTML = html; lastStatus = html; }
 }
 
-function frame() {
+function frame(now) {
+  pollGamepad(now || performance.now());
   if (state.dirty || sched.playing) { state.dirty = false; draw(); }
   requestAnimationFrame(frame);
+}
+
+// ---- Game controller ------------------------------------------------------------------------
+// The Gamepad API is polled, so this runs every frame. Standard-mapping indices (Xbox layout):
+// 0 A, 1 B, 2 X, 3 Y, 4 LB, 5 RB, 6 LT, 7 RT, 8 Back, 9 Start, 12–15 d-pad; axes 0/1 left stick.
+// Scheme follows LSDJ: directions move, A + direction edits the value under the cursor.
+const gamepad = { name: null, held: {}, next: {}, aUsed: false, backUsed: false, warned: false };
+const GP_DELAY = 260, GP_REPEAT = 70;
+const GP_REPEATS = { up: 1, down: 1, left: 1, right: 1, lt: 2.5, rt: 2.5 };
+function pollGamepad(now) {
+  const list = navigator.getGamepads ? navigator.getGamepads() : [];
+  let gp = null; for (const g of list) if (g && g.connected) { gp = g; break; }
+  if (!gp) { if (gamepad.name) { gamepad.name = null; gamepad.held = {}; state.dirty = true; } return; }
+  if (gamepad.name !== gp.id) {
+    gamepad.name = gp.id; gamepad.held = {}; state.dirty = true;
+    if (gp.mapping !== 'standard' && !gamepad.warned) { gamepad.warned = true; state.message = 'Controller reports a non-standard layout; buttons may be shuffled'; }
+  }
+  const b = i => { const x = gp.buttons[i]; return !!x && (x.pressed || x.value > 0.5); };
+  const ax = (i, sign) => (gp.axes[i] || 0) * sign > 0.5;
+  const held = { up: b(12) || ax(1, -1), down: b(13) || ax(1, 1), left: b(14) || ax(0, -1), right: b(15) || ax(0, 1),
+                 a: b(0), b: b(1), x: b(2), y: b(3), lb: b(4), rb: b(5), lt: b(6), rt: b(7), back: b(8), start: b(9) };
+  const fire = {};
+  for (const k in held) {
+    const was = gamepad.held[k];
+    if (held[k] && !was) { fire[k] = true; gamepad.next[k] = now + GP_DELAY; }
+    else if (held[k] && GP_REPEATS[k] && now >= gamepad.next[k]) { fire[k] = true; gamepad.next[k] = now + GP_REPEAT * GP_REPEATS[k]; }
+    if (!held[k] && was) fire[k + 'Up'] = true;
+  }
+  gamepad.held = held;
+  if (fire.a) gamepad.aUsed = false;
+  if (fire.back) gamepad.backUsed = false;
+  const edit = d => { gamepad.aUsed = true; nudgeCell(d); };
+  const big = () => { const k = currentCell().kind; return k === 'note' ? 12 : k === 'tempo' ? 10 : 16; };
+  if (fire.up)    held.a ? edit(1) : moveRow(-1);
+  if (fire.down)  held.a ? edit(-1) : moveRow(1);
+  if (fire.left)  held.a ? edit(-big()) : moveCell(-1);
+  if (fire.right) held.a ? edit(big()) : moveCell(1);
+  if (fire.aUp && !gamepad.aUsed) tapCell();
+  if (fire.b) clearCell();
+  if (fire.x) { const tr = curTrack(); if (tr) { const ev = noteCovering(curPat(), tr.id, currentCell().col | 0, state.cursor.row); if (ev) audition(tr, ev.pitch, ev.art); } }
+  if (fire.y) nudgeArticulation(1);
+  if (fire.lb) moveTrack(-1);
+  if (fire.rb) moveTrack(1);
+  if (fire.lt) moveRow(-rowsPerBar());
+  if (fire.rt) moveRow(rowsPerBar());
+  if (fire.start) { if (held.back) { gamepad.backUsed = true; playSong(); } else if (sched.playing) stopAll(); else playPattern(false); }
+  if (fire.backUp && !gamepad.backUsed) undo();
+}
+window.addEventListener('gamepadconnected', e => { state.message = 'Controller connected: ' + e.gamepad.id; state.dirty = true; });
+window.addEventListener('gamepaddisconnected', () => { state.message = 'Controller disconnected'; state.dirty = true; });
+
+// ---- Touch pad ------------------------------------------------------------------------------
+// Buttons feed the same key handlers as the keyboard, so entry behaves identically. The key row
+// changes with the cell under the cursor: a piano octave for notes, hex digits for velocity and
+// dynamics, decimal digits for tempo, the instrument's articulation names for the art column.
+const PAD_NOTES = [['C', 'z'], ['C\u266f', 's'], ['D', 'x'], ['D\u266f', 'd'], ['E', 'c'], ['F', 'v'], ['F\u266f', 'g'], ['G', 'b'], ['G\u266f', 'h'], ['A', 'n'], ['A\u266f', 'j'], ['B', 'm'], ['C+', ',']];
+let padSig = '';
+function padButton(label, cls, fn, title) {
+  const b = document.createElement('button'); b.textContent = label; if (cls) b.className = cls; if (title) b.title = title;
+  b.addEventListener('pointerdown', e => { e.preventDefault(); fn(); state.dirty = true; });
+  b.addEventListener('click', e => e.preventDefault());
+  return b;
+}
+function syncPad() {
+  if (!state.pad) return;
+  const cell = currentCell(), tr = curTrack();
+  const sig = [cell.kind, tr ? tr.instrument : '', state.octave, state.step, sched.playing ? 1 : 0].join(':');
+  if (sig === padSig) return; padSig = sig;
+  const keys = $('padKeys'); keys.innerHTML = '';
+  if (cell.kind === 'note') {
+    // Two rows like a keyboard: 8 white keys span 16 grid columns, black keys sit between them.
+    keys.style.setProperty('--cols', 16);
+    let col = 1;
+    for (const [n, k] of PAD_NOTES) {
+      const black = n.indexOf('\u266f') >= 0;
+      const b = padButton(n === 'C+' ? 'C' + (state.octave + 1) : n, black ? 'black' : 'white', () => typeIntoCell(k));
+      if (black) b.style.gridColumn = (col - 1) + ' / span 2'; else { b.style.gridColumn = col + ' / span 2'; col += 2; }
+      keys.appendChild(b);
+    }
+  } else if (cell.kind === 'art') {
+    const arts = INST[tr.instrument].articulations;
+    keys.style.setProperty('--cols', arts.length * 2);
+    arts.forEach((a, i) => keys.appendChild(padButton(a, 'small', () => typeIntoCell(String(i + 1)))));
+  } else {
+    const digits = cell.kind === 'tempo' ? '0123456789' : '0123456789abcdef';
+    keys.style.setProperty('--cols', cell.kind === 'tempo' ? 12 : 16);
+    for (const d of digits) keys.appendChild(padButton(d.toUpperCase(), '', () => typeIntoCell(d)));
+    if (cell.kind !== 'vel') { keys.appendChild(padButton('ramp', 'small', () => typeIntoCell('l'))); keys.appendChild(padButton('hold', 'small', () => typeIntoCell('s'))); }
+  }
+  const nav = $('padNav'); nav.innerHTML = '';
+  [['\u2191', () => moveRow(-1), 'Row up'], ['\u2193', () => moveRow(1), 'Row down'], ['\u2190', () => moveCell(-1), 'Field left'], ['\u2192', () => moveCell(1), 'Field right'],
+   ['\u21e4', () => moveTrack(-1), 'Previous track'], ['\u21e5', () => moveTrack(1), 'Next track'], ['del', clearCell, 'Clear the cell'], ['undo', undo, 'Undo']]
+    .forEach(([l, f, t]) => nav.appendChild(padButton(l, '', f, t)));
+  const ctl = $('padCtl'); ctl.innerHTML = '';
+  [['oct\u2212', () => setOctave(state.octave - 1), 'Octave down'], ['oct' + state.octave + '+', () => setOctave(state.octave + 1), 'Octave up'],
+   ['stp\u2212', () => setStep(state.step - 1), 'Step down'], ['stp' + state.step + '+', () => setStep(state.step + 1), 'Step up'],
+   ['len\u2212', () => changeLength(-1), 'Shorter note'], ['len+', () => changeLength(1), 'Longer note'],
+   [sched.playing ? '\u25a0' : '\u25b6', () => sched.playing ? stopAll() : playPattern(false), 'Play or stop the pattern']]
+    .forEach(([l, f, t]) => ctl.appendChild(padButton(l, /^[\u25a0\u25b6]$/.test(l) ? 'act' : 'small', f, t)));
+}
+function setPad(on) {
+  state.pad = on; document.body.classList.toggle('padon', on); $('padToggle').checked = on; padSig = ''; state.dirty = true;
+}
+
+// ---- MIDI in: step recording -----------------------------------------------------------------
+// Notes arriving within a short window are one chord and spread across the track's note columns,
+// growing the columns if needed; when the window closes the cursor advances by step.
+const midiRec = { timer: 0, n: 0 };
+function onMidiMessage(e) {
+  const [st, d1, d2] = e.data, type = st & 0xF0;
+  if (type === 0x90 && d2 > 0) recordPitch(d1, d2);
+  else if (type === 0xB0 && d1 === 64 && d2 >= 64) moveRow(Math.max(1, state.step));
+  else if (type === 0xB0 && d1 === 1) {
+    const tr = curTrack(); if (!tr) return;
+    const pat = curPat(); laneSet(patTrack(pat, tr.id).dyn, state.cursor.row * pat.ticksPerRow, d2); state.dirty = true;
+  }
+}
+function recordPitch(pitch, vel) {
+  const tr = curTrack();
+  if (!tr) { state.message = 'Move the cursor onto an instrument track to record'; state.dirty = true; return; }
+  if (midiRec.timer) { clearTimeout(midiRec.timer); midiRec.n++; } else midiRec.n = 0;
+  const col = Math.min((currentCell().col | 0) + midiRec.n, 3);
+  if (col >= tr.columns) tr.columns = col + 1;
+  enterPitch(pitch, vel, col);
+  const ins = INST[tr.instrument];
+  if (state.preview) synth.audition(ins.family, pitch, ins.articulations[0]);
+  midiRec.timer = setTimeout(() => { midiRec.timer = 0; moveRow(state.step); }, 80);
+  state.dirty = true;
 }
 
 // ---- Toolbar wiring -------------------------------------------------------------------------
@@ -1598,32 +1901,42 @@ $('octave').onchange = e => setOctave(parseInt(e.target.value, 10) || 0);
 $('step').onchange = e => setStep(parseInt(e.target.value, 10) || 0);
 $('follow').onchange = e => { state.follow = e.target.checked; };
 $('preview').onchange = e => { state.preview = e.target.checked; synth.enabled = state.preview; if (!state.preview) synth.allOff(); state.dirty = true; };
-// Rebuild the output list from the current ports, keeping whatever is selected if it still exists.
+// Rebuild the port lists from the current devices, keeping whatever is selected if it still exists.
 // Chrome fires statechange whenever any port opens or closes (including our own on first send),
 // so this must not reset the selection.
-function refreshMidiOutputs() {
-  const outs = midi.outputs();
-  const sel = $('midiOut');
-  const want = (midi.out && midi.out.id) || sel.value;
-  const ids = outs.map(o => o.id).join('\n');
+function fillPorts(sel, ports, label, current, autoPick) {
+  const ids = ports.map(p => p.id).join('\n');
   if (sel.dataset.ids !== ids) {
-    sel.innerHTML = '<option value="">MIDI: off</option>' + outs.map(o => '<option value="' + o.id + '">' + o.name + '</option>').join('');
+    sel.innerHTML = '<option value="">' + label + '</option>' + ports.map(p => '<option value="' + p.id + '">' + esc(p.name) + '</option>').join('');
     sel.dataset.ids = ids;
   }
-  const pick = outs.some(o => o.id === want) ? want : (outs.length === 1 ? outs[0].id : '');
-  sel.value = pick; midi.select(pick);
-  state.message = outs.length ? '' : 'No MIDI outputs found. Turn on the IAC Driver (macOS) or loopMIDI (Windows), then reload.';
+  const want = current || sel.value;
+  const pick = ports.some(p => p.id === want) ? want : (autoPick && ports.length === 1 ? ports[0].id : '');
+  sel.value = pick;
+  return pick;
+}
+function refreshMidiPorts() {
+  const outs = midi.outputs(), ins = midi.inputs();
+  midi.select(fillPorts($('midiOut'), outs, 'MIDI out: off', midi.out && midi.out.id, true));
+  midi.selectIn(fillPorts($('midiIn'), ins, 'MIDI in: off', midi.in && midi.in.id, false), onMidiMessage);
+  state.message = outs.length || ins.length ? '' : 'No MIDI ports found. Turn on the IAC Driver (macOS) or loopMIDI (Windows), then reload.';
   state.dirty = true;
 }
 $('midiEnable').onclick = async () => {
   try {
     await midi.enable();
-    $('midiOut').hidden = false; $('midiEnable').hidden = true;
-    refreshMidiOutputs();
-    midi.access.onstatechange = refreshMidiOutputs;
+    $('midiOut').hidden = false; $('midiIn').hidden = false; $('midiEnable').hidden = true;
+    refreshMidiPorts();
+    midi.access.onstatechange = refreshMidiPorts;
   } catch (err) { state.message = 'MIDI: ' + err.message; state.dirty = true; }
 };
 $('midiOut').onchange = e => { midi.allOff(); midi.select(e.target.value); state.dirty = true; };
+$('midiIn').onchange = e => { midi.selectIn(e.target.value, onMidiMessage); state.dirty = true; };
+$('padToggle').onchange = e => setPad(e.target.checked);
+$('menuToggle').onclick = () => {
+  const open = document.querySelector('header').classList.toggle('open');
+  $('menuToggle').setAttribute('aria-expanded', String(open));
+};
 function download(name, blob) {
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
   document.body.appendChild(a); a.click(); a.remove();
@@ -1647,6 +1960,7 @@ document.querySelectorAll('select, input').forEach(el => el.addEventListener('ch
 
 syncSongUI();
 syncPatternUI();
+setPad(coarsePointer());
 resize();
 canvas.focus();
 requestAnimationFrame(frame);
