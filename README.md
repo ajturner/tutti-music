@@ -9,6 +9,7 @@ A browser-based tracker for composing orchestral music, with MIDI export. Single
 - **Keyboard:** piano-layout letters, arrows, and the shortcuts listed under "Keys and MIDI setup" in the app.
 - **Touch:** tap to place the cursor, drag to scroll, long-press to clear. An on-screen pad appears on touch screens (or tick *pad* in the menu).
 - **Game controller:** Bluetooth or USB gamepad, LSDJ-style. D-pad moves, A + d-pad edits, B clears, Start plays. Works on iPhone and iPad.
+- **Selection and batch edits:** Shift+arrows or mouse drag select a block. Copy, cut, paste, duplicate, clear, transpose, velocity, note length, articulation, and linear ramps from the toolbar or keyboard.
 - **MIDI in:** step-record from a keyboard into the cursor cell, with chords spread across note columns. Chromium browsers only.
 
 ## Run locally

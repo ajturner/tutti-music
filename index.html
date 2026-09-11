@@ -56,6 +56,12 @@
   .songgrp { order: -1; }
   #menuToggle { display: none; }
   .short { display: none; }
+  /* Selection toolbar */
+  #selbar { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; padding: 4px 8px; border-top: 1px solid var(--line); background: var(--panel); }
+  #selbar[hidden] { display: none; }
+  #selbar #selInfo { color: var(--accent); margin-right: 8px; }
+  #selbar .sep { width: 1px; height: 18px; background: var(--line); margin: 0 4px; }
+  #selbar button, #selbar select { padding: 2px 7px; }
   /* Touch pad under the grid */
   #pad { display: none; border-top: 1px solid var(--line); background: var(--panel); padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); user-select: none; -webkit-user-select: none; }
   body.padon #pad { display: block; }
@@ -87,6 +93,9 @@
     header.open #more { display: flex; }
     footer { padding: 4px 8px calc(4px + env(safe-area-inset-bottom)); }
     body.padon footer { padding-bottom: 4px; }
+    #selbar { gap: 3px; padding: 3px 6px; }
+    #selbar button, #selbar select { min-height: 32px; padding: 2px 6px; font-size: 13px; }
+    #selbar #selInfo { flex-basis: 100%; margin: 0; font-size: 12px; }
     #status { display: block; white-space: nowrap; overflow-x: auto; }
     #status > span { margin-right: 18px; }
     #help { grid-template-columns: 1fr; }
@@ -148,6 +157,27 @@
   </div>
 </header>
 <main><canvas id="grid" tabindex="0" aria-label="Pattern grid"></canvas></main>
+<div id="selbar" hidden aria-label="Selection">
+  <span id="selInfo"></span>
+  <button data-op="copy" title="Copy (⌘C)">Copy</button>
+  <button data-op="cut" title="Cut (⌘X)">Cut</button>
+  <button data-op="paste" title="Paste at the cursor (⌘V)">Paste</button>
+  <button data-op="dup" title="Paste a copy right after the selection (⌘D)">Duplicate</button>
+  <button data-op="clear" title="Clear (Delete)">Clear</button>
+  <span class="sep"></span>
+  <button data-op="tr:-1" title="Transpose down a semitone (−)">−1</button>
+  <button data-op="tr:1" title="Transpose up a semitone (=)">+1</button>
+  <button data-op="tr:-12" title="Transpose down an octave (⇧−)">−oct</button>
+  <button data-op="tr:12" title="Transpose up an octave (⇧=)">+oct</button>
+  <button data-op="vel:-8" title="Softer">vel −</button>
+  <button data-op="vel:8" title="Louder">vel +</button>
+  <button data-op="len:-1" title="Shorter notes ([)">len −</button>
+  <button data-op="len:1" title="Longer notes (])">len +</button>
+  <select id="selArt" title="Set articulation on every note in the selection"><option value="">art…</option></select>
+  <button data-op="interp" title="Ramp velocity, dynamics or tempo linearly from the first row to the last">Interpolate</button>
+  <span class="sep"></span>
+  <button data-op="deselect" title="Deselect (Esc)">✕</button>
+</div>
 <div id="pad" aria-label="Entry pad">
   <div class="padrow" id="padKeys"></div>
   <div class="padrow" id="padNav"></div>
@@ -163,11 +193,21 @@
         <h3>Moving the cursor</h3>
         <table class="keys">
           <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>row</td></tr>
-          <tr><td><kbd>⇧</kbd><kbd>↑</kbd> <kbd>⇧</kbd><kbd>↓</kbd></td><td>bar &nbsp;<span class="alt">(or <kbd>PgUp</kbd>/<kbd>PgDn</kbd>)</span></td></tr>
+          <tr><td><kbd>⌘</kbd><kbd>⇧</kbd><kbd>↑</kbd> <kbd>⌘</kbd><kbd>⇧</kbd><kbd>↓</kbd></td><td>bar &nbsp;<span class="alt">(or <kbd>PgUp</kbd>/<kbd>PgDn</kbd>)</span></td></tr>
           <tr><td><kbd>⌘</kbd><kbd>↑</kbd> <kbd>⌘</kbd><kbd>↓</kbd></td><td>first / last row &nbsp;<span class="alt">(or <kbd>Home</kbd>/<kbd>End</kbd>)</span></td></tr>
           <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>field</td></tr>
-          <tr><td><kbd>⇧</kbd><kbd>←</kbd> <kbd>⇧</kbd><kbd>→</kbd></td><td>track &nbsp;<span class="alt">(or <kbd>Tab</kbd>/<kbd>⇧</kbd><kbd>Tab</kbd>)</span></td></tr>
+          <tr><td><kbd>Tab</kbd> <kbd>⇧</kbd><kbd>Tab</kbd></td><td>track</td></tr>
         </table>
+        <h3>Selecting and batch edits</h3>
+        <table class="keys">
+          <tr><td><kbd>⇧</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd></td><td>extend the selection from the cursor &nbsp;<span class="alt">(or drag with the mouse, ⇧-click)</span></td></tr>
+          <tr><td><kbd>⌘</kbd><kbd>A</kbd></td><td>select the track, again for the whole pattern</td></tr>
+          <tr><td><kbd>⌘</kbd><kbd>C</kbd> <kbd>⌘</kbd><kbd>X</kbd> <kbd>⌘</kbd><kbd>V</kbd></td><td>copy, cut, paste at the cursor</td></tr>
+          <tr><td><kbd>⌘</kbd><kbd>D</kbd></td><td>duplicate right after the selection</td></tr>
+          <tr><td><kbd>-</kbd> <kbd>=</kbd> &nbsp; <kbd>[</kbd> <kbd>]</kbd></td><td>with a selection: transpose a semitone (⇧ octave), note length</td></tr>
+          <tr><td><kbd>Esc</kbd></td><td>deselect</td></tr>
+        </table>
+        <p>The toolbar above the grid applies the same edits, plus velocity, articulation and a linear ramp of velocity, dynamics or tempo across the selected rows. Paste lines cells up by kind, so a block of notes pastes onto note columns and a dynamics run onto a dynamics column.</p>
         <h3>Transport</h3>
         <table class="keys">
           <tr><td><kbd>Space</kbd></td><td>loop the pattern / stop</td></tr>
@@ -209,8 +249,8 @@
       </div>
       <div>
         <h3>Touch, game controller, MIDI in</h3>
-        <p>Touch: tap a cell to move the cursor, drag to scroll, long-press to clear a cell. The pad under the grid enters notes and values and appears on touch screens, or tick <em>pad</em> in the menu.</p>
-        <p>Game controller (Bluetooth or USB; works on iPhone and iPad): d-pad or stick moves the cursor. Hold <kbd>A</kbd> and press up/down to nudge the value under the cursor, left/right for an octave. Tap <kbd>A</kbd> to enter a note or audition one. <kbd>B</kbd> clears, <kbd>X</kbd> auditions, <kbd>Y</kbd> cycles articulation, bumpers change track, triggers jump a bar. <kbd>Start</kbd> plays or stops the pattern, <kbd>Back</kbd>+<kbd>Start</kbd> plays the song, <kbd>Back</kbd> alone undoes. Press any button after pairing so the browser lists it.</p>
+        <p>Touch: tap a cell to move the cursor, drag to scroll, long-press to clear a cell. The <em>sel</em> pad button switches dragging to selecting. The pad under the grid enters notes and values and appears on touch screens, or tick <em>pad</em> in the menu.</p>
+        <p>Game controller (Bluetooth or USB; works on iPhone and iPad): d-pad or stick moves the cursor. Hold <kbd>A</kbd> and press up/down to nudge the value under the cursor, left/right for an octave. Tap <kbd>A</kbd> to enter a note or audition one. <kbd>B</kbd> clears, or held with the d-pad extends the selection; <kbd>X</kbd> auditions, <kbd>Y</kbd> cycles articulation, bumpers change track, triggers jump a bar. With <kbd>Back</kbd> held: <kbd>B</kbd> copies, <kbd>X</kbd> cuts, <kbd>A</kbd> pastes, <kbd>Y</kbd> duplicates. <kbd>Start</kbd> plays or stops the pattern, <kbd>Back</kbd>+<kbd>Start</kbd> plays the song, <kbd>Back</kbd> alone undoes. Press any button after pairing so the browser lists it.</p>
         <p>MIDI in: choose an input after enabling MIDI. Played notes go into the cursor cell with their velocity and advance by <em>step</em>; chords spread across the track's note columns. Sustain pedal skips a step; mod wheel writes dynamics. Not available on iOS, which has no WebMIDI.</p>
       </div>
     </div>
@@ -1113,6 +1153,11 @@ const state = {
   ensureVisible: true,   // scroll horizontally to the cursor's track on the next draw
   lastPitch: 60,         // what the controller's A button enters on an empty cell
   pad: false,
+  sel: null,             // { r0, r1, g0, g1 } rows and global cell indices, inclusive
+  selAnchor: null,       // { row, g } where the current selection started
+  selectMode: false,     // touch: drag selects instead of scrolling
+  topLock: null,         // first visible row pinned during a drag selection
+  clipboard: null,
 };
 state.song = state.songs[0];
 
@@ -1141,7 +1186,7 @@ const rowsPerStrongBeat = () => { const [beats, unit] = patMeter(curPat()); retu
 function computeLayout() {
   const cw = charW;
   const gutter = { rowX: PAD, tempoX: PAD + cw * 4.5, w: PAD + cw * 10 };
-  let x = gutter.w;
+  let x = gutter.w, g = 1;
   const tracks = state.song.tracks.map(tr => {
     const cells = []; let cx = x;
     for (let c = 0; c < tr.columns; c++) {
@@ -1150,8 +1195,8 @@ function computeLayout() {
     }
     cells.push({ kind: 'art', col: 0, x: cx, w: 3 * cw }); cx += 4 * cw;
     cells.push({ kind: 'dyn', col: 0, x: cx, w: 3 * cw }); cx += 4.5 * cw;
-    const lay = { x, w: cx - x, cells, track: tr };
-    x = cx;
+    const lay = { x, w: cx - x, cells, track: tr, g0: g };
+    x = cx; g += cells.length;
     return lay;
   });
   return { gutter, tracks, totalW: x };
@@ -1357,6 +1402,206 @@ function tapCell() {
     case 'tempo': { if (!pat.tempo.find(x => x.tick === tick)) withUndo(() => laneSet(pat.tempo, tick, state.song.bpm)); return; }
   }
 }
+// ---- Selection ----------------------------------------------------------------------------
+// Cells are numbered globally left to right: 0 is the tempo column, then every track's cells in
+// layout order. A selection is a rectangle of rows × global cell indices.
+function allCells() {
+  const out = [{ track: -1, cell: 0, kind: 'tempo', col: 0 }];
+  state.song.tracks.forEach((tr, ti) => {
+    for (let c = 0; c < tr.columns; c++) { out.push({ track: ti, cell: c * 2, kind: 'note', col: c }); out.push({ track: ti, cell: c * 2 + 1, kind: 'vel', col: c }); }
+    out.push({ track: ti, cell: tr.columns * 2, kind: 'art', col: 0 });
+    out.push({ track: ti, cell: tr.columns * 2 + 1, kind: 'dyn', col: 0 });
+  });
+  return out;
+}
+function cellIndex(track, cell) {
+  if (track < 0) return 0;
+  let g = 1;
+  for (let i = 0; i < track; i++) g += state.song.tracks[i].columns * 2 + 2;
+  return g + clamp(cell, 0, state.song.tracks[track].columns * 2 + 1);
+}
+const cursorIndex = () => cellIndex(state.cursor.track, state.cursor.cell);
+function setCursorIndex(g) {
+  const cells = allCells(), c = cells[clamp(g, 0, cells.length - 1)];
+  state.cursor.track = c.track; state.cursor.cell = c.cell; state.typing = null; state.ensureVisible = true; state.dirty = true;
+}
+function selRect() {   // the selection, or the cursor cell when nothing is selected
+  if (state.sel) return state.sel;
+  const g = cursorIndex(); return { r0: state.cursor.row, r1: state.cursor.row, g0: g, g1: g };
+}
+function selUpdate() {
+  const a = state.selAnchor, g = cursorIndex(), r = state.cursor.row;
+  state.sel = { r0: Math.min(a.row, r), r1: Math.max(a.row, r), g0: Math.min(a.g, g), g1: Math.max(a.g, g) };
+  state.dirty = true;
+}
+// Move the cursor by rows or cells without wrapping and grow the selection to cover it.
+function selExtend(dRow, dCell) {
+  if (!state.selAnchor) state.selAnchor = { row: state.cursor.row, g: cursorIndex() };
+  if (dRow) { state.cursor.row = clamp(state.cursor.row + dRow, 0, curPat().rows - 1); state.typing = null; }
+  if (dCell) setCursorIndex(cursorIndex() + dCell);
+  selUpdate();
+}
+function selectTrackOrAll() {
+  const cells = allCells(), rows = curPat().rows;
+  const tr = state.cursor.track;
+  const g0 = tr < 0 ? 0 : cellIndex(tr, 0), g1 = tr < 0 ? 0 : cellIndex(tr, state.song.tracks[tr].columns * 2 + 1);
+  const whole = state.sel && state.sel.r0 === 0 && state.sel.r1 === rows - 1 && state.sel.g0 === g0 && state.sel.g1 === g1;
+  state.sel = whole ? { r0: 0, r1: rows - 1, g0: 0, g1: cells.length - 1 } : { r0: 0, r1: rows - 1, g0, g1 };
+  state.selAnchor = { row: state.sel.r0, g: state.sel.g0 };
+  state.message = whole ? 'Selected the whole pattern' : 'Selected the track; ⌘A again for the whole pattern';
+  state.dirty = true;
+}
+function deselect() { state.sel = null; state.selAnchor = null; state.dirty = true; }
+function selCells(rect) { return allCells().slice(rect.g0, rect.g1 + 1); }
+function inSel(g, r) { const s = state.sel; return !!s && g >= s.g0 && g <= s.g1 && r >= s.r0 && r <= s.r1; }
+
+// ---- Batch edits ----------------------------------------------------------------------------
+function notesIn(pat, trackId, col, r0, r1) {
+  const pt = pat.tracks[trackId]; if (!pt) return [];
+  return pt.events.filter(e => e.col === col && Math.floor(e.tick / pat.ticksPerRow) >= r0 && Math.floor(e.tick / pat.ticksPerRow) <= r1);
+}
+// Notes touched by a selection: note and vel cells give their own column, an art cell gives every column.
+function selNotes(rect, pat) {
+  const seen = new Set(), out = [];
+  for (const c of selCells(rect)) {
+    if (c.track < 0 || c.kind === 'dyn') continue;
+    const tr = state.song.tracks[c.track];
+    const cols = c.kind === 'art' ? Array.from({ length: tr.columns }, (_, i) => i) : [c.col];
+    for (const col of cols) for (const ev of notesIn(pat, tr.id, col, rect.r0, rect.r1)) if (!seen.has(ev)) { seen.add(ev); out.push({ ev, tr }); }
+  }
+  return out;
+}
+function putNote(pat, trackId, col, tick, n) {
+  const pt = patTrack(pat, trackId);
+  pt.events = pt.events.filter(e => !(e.col === col && e.tick === tick));
+  for (const e of pt.events) if (e.col === col && e.tick < tick && e.tick + e.len > tick) e.len = tick - e.tick;
+  const next = pt.events.filter(e => e.col === col && e.tick > tick).sort((a, b) => a.tick - b.tick)[0];
+  const maxLen = Math.min(next ? next.tick - tick : Infinity, pat.rows * pat.ticksPerRow - tick);
+  pt.events.push({ tick, len: clamp(n.len, pat.ticksPerRow, maxLen), pitch: n.pitch, vel: n.vel, col, art: n.art || null });
+}
+function copySel() {
+  const rect = selRect(), pat = curPat(), tpr = pat.ticksPerRow, t0 = rect.r0 * tpr, t1 = (rect.r1 + 1) * tpr;
+  const cells = selCells(rect).map(c => {
+    const out = { kind: c.kind, items: [] };
+    if (c.kind === 'tempo') out.items = pat.tempo.filter(p => p.tick >= t0 && p.tick < t1).map(p => ({ tick: p.tick - t0, value: p.value, interp: p.interp }));
+    else {
+      const tr = state.song.tracks[c.track], pt = pat.tracks[tr.id];
+      if (c.kind === 'dyn') out.items = pt ? pt.dyn.filter(p => p.tick >= t0 && p.tick < t1).map(p => ({ tick: p.tick - t0, value: p.value, interp: p.interp })) : [];
+      else if (c.kind === 'note') out.items = notesIn(pat, tr.id, c.col, rect.r0, rect.r1).map(e => ({ tick: e.tick - t0, len: e.len, pitch: e.pitch, vel: e.vel, art: e.art }));
+      else if (c.kind === 'vel') out.items = notesIn(pat, tr.id, c.col, rect.r0, rect.r1).map(e => ({ tick: e.tick - t0, vel: e.vel }));
+      else if (c.kind === 'art') out.items = (pt ? pt.events : []).filter(e => e.art && e.tick >= t0 && e.tick < t1).map(e => ({ tick: e.tick - t0, art: e.art }));
+    }
+    return out;
+  });
+  state.clipboard = { rows: rect.r1 - rect.r0 + 1, tpr, cells };
+  state.message = 'Copied ' + state.clipboard.rows + ' rows × ' + cells.length + ' cells';
+  state.dirty = true;
+}
+function clearSel() {
+  const rect = selRect(), pat = curPat(), tpr = pat.ticksPerRow, t0 = rect.r0 * tpr, t1 = (rect.r1 + 1) * tpr;
+  withUndo(() => {
+    for (const c of selCells(rect)) {
+      if (c.kind === 'tempo') { pat.tempo = pat.tempo.filter(p => p.tick < t0 || p.tick >= t1); continue; }
+      const tr = state.song.tracks[c.track], pt = pat.tracks[tr.id]; if (!pt) continue;
+      if (c.kind === 'note') pt.events = pt.events.filter(e => !(e.col === c.col && e.tick >= t0 && e.tick < t1));
+      else if (c.kind === 'art') pt.events.forEach(e => { if (e.tick >= t0 && e.tick < t1) e.art = null; });
+      else if (c.kind === 'dyn') pt.dyn = pt.dyn.filter(p => p.tick < t0 || p.tick >= t1);
+    }
+  });
+  state.typing = null;
+}
+function cutSel() { copySel(); clearSel(); }
+// Paste with the clipboard's top-left cell at the given row and global cell index. Cells line up by
+// kind: a note block lands on note columns, a dynamics run on a dynamics column; mismatches are skipped.
+function pasteAt(row, g, clip) {
+  clip = clip || state.clipboard; if (!clip) { state.message = 'Nothing to paste'; state.dirty = true; return null; }
+  const pat = curPat(), tpr = pat.ticksPerRow, cells = allCells(), scale = tpr / clip.tpr, endTick = pat.rows * tpr;
+  const t0 = row * tpr;
+  withUndo(() => {
+    clip.cells.forEach((cc, i) => {
+      const c = cells[g + i]; if (!c || c.kind !== cc.kind) return;
+      const tr = c.track >= 0 ? state.song.tracks[c.track] : null;
+      for (const it of cc.items) {
+        const tick = t0 + Math.round(it.tick * scale); if (tick >= endTick) continue;
+        if (cc.kind === 'tempo') laneSet(pat.tempo, tick, it.value, it.interp);
+        else if (cc.kind === 'dyn') laneSet(patTrack(pat, tr.id).dyn, tick, it.value, it.interp);
+        else if (cc.kind === 'note') putNote(pat, tr.id, c.col, tick, { pitch: it.pitch, len: Math.round(it.len * scale), vel: it.vel, art: it.art });
+        else if (cc.kind === 'vel') { const ev = noteAt(pat, tr.id, c.col, Math.floor(tick / tpr)); if (ev) ev.vel = it.vel; }
+        else if (cc.kind === 'art') notesStartingAt(pat, tr.id, Math.floor(tick / tpr)).forEach(e => { if (INST[tr.instrument].articulations.includes(it.art)) e.art = it.art; });
+      }
+    });
+  });
+  return { r0: row, r1: Math.min(pat.rows - 1, row + clip.rows - 1), g0: g, g1: Math.min(cells.length - 1, g + clip.cells.length - 1) };
+}
+function pasteSel() { pasteAt(state.cursor.row, cursorIndex()); }
+function duplicateSel() {
+  const rect = selRect(); copySel();
+  const row = rect.r1 + 1; if (row >= curPat().rows) { state.message = 'No room below the selection'; return; }
+  const placed = pasteAt(row, rect.g0);
+  if (placed) { state.sel = placed; state.selAnchor = { row: placed.r0, g: placed.g0 }; state.cursor.row = placed.r0; setCursorIndex(placed.g0); }
+}
+function transposeSel(d) {
+  const pat = curPat(), notes = selNotes(selRect(), pat);
+  if (!notes.length) { state.message = 'No notes in the selection'; state.dirty = true; return; }
+  withUndo(() => notes.forEach(({ ev }) => { ev.pitch = clamp(ev.pitch + d, 0, 127); }));
+  const first = notes[0]; audition(first.tr, first.ev.pitch, first.ev.art);
+}
+function velocitySel(d) {
+  const notes = selNotes(selRect(), curPat());
+  if (!notes.length) { state.message = 'No notes in the selection'; state.dirty = true; return; }
+  withUndo(() => notes.forEach(({ ev }) => { ev.vel = clamp(ev.vel + d, 1, 127); }));
+}
+function lengthSel(d) {
+  const pat = curPat(), notes = selNotes(selRect(), pat);
+  if (!notes.length) { state.message = 'No notes in the selection'; state.dirty = true; return; }
+  withUndo(() => notes.forEach(({ ev, tr }) => {
+    const next = pat.tracks[tr.id].events.filter(e => e.col === ev.col && e.tick > ev.tick).sort((a, b) => a.tick - b.tick)[0];
+    ev.len = clamp(ev.len + d * pat.ticksPerRow, pat.ticksPerRow, next ? next.tick - ev.tick : pat.rows * pat.ticksPerRow - ev.tick);
+  }));
+}
+function articulationSel(art) {
+  const notes = selNotes(selRect(), curPat()).filter(({ tr }) => INST[tr.instrument].articulations.includes(art));
+  if (!notes.length) { state.message = 'No notes in the selection take ' + art; state.dirty = true; return; }
+  withUndo(() => notes.forEach(({ ev }) => { ev.art = art; }));
+}
+// Linear ramp from the first selected row to the last: velocities of notes in note/vel cells, and
+// dynamics or tempo lanes become two ramp points with nothing in between.
+function interpolateSel() {
+  const rect = selRect(), pat = curPat(), tpr = pat.ticksPerRow, t0 = rect.r0 * tpr, t1 = rect.r1 * tpr;
+  if (rect.r1 - rect.r0 < 1) { state.message = 'Select at least two rows to interpolate'; state.dirty = true; return; }
+  withUndo(() => {
+    for (const c of selCells(rect)) {
+      if (c.kind === 'tempo' || c.kind === 'dyn') {
+        const pts = c.kind === 'tempo' ? pat.tempo : patTrack(pat, state.song.tracks[c.track].id).dyn;
+        const v0 = laneValueAt(pts, t0, null), v1 = laneValueAt(pts, t1, null);
+        if (v0 == null || v1 == null) continue;
+        const keep = pts.filter(p => p.tick < t0 || p.tick > t1); pts.length = 0; pts.push(...keep);
+        laneSet(pts, t0, v0, 'lin'); laneSet(pts, t1, v1, 'step');
+      } else if (c.kind === 'note' || c.kind === 'vel') {
+        const tr = state.song.tracks[c.track], evs = notesIn(pat, tr.id, c.col, rect.r0, rect.r1).sort((a, b) => a.tick - b.tick);
+        if (evs.length < 3) continue;
+        const a = evs[0], b = evs[evs.length - 1];
+        for (const e of evs) e.vel = Math.round(a.vel + (b.vel - a.vel) * (e.tick - a.tick) / (b.tick - a.tick));
+      }
+    }
+  });
+}
+function batchOp(op) {
+  const [name, arg] = op.split(':'), n = parseInt(arg, 10);
+  switch (name) {
+    case 'copy': copySel(); break;
+    case 'cut': cutSel(); break;
+    case 'paste': pasteSel(); break;
+    case 'dup': duplicateSel(); break;
+    case 'clear': clearSel(); break;
+    case 'tr': transposeSel(n); break;
+    case 'vel': velocitySel(n); break;
+    case 'len': lengthSel(n); break;
+    case 'interp': interpolateSel(); break;
+    case 'deselect': deselect(); break;
+  }
+  state.dirty = true;
+}
 function clearCell() {
   const pat = curPat(), tr = curTrack(), cell = currentCell(), row = state.cursor.row, tick = row * pat.ticksPerRow;
   withUndo(() => {
@@ -1442,9 +1687,21 @@ function handleKey(e) {
     const lower = k.toLowerCase();
     if (lower === 'z' && !sh) { undo(); return true; }
     if ((lower === 'z' && sh) || lower === 'y') { redo(); return true; }
-    if (k === 'ArrowUp') { setRow(0); return true; }                    // native: top of document
-    if (k === 'ArrowDown') { setRow(curPat().rows - 1); return true; }  // native: end of document
+    if (lower === 'a') { selectTrackOrAll(); return true; }
+    if (lower === 'c') { copySel(); return true; }
+    if (lower === 'x') { cutSel(); return true; }
+    if (lower === 'v') { pasteSel(); return true; }
+    if (lower === 'd') { duplicateSel(); return true; }
+    if (k === 'ArrowUp') { sh ? moveRow(-rowsPerBar()) : setRow(0); return true; }                    // ⌘↑ top, ⌘⇧↑ bar
+    if (k === 'ArrowDown') { sh ? moveRow(rowsPerBar()) : setRow(curPat().rows - 1); return true; }  // ⌘↓ end, ⌘⇧↓ bar
     return false;                                              // let the browser have the rest
+  }
+  // With a selection, the octave/step and length keys act on the selection instead.
+  if (state.sel) {
+    if (code === 'Minus' || k === '-' || k === '_') { transposeSel(sh ? -12 : -1); return true; }
+    if (code === 'Equal' || k === '=' || k === '+') { transposeSel(sh ? 12 : 1); return true; }
+    if (code === 'BracketLeft' || k === '[' || k === '{') { lengthSel(-1); return true; }
+    if (code === 'BracketRight' || k === ']' || k === '}') { lengthSel(1); return true; }
   }
   // Octave and step: the two keys to the right of 0. Shift switches from octave to step.
   if (code === 'Minus' || k === '-' || k === '_') {
@@ -1461,10 +1718,10 @@ function handleKey(e) {
   if (code === 'BracketLeft' || k === '[' || k === '{') { sh ? changeColumns(-1) : changeLength(-1); return true; }
   if (code === 'BracketRight' || k === ']' || k === '}') { sh ? changeColumns(1) : changeLength(1); return true; }
   switch (k) {
-    case 'ArrowUp': moveRow(sh ? -rowsPerBar() : -1); return true;
-    case 'ArrowDown': moveRow(sh ? rowsPerBar() : 1); return true;
-    case 'ArrowLeft': sh ? moveTrack(-1) : moveCell(-1); return true;
-    case 'ArrowRight': sh ? moveTrack(1) : moveCell(1); return true;
+    case 'ArrowUp': sh ? selExtend(-1, 0) : moveRow(-1); return true;
+    case 'ArrowDown': sh ? selExtend(1, 0) : moveRow(1); return true;
+    case 'ArrowLeft': sh ? selExtend(0, -1) : moveCell(-1); return true;
+    case 'ArrowRight': sh ? selExtend(0, 1) : moveCell(1); return true;
     case 'PageUp': moveRow(-rowsPerBar()); return true;
     case 'PageDown': moveRow(rowsPerBar()); return true;
     case 'Home': setRow(0); return true;
@@ -1472,8 +1729,8 @@ function handleKey(e) {
     case 'Tab': moveTrack(sh ? -1 : 1); return true;
     case ' ': if (sched.playing) stopAll(); else playPattern(sh); return true;
     case 'Enter': playSong(); return true;
-    case 'Escape': stopAll(); return true;
-    case 'Delete': case 'Backspace': clearCell(); return true;
+    case 'Escape': if (state.sel) deselect(); else stopAll(); return true;
+    case 'Delete': case 'Backspace': state.sel ? clearSel() : clearCell(); return true;
   }
   if (k.length === 1) return typeIntoCell(k);
   return false;
@@ -1496,16 +1753,20 @@ function hitTest(x, y) {
   if (ci < 0) ci = lay.cells.length - 1;
   return { row, track: ti, cell: ci };
 }
-function placeCursor(hit) {
+function placeCursor(hit, extend) {
+  if (extend && !state.selAnchor) state.selAnchor = { row: state.cursor.row, g: cursorIndex() };   // extend from where the cursor was
   state.cursor.row = hit.row; state.cursor.track = hit.track; state.cursor.cell = hit.cell;
   state.typing = null; state.message = ''; state.dirty = true;
+  if (extend) selUpdate(); else deselect();
 }
 canvas.addEventListener('pointerdown', e => {
   if (e.pointerType === 'mouse' && e.button !== 0) return;
   canvas.focus(); e.preventDefault();
   try { canvas.setPointerCapture(e.pointerId); } catch (_) { /* synthetic events have no capturable id */ }
-  drag = { id: e.pointerId, x0: e.offsetX, y0: e.offsetY, scrollX0: state.scrollX, row0: state.cursor.row, moved: false, done: false, timer: 0 };
-  if (e.pointerType !== 'mouse') drag.timer = setTimeout(() => {
+  drag = { id: e.pointerId, x0: e.offsetX, y0: e.offsetY, scrollX0: state.scrollX, row0: state.cursor.row, moved: false, done: false, timer: 0,
+           select: e.pointerType === 'mouse' || state.selectMode, shift: e.shiftKey };
+  if (drag.select) { const hit = hitTest(e.offsetX, e.offsetY); drag.hit = hit && !hit.header ? hit : null; }
+  if (e.pointerType !== 'mouse' && !state.selectMode) drag.timer = setTimeout(() => {
     if (!drag || drag.moved) return;
     const hit = hitTest(drag.x0, drag.y0);
     if (hit && !hit.header) { placeCursor(hit); clearCell(); drag.done = true; if (navigator.vibrate) navigator.vibrate(15); }
@@ -1515,7 +1776,25 @@ canvas.addEventListener('pointermove', e => {
   if (!drag || e.pointerId !== drag.id) return;
   const dx = e.offsetX - drag.x0, dy = e.offsetY - drag.y0;
   if (!drag.moved && Math.hypot(dx, dy) < (e.pointerType === 'mouse' ? 4 : 10)) return;
-  if (!drag.moved) { drag.moved = true; clearTimeout(drag.timer); }
+  if (!drag.moved) {
+    drag.moved = true; clearTimeout(drag.timer);
+    if (drag.select && drag.hit) {   // anchor the selection where the drag began (or at the cursor with shift)
+      placeCursor(drag.hit, drag.shift);
+      if (!state.selAnchor) state.selAnchor = { row: drag.hit.row, g: cellIndex(drag.hit.track, drag.hit.cell) };
+    }
+  }
+  if (drag.select) {
+    if (!drag.hit) return;
+    if (state.topLock == null) state.topLock = lastDraw.top;
+    // Past the top or bottom edge: creep the view one row per move so long selections are possible.
+    const H = canvas.clientHeight, rows = curPat().rows;
+    if (e.offsetY > H - ROW_H) state.topLock = Math.min(state.topLock + 1, rows - 1);
+    else if (e.offsetY < lastDraw.headerH + ROW_H) state.topLock = Math.max(state.topLock - 1, -Math.floor((H - lastDraw.headerH) / ROW_H) + 1);
+    const hit = hitTest(clamp(e.offsetX, 0, canvas.clientWidth - 1), clamp(e.offsetY, lastDraw.headerH, H - 1));
+    if (hit && !hit.header) placeCursor(hit, true);
+    state.dirty = true;
+    return;
+  }
   state.scrollX = Math.max(0, drag.scrollX0 - dx);
   const r = clamp(drag.row0 - Math.round(dy / ROW_H), 0, curPat().rows - 1);
   if (r !== state.cursor.row) { state.cursor.row = r; state.typing = null; }
@@ -1527,9 +1806,9 @@ function endDrag(e) {
   if (!drag.moved && !drag.done && e.type === 'pointerup') {
     const hit = hitTest(e.offsetX, e.offsetY);
     if (hit && hit.header) { if (hit.track >= 0) { state.song.tracks[hit.track].mute = !state.song.tracks[hit.track].mute; state.dirty = true; } }
-    else if (hit) placeCursor(hit);
+    else if (hit) placeCursor(hit, drag.shift);
   }
-  drag = null;
+  drag = null; state.topLock = null; state.dirty = true;
 }
 canvas.addEventListener('pointerup', endDrag);
 canvas.addEventListener('pointercancel', endDrag);
@@ -1567,7 +1846,8 @@ function draw() {
   const headerH = ROW_H * 2 + 8;
   const visible = Math.max(1, Math.floor((H - headerH) / ROW_H));
   const centerRow = (playRow != null && state.follow && playPat === state.pat) ? playRow : state.cursor.row;
-  const top = centerRow - Math.floor(visible / 2);
+  // While a drag selection is in progress the view stays put (state.topLock) so rows don't slide under the pointer.
+  const top = state.topLock != null ? state.topLock : centerRow - Math.floor(visible / 2);
 
   // Bring the cursor's track on screen after the cursor moved, but leave a hand-scrolled view alone.
   if (state.cursor.track >= 0 && state.ensureVisible) {
@@ -1607,8 +1887,10 @@ function draw() {
     for (let r = Math.max(0, top); r < Math.min(pat.rows, top + visible + 1); r++) {
       const y = rowY(r), ym = y + ROW_H / 2;
       const starts = idx.starts.get(r) || {}, spans = idx.spans.get(r) || {};
-      for (const cell of lay.cells) {
+      for (let ci = 0; ci < lay.cells.length; ci++) {
+        const cell = lay.cells[ci];
         const isCursor = cur.track === ti && cell === cursorCell && r === cur.row;
+        if (state.sel && inSel(lay.g0 + ci, r)) { ctx.fillStyle = COLORS.accent; ctx.globalAlpha = 0.22; ctx.fillRect(cell.x - 2, y, cell.w + 4, ROW_H); ctx.globalAlpha = 1; }
         if (isCursor) { ctx.fillStyle = COLORS.accent; ctx.fillRect(cell.x - 2, y + 1, cell.w + 4, ROW_H - 2); }
         const textColor = isCursor ? COLORS.cursorText : COLORS.text;
         if (cell.kind === 'note') {
@@ -1646,6 +1928,7 @@ function draw() {
     ctx.fillStyle = r % rpb === 0 ? COLORS.accent : COLORS.num;
     ctx.fillText(String(r).padStart(3, '0'), L.gutter.rowX, ym);
     const isCursor = cur.track === -1 && r === cur.row;
+    if (state.sel && inSel(0, r)) { ctx.fillStyle = COLORS.accent; ctx.globalAlpha = 0.22; ctx.fillRect(L.gutter.tempoX - 2, y, charW * 4 + 4, ROW_H); ctx.globalAlpha = 1; }
     if (isCursor) { ctx.fillStyle = COLORS.accent; ctx.fillRect(L.gutter.tempoX - 2, y + 1, charW * 4 + 4, ROW_H - 2); }
     const p = pat.tempo.find(x => x.tick === r * pat.ticksPerRow);
     ctx.fillStyle = isCursor ? COLORS.cursorText : (p ? COLORS.text : COLORS.dim);
@@ -1686,7 +1969,7 @@ function draw() {
   ctx.fillText('bpm', L.gutter.tempoX, ROW_H + 8 + ROW_H / 2);
 
   lastDraw = { L, top, headerH };
-  syncPad();
+  syncPad(); syncSelBar();
   updateStatus(playRow);
 }
 
@@ -1705,6 +1988,7 @@ function updateStatus(playRow) {
   } else parts.push('<b>tempo</b> row ' + row + ' (digits, L ramp, S hold)');
   parts.push('octave <b>' + state.octave + '</b>');
   parts.push('preview ' + (state.preview ? 'on' : 'off') + ' | MIDI ' + (midi.out ? '<b>' + esc(midi.out.name) + '</b>' : 'off'));
+  if (state.sel) parts.push('selected <b>' + (state.sel.r1 - state.sel.r0 + 1) + '</b> rows × <b>' + (state.sel.g1 - state.sel.g0 + 1) + '</b> cells');
   if (midi.in) parts.push('MIDI in <b>' + esc(midi.in.name) + '</b>');
   if (gamepad.name) parts.push('\u{1F3AE} <b>' + esc(gamepad.name.replace(/\s*\(.*$/, '')) + '</b>');
   if (sched.playing) parts.push('<b>playing</b>' + (sched.loop ? ' (loop)' : '') + (playRow != null ? ' row ' + playRow : ''));
@@ -1723,7 +2007,7 @@ function frame(now) {
 // The Gamepad API is polled, so this runs every frame. Standard-mapping indices (Xbox layout):
 // 0 A, 1 B, 2 X, 3 Y, 4 LB, 5 RB, 6 LT, 7 RT, 8 Back, 9 Start, 12–15 d-pad; axes 0/1 left stick.
 // Scheme follows LSDJ: directions move, A + direction edits the value under the cursor.
-const gamepad = { name: null, held: {}, next: {}, aUsed: false, backUsed: false, warned: false };
+const gamepad = { name: null, held: {}, next: {}, aUsed: false, bUsed: false, backUsed: false, warned: false };
 const GP_DELAY = 260, GP_REPEAT = 70;
 const GP_REPEATS = { up: 1, down: 1, left: 1, right: 1, lt: 2.5, rt: 2.5 };
 function pollGamepad(now) {
@@ -1747,17 +2031,19 @@ function pollGamepad(now) {
   }
   gamepad.held = held;
   if (fire.a) gamepad.aUsed = false;
+  if (fire.b) gamepad.bUsed = false;
   if (fire.back) gamepad.backUsed = false;
   const edit = d => { gamepad.aUsed = true; nudgeCell(d); };
+  const grow = (dr, dc) => { gamepad.bUsed = true; selExtend(dr, dc); };
   const big = () => { const k = currentCell().kind; return k === 'note' ? 12 : k === 'tempo' ? 10 : 16; };
-  if (fire.up)    held.a ? edit(1) : moveRow(-1);
-  if (fire.down)  held.a ? edit(-1) : moveRow(1);
-  if (fire.left)  held.a ? edit(-big()) : moveCell(-1);
-  if (fire.right) held.a ? edit(big()) : moveCell(1);
-  if (fire.aUp && !gamepad.aUsed) tapCell();
-  if (fire.b) clearCell();
-  if (fire.x) { const tr = curTrack(); if (tr) { const ev = noteCovering(curPat(), tr.id, currentCell().col | 0, state.cursor.row); if (ev) audition(tr, ev.pitch, ev.art); } }
-  if (fire.y) nudgeArticulation(1);
+  if (fire.up)    held.b ? grow(-1, 0) : held.a ? edit(1) : moveRow(-1);
+  if (fire.down)  held.b ? grow(1, 0) : held.a ? edit(-1) : moveRow(1);
+  if (fire.left)  held.b ? grow(0, -1) : held.a ? edit(-big()) : moveCell(-1);
+  if (fire.right) held.b ? grow(0, 1) : held.a ? edit(big()) : moveCell(1);
+  if (fire.aUp && !gamepad.aUsed) { if (held.back) { gamepad.backUsed = true; pasteSel(); } else tapCell(); }
+  if (fire.bUp && !gamepad.bUsed) { if (held.back) { gamepad.backUsed = true; copySel(); } else if (state.sel) clearSel(); else clearCell(); }
+  if (fire.x) { if (held.back) { gamepad.backUsed = true; cutSel(); } else { const tr = curTrack(); if (tr) { const ev = noteCovering(curPat(), tr.id, currentCell().col | 0, state.cursor.row); if (ev) audition(tr, ev.pitch, ev.art); } } }
+  if (fire.y) { if (held.back) { gamepad.backUsed = true; duplicateSel(); } else nudgeArticulation(1); }
   if (fire.lb) moveTrack(-1);
   if (fire.rb) moveTrack(1);
   if (fire.lt) moveRow(-rowsPerBar());
@@ -1783,7 +2069,7 @@ function padButton(label, cls, fn, title) {
 function syncPad() {
   if (!state.pad) return;
   const cell = currentCell(), tr = curTrack();
-  const sig = [cell.kind, tr ? tr.instrument : '', state.octave, state.step, sched.playing ? 1 : 0].join(':');
+  const sig = [cell.kind, tr ? tr.instrument : '', state.octave, state.step, sched.playing ? 1 : 0, state.selectMode ? 1 : 0].join(':');
   if (sig === padSig) return; padSig = sig;
   const keys = $('padKeys'); keys.innerHTML = '';
   if (cell.kind === 'note') {
@@ -1808,14 +2094,29 @@ function syncPad() {
   }
   const nav = $('padNav'); nav.innerHTML = '';
   [['\u2191', () => moveRow(-1), 'Row up'], ['\u2193', () => moveRow(1), 'Row down'], ['\u2190', () => moveCell(-1), 'Field left'], ['\u2192', () => moveCell(1), 'Field right'],
-   ['\u21e4', () => moveTrack(-1), 'Previous track'], ['\u21e5', () => moveTrack(1), 'Next track'], ['del', clearCell, 'Clear the cell'], ['undo', undo, 'Undo']]
-    .forEach(([l, f, t]) => nav.appendChild(padButton(l, '', f, t)));
+   ['\u21e4', () => moveTrack(-1), 'Previous track'], ['\u21e5', () => moveTrack(1), 'Next track'],
+   ['sel', () => { state.selectMode = !state.selectMode; padSig = ''; }, 'Drag selects instead of scrolling'],
+   ['del', () => state.sel ? clearSel() : clearCell(), 'Clear'], ['\u21b6', undo, 'Undo']]
+    .forEach(([l, f, t]) => nav.appendChild(padButton(l, l === 'sel' && state.selectMode ? 'act' : '', f, t)));
   const ctl = $('padCtl'); ctl.innerHTML = '';
   [['oct\u2212', () => setOctave(state.octave - 1), 'Octave down'], ['oct' + state.octave + '+', () => setOctave(state.octave + 1), 'Octave up'],
    ['stp\u2212', () => setStep(state.step - 1), 'Step down'], ['stp' + state.step + '+', () => setStep(state.step + 1), 'Step up'],
    ['len\u2212', () => changeLength(-1), 'Shorter note'], ['len+', () => changeLength(1), 'Longer note'],
    [sched.playing ? '\u25a0' : '\u25b6', () => sched.playing ? stopAll() : playPattern(false), 'Play or stop the pattern']]
     .forEach(([l, f, t]) => ctl.appendChild(padButton(l, /^[\u25a0\u25b6]$/.test(l) ? 'act' : 'small', f, t)));
+}
+let selBarSig = '';
+function syncSelBar() {
+  const show = !!state.sel || state.selectMode;
+  const bar = $('selbar'); bar.hidden = !show;
+  if (!show) { selBarSig = ''; return; }
+  const rect = selRect();
+  const tracks = new Set(selCells(rect).map(c => c.track).filter(t => t >= 0));
+  const arts = tracks.size ? [...new Set([...tracks].flatMap(t => INST[state.song.tracks[t].instrument].articulations))] : [];
+  const sig = [rect.r0, rect.r1, rect.g0, rect.g1, arts.join(','), state.sel ? 1 : 0].join('|');
+  if (sig === selBarSig) return; selBarSig = sig;
+  $('selInfo').textContent = state.sel ? (rect.r1 - rect.r0 + 1) + ' rows × ' + (rect.g1 - rect.g0 + 1) + ' cells' : 'cursor cell';
+  const sel = $('selArt'); sel.innerHTML = '<option value="">art…</option>' + arts.map(a => '<option value="' + a + '">' + a + ' ' + ART[a] + '</option>').join('');
 }
 function setPad(on) {
   state.pad = on; document.body.classList.toggle('padon', on); $('padToggle').checked = on; padSig = ''; state.dirty = true;
@@ -1933,6 +2234,9 @@ $('midiEnable').onclick = async () => {
 $('midiOut').onchange = e => { midi.allOff(); midi.select(e.target.value); state.dirty = true; };
 $('midiIn').onchange = e => { midi.selectIn(e.target.value, onMidiMessage); state.dirty = true; };
 $('padToggle').onchange = e => setPad(e.target.checked);
+$('selbar').addEventListener('pointerdown', e => { const b = e.target.closest('button[data-op]'); if (!b) return; e.preventDefault(); batchOp(b.dataset.op); });
+$('selbar').addEventListener('click', e => { if (e.target.closest('button')) e.preventDefault(); });
+$('selArt').onchange = e => { if (e.target.value) articulationSel(e.target.value); e.target.value = ''; state.dirty = true; };
 $('menuToggle').onclick = () => {
   const open = document.querySelector('header').classList.toggle('open');
   $('menuToggle').setAttribute('aria-expanded', String(open));
