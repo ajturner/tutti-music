@@ -5,6 +5,7 @@ import { newSong, newPattern, patTrack, laneSet, laneValueAt, normalizeSong, SON
 import { renderSong, TimeMap, TYPE_ORDER } from '../src/core/render.js';
 import { midiFileBytes } from '../src/core/midifile.js';
 import { EXAMPLES, line } from '../src/core/examples.js';
+import { setNote, putNote, resizeNote, removeNotesAt, noteAt, noteCovering, notesIn, maxLength } from '../src/core/edit.js';
 
 const fails = [];
 const check = (name, ok, extra = '') => { console.log((ok ? 'PASS ' : 'FAIL ') + name + (extra ? '  ' + extra : '')); if (!ok) fails.push(name); };
@@ -56,6 +57,31 @@ const bytes = midiFileBytes(song);
 const str = (a, b) => String.fromCharCode(...bytes.slice(a, b));
 check('midi: header chunk', str(0, 4) === 'MThd' && bytes[9] === 1 && (bytes[12] << 8 | bytes[13]) === 960);
 check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[11]) === song.tracks.length + 1);
+
+// Editing primitives: overlap and clamping rules
+{
+  const s = newSong(), p = s.patterns[0], tpr = p.ticksPerRow, id = 'fl';
+  setNote(p, id, 0, 0, 60, 4 * tpr);
+  setNote(p, id, 0, 2 * tpr, 62, 4 * tpr);
+  const a = noteAt(p, id, 0, 0), b = noteAt(p, id, 0, 2);
+  check('edit: new note cuts the sounding note', a.len === 2 * tpr && b.len === 4 * tpr);
+  setNote(p, id, 0, 0, 65, 4 * tpr);
+  check('edit: writing on a start replaces pitch and keeps length', a.pitch === 65 && a.len === 2 * tpr && noteAt(p, id, 0, 0) === a);
+  resizeNote(p, id, a, 10);
+  check('edit: resize clamps to the next note', a.len === 2 * tpr);
+  resizeNote(p, id, b, 100);
+  check('edit: resize clamps to the pattern end', b.tick + b.len === p.rows * tpr);
+  resizeNote(p, id, b, -1000);
+  check('edit: resize never below one row', b.len === tpr);
+  setNote(p, id, 1, tpr, 67, 8 * tpr);
+  check('edit: other columns may overlap', noteCovering(p, id, 1, 3).pitch === 67 && noteAt(p, id, 0, 0).len === 2 * tpr);
+  putNote(p, id, 0, 2 * tpr, { pitch: 70, len: 3 * tpr, vel: 50, art: 'stc' });
+  const c = noteAt(p, id, 0, 2);
+  check('edit: putNote replaces the note at that tick', c.pitch === 70 && c.vel === 50 && c.art === 'stc' && notesIn(p, id, 0, 0, 63).length === 2);
+  check('edit: maxLength before a note', maxLength(p, id, 0, 0) === 2 * tpr);
+  removeNotesAt(p, id, 0, 2);
+  check('edit: removeNotesAt', noteAt(p, id, 0, 2) === null && noteAt(p, id, 0, 0) !== null);
+}
 
 // Every example renders and exports
 for (const ex of EXAMPLES) {

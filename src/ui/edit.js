@@ -1,38 +1,14 @@
 // Editing primitives: note lookup, undo, cell entry and nudging, clearing, note length and columns, cursor movement.
 import { clamp, noteName } from '../core/constants.js';
 import { INST } from '../core/instruments.js';
-import { laneSet, patTrack } from '../core/song.js';
+import { laneRemove, laneSet, patTrack } from '../core/song.js';
+import { setNote as coreSetNote, noteAt, noteCovering, notesStartingAt, removeNotesAt, resizeNote } from '../core/edit.js';
 import { $, KEYMAP, curPat, curTrack, midi, state, synth } from './state.js';
 import { currentCell } from './layout.js';
 import { syncPatternUI } from './sync.js';
 
-// ---- Pattern indexing for drawing and editing ---------------------------------------
-export function indexTrack(pat, trackId) {
-  const pt = pat.tracks[trackId], tpr = pat.ticksPerRow;
-  const starts = new Map(), spans = new Map();
-  if (pt) for (const ev of pt.events) {
-    const r0 = Math.floor(ev.tick / tpr), r1 = Math.min(pat.rows - 1, Math.ceil((ev.tick + ev.len) / tpr) - 1);
-    if (r0 >= pat.rows) continue;
-    if (!starts.has(r0)) starts.set(r0, {});
-    starts.get(r0)[ev.col] = ev;
-    for (let r = r0 + 1; r <= r1; r++) { if (!spans.has(r)) spans.set(r, {}); spans.get(r)[ev.col] = ev; }
-  }
-  return { starts, spans, dyn: pt ? pt.dyn : [] };
-}
-export function noteAt(pat, trackId, col, row) {
-  const pt = pat.tracks[trackId]; if (!pt) return null;
-  return pt.events.find(e => e.col === col && Math.floor(e.tick / pat.ticksPerRow) === row) || null;
-}
-export function noteCovering(pat, trackId, col, row) {
-  const pt = pat.tracks[trackId]; if (!pt) return null;
-  const tpr = pat.ticksPerRow;
-  return pt.events.filter(e => e.col === col && Math.floor(e.tick / tpr) <= row && Math.ceil((e.tick + e.len) / tpr) - 1 >= row)
-    .sort((a, b) => b.tick - a.tick)[0] || null;
-}
-export function notesStartingAt(pat, trackId, row) {
-  const pt = pat.tracks[trackId]; if (!pt) return [];
-  return pt.events.filter(e => Math.floor(e.tick / pat.ticksPerRow) === row);
-}
+// Pattern lookups live in the core; re-exported so UI modules keep one import path.
+export { indexTrack, noteAt, noteCovering, notesStartingAt, notesIn, putNote, nextNote, maxLength } from '../core/edit.js';
 
 // ---- Undo ---------------------------------------------------------------------------
 export function withUndo(fn) {
@@ -54,14 +30,9 @@ export function swapHistory(from, to) {
 // ---- Editing --------------------------------------------------------------------------
 // A note column holds non-overlapping notes: a new note cuts off any note still sounding in that column,
 // and a note can't be lengthened past the next note in its column. Overlaps across columns are fine (divisi).
+// New notes last `step` rows (at least one); the overlap rules are in the core.
 export function setNote(pat, trackId, col, tick, pitch) {
-  const pt = patTrack(pat, trackId);
-  const existing = pt.events.find(e => e.col === col && e.tick === tick);
-  if (existing) { existing.pitch = pitch; return; }
-  for (const e of pt.events) if (e.col === col && e.tick < tick && e.tick + e.len > tick) e.len = tick - e.tick;
-  const next = pt.events.filter(e => e.col === col && e.tick > tick).sort((a, b) => a.tick - b.tick)[0];
-  const len = Math.min(Math.max(1, state.step) * pat.ticksPerRow, next ? next.tick - tick : Infinity);
-  pt.events.push({ tick, len, pitch, vel: 100, col, art: null });
+  return coreSetNote(pat, trackId, col, tick, pitch, Math.max(1, state.step) * pat.ticksPerRow);
 }
 export function audition(track, pitch, art) {
   const ins = INST[track.instrument];
@@ -220,3 +191,27 @@ export function moveTrack(d) {
 }
 export function setOctave(o) { state.octave = clamp(o, 0, 8); $('octave').value = state.octave; state.dirty = true; }
 export function setStep(s) { state.step = clamp(s, 0, 64); $('step').value = state.step; state.dirty = true; }
+
+// ---- Clearing, length, columns ----------------------------------------------------------
+export function clearCell() {
+  const pat = curPat(), tr = curTrack(), cell = currentCell(), row = state.cursor.row, tick = row * pat.ticksPerRow;
+  withUndo(() => {
+    if (cell.kind === 'tempo') laneRemove(pat.tempo, tick);
+    else if (cell.kind === 'dyn') laneRemove(patTrack(pat, tr.id).dyn, tick);
+    else if (cell.kind === 'art') notesStartingAt(pat, tr.id, row).forEach(e => { e.art = null; });
+    else removeNotesAt(pat, tr.id, cell.col, row);
+  });
+  state.typing = null;
+}
+export function changeLength(d) {
+  const pat = curPat(), tr = curTrack(); if (!tr) return;
+  const ev = noteCovering(pat, tr.id, currentCell().col, state.cursor.row);
+  if (!ev) return;
+  withUndo(() => resizeNote(pat, tr.id, ev, d));
+}
+export function changeColumns(d) {
+  const tr = curTrack(); if (!tr) return;
+  tr.columns = clamp(tr.columns + d, 1, 4);
+  state.cursor.cell = clamp(state.cursor.cell, 0, tr.columns * 2 + 1);
+  state.dirty = true;
+}

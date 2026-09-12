@@ -5,6 +5,7 @@ import { laneRemove, laneSet, laneValueAt, patTrack } from '../core/song.js';
 import { curPat, curTrack, state } from './state.js';
 import { currentCell } from './layout.js';
 import { audition, noteAt, noteCovering, notesStartingAt, withUndo } from './edit.js';
+import { notesIn, putNote, resizeNote } from '../core/edit.js';
 
 // ---- Selection ----------------------------------------------------------------------------
 // Cells are numbered globally left to right: 0 is the tempo column, then every track's cells in
@@ -60,10 +61,6 @@ export function selCells(rect) { return allCells().slice(rect.g0, rect.g1 + 1); 
 export function inSel(g, r) { const s = state.sel; return !!s && g >= s.g0 && g <= s.g1 && r >= s.r0 && r <= s.r1; }
 
 // ---- Batch edits ----------------------------------------------------------------------------
-export function notesIn(pat, trackId, col, r0, r1) {
-  const pt = pat.tracks[trackId]; if (!pt) return [];
-  return pt.events.filter(e => e.col === col && Math.floor(e.tick / pat.ticksPerRow) >= r0 && Math.floor(e.tick / pat.ticksPerRow) <= r1);
-}
 // Notes touched by a selection: note and vel cells give their own column, an art cell gives every column.
 export function selNotes(rect, pat) {
   const seen = new Set(), out = [];
@@ -74,14 +71,6 @@ export function selNotes(rect, pat) {
     for (const col of cols) for (const ev of notesIn(pat, tr.id, col, rect.r0, rect.r1)) if (!seen.has(ev)) { seen.add(ev); out.push({ ev, tr }); }
   }
   return out;
-}
-export function putNote(pat, trackId, col, tick, n) {
-  const pt = patTrack(pat, trackId);
-  pt.events = pt.events.filter(e => !(e.col === col && e.tick === tick));
-  for (const e of pt.events) if (e.col === col && e.tick < tick && e.tick + e.len > tick) e.len = tick - e.tick;
-  const next = pt.events.filter(e => e.col === col && e.tick > tick).sort((a, b) => a.tick - b.tick)[0];
-  const maxLen = Math.min(next ? next.tick - tick : Infinity, pat.rows * pat.ticksPerRow - tick);
-  pt.events.push({ tick, len: clamp(n.len, pat.ticksPerRow, maxLen), pitch: n.pitch, vel: n.vel, col, art: n.art || null });
 }
 export function copySel() {
   const rect = selRect(), pat = curPat(), tpr = pat.ticksPerRow, t0 = rect.r0 * tpr, t1 = (rect.r1 + 1) * tpr;
@@ -158,10 +147,7 @@ export function velocitySel(d) {
 export function lengthSel(d) {
   const pat = curPat(), notes = selNotes(selRect(), pat);
   if (!notes.length) { state.message = 'No notes in the selection'; state.dirty = true; return; }
-  withUndo(() => notes.forEach(({ ev, tr }) => {
-    const next = pat.tracks[tr.id].events.filter(e => e.col === ev.col && e.tick > ev.tick).sort((a, b) => a.tick - b.tick)[0];
-    ev.len = clamp(ev.len + d * pat.ticksPerRow, pat.ticksPerRow, next ? next.tick - ev.tick : pat.rows * pat.ticksPerRow - ev.tick);
-  }));
+  withUndo(() => notes.forEach(({ ev, tr }) => resizeNote(pat, tr.id, ev, d)));
 }
 export function articulationSel(art) {
   const notes = selNotes(selRect(), curPat()).filter(({ tr }) => INST[tr.instrument].articulations.includes(art));
@@ -204,29 +190,5 @@ export function batchOp(op) {
     case 'interp': interpolateSel(); break;
     case 'deselect': deselect(); break;
   }
-  state.dirty = true;
-}
-export function clearCell() {
-  const pat = curPat(), tr = curTrack(), cell = currentCell(), row = state.cursor.row, tick = row * pat.ticksPerRow;
-  withUndo(() => {
-    if (cell.kind === 'tempo') laneRemove(pat.tempo, tick);
-    else if (cell.kind === 'dyn') laneRemove(patTrack(pat, tr.id).dyn, tick);
-    else if (cell.kind === 'art') notesStartingAt(pat, tr.id, row).forEach(e => { e.art = null; });
-    else { const pt = pat.tracks[tr.id]; if (pt) pt.events = pt.events.filter(e => !(e.col === cell.col && Math.floor(e.tick / pat.ticksPerRow) === row)); }
-  });
-  state.typing = null;
-}
-export function changeLength(d) {
-  const pat = curPat(), tr = curTrack(); if (!tr) return;
-  const ev = noteCovering(pat, tr.id, currentCell().col, state.cursor.row);
-  if (!ev) return;
-  const next = pat.tracks[tr.id].events.filter(e => e.col === ev.col && e.tick > ev.tick).sort((a, b) => a.tick - b.tick)[0];
-  const maxLen = next ? next.tick - ev.tick : Infinity;
-  withUndo(() => { ev.len = clamp(ev.len + d * pat.ticksPerRow, pat.ticksPerRow, maxLen); });
-}
-export function changeColumns(d) {
-  const tr = curTrack(); if (!tr) return;
-  tr.columns = clamp(tr.columns + d, 1, 4);
-  state.cursor.cell = clamp(state.cursor.cell, 0, tr.columns * 2 + 1);
   state.dirty = true;
 }

@@ -4,7 +4,8 @@ import { INST } from '../core/instruments.js';
 import { $, curTrack, sched, state } from './state.js';
 import { currentCell } from './layout.js';
 import { moveCell, moveRow, moveTrack, setOctave, setStep, typeIntoCell, undo } from './edit.js';
-import { changeLength, clearCell, clearSel, selCells, selRect } from './selection.js';
+import { clearSel, selCells, selRect } from './selection.js';
+import { changeLength, clearCell } from './edit.js';
 import { playPattern, stopAll } from './transport.js';
 
 // ---- Touch pad ------------------------------------------------------------------------------

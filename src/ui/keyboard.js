@@ -1,7 +1,8 @@
 // Keyboard bindings. See the help panel for the scheme and its macOS constraints.
 import { curPat, rowsPerBar, sched, state } from './state.js';
 import { moveCell, moveRow, moveTrack, redo, setOctave, setRow, setStep, typeIntoCell, undo } from './edit.js';
-import { changeColumns, changeLength, clearCell, clearSel, copySel, cutSel, deselect, duplicateSel, lengthSel, pasteSel, selExtend, selectTrackOrAll, transposeSel } from './selection.js';
+import { clearSel, copySel, cutSel, deselect, duplicateSel, lengthSel, pasteSel, selExtend, selectTrackOrAll, transposeSel } from './selection.js';
+import { changeColumns, changeLength, clearCell } from './edit.js';
 import { playPattern, playSong, stopAll } from './transport.js';
 
 // ---- Keyboard -----------------------------------------------------------------------------

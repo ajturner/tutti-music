@@ -2,7 +2,8 @@
 import { clamp } from '../core/constants.js';
 import { canvas, curPat, state, view } from './state.js';
 import { moveRow } from './edit.js';
-import { cellIndex, clearCell, cursorIndex, deselect, selUpdate } from './selection.js';
+import { cellIndex, cursorIndex, deselect, selUpdate } from './selection.js';
+import { clearCell } from './edit.js';
 
 // ---- Pointer: tap places the cursor, drag scrolls, long-press clears --------------------------
 export let drag = null;

@@ -2,7 +2,8 @@
 import { curPat, curTrack, rowsPerBar, sched, state } from './state.js';
 import { currentCell } from './layout.js';
 import { audition, moveCell, moveRow, moveTrack, noteCovering, nudgeArticulation, nudgeCell, tapCell, undo } from './edit.js';
-import { clearCell, clearSel, copySel, cutSel, duplicateSel, pasteSel, selExtend } from './selection.js';
+import { clearSel, copySel, cutSel, duplicateSel, pasteSel, selExtend } from './selection.js';
+import { clearCell } from './edit.js';
 import { playPattern, playSong, stopAll } from './transport.js';
 
 // ---- Game controller ------------------------------------------------------------------------
