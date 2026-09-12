@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ajturner.github.io/tutti-music/schema/tutti-song.schema.json",
+  "title": "Tutti song",
+  "description": "A Tutti symphonic-tracker song. Timing is in ticks at 960 pulses per quarter note. Pitches are MIDI note numbers (60 = C4). Velocities and controller values follow MIDI (0-127).",
+  "type": "object",
+  "required": ["title", "bpm", "order", "patterns", "tracks"],
+  "properties": {
+    "$schema": { "type": "string", "format": "uri" },
+    "format": { "const": "tutti-song", "description": "File format marker. Files written before this field existed omit it and are accepted." },
+    "version": { "type": "integer", "const": 1, "description": "Format version. Incremented only for incompatible changes." },
+    "title": { "type": "string" },
+    "notes": { "type": "string", "description": "Free text shown under the grid." },
+    "bpm": { "type": "number", "minimum": 20, "maximum": 300, "description": "Base tempo; the tempo lane of each pattern overrides it while that pattern plays." },
+    "order": {
+      "type": "array", "minItems": 1,
+      "items": { "type": "integer", "minimum": 0 },
+      "description": "Pattern indices in playback sequence. Indices must exist in patterns."
+    },
+    "patterns": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/pattern" } },
+    "tracks": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/track" } }
+  },
+  "$defs": {
+    "tick": { "type": "integer", "minimum": 0, "description": "Ticks from the start of the pattern at 960 PPQ." },
+    "midiValue": { "type": "integer", "minimum": 0, "maximum": 127 },
+    "articulation": {
+      "type": "string",
+      "enum": ["sus", "leg", "stc", "mrc", "trm", "piz", "mut", "rll"],
+      "description": "sus sustain, leg legato, stc staccato, mrc marcato, trm tremolo, piz pizzicato, mut muted, rll roll. Each instrument supports a subset; the first in its list is the default."
+    },
+    "point": {
+      "type": "object",
+      "required": ["tick", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "tick": { "$ref": "#/$defs/tick" },
+        "value": { "type": "number" },
+        "interp": { "type": "string", "enum": ["lin", "step"], "default": "lin", "description": "lin ramps to the next point; step holds until it." }
+      }
+    },
+    "lane": { "type": "array", "items": { "$ref": "#/$defs/point" }, "description": "Points sorted by tick; at most one point per tick." },
+    "event": {
+      "type": "object",
+      "required": ["tick", "len", "pitch", "vel", "col"],
+      "additionalProperties": false,
+      "properties": {
+        "tick": { "$ref": "#/$defs/tick" },
+        "len": { "type": "integer", "minimum": 1, "description": "Duration in ticks." },
+        "pitch": { "$ref": "#/$defs/midiValue" },
+        "vel": { "type": "integer", "minimum": 1, "maximum": 127 },
+        "col": { "type": "integer", "minimum": 0, "maximum": 3, "description": "Note column (divisi voice) on the track. Notes in one column never overlap." },
+        "art": { "oneOf": [{ "$ref": "#/$defs/articulation" }, { "type": "null" }], "description": "null means the instrument's default articulation." }
+      }
+    },
+    "patternTrack": {
+      "type": "object",
+      "properties": {
+        "events": { "type": "array", "items": { "$ref": "#/$defs/event" } },
+        "dyn": { "$ref": "#/$defs/lane", "description": "Dynamics lane, 0-127, sent as the instrument's dynamics controller (CC1 by default)." },
+        "expr": { "$ref": "#/$defs/lane", "description": "Expression lane, 0-127, sent as the instrument's expression controller (CC11 by default)." }
+      }
+    },
+    "pattern": {
+      "type": "object",
+      "required": ["name", "rows", "ticksPerRow"],
+      "properties": {
+        "name": { "type": "string" },
+        "rows": { "type": "integer", "minimum": 1, "maximum": 512 },
+        "ticksPerRow": { "type": "integer", "minimum": 1, "description": "240 = one sixteenth note at 960 PPQ." },
+        "meter": {
+          "type": "array", "minItems": 2, "maxItems": 2,
+          "prefixItems": [{ "type": "integer", "minimum": 1, "maximum": 16 }, { "type": "integer", "enum": [2, 4, 8] }],
+          "default": [4, 4],
+          "description": "Beats per bar and beat unit, as in a time signature."
+        },
+        "tempo": { "$ref": "#/$defs/lane", "description": "Tempo lane in bpm (20-300)." },
+        "tracks": {
+          "type": "object",
+          "description": "Keyed by track id.",
+          "additionalProperties": { "$ref": "#/$defs/patternTrack" }
+        }
+      }
+    },
+    "track": {
+      "type": "object",
+      "required": ["id", "name", "instrument", "channel"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9-]+$", "description": "Stable key used by pattern.tracks." },
+        "name": { "type": "string" },
+        "instrument": { "type": "string", "pattern": "^[a-z0-9-]+$", "description": "Instrument id; see tutti-instrument.schema.json." },
+        "channel": { "type": "integer", "minimum": 1, "maximum": 16, "description": "MIDI channel, 1-based." },
+        "columns": { "type": "integer", "minimum": 1, "maximum": 4, "default": 1, "description": "Note columns (divisi voices)." },
+        "mute": { "type": "boolean", "default": false }
+      }
+    }
+  }
+}

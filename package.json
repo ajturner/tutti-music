@@ -26,12 +26,19 @@
   "scripts": {
     "start": "npx --yes serve -l 3000 .",
     "dev": "npx --yes serve -l 3000 .",
-    "test": "mkdir -p test/out && node test/ui.test.mjs"
+    "test": "npm run test:core && npm run test:schema && npm run test:ui",
+    "test:core": "node test/core.test.mjs",
+    "test:schema": "node test/schema.test.mjs",
+    "test:ui": "mkdir -p test/out && node test/ui.test.mjs"
   },
   "files": [
-    "index.html"
+    "index.html",
+    "styles.css",
+    "src",
+    "schema"
   ],
   "devDependencies": {
+    "ajv": "^8.20.0",
     "playwright": "^1.49.1"
   }
 }

@@ -1,0 +1,76 @@
+// Lookahead scheduler that plays rendered events through one or more sinks in the performance.now() domain.
+import { INST } from './instruments.js';
+import { TYPE_ORDER, TimeMap } from './render.js';
+
+// ---- Scheduler: lookahead loop in the performance.now() domain ------------------
+// Sinks receive (event, atMs) where atMs is an absolute performance.now() timestamp,
+// which is what MIDIOutput.send() takes directly; the synth converts to AudioContext time.
+export class Scheduler {
+  constructor(getSinks) {
+    this.getSinks = getSinks;
+    this.LOOKAHEAD = 120; this.INTERVAL = 25;
+    this.playing = false; this.timer = null; this.onStop = null;
+  }
+  play(song, rendered, { loop = false, startTick = 0 } = {}) {
+    this.stop();
+    const tm = new TimeMap(rendered.tempo, rendered.lengthTicks, song.bpm);
+    const byId = Object.fromEntries(song.tracks.map(t => [t.id, t]));
+    const list = rendered.events.map(ev => {
+      const tr = byId[ev.track], ins = INST[tr.instrument];
+      const delay = (ev.type === 'on' || ev.type === 'off') ? (ins.speakDelayMs || 0) : 0;
+      return Object.assign({ ms: tm.msAt(ev.tick) + delay, channel: tr.channel - 1, family: ins.family, trackRef: tr }, ev);
+    }).sort((a, b) => a.ms - b.ms || TYPE_ORDER[a.type] - TYPE_ORDER[b.type]);
+    this.tm = tm; this.list = list; this.loop = loop; this.song = song; this.rendered = rendered;
+    this.lengthMs = Math.max(1, tm.msAt(rendered.lengthTicks));
+    const startMs = tm.msAt(startTick);
+    const now = performance.now();
+    this.origin = now + 60 - startMs;               // absolute time = origin + ev.ms
+    // Catch up controller and keyswitch state for events we skip when starting mid-pattern.
+    const carry = new Map();
+    let i = 0;
+    while (i < list.length && list[i].ms < startMs) {
+      const ev = list[i++];
+      if (ev.type === 'cc') carry.set(ev.track + ':' + ev.cc, ev);
+      else if (ev.type === 'ks') carry.set(ev.track + ':ks', ev);
+    }
+    this.playing = true;
+    for (const ev of carry.values()) this.dispatch(ev, now + 20);
+    this.idx = i;
+    this.timer = setInterval(() => this.tick(), this.INTERVAL);
+    this.tick();
+  }
+  tick() {
+    const now = performance.now(), horizon = now + this.LOOKAHEAD;
+    for (let guard = 0; guard < 20000 && this.playing; guard++) {
+      if (this.idx >= this.list.length) {
+        const endAt = this.origin + this.lengthMs;
+        if (!this.loop) { if (now >= endAt) this.stop(); break; }
+        if (endAt > horizon) break;
+        this.origin = endAt; this.idx = 0;
+        continue;
+      }
+      const ev = this.list[this.idx], at = this.origin + ev.ms;
+      if (at > horizon) break;
+      this.dispatch(ev, at);
+      this.idx++;
+    }
+  }
+  dispatch(ev, at) {
+    if (ev.trackRef.mute && ev.type !== 'off') return;
+    for (const s of this.getSinks()) s.send(ev, at);
+  }
+  positionTick() {
+    if (!this.playing) return null;
+    let ms = performance.now() - this.origin;
+    if (this.loop) ms = ((ms % this.lengthMs) + this.lengthMs) % this.lengthMs;
+    return this.tm.tickAt(Math.max(0, ms));
+  }
+  stop() {
+    if (this.timer) clearInterval(this.timer);
+    this.timer = null;
+    const was = this.playing;
+    this.playing = false;
+    for (const s of this.getSinks()) s.allOff();
+    if (was && this.onStop) this.onStop();
+  }
+}

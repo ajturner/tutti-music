@@ -1,6 +1,6 @@
 # Tutti — symphonic tracker
 
-A browser-based tracker for composing orchestral music, with MIDI export. Single `index.html`, no build step, no dependencies.
+A browser-based tracker for composing orchestral music, with MIDI export. Plain ES modules, no build step, no runtime dependencies.
 
 **Live:** https://ajturner.github.io/tutti-music/
 
@@ -18,9 +18,18 @@ A browser-based tracker for composing orchestral music, with MIDI export. Single
 npm start
 ```
 
-Or just open `index.html` in a browser.
+Then open http://localhost:3000/. The app is ES modules, so it needs a server; opening `index.html` from disk does not work.
+
+## Layout
+
+- `index.html`, `styles.css`: markup and styles.
+- `src/core/`: the UI-free core (song model, instruments, render, scheduler, preview synth, MIDI out, MIDI file writer, examples). It runs under Node and could back a native app.
+- `src/ui/`: the browser tracker (state, layout, editing, selection, keyboard, pointer, drawing, gamepad, pad, MIDI in, toolbar). `src/main.js` wires it and exposes the API as `window.tutti`.
+- `schema/`: JSON Schema (draft 2020-12) for the song file and instrument definitions. Saved songs reference the song schema by URL.
+- `openspec/`: behaviour specs.
+- `test/`: Node tests for the core and schemas, Playwright tests for the UI.
 
 ## Development
 
 - **Specs:** behaviour is documented with [OpenSpec](https://github.com/Fission-AI/OpenSpec) under `openspec/specs/`, one capability per folder. Propose changes with `/opsx:propose` in Claude Code, or run `openspec validate --all --strict`.
-- **Tests:** `npm install` once, then `npm test` runs Playwright browser tests (`test/ui.test.mjs`) against `index.html` at desktop and phone sizes, including mocked gamepad and MIDI input. Uses installed Google Chrome by default; set `TUTTI_BROWSER=chromium` to use Playwright's own build.
+- **Tests:** `npm install` once, then `npm test` runs the core and schema tests under Node and the Playwright browser tests (`test/ui.test.mjs`) at desktop and phone sizes, including mocked gamepad and MIDI input. Uses installed Google Chrome by default; set `TUTTI_BROWSER=chromium` to use Playwright's own build.

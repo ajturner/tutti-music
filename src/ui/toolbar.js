@@ -1,0 +1,67 @@
+// Header controls: songs, patterns, meter, order, files, menu.
+import { clamp } from '../core/constants.js';
+import { newPattern, newSong, patMeter, normalizeSong } from '../core/song.js';
+import { midiFileBytes } from '../core/midifile.js';
+import { $, curPat, state, synth } from './state.js';
+import { setOctave, setStep, withUndo } from './edit.js';
+import { articulationSel, batchOp } from './selection.js';
+import { playPattern, playSong, stopAll } from './transport.js';
+import { setPad } from './pad.js';
+import { syncPatternUI, syncSongUI } from './sync.js';
+
+export function selectSong(i) {
+  stopAll();
+  state.songIndex = i; state.song = state.songs[i]; state.pat = 0;
+  state.undo.length = 0; state.redo.length = 0;
+  state.cursor = { row: 0, track: 0, cell: 0 }; state.scrollX = 0; state.typing = null; state.message = '';
+  syncSongUI(); syncPatternUI(); state.dirty = true;
+}
+export function addSong(song) { state.songs.push(song); selectSong(state.songs.length - 1); }
+$('song').onchange = e => selectSong(parseInt(e.target.value, 10));
+$('newSong').onclick = () => addSong(Object.assign(newSong(), { title: 'Untitled ' + (state.songs.length + 1) }));
+$('title').onchange = e => { state.song.title = e.target.value.trim() || 'Untitled'; syncSongUI(); };
+$('playPat').onclick = () => playPattern(false);
+$('playSong').onclick = () => playSong();
+$('stop').onclick = () => stopAll();
+$('bpm').onchange = e => { state.song.bpm = clamp(parseInt(e.target.value, 10) || 100, 20, 300); state.dirty = true; };
+$('pattern').onchange = e => { state.pat = parseInt(e.target.value, 10); syncPatternUI(); state.dirty = true; };
+$('addPattern').onclick = () => {
+  const p = state.song.patterns;
+  p.push(newPattern(String.fromCharCode(65 + (p.length % 26)), curPat().rows, curPat().ticksPerRow, patMeter(curPat())));
+  state.song.order.push(p.length - 1); state.pat = p.length - 1; syncPatternUI(); state.dirty = true;
+};
+$('rows').onchange = e => { const n = clamp(parseInt(e.target.value, 10) || 64, 1, 512); withUndo(() => { curPat().rows = n; }); syncPatternUI(); };
+$('tpr').onchange = e => { const n = parseInt(e.target.value, 10); withUndo(() => { curPat().ticksPerRow = n; }); };
+$('meterNum').onchange = e => { const n = clamp(parseInt(e.target.value, 10) || 4, 1, 16); withUndo(() => { curPat().meter = [n, patMeter(curPat())[1]]; }); syncPatternUI(); };
+$('meterDen').onchange = e => { const n = parseInt(e.target.value, 10); withUndo(() => { curPat().meter = [patMeter(curPat())[0], n]; }); };
+$('order').onchange = e => {
+  const o = e.target.value.split(/[\s,]+/).map(s => parseInt(s, 10)).filter(n => Number.isInteger(n) && state.song.patterns[n]);
+  state.song.order = o.length ? o : [0]; e.target.value = state.song.order.join(' ');
+};
+$('octave').onchange = e => setOctave(parseInt(e.target.value, 10) || 0);
+$('step').onchange = e => setStep(parseInt(e.target.value, 10) || 0);
+$('follow').onchange = e => { state.follow = e.target.checked; };
+$('preview').onchange = e => { state.preview = e.target.checked; synth.enabled = state.preview; if (!state.preview) synth.allOff(); state.dirty = true; };
+$('padToggle').onchange = e => setPad(e.target.checked);
+$('selbar').addEventListener('pointerdown', e => { const b = e.target.closest('button[data-op]'); if (!b) return; e.preventDefault(); batchOp(b.dataset.op); });
+$('selbar').addEventListener('click', e => { if (e.target.closest('button')) e.preventDefault(); });
+$('selArt').onchange = e => { if (e.target.value) articulationSel(e.target.value); e.target.value = ''; state.dirty = true; };
+$('menuToggle').onclick = () => {
+  const open = document.querySelector('header').classList.toggle('open');
+  $('menuToggle').setAttribute('aria-expanded', String(open));
+};
+export function download(name, blob) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+$('exportMidi').onclick = () => download((state.song.title || 'tutti').replace(/[^\w.-]+/g, '_') + '.mid', new Blob([midiFileBytes(state.song)], { type: 'audio/midi' }));
+$('save').onclick = () => download((state.song.title || 'tutti').replace(/[^\w.-]+/g, '_') + '.json', new Blob([JSON.stringify(state.song, null, 1)], { type: 'application/json' }));
+$('load').onclick = () => $('file').click();
+$('file').onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    addSong(normalizeSong(JSON.parse(await f.text()), f.name.replace(/\.json$/i, '')));
+  } catch (err) { state.message = 'Load failed: ' + err.message; }
+  e.target.value = ''; state.dirty = true;
+};

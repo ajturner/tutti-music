@@ -10,7 +10,8 @@ import path from 'node:path';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const server = createServer(async (req, res) => {
   const file = path.join(root, req.url === '/' ? 'index.html' : decodeURIComponent(req.url.split('?')[0]));
-  try { res.setHeader('Content-Type', file.endsWith('.html') ? 'text/html' : 'application/octet-stream'); res.end(await readFile(file)); }
+  const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json' };
+  try { res.setHeader('Content-Type', types[path.extname(file)] || 'application/octet-stream'); res.end(await readFile(file)); }
   catch { res.statusCode = 404; res.end(); }
 });
 await new Promise(r => server.listen(0, '127.0.0.1', r));
@@ -25,6 +26,11 @@ async function open(ctxOpts, label) {
   page.on('pageerror', e => errors.push('pageerror: ' + e.message));
   page.on('console', m => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
   await page.goto(URL); await page.waitForTimeout(300);
+  // The app is ES modules; expose window.tutti's API as globals so test snippets read naturally.
+  await page.evaluate(() => {
+    for (const k of Object.keys(tutti)) if (!(k in window)) Object.defineProperty(window, k, { get: () => tutti[k], configurable: true });
+    for (const k of ['lastDraw', 'ROW_H']) Object.defineProperty(window, k, { get: () => tutti.view[k], configurable: true });
+  });
   return { ctx, page, errors, label };
 }
 const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.cursor.track, cell: state.cursor.cell, scrollX: state.scrollX, pad: state.pad, rowH: ROW_H }));
