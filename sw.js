@@ -1,10 +1,10 @@
 // Service worker: the app shell is cached at install so Tutti opens offline; samples are cached the
 // first time they play, so instruments you have used keep working without a network. The cache is
 // named after the app version, and old caches are dropped on activation.
-const VERSION = '2.4.0';
+const VERSION = '2.4.1';
 const SHELL = 'tutti-shell-' + VERSION, SAMPLES = 'tutti-samples-v1';
 const SHELL_FILES = [
-  './', 'index.html', 'help.html', 'styles.css', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png',
+  './', 'index.html', 'help.html', 'styles.css', 'manifest.webmanifest', 'assets/icon-192.png', 'assets/icon-512.png',
   'src/main.js', 'src/version.js',
   'src/core/constants.js', 'src/core/instruments.js', 'src/core/song.js', 'src/core/render.js', 'src/core/scheduler.js', 'src/core/synth.js',
   'src/core/midi.js', 'src/core/midifile.js', 'src/core/examples.js', 'src/core/edit.js', 'src/core/scales.js', 'src/core/sampler.js',
@@ -14,7 +14,8 @@ const SHELL_FILES = [
   'samples/index.json',
 ];
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(SHELL).then(c => c.addAll(SHELL_FILES)).then(() => self.skipWaiting()));
+  // Cache each file on its own: one missing file (a CDN still propagating, say) must not block install.
+  e.waitUntil(caches.open(SHELL).then(c => Promise.allSettled(SHELL_FILES.map(f => c.add(f)))).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k.startsWith('tutti-shell-') && k !== SHELL).map(k => caches.delete(k)))).then(() => self.clients.claim()));
