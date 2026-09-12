@@ -1,0 +1,2 @@
+# Design
+`src/ui/views.js`: `setView(name)` sets `body[data-view]`, toggles the tab highlights, and adopts or restores elements using placeholder comments so each control returns to its home in the menu or dialog. The Mixer screen forces the sidebar visible and CSS makes it static and full width; the Tracks screen re-renders the table. Leaving Pattern closes the menu. Resizing to a wide window returns to Pattern and restores everything. The draw loop skips frames while the canvas is hidden. No JSON change.

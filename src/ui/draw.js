@@ -26,6 +26,7 @@ export function resize() {
 window.addEventListener('resize', resize);
 
 export function draw() {
+  if (!canvas.clientWidth || !canvas.clientHeight) { syncPad(); syncSelBar(); syncMixer(); updateStatus(null); return; }   // hidden behind another phone screen: keep the panels in step
   const dpr = window.devicePixelRatio || 1;
   if (canvas.width !== Math.floor(canvas.clientWidth * dpr) || canvas.height !== Math.floor(canvas.clientHeight * dpr)) resize();
   const W = canvas.clientWidth, H = canvas.clientHeight;

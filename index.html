@@ -78,6 +78,14 @@
 </header>
 <div id="workspace">
   <main><canvas id="grid" tabindex="0" aria-label="Pattern grid"></canvas></main>
+  <section id="arrangeView" class="view" hidden aria-label="Arrange">
+    <h2>Arrange</h2>
+    <div class="viewBody"></div>
+  </section>
+  <section id="tracksView" class="view" hidden aria-label="Tracks">
+    <h2>Tracks</h2>
+    <div class="viewBody"></div>
+  </section>
   <aside id="mixer" hidden aria-label="Mixer">
     <div class="mixHead"><b>Mixer</b><span class="spacer"></span><button id="mixerTracks" title="Tracks: add, remove, reorder, instruments">Tracks…</button><button id="mixerClose" title="Hide the mixer">✕</button></div>
     <div id="mixerStrips"></div>
@@ -141,6 +149,12 @@
   <div class="padrow" id="padNav"></div>
   <div class="padrow" id="padCtl"></div>
 </div>
+<nav id="tabs" aria-label="Screens">
+  <button data-view="pattern" class="on">Pattern</button>
+  <button data-view="arrange">Arrange</button>
+  <button data-view="mixer">Mixer</button>
+  <button data-view="tracks">Tracks</button>
+</nav>
 <footer>
   <div id="notes"></div>
   <div id="status"></div>

@@ -42,6 +42,7 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   check('desktop: menu toggle hidden', !(await page.isVisible('#menuToggle')));
   check('desktop: song select visible', await page.isVisible('#song'));
   check('desktop: pad hidden', !(await page.isVisible('#pad')));
+  check('desktop: no tab bar', !(await page.isVisible('#tabs')));
   check('desktop: row height 18', (await cur(page)).rowH === 18);
   const box = await page.locator('#grid').boundingBox();
   // tap a cell: gutter is ~90px wide; header ~44px; click row 5 in first track
@@ -456,6 +457,18 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   check('phone: mixer overlays the grid', await page.isVisible('#mixer') && (await page.evaluate(() => getComputedStyle(document.getElementById('mixer')).position)) === 'absolute');
   await page.tap('#mixerClose'); await page.waitForTimeout(60);
   check('phone: toggling the mixer closed the menu', !(await page.isVisible('#song')));
+  check('phone: tab bar visible', await page.isVisible('#tabs'));
+  await page.tap('#tabs button[data-view="mixer"]'); await page.waitForTimeout(80);
+  const mv = await page.evaluate(() => ({ view: state.view, mixer: !document.getElementById('mixer').hidden, main: getComputedStyle(document.querySelector('main')).display, pos: getComputedStyle(document.getElementById('mixer')).position, strips: document.querySelectorAll('#mixerStrips .strip').length }));
+  check('phone: mixer screen fills the view', mv.view === 'mixer' && mv.mixer && mv.main === 'none' && mv.pos === 'static' && mv.strips > 10, JSON.stringify(mv));
+  await page.tap('#tabs button[data-view="arrange"]'); await page.waitForTimeout(80);
+  const av = await page.evaluate(() => ({ chips: !!document.querySelector('#arrangeView #arranger .chip'), rows: !!document.querySelector('#arrangeView #rows'), key: !!document.querySelector('#arrangeView #keyRoot'), mixerHidden: document.getElementById('mixer').hidden }));
+  check('phone: arrange screen holds the order, pattern settings and key', av.chips && av.rows && av.key && av.mixerHidden, JSON.stringify(av));
+  await page.tap('#tabs button[data-view="tracks"]'); await page.waitForTimeout(80);
+  check('phone: tracks screen shows the table', (await page.$$eval('#tracksView #tracksBody tr', r => r.length)) === (await page.evaluate(() => state.song.tracks.length)) && !(await page.evaluate(() => !!document.querySelector('#arrangeView #rows'))));
+  await page.tap('#tabs button[data-view="pattern"]'); await page.waitForTimeout(80);
+  const back = await page.evaluate(() => ({ view: state.view, grid: document.getElementById('grid').clientWidth > 0, rowsHome: !!document.querySelector('#more #rows'), tableHome: !!document.querySelector('#tracksDlg #tracksTable') }));
+  check('phone: pattern screen restores everything home', back.view === 'pattern' && back.grid && back.rowsHome && back.tableHome, JSON.stringify(back));
   await page.tap('#padNav button:text-is("sel")'); await page.waitForTimeout(80);
   check('phone: sel mode shows toolbar', (await page.evaluate(() => state.selectMode)) && await page.isVisible('#selbar'));
   const selDrag = await page.evaluate(async () => {
