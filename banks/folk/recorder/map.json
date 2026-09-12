@@ -1,0 +1,182 @@
+{
+ "instrument": "recorder",
+ "source": "VSCO 2 CE / VCSL (CC0) by Versilian Studios, converted",
+ "license": "CC0-1.0",
+ "zones": [
+  {
+   "art": "stc",
+   "note": 72,
+   "layer": 1,
+   "file": "stc_n72_0.m4a",
+   "source": "VCSL:Aerophones/Edge-blown Aerophones/Baroque Soprano Recorder/Staccato/SopRecorder_Stac_C4_rr1_Main.wav"
+  },
+  {
+   "art": "stc",
+   "note": 74,
+   "layer": 1,
+   "file": "stc_n74_0.m4a",
+   "source": "VCSL:Aerophones/Edge-blown Aerophones/Baroque Soprano Recorder/Staccato/SopRecorder_Stac_D4_rr1_Main.wav"
+  },
+  {
+   "art": "stc",
+   "note": 76,
+   "layer": 1,
+   "file": "stc_n76_0.m4a",
+   "source": "VCSL:Aerophones/Edge-blown Aerophones/Baroque Soprano Recorder/Staccato/SopRecorder_Stac_E4_rr1_Main.wav"
+  },
+  {
+   "art": "stc",
+   "note": 78,
+   "layer": 1,
+   "file": "stc_n78_0.m4a",
+   "source": "VCSL:Aerophones/Edge-blown Aerophones/Baroque Soprano Recorder/Staccato/SopRecorder_Stac_F#4_rr1_Main.wav"
+  },
+  {
+   "art": "stc",
+   "note": 80,
+   "layer": 1,
+   "file": "stc_n80_0.m4a",
+   "source": "VCSL:Aerophones/Edge-blown Aerophones/Baroque Soprano Recorder/Staccato/SopRecorder_Stac_G#4_rr1_Main.wav"
+  },
+  {
+   "art": "stc",
+   "note": 82,
+   "layer": 1,
+   "file": "stc_n82_0.m4a",
+   "source": "VCSL:Aerophones/Edge-blown Aerophones/Baroque Soprano Recorder/Staccato/SopRecorder_Stac_A#4_rr1_Main.wav"
+  },
+  {
+   "art": "stc",
+   "note": 84,
+   "layer": 1,
+   "file": "stc_n84_0.m4a",
+   "source": "VCSL:Aerophones/Edge-blown Aerophones/Baroque Soprano Recorder/Staccato/SopRecorder_Stac_C5_rr1_Main.wav"
+  },
+  {
+   "art": "stc",
+   "note": 86,
+   "layer": 1,
+   "file": "stc_n86_0.m4a",
+   "source": "VCSL:Aerophones/Edge-blown Aerophones/Baroque Soprano Recorder/Staccato/SopRecorder_Stac_D5_rr1_Main.wav"
+  },
+  {
+   "art": "stc",
+   "note": 88,
+   "layer": 1,
+   "file": "stc_n88_0.m4a",
+   "source": "VCSL:Aerophones/Edge-blown Aerophones/Baroque Soprano Recorder/Staccato/SopRecorder_Stac_E5_rr1_Main.wav"
+  },
+  {
+   "art": "stc",
+   "note": 90,
+   "layer": 1,
+   "file": "stc_n90_0.m4a",
+   "source": "VCSL:Aerophones/Edge-blown Aerophones/Baroque Soprano Recorder/Staccato/SopRecorder_Stac_F#5_rr1_Main.wav"
+  },
+  {
+   "art": "stc",
+   "note": 91,
+   "layer": 1,
+   "file": "stc_n91_0.m4a",
+   "source": "VCSL:Aerophones/Edge-blown Aerophones/Baroque Soprano Recorder/Staccato/SopRecorder_Stac_G5_rr1_Main.wav"
+  },
+  {
+   "art": "stc",
+   "note": 94,
+   "layer": 1,
+   "file": "stc_n94_0.m4a",
+   "source": "VCSL:Aerophones/Edge-blown Aerophones/Baroque Soprano Recorder/Staccato/SopRecorder_Stac_A#5_rr1_Main.wav"
+  },
+  {
+   "art": "sus",
+   "note": 72,
+   "layer": 1,
+   "file": "sus_n72_0.m4a",
+   "source": "VCSL:Aerophones/Edge-blown Aerophones/Baroque Soprano Recorder/Sustain/SopRecorder_Sus_C4_rr1_Main.wav"
+  },
+  {
+   "art": "sus",
+   "note": 74,
+   "layer": 1,
+   "file": "sus_n74_0.m4a",
+   "source": "VCSL:Aerophones/Edge-blown Aerophones/Baroque Soprano Recorder/Sustain/SopRecorder_Sus_D4_rr1_Main.wav"
+  },
+  {
+   "art": "sus",
+   "note": 76,
+   "layer": 1,
+   "file": "sus_n76_0.m4a",
+   "source": "VCSL:Aerophones/Edge-blown Aerophones/Baroque Soprano Recorder/Sustain/SopRecorder_Sus_E4_rr1_Main.wav"
+  },
+  {
+   "art": "sus",
+   "note": 78,
+   "layer": 1,
+   "file": "sus_n78_0.m4a",
+   "source": "VCSL:Aerophones/Edge-blown Aerophones/Baroque Soprano Recorder/Sustain/SopRecorder_Sus_F#4_rr1_Main.wav"
+  },
+  {
+   "art": "sus",
+   "note": 80,
+   "layer": 1,
+   "file": "sus_n80_0.m4a",
+   "source": "VCSL:Aerophones/Edge-blown Aerophones/Baroque Soprano Recorder/Sustain/SopRecorder_Sus_G#4_rr1_Main.wav"
+  },
+  {
+   "art": "sus",
+   "note": 82,
+   "layer": 1,
+   "file": "sus_n82_0.m4a",
+   "source": "VCSL:Aerophones/Edge-blown Aerophones/Baroque Soprano Recorder/Sustain/SopRecorder_Sus_A#4_rr1_Main.wav"
+  },
+  {
+   "art": "sus",
+   "note": 84,
+   "layer": 1,
+   "file": "sus_n84_0.m4a",
+   "source": "VCSL:Aerophones/Edge-blown Aerophones/Baroque Soprano Recorder/Sustain/SopRecorder_Sus_C5_rr1_Main.wav"
+  },
+  {
+   "art": "sus",
+   "note": 86,
+   "layer": 1,
+   "file": "sus_n86_0.m4a",
+   "source": "VCSL:Aerophones/Edge-blown Aerophones/Baroque Soprano Recorder/Sustain/SopRecorder_Sus_D5_rr1_Main.wav"
+  },
+  {
+   "art": "sus",
+   "note": 88,
+   "layer": 1,
+   "file": "sus_n88_0.m4a",
+   "source": "VCSL:Aerophones/Edge-blown Aerophones/Baroque Soprano Recorder/Sustain/SopRecorder_Sus_E5_rr1_Main.wav"
+  },
+  {
+   "art": "sus",
+   "note": 90,
+   "layer": 1,
+   "file": "sus_n90_0.m4a",
+   "source": "VCSL:Aerophones/Edge-blown Aerophones/Baroque Soprano Recorder/Sustain/SopRecorder_Sus_F#5_rr1_Main.wav"
+  },
+  {
+   "art": "sus",
+   "note": 91,
+   "layer": 1,
+   "file": "sus_n91_0.m4a",
+   "source": "VCSL:Aerophones/Edge-blown Aerophones/Baroque Soprano Recorder/Sustain/SopRecorder_Sus_G5_rr1_Main.wav"
+  },
+  {
+   "art": "sus",
+   "note": 94,
+   "layer": 1,
+   "file": "sus_n94_0.m4a",
+   "source": "VCSL:Aerophones/Edge-blown Aerophones/Baroque Soprano Recorder/Sustain/SopRecorder_Sus_A#5_rr1_Main.wav"
+  },
+  {
+   "art": "sus",
+   "note": 96,
+   "layer": 1,
+   "file": "sus_n96_0.m4a",
+   "source": "VCSL:Aerophones/Edge-blown Aerophones/Baroque Soprano Recorder/Sustain/SopRecorder_Sus_C6_rr1_Main.wav"
+  }
+ ]
+}

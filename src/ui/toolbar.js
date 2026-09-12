@@ -1,5 +1,6 @@
 // Header controls: songs, patterns, meter, order, files, menu.
 import { markEdited, deleteCurrentSong } from './storage.js';
+import { placeholdersFor } from '../core/banks.js';
 import { arranger, syncArranger, wireArranger } from './arranger.js';
 import { wireTracks } from './tracks.js';
 import { queuePattern, toggleRecord } from './transport.js';
@@ -18,6 +19,7 @@ import { syncPatternUI, syncSongUI } from './sync.js';
 export function selectSong(i) {
   stopAll();
   state.songIndex = i; state.song = state.songs[i]; state.pat = 0;
+  placeholdersFor(state.song);
   state.undo.length = 0; state.redo.length = 0;
   state.cursor = { row: 0, track: 0, cell: 0 }; state.scrollX = 0; state.typing = null; state.message = '';
   syncSongUI(); syncPatternUI(); state.dirty = true;

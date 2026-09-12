@@ -28,6 +28,35 @@ export const INSTRUMENTS = [
   inst('synth-arp',  'Synth arp',  'electronic', [48, 96], ['sus','stc','leg'], { keyswitches: {}, program: 81 }),
 ];
 export const INST = Object.fromEntries(INSTRUMENTS.map(i => [i.id, i]));
+for (const i of INSTRUMENTS) i.bank = 'orchestra';
+
+// ---- Banks: instruments added at run time --------------------------------------------------
+// A bank definition lists instruments in the same shape as the table above plus optional fields:
+//   samples  URL of the folder holding map.json (resolved against the bank file)
+//   kit      { midiNote: name } for fixed-pitch drum kits (samples are not pitch-shifted)
+//   patch    overrides for the sketch synth voice (waves, envelope, level, lfo)
+export function registerInstrument(def, bankId) {
+  const ins = inst(def.id, def.name, def.family, def.range || [0, 127], def.articulations && def.articulations.length ? def.articulations : ['sus'],
+    Object.assign({ keyswitches: def.keyswitches || {}, program: def.program || 0 }, def.speakDelayMs != null ? { speakDelayMs: def.speakDelayMs } : {},
+      def.dynCC != null ? { dynCC: def.dynCC } : {}, def.exprCC != null ? { exprCC: def.exprCC } : {}));
+  if (def.samples) ins.samples = def.samples;
+  if (def.kit) ins.kit = def.kit;
+  if (def.patch) ins.patch = def.patch;
+  ins.bank = bankId || def.bank || 'custom';
+  const at = INSTRUMENTS.findIndex(i => i.id === ins.id);
+  if (at >= 0) INSTRUMENTS[at] = ins; else INSTRUMENTS.push(ins);
+  INST[ins.id] = ins;
+  return ins;
+}
+export function unregisterInstrument(id) {
+  const at = INSTRUMENTS.findIndex(i => i.id === id && i.bank !== 'orchestra');
+  if (at < 0) return false;
+  INSTRUMENTS.splice(at, 1); delete INST[id]; return true;
+}
+// A stand-in for an instrument whose bank is not loaded, so songs still open and play through the synth.
+export function placeholderInstrument(id) {
+  return registerInstrument({ id, name: id + ' (missing)', family: 'electronic', range: [0, 127], articulations: ['sus'] }, 'missing');
+}
 
 // Score-order track list. channel is 1-based; 10 is skipped so GM players don't treat anything as drums.
 export const DEFAULT_TRACKS = [

@@ -107,12 +107,17 @@
 </dialog>
 <dialog id="soundsDlg" class="m8" aria-label="Sounds">
   <div class="dlgHead"><b>SOUNDS</b><span class="dim mono">bundled orchestra · VSCO 2 CE · settings stay in this browser</span><span class="spacer"></span><button id="soundsResetAll" title="All instruments back to defaults">reset all</button><button id="soundsClose" title="Close">✕</button></div>
+  <div id="bankBar">
+    <span class="lbl">banks</span>
+    <span id="bankList"></span>
+    <form id="bankUrlForm"><input id="bankUrl" type="url" placeholder="https://…/bank.json" title="Load a bank from a URL"><button type="submit" title="Load the bank at this URL">load url</button></form>
+  </div>
   <div class="scopes">
     <div class="scope"><div class="scopeLabel">out</div><canvas id="scopeOut"></canvas></div>
     <div class="scope"><div class="scopeLabel" id="scopeZoneLabel">zone: play a note</div><canvas id="scopeZone"></canvas></div>
   </div>
   <table id="soundsTable">
-    <thead><tr><th>instrument</th><th>src</th><th>articulations</th><th></th><th>tune</th><th>cents</th><th>trim dB</th><th>rel ×</th><th></th></tr></thead>
+    <thead><tr><th>instrument</th><th>bank</th><th>src</th><th>articulations</th><th></th><th>tune</th><th>cents</th><th>trim dB</th><th>rel ×</th><th></th></tr></thead>
     <tbody id="soundsBody"></tbody>
   </table>
 </dialog>

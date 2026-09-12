@@ -7,6 +7,8 @@ import { addTrack, removeTrack, moveTrack, setTrackInstrument, freeChannel, norm
 import { inScale, transposeDiatonic, snapToScale, degreeOf, effectiveKey } from '../src/core/scales.js';
 import { Scheduler } from '../src/core/scheduler.js';
 import { pickZones } from '../src/core/sampler.js';
+import { installBank, banks, unloadBank, ensureSongBanks } from '../src/core/banks.js';
+import { registerInstrument, unregisterInstrument } from '../src/core/instruments.js';
 import { readdir } from 'node:fs/promises';
 import { midiFileBytes } from '../src/core/midifile.js';
 import { EXAMPLES, line } from '../src/core/examples.js';
@@ -246,6 +248,36 @@ check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[1
     if (!INST[id] || !m.zones.some(z => z.art === 'sus')) bad.push(id + ' no sus');
   }
   check('samples: every bundled map is complete', maps >= 12 && files > 200 && bad.length === 0, maps + ' maps, ' + files + ' files' + (bad.length ? ' bad: ' + bad.slice(0, 3).join(', ') : ''));
+}
+
+// Banks: install, register, song banks, kits, placeholders
+{
+  const json = { id: 'test-bank', name: 'Test', instruments: [
+    { id: 'zither', name: 'Zither', family: 'plucked', range: [40, 80], articulations: ['sus'], samples: './zither/' },
+    { id: 'box-kit', name: 'Box kit', family: 'drums', range: [36, 40], articulations: ['sus'], kit: { 36: 'thump', 38: 'slap' } },
+    { id: 'buzz', name: 'Buzz', family: 'electronic', range: [36, 96], articulations: ['sus'], patch: { waves: [['square', 0, 0.5]], a: 0.01, d: 0.1, s: 0.8, r: 0.1, level: 0.2 } } ] };
+  const b = installBank(json, 'https://example.test/banks/test-bank/bank.json');
+  check('banks: install registers instruments with resolved sample folders', b.instruments.length === 3 && INST.zither.bank === 'test-bank' && INST.zither.samples === 'https://example.test/banks/test-bank/zither/' && INST['box-kit'].kit[38] === 'slap' && INST.buzz.patch.waves[0][0] === 'square');
+  const s = newSong();
+  const t = addTrack(s, 'zither');
+  check('banks: adding a bank instrument records the bank on the song', s.banks.includes('test-bank') && t.instrument === 'zither');
+  addTrack(s, 'flute');
+  check('banks: orchestral instruments add no bank', s.banks.length === 1);
+  check('banks: unload keeps instruments in use', unloadBank('test-bank', id => id === 'zither') && !!INST.zither && !INST.buzz && !banks.has('test-bank'));
+  const s2 = newSong(); s2.tracks.push({ id: 'x', name: 'X', instrument: 'nope', channel: 15, columns: 1, mute: false }); s2.banks = ['no-such-bank'];
+  const missing = await ensureSongBanks(s2);
+  check('banks: missing banks and instruments get placeholders and are reported', missing.includes('no-such-bank') && missing.includes('nope') && INST.nope && INST.nope.bank === 'missing');
+  unregisterInstrument('zither'); unregisterInstrument('nope');
+  const kitMap = { zones: [{ art: 'sus', note: 36, layer: 0, file: 'k0' }, { art: 'sus', note: 36, layer: 1, file: 'k1' }, { art: 'sus', note: 38, layer: 1, file: 's' }] };
+  check('sampler: kit zones resolve by nearest mapped note', pickZones(kitMap, 'sus', 38, 64, 100)[0].zone.file === 's' && pickZones(kitMap, 'sus', 36, 64, 20)[0].zone.file === 'k0');
+  const dir = new URL('../banks/', import.meta.url);
+  let nb = 0, ninst = 0, bad = [];
+  const idx = JSON.parse(await readFile(new URL('index.json', dir)));
+  for (const e of idx.banks) {
+    const bj = JSON.parse(await readFile(new URL(e.url, dir))); nb++;
+    for (const d of bj.instruments) { ninst++; if (d.samples) { try { const m = JSON.parse(await readFile(new URL(d.samples + 'map.json', new URL(e.url, dir)))); if (!m.zones.length) bad.push(d.id + ' empty'); for (const z of m.zones) { try { await readFile(new URL(d.samples + z.file, new URL(e.url, dir))); } catch { bad.push(d.id + '/' + z.file); } } } catch { bad.push(d.id + ' no map'); } } }
+  }
+  check('banks: every bundled bank is complete', nb === 3 && ninst >= 15 && bad.length === 0, nb + ' banks, ' + ninst + ' instruments' + (bad.length ? ' bad: ' + bad.slice(0, 3).join(', ') : ''));
 }
 
 // Every example renders and exports

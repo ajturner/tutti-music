@@ -1,0 +1,140 @@
+{
+ "instrument": "harmonica",
+ "source": "VSCO 2 CE / VCSL (CC0) by Versilian Studios, converted",
+ "license": "CC0-1.0",
+ "zones": [
+  {
+   "art": "leg",
+   "note": 60,
+   "layer": 1,
+   "file": "leg_n60_0.m4a",
+   "source": "VCSL:Aerophones/Free Aerophones/Harmonica-Hohner-Special20-C/Sustains/Vib/Hohner-Special20_Vib_C3.wav"
+  },
+  {
+   "art": "leg",
+   "note": 64,
+   "layer": 1,
+   "file": "leg_n64_0.m4a",
+   "source": "VCSL:Aerophones/Free Aerophones/Harmonica-Hohner-Special20-C/Sustains/Vib/Hohner-Special20_Vib_E3.wav"
+  },
+  {
+   "art": "leg",
+   "note": 67,
+   "layer": 1,
+   "file": "leg_n67_0.m4a",
+   "source": "VCSL:Aerophones/Free Aerophones/Harmonica-Hohner-Special20-C/Sustains/Vib/Hohner-Special20_Vib_G3.wav"
+  },
+  {
+   "art": "leg",
+   "note": 72,
+   "layer": 1,
+   "file": "leg_n72_0.m4a",
+   "source": "VCSL:Aerophones/Free Aerophones/Harmonica-Hohner-Special20-C/Sustains/Vib/Hohner-Special20_Vib_C4.wav"
+  },
+  {
+   "art": "leg",
+   "note": 76,
+   "layer": 1,
+   "file": "leg_n76_0.m4a",
+   "source": "VCSL:Aerophones/Free Aerophones/Harmonica-Hohner-Special20-C/Sustains/Vib/Hohner-Special20_Vib_E4.wav"
+  },
+  {
+   "art": "leg",
+   "note": 79,
+   "layer": 1,
+   "file": "leg_n79_0.m4a",
+   "source": "VCSL:Aerophones/Free Aerophones/Harmonica-Hohner-Special20-C/Sustains/Vib/Hohner-Special20_Vib_G4.wav"
+  },
+  {
+   "art": "leg",
+   "note": 84,
+   "layer": 1,
+   "file": "leg_n84_0.m4a",
+   "source": "VCSL:Aerophones/Free Aerophones/Harmonica-Hohner-Special20-C/Sustains/Vib/Hohner-Special20_Vib_C5.wav"
+  },
+  {
+   "art": "leg",
+   "note": 88,
+   "layer": 1,
+   "file": "leg_n88_0.m4a",
+   "source": "VCSL:Aerophones/Free Aerophones/Harmonica-Hohner-Special20-C/Sustains/Vib/Hohner-Special20_Vib_E5.wav"
+  },
+  {
+   "art": "leg",
+   "note": 91,
+   "layer": 1,
+   "file": "leg_n91_0.m4a",
+   "source": "VCSL:Aerophones/Free Aerophones/Harmonica-Hohner-Special20-C/Sustains/Vib/Hohner-Special20_Vib_G5.wav"
+  },
+  {
+   "art": "leg",
+   "note": 96,
+   "layer": 1,
+   "file": "leg_n96_0.m4a",
+   "source": "VCSL:Aerophones/Free Aerophones/Harmonica-Hohner-Special20-C/Sustains/Vib/Hohner-Special20_Vib_C6.wav"
+  },
+  {
+   "art": "sus",
+   "note": 60,
+   "layer": 1,
+   "file": "sus_n60_0.m4a",
+   "source": "VCSL:Aerophones/Free Aerophones/Harmonica-Hohner-Special20-C/Sustains/Normal/Hohner-Special20_Normal_C3.wav"
+  },
+  {
+   "art": "sus",
+   "note": 64,
+   "layer": 1,
+   "file": "sus_n64_0.m4a",
+   "source": "VCSL:Aerophones/Free Aerophones/Harmonica-Hohner-Special20-C/Sustains/Normal/Hohner-Special20_Normal_E3.wav"
+  },
+  {
+   "art": "sus",
+   "note": 72,
+   "layer": 1,
+   "file": "sus_n72_0.m4a",
+   "source": "VCSL:Aerophones/Free Aerophones/Harmonica-Hohner-Special20-C/Sustains/Normal/Hohner-Special20_Normal_C4.wav"
+  },
+  {
+   "art": "sus",
+   "note": 76,
+   "layer": 1,
+   "file": "sus_n76_0.m4a",
+   "source": "VCSL:Aerophones/Free Aerophones/Harmonica-Hohner-Special20-C/Sustains/Normal/Hohner-Special20_Normal_E4.wav"
+  },
+  {
+   "art": "sus",
+   "note": 79,
+   "layer": 1,
+   "file": "sus_n79_0.m4a",
+   "source": "VCSL:Aerophones/Free Aerophones/Harmonica-Hohner-Special20-C/Sustains/Normal/Hohner-Special20_Normal_G4.wav"
+  },
+  {
+   "art": "sus",
+   "note": 84,
+   "layer": 1,
+   "file": "sus_n84_0.m4a",
+   "source": "VCSL:Aerophones/Free Aerophones/Harmonica-Hohner-Special20-C/Sustains/Normal/Hohner-Special20_Normal_C5.wav"
+  },
+  {
+   "art": "sus",
+   "note": 88,
+   "layer": 1,
+   "file": "sus_n88_0.m4a",
+   "source": "VCSL:Aerophones/Free Aerophones/Harmonica-Hohner-Special20-C/Sustains/Normal/Hohner-Special20_Normal_E5.wav"
+  },
+  {
+   "art": "sus",
+   "note": 91,
+   "layer": 1,
+   "file": "sus_n91_0.m4a",
+   "source": "VCSL:Aerophones/Free Aerophones/Harmonica-Hohner-Special20-C/Sustains/Normal/Hohner-Special20_Normal_G5.wav"
+  },
+  {
+   "art": "sus",
+   "note": 96,
+   "layer": 1,
+   "file": "sus_n96_0.m4a",
+   "source": "VCSL:Aerophones/Free Aerophones/Harmonica-Hohner-Special20-C/Sustains/Normal/Hohner-Special20_Normal_C6.wav"
+  }
+ ]
+}

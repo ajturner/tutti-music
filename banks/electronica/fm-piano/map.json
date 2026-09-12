@@ -1,0 +1,315 @@
+{
+ "instrument": "fm-piano",
+ "source": "VSCO 2 CE / VCSL (CC0) by Versilian Studios, converted",
+ "license": "CC0-1.0",
+ "zones": [
+  {
+   "art": "sus",
+   "note": 12,
+   "layer": 0,
+   "file": "sus_n24_0.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_C0_vl1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 12,
+   "layer": 1,
+   "file": "sus_n24_1.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_C0_vl3.wav"
+  },
+  {
+   "art": "sus",
+   "note": 16,
+   "layer": 0,
+   "file": "sus_n28_0.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_E0_vl1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 16,
+   "layer": 1,
+   "file": "sus_n28_1.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_E0_vl3.wav"
+  },
+  {
+   "art": "sus",
+   "note": 20,
+   "layer": 0,
+   "file": "sus_n32_0.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_G#0_vl1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 20,
+   "layer": 1,
+   "file": "sus_n32_1.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_G#0_vl3.wav"
+  },
+  {
+   "art": "sus",
+   "note": 24,
+   "layer": 0,
+   "file": "sus_n36_0.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_C1_vl1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 24,
+   "layer": 1,
+   "file": "sus_n36_1.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_C1_vl3.wav"
+  },
+  {
+   "art": "sus",
+   "note": 28,
+   "layer": 0,
+   "file": "sus_n40_0.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_E1_vl1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 28,
+   "layer": 1,
+   "file": "sus_n40_1.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_E1_vl3.wav"
+  },
+  {
+   "art": "sus",
+   "note": 32,
+   "layer": 0,
+   "file": "sus_n44_0.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_G#1_vl1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 32,
+   "layer": 1,
+   "file": "sus_n44_1.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_G#1_vl3.wav"
+  },
+  {
+   "art": "sus",
+   "note": 36,
+   "layer": 0,
+   "file": "sus_n48_0.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_C2_vl1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 36,
+   "layer": 1,
+   "file": "sus_n48_1.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_C2_vl3.wav"
+  },
+  {
+   "art": "sus",
+   "note": 40,
+   "layer": 0,
+   "file": "sus_n52_0.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_E2_vl1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 40,
+   "layer": 1,
+   "file": "sus_n52_1.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_E2_vl3.wav"
+  },
+  {
+   "art": "sus",
+   "note": 44,
+   "layer": 0,
+   "file": "sus_n56_0.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_G#2_vl1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 44,
+   "layer": 1,
+   "file": "sus_n56_1.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_G#2_vl3.wav"
+  },
+  {
+   "art": "sus",
+   "note": 48,
+   "layer": 0,
+   "file": "sus_n60_0.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_C3_vl1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 48,
+   "layer": 1,
+   "file": "sus_n60_1.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_C3_vl3.wav"
+  },
+  {
+   "art": "sus",
+   "note": 52,
+   "layer": 0,
+   "file": "sus_n64_0.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_E3_vl1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 52,
+   "layer": 1,
+   "file": "sus_n64_1.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_E3_vl3.wav"
+  },
+  {
+   "art": "sus",
+   "note": 56,
+   "layer": 0,
+   "file": "sus_n68_0.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_G#3_vl1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 56,
+   "layer": 1,
+   "file": "sus_n68_1.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_G#3_vl3.wav"
+  },
+  {
+   "art": "sus",
+   "note": 60,
+   "layer": 0,
+   "file": "sus_n72_0.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_C4_vl1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 60,
+   "layer": 1,
+   "file": "sus_n72_1.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_C4_vl3.wav"
+  },
+  {
+   "art": "sus",
+   "note": 64,
+   "layer": 0,
+   "file": "sus_n76_0.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_E4_vl1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 64,
+   "layer": 1,
+   "file": "sus_n76_1.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_E4_vl3.wav"
+  },
+  {
+   "art": "sus",
+   "note": 68,
+   "layer": 0,
+   "file": "sus_n80_0.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_G#4_vl1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 68,
+   "layer": 1,
+   "file": "sus_n80_1.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_G#4_vl3.wav"
+  },
+  {
+   "art": "sus",
+   "note": 72,
+   "layer": 0,
+   "file": "sus_n84_0.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_C5_vl1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 72,
+   "layer": 1,
+   "file": "sus_n84_1.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_C5_vl3.wav"
+  },
+  {
+   "art": "sus",
+   "note": 76,
+   "layer": 0,
+   "file": "sus_n88_0.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_E5_vl1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 76,
+   "layer": 1,
+   "file": "sus_n88_1.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_E5_vl3.wav"
+  },
+  {
+   "art": "sus",
+   "note": 80,
+   "layer": 0,
+   "file": "sus_n92_0.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_G#5_vl1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 80,
+   "layer": 1,
+   "file": "sus_n92_1.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_G#5_vl3.wav"
+  },
+  {
+   "art": "sus",
+   "note": 84,
+   "layer": 0,
+   "file": "sus_n96_0.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_C6_vl1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 84,
+   "layer": 1,
+   "file": "sus_n96_1.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_C6_vl3.wav"
+  },
+  {
+   "art": "sus",
+   "note": 88,
+   "layer": 0,
+   "file": "sus_n100_0.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_E6_vl1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 88,
+   "layer": 1,
+   "file": "sus_n100_1.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_E6_vl3.wav"
+  },
+  {
+   "art": "sus",
+   "note": 92,
+   "layer": 0,
+   "file": "sus_n104_0.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_G#6_vl1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 92,
+   "layer": 1,
+   "file": "sus_n104_1.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_G#6_vl3.wav"
+  },
+  {
+   "art": "sus",
+   "note": 96,
+   "layer": 0,
+   "file": "sus_n108_0.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_C7_vl1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 96,
+   "layer": 1,
+   "file": "sus_n108_1.m4a",
+   "source": "VCSL:Electrophones/TX81Z/FM Piano/FMPiano_C7_vl3.wav"
+  }
+ ]
+}

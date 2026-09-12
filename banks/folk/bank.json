@@ -1,0 +1,123 @@
+{
+ "$schema": "https://ajturner.github.io/tutti-music/schema/tutti-bank.schema.json",
+ "id": "folk",
+ "name": "Folk group",
+ "description": "Fiddle, folk harp, recorder, harmonica, frame drum and hand percussion; plus flute, clarinet, cellos and basses.",
+ "license": "CC0-1.0",
+ "source": "VSCO 2 Community Edition and VCSL by Versilian Studios",
+ "include": [
+  "flute",
+  "clarinet",
+  "cellos",
+  "basses"
+ ],
+ "instruments": [
+  {
+   "id": "fiddle",
+   "name": "Fiddle",
+   "family": "strings",
+   "range": [
+    55,
+    100
+   ],
+   "program": 110,
+   "articulations": [
+    "sus",
+    "stc",
+    "piz",
+    "trm"
+   ],
+   "samples": "./fiddle/"
+  },
+  {
+   "id": "folk-harp",
+   "name": "Folk harp",
+   "family": "plucked",
+   "range": [
+    36,
+    84
+   ],
+   "program": 46,
+   "articulations": [
+    "sus"
+   ],
+   "samples": "./folk-harp/"
+  },
+  {
+   "id": "recorder",
+   "name": "Recorder",
+   "family": "woodwind",
+   "range": [
+    72,
+    98
+   ],
+   "program": 74,
+   "articulations": [
+    "sus",
+    "stc"
+   ],
+   "samples": "./recorder/"
+  },
+  {
+   "id": "harmonica",
+   "name": "Harmonica",
+   "family": "woodwind",
+   "range": [
+    60,
+    96
+   ],
+   "program": 22,
+   "articulations": [
+    "sus",
+    "leg"
+   ],
+   "samples": "./harmonica/"
+  },
+  {
+   "id": "frame-drum",
+   "name": "Frame drum",
+   "family": "drums",
+   "range": [
+    36,
+    47
+   ],
+   "program": 0,
+   "articulations": [
+    "sus"
+   ],
+   "kit": {
+    "36": "large hit",
+    "38": "large muted",
+    "40": "large hand",
+    "43": "small hit",
+    "45": "small muted",
+    "47": "small hand"
+   },
+   "samples": "./frame-drum/"
+  },
+  {
+   "id": "hand-percussion",
+   "name": "Hand percussion",
+   "family": "drums",
+   "range": [
+    42,
+    56
+   ],
+   "program": 0,
+   "articulations": [
+    "sus"
+   ],
+   "kit": {
+    "42": "tambourine",
+    "44": "tambourine shake",
+    "46": "tambourine roll",
+    "48": "shaker",
+    "50": "shaker hit",
+    "52": "woodblock",
+    "54": "cajon",
+    "56": "bongo"
+   },
+   "samples": "./hand-percussion/"
+  }
+ ]
+}

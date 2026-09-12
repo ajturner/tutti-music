@@ -1,0 +1,98 @@
+{
+ "$schema": "https://ajturner.github.io/tutti-music/schema/tutti-bank.schema.json",
+ "id": "jazz",
+ "name": "Jazz combo",
+ "description": "Piano, vibes, tenor sax, upright bass and a drum kit; plus the orchestral trumpets and trombones.",
+ "license": "CC0-1.0",
+ "source": "VSCO 2 Community Edition and VCSL by Versilian Studios",
+ "include": [
+  "trumpets",
+  "trombones"
+ ],
+ "instruments": [
+  {
+   "id": "piano",
+   "name": "Piano",
+   "family": "keys",
+   "range": [
+    21,
+    108
+   ],
+   "program": 0,
+   "articulations": [
+    "sus"
+   ],
+   "samples": "./piano/"
+  },
+  {
+   "id": "vibraphone",
+   "name": "Vibraphone",
+   "family": "keys",
+   "range": [
+    53,
+    89
+   ],
+   "program": 11,
+   "articulations": [
+    "sus"
+   ],
+   "samples": "./vibraphone/"
+  },
+  {
+   "id": "tenor-sax",
+   "name": "Tenor sax",
+   "family": "woodwind",
+   "range": [
+    44,
+    76
+   ],
+   "program": 66,
+   "articulations": [
+    "sus",
+    "stc"
+   ],
+   "samples": "./tenor-sax/"
+  },
+  {
+   "id": "upright-bass",
+   "name": "Upright bass",
+   "family": "strings",
+   "range": [
+    28,
+    60
+   ],
+   "program": 32,
+   "articulations": [
+    "piz",
+    "sus"
+   ],
+   "samples": "./upright-bass/"
+  },
+  {
+   "id": "drum-kit",
+   "name": "Drum kit",
+   "family": "drums",
+   "range": [
+    35,
+    52
+   ],
+   "program": 0,
+   "articulations": [
+    "sus"
+   ],
+   "kit": {
+    "36": "kick",
+    "38": "snare",
+    "39": "clap",
+    "40": "snare, snares off",
+    "42": "closed hat",
+    "44": "pedal hat",
+    "45": "tom",
+    "46": "open hat",
+    "49": "crash",
+    "51": "ride bell"
+   },
+   "samples": "./drum-kit/"
+  }
+ ]
+}

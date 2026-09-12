@@ -3,6 +3,7 @@
 import { INSTRUMENTS, INST } from '../core/instruments.js';
 import { FAMILIES } from '../core/constants.js';
 import { addTrack, removeTrack, moveTrack, setTrackInstrument } from '../core/song.js';
+import { banks } from '../core/banks.js';
 import { $, sched, state, preloadSamples } from './state.js';
 import { deselect } from './selection.js';
 import { withSongUndo } from './edit.js';
@@ -21,7 +22,15 @@ export function sendControl(tr, cc, value) {
   const ev = { type: 'cc', track: tr.id, cc, value, channel: tr.channel - 1, family: ins.family, trackRef: tr };
   for (const s of sched.getSinks()) s.send(ev, performance.now());
 }
-const instOptions = cur => INSTRUMENTS.map(i => '<option value="' + i.id + '"' + (i.id === cur ? ' selected' : '') + '>' + i.name + ' (' + FAMILIES[i.family].label + ')</option>').join('');
+// Instruments grouped by bank: the orchestra first, then each loaded bank (with the instruments it includes).
+export function instOptions(cur) {
+  const groups = [['orchestra', 'Orchestra', INSTRUMENTS.filter(i => i.bank === 'orchestra')]];
+  for (const b of banks.values()) groups.push([b.id, b.name, [...b.instruments, ...b.includes].map(id => INST[id]).filter(Boolean)]);
+  const rest = INSTRUMENTS.filter(i => i.bank !== 'orchestra' && !banks.has(i.bank));
+  if (rest.length) groups.push(['other', 'Other', rest]);
+  const opt = i => '<option value="' + i.id + '"' + (i.id === cur ? ' selected' : '') + '>' + i.name + ' (' + (FAMILIES[i.family] || FAMILIES.electronic).label + ')</option>';
+  return groups.map(([id, label, list]) => '<optgroup label="' + label + '">' + list.map(opt).join('') + '</optgroup>').join('');
+}
 export function renderTracks() {
   const body = $('tracksBody'); if (!body) return;
   body.innerHTML = state.song.tracks.map((tr, i) => `
@@ -36,7 +45,7 @@ export function renderTracks() {
       <td><label><input data-f="mute" type="checkbox"${tr.mute ? ' checked' : ''}> M</label> <label><input data-f="solo" type="checkbox"${tr.solo ? ' checked' : ''}> S</label></td>
       <td><button data-act="remove" title="Remove this track and its notes">×</button></td>
     </tr>`).join('');
-  const add = $('trackAddInst'); if (!add.options.length) add.innerHTML = instOptions('violins-1');
+  const add = $('trackAddInst'); const cur = add.value; add.innerHTML = instOptions(cur || 'violins-1');
 }
 function onChange(e) {
   const row = e.target.closest('tr'); if (!row) return;

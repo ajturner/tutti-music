@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ajturner.github.io/tutti-music/schema/tutti-bank.schema.json",
+  "title": "Tutti sound bank",
+  "description": "A set of instruments that can be loaded into Tutti at run time, with optional sample folders.",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "instruments"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "license": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string"
+    },
+    "include": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Ids of already-registered instruments to show with this bank."
+    },
+    "instruments": {
+      "type": "array",
+      "items": {
+        "$ref": "https://ajturner.github.io/tutti-music/schema/tutti-instrument.schema.json"
+      }
+    }
+  }
+}

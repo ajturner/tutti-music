@@ -2,6 +2,7 @@
 // edited is stored under its uid; built-in examples are stored only once edited and can be reset.
 import { EXAMPLES } from '../core/examples.js';
 import { normalizeSong } from '../core/song.js';
+import { placeholdersFor } from '../core/banks.js';
 import { state } from './state.js';
 
 const KEY = 'tutti.songs.v1';
@@ -30,6 +31,7 @@ export function restoreSongs() {
   let n = 0;
   for (const raw of stored) {
     let s; try { s = normalizeSong(raw); } catch { continue; }
+    placeholdersFor(s);
     const i = state.songs.findIndex(x => x.uid === s.uid);
     if (i >= 0) state.songs[i] = s; else state.songs.push(s);
     persisted.add(s.uid); n++;
@@ -48,3 +50,5 @@ export function deleteCurrentSong() {
   saveNow();
   return Math.min(i, state.songs.length - 1);
 }
+// Flush a pending save when the page is hidden or unloaded so a quick close or reload loses nothing.
+if (typeof window !== 'undefined') { window.addEventListener('pagehide', () => { clearTimeout(timer); saveNow(); }); document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') { clearTimeout(timer); saveNow(); } }); }

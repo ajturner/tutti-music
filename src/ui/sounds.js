@@ -3,9 +3,12 @@
 // Two scopes at the top: the live preview output, and the waveform of the zone that last played.
 import { INSTRUMENTS, INST } from '../core/instruments.js';
 import { FAMILIES, ART } from '../core/constants.js';
-import { $, sampler, synth, state } from './state.js';
+import { $, sampler, synth, state, preloadSamples } from './state.js';
+import { banks, loadCatalog, loadBank, unloadBank } from '../core/banks.js';
+import { renderTracks } from './tracks.js';
 
-const KEY = 'tutti.sounds.v1';
+const KEY = 'tutti.sounds.v1', BANKS_KEY = 'tutti.banks.v1';
+let catalog = [];
 let raf = 0, zoneDirty = true;
 const fmtSigned = (v, unit = '') => (v > 0 ? '+' : '') + v + unit;
 
@@ -23,7 +26,7 @@ function phraseFor(ins) {
 export function renderSounds() {
   const body = $('soundsBody'); if (!body) return;
   body.innerHTML = INSTRUMENTS.map(ins => {
-    const cov = sampler.coverage(ins.id), st = sampler.setting(ins.id), fam = FAMILIES[ins.family];
+    const cov = sampler.coverage(ins.id), st = sampler.setting(ins.id), fam = FAMILIES[ins.family] || FAMILIES.electronic;
     const arts = ins.articulations.map(a => {
       const real = cov.sampled.includes(a), to = cov.fallback[a];
       const title = real ? ART[a] + ': sampled' : to ? ART[a] + ': uses ' + to + ' samples' : ART[a] + ': synth';
@@ -33,6 +36,7 @@ export function renderSounds() {
     const changed = st.tune || st.cents || st.trim || st.release !== 1;
     return `<tr data-id="${ins.id}" style="--fam:${fam.color}">
       <td class="name"><span class="swatch"></span>${ins.name}<small>${fam.label}</small></td>
+      <td class="bankcell">${(banks.get(ins.bank) || {}).name || ins.bank}</td>
       <td class="status">${status}</td>
       <td class="arts">${arts}</td>
       <td><button data-act="play" class="play" title="Audition a phrase">▶</button></td>
@@ -45,6 +49,33 @@ export function renderSounds() {
   }).join('');
 }
 
+// ---- banks ----------------------------------------------------------------------------------
+function loadedBankIds() { return [...banks.keys()]; }
+function saveBanks() { try { localStorage.setItem(BANKS_KEY, JSON.stringify(loadedBankIds().filter(id => !state.song.banks.includes(id)))); } catch { /* no storage */ } }
+export async function restoreBanks() {
+  let ids = []; try { ids = JSON.parse(localStorage.getItem(BANKS_KEY) || '[]'); } catch { ids = []; }
+  for (const id of ids) { try { await loadBank(id); } catch { /* gone */ } }
+  renderTracks();
+}
+export function renderBanks() {
+  const el = $('bankList'); if (!el) return;
+  const known = new Map(catalog.map(b => [b.id, b]));
+  for (const b of banks.values()) if (!known.has(b.id)) known.set(b.id, { id: b.id, name: b.name, description: b.description, url: b.url });
+  el.innerHTML = [...known.values()].map(b => {
+    const on = banks.has(b.id), used = state.song.banks.includes(b.id), n = on ? banks.get(b.id).instruments.length : '';
+    return `<button class="bank${on ? ' on' : ''}" data-bank="${b.id}" title="${(b.description || '').replace(/"/g, '&quot;')}${used ? ' (used by this song)' : ''}">${b.name}${n !== '' ? '<i>' + n + '</i>' : ''}${on ? ' ✓' : ''}</button>`;
+  }).join('');
+}
+async function toggleBank(id) {
+  const btn = $('bankList').querySelector(`[data-bank="${id}"]`); if (btn) btn.classList.add('busy');
+  try {
+    if (banks.has(id)) {
+      if (state.song.banks.includes(id)) { state.message = 'This song uses ' + id + '; remove its tracks first'; state.dirty = true; return; }
+      unloadBank(id, iid => state.songs.some(s => s.tracks.some(t => t.instrument === iid)));
+    } else { await loadBank(id); await sampler.preload(banks.get(id).instruments); }
+  } catch (e) { state.message = 'Bank: ' + e.message; state.dirty = true; }
+  saveBanks(); renderBanks(); renderSounds(); renderTracks();
+}
 // ---- scopes ---------------------------------------------------------------------------------
 function drawOut() {
   const cv = $('scopeOut'); if (!cv) return; const ctx = cv.getContext('2d'), W = cv.width, H = cv.height;
@@ -89,8 +120,8 @@ function fitCanvases() {
 }
 
 // ---- wiring ---------------------------------------------------------------------------------
-export function openSounds() {
-  renderSounds(); $('soundsDlg').showModal(); fitCanvases();
+export async function openSounds() {
+  catalog = await loadCatalog(); renderBanks(); renderSounds(); $('soundsDlg').showModal(); fitCanvases();
   if (!raf) raf = requestAnimationFrame(loop);
   // load anything not loaded yet so the rows fill in
   const ids = INSTRUMENTS.map(i => i.id); sampler.preload(ids).then(renderSounds);
@@ -116,6 +147,12 @@ export function wireSounds() {
     state.dirty = true;
   });
   $('soundsDlg').addEventListener('keydown', e => e.stopPropagation());
+  $('bankList').addEventListener('click', e => { const b = e.target.closest('button[data-bank]'); if (b) toggleBank(b.dataset.bank); });
+  $('bankUrlForm').addEventListener('submit', async e => {
+    e.preventDefault(); const url = $('bankUrl').value.trim(); if (!url) return;
+    try { const b = await loadBank(url); $('bankUrl').value = ''; await sampler.preload(b.instruments); } catch (err) { state.message = 'Bank: ' + err.message; state.dirty = true; }
+    saveBanks(); renderBanks(); renderSounds(); renderTracks();
+  });
   sampler.onZone = () => { zoneDirty = true; };
   sampler.onProgress = ((prev) => (id, done, total) => { if (prev) prev(id, done, total); if ($('soundsDlg').open && done === total) renderSounds(); })(sampler.onProgress);
   window.addEventListener('resize', () => { if ($('soundsDlg').open) fitCanvases(); });

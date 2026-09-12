@@ -17,6 +17,9 @@ export const FAMILIES = {
   percussion: { label: 'Percussion', color: '#D0715B' },
   strings:    { label: 'Strings',    color: '#8FA6E6' },
   electronic: { label: 'Electronic', color: '#B48EE0' },
+  keys:       { label: 'Keys',       color: '#E6C889' },
+  plucked:    { label: 'Plucked',    color: '#A9D18E' },
+  drums:      { label: 'Drums',      color: '#D98C8C' },
 };
 
 // Articulation codes shown in the grid. The first entry in an instrument's list is its default.

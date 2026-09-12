@@ -1,0 +1,112 @@
+{
+ "instrument": "drum-kit",
+ "source": "VSCO 2 CE / VCSL (CC0) by Versilian Studios, converted",
+ "license": "CC0-1.0",
+ "zones": [
+  {
+   "art": "sus",
+   "note": 36,
+   "layer": 0,
+   "file": "sus_n36_0.m4a",
+   "source": "VCSL:Membranophones/Struck Membranophones/Bass Drum 1/BDrumNew_hit_v2_rr1_Sum.wav"
+  },
+  {
+   "art": "sus",
+   "note": 36,
+   "layer": 1,
+   "file": "sus_n36_1.m4a",
+   "source": "VCSL:Membranophones/Struck Membranophones/Bass Drum 1/BDrumNew_hit_v7_rr1_Sum.wav"
+  },
+  {
+   "art": "sus",
+   "note": 38,
+   "layer": 0,
+   "file": "sus_n38_0.m4a",
+   "source": "VCSL:Membranophones/Struck Membranophones/Snare Drum, Modern 1/Snare2_HitSN_v3_rr1_Mid.wav"
+  },
+  {
+   "art": "sus",
+   "note": 38,
+   "layer": 1,
+   "file": "sus_n38_1.m4a",
+   "source": "VCSL:Membranophones/Struck Membranophones/Snare Drum, Modern 1/Snare2_HitSN_v9_rr1_Mid.wav"
+  },
+  {
+   "art": "sus",
+   "note": 39,
+   "layer": 1,
+   "file": "sus_n39_0.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Claps/Clap_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 40,
+   "layer": 0,
+   "file": "sus_n40_0.m4a",
+   "source": "VCSL:Membranophones/Struck Membranophones/Snare Drum, Modern 1/Snare2_HitNS_v2_rr1_Mid.wav"
+  },
+  {
+   "art": "sus",
+   "note": 40,
+   "layer": 1,
+   "file": "sus_n40_1.m4a",
+   "source": "VCSL:Membranophones/Struck Membranophones/Snare Drum, Modern 1/Snare2_HitNS_v6_rr1_Mid.wav"
+  },
+  {
+   "art": "sus",
+   "note": 42,
+   "layer": 0,
+   "file": "sus_n42_0.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Hi-Hat Cymbal/HiHat_HitC_v1_rr1_Mid.wav"
+  },
+  {
+   "art": "sus",
+   "note": 42,
+   "layer": 1,
+   "file": "sus_n42_1.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Hi-Hat Cymbal/HiHat_HitC_v4_rr1_Mid.wav"
+  },
+  {
+   "art": "sus",
+   "note": 44,
+   "layer": 1,
+   "file": "sus_n44_0.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Hi-Hat Cymbal/HiHat_Close_rr1_Mid.wav"
+  },
+  {
+   "art": "sus",
+   "note": 45,
+   "layer": 0,
+   "file": "sus_n45_0.m4a",
+   "source": "VCSL:Membranophones/Struck Membranophones/Tom 1/Stick/TomH_HitS_v2_rr1_Mid.wav"
+  },
+  {
+   "art": "sus",
+   "note": 45,
+   "layer": 1,
+   "file": "sus_n45_1.m4a",
+   "source": "VCSL:Membranophones/Struck Membranophones/Tom 1/Stick/TomH_HitS_v4_rr1_Mid.wav"
+  },
+  {
+   "art": "sus",
+   "note": 46,
+   "layer": 1,
+   "file": "sus_n46_0.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Hi-Hat Cymbal/HiHat_HitO_rr1_Mid.wav"
+  },
+  {
+   "art": "sus",
+   "note": 49,
+   "layer": 1,
+   "file": "sus_n49_0.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Suspended Cymbal 1/susCymb1_hit_f1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 51,
+   "layer": 1,
+   "file": "sus_n51_0.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Suspended Cymbal 1/susCymb1_hit_bell_fff1.wav"
+  }
+ ]
+}

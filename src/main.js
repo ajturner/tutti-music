@@ -37,7 +37,8 @@ import * as ui_arranger from './ui/arranger.js';
 import * as ui_mixer from './ui/mixer.js';
 import { wireMixer, setMixer, mixerDefault } from './ui/mixer.js';
 import * as ui_sounds from './ui/sounds.js';
-import { wireSounds } from './ui/sounds.js';
+import { wireSounds, restoreBanks } from './ui/sounds.js';
+import * as core_banks from './core/banks.js';
 import * as ui_views from './ui/views.js';
 import { wireViews } from './ui/views.js';
 import { restoreLocation } from './ui/session.js';
@@ -64,7 +65,7 @@ wireMixer();
 wireSounds();
 wireViews();
 setMixer(mixerDefault());
-preloadSamples();
+preloadSamples().then(restoreBanks);
 resize();
 canvas.focus();
 requestAnimationFrame(frame);
@@ -73,4 +74,4 @@ requestAnimationFrame(frame);
 if ('serviceWorker' in navigator && location.protocol.startsWith('http') && !location.search.includes('nosw')) {
   navigator.serviceWorker.register('sw.js').catch(() => { /* offline support is optional */ });
 }
-window.tutti = Object.assign({}, core_constants, core_instruments, core_song, core_render, core_scheduler, core_synth, core_midi, core_midifile, core_examples, core_edit, core_scales, core_sampler, ui_state, ui_layout, ui_sync, ui_edit, ui_selection, ui_transport, ui_keyboard, ui_pointer, ui_draw, ui_gamepad, ui_pad, ui_midi_in, ui_toolbar, ui_storage, ui_session, ui_tracks, ui_arranger, ui_mixer, ui_sounds, ui_views, { VERSION });
+window.tutti = Object.assign({}, core_constants, core_instruments, core_song, core_render, core_scheduler, core_synth, core_midi, core_midifile, core_examples, core_edit, core_scales, core_sampler, core_banks, ui_state, ui_layout, ui_sync, ui_edit, ui_selection, ui_transport, ui_keyboard, ui_pointer, ui_draw, ui_gamepad, ui_pad, ui_midi_in, ui_toolbar, ui_storage, ui_session, ui_tracks, ui_arranger, ui_mixer, ui_sounds, ui_views, { VERSION });

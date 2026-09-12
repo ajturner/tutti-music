@@ -51,14 +51,15 @@ export class SamplerSink {
     if (this.maps.has(instrumentId)) return this.has(instrumentId);
     if (this.loading.has(instrumentId)) return this.loading.get(instrumentId);
     const p = (async () => {
-      const alias = await this.index(), folder = alias[instrumentId];   // only instruments listed in the index have samples
+      const own = INST[instrumentId] && INST[instrumentId].samples;   // bank instruments carry their own folder URL
+      const alias = own ? null : await this.index(), folder = own ? own : (alias[instrumentId] ? this.base + alias[instrumentId] + '/' : null);
       let map = null;
-      if (folder) try { const r = await fetch(this.base + folder + '/map.json'); if (r.ok) map = await r.json(); } catch { map = null; }
+      if (folder) try { const r = await fetch(folder + 'map.json'); if (r.ok) map = await r.json(); } catch { map = null; }
       if (!map) { this.maps.set(instrumentId, null); return false; }
       map.folder = folder;
       this.ensure();
       let done = 0;
-      await Promise.all(map.zones.map(async z => { await this.buffer(this.base + folder + '/' + z.file); done++; if (this.onProgress) this.onProgress(instrumentId, done, map.zones.length); }));
+      await Promise.all(map.zones.map(async z => { await this.buffer(folder + z.file); done++; if (this.onProgress) this.onProgress(instrumentId, done, map.zones.length); }));
       this.maps.set(instrumentId, map);
       return true;
     })();
@@ -102,7 +103,7 @@ export class SamplerSink {
     pitches.forEach((p, i) => {
       const t = t0 + i * gap, end = t + (i === pitches.length - 1 ? gap * 2.2 : gap * 0.95);
       if (this.has(instrumentId)) { this.noteOn('sounds', instrumentId, p, 100, a, t); this.noteOff('sounds', p, end); }
-      else this.synth.audition(ins ? ins.family : 'strings', p, a);
+      else this.synth.audition(ins ? ins.family : 'strings', p, a, instrumentId);
     });
   }
   // ---- playing ------------------------------------------------------------------------------
@@ -134,11 +135,11 @@ export class SamplerSink {
     if (this.voices.has(key)) this.release(this.voices.get(key), t, 0.05);
     const ins = INST[inst], useArt = art || (ins ? ins.articulations[0] : 'sus'), st = this.setting(inst);
     const picks = pickZones(map, useArt, pitch, b.dyn, vel);
-    if (!picks.length) return;
+    if (!picks.length || (ins && ins.kit && Math.abs(picks[0].zone.note - pitch) > 0)) return;   // a kit only sounds on its mapped notes
     const list = [], trim = Math.pow(10, st.trim / 20), detune = st.tune + st.cents / 100;
     for (const p of picks) {
-      const buf = this.buffers.get(this.base + map.folder + '/' + p.zone.file); if (!buf || buf.then) continue;
-      const src = ctx.createBufferSource(); src.buffer = buf; src.playbackRate.value = Math.pow(2, (pitch - p.zone.note + detune) / 12);
+      const buf = this.buffers.get(map.folder + p.zone.file); if (!buf || buf.then) continue;
+      const src = ctx.createBufferSource(); src.buffer = buf; src.playbackRate.value = ins && ins.kit ? Math.pow(2, detune / 12) : Math.pow(2, (pitch - p.zone.note + detune) / 12);   // kits are fixed-pitch
       const g = ctx.createGain(); const level = trim * p.gain * (SHORT.has(p.art) ? 0.6 + 0.4 * vel / 127 : 1) * (useArt === 'mrc' ? 1.25 : 1);
       g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(level, t + (useArt === 'leg' ? 0.06 : 0.004));
       src.connect(g).connect(b.gain); src.start(t);
@@ -153,7 +154,7 @@ export class SamplerSink {
   }
   allOff() { const t = this.ctx ? this.ctx.currentTime : 0; for (const v of this.voices.values()) this.release(v, t, 0.1); this.voices.clear(); this.synth.allOff(); }
   audition(instrumentId, family, pitch, art) {
-    if (!this.has(instrumentId)) { this.load(instrumentId); return this.synth.audition(family, pitch, art); }
+    if (!this.has(instrumentId)) { this.load(instrumentId); return this.synth.audition(family, pitch, art, instrumentId); }
     this.ensure(); const t = this.ctx.currentTime + 0.01;
     this.noteOn('audition', instrumentId, pitch, 100, art, t); this.noteOff('audition', pitch, t + 0.6);
   }

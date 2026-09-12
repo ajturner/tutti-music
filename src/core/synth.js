@@ -1,16 +1,21 @@
+import { INST } from './instruments.js';
 // WebAudio preview synth: one voice per family shaped by articulation and the dynamics/expression lanes.
 // ---- SynthSink: WebAudio preview ---------------------------------------------
 // One bus per track: voices -> lowpass (opened by the dynamics lane) -> gain -> compressor.
 // Family and articulation pick waveforms and envelope; CC1 brightens and lifts, CC11 scales level.
-export function voiceParams(family, art) {
-  const base = {
+export function voiceParams(family, art, patch) {
+  const base = patch ? Object.assign({ waves: [['sawtooth', 0, 0.5]], a: 0.01, d: 0.2, s: 0.7, r: 0.2, level: 0.25 }, patch) : {
     strings:    { waves: [['sawtooth', -6, 0.5], ['sawtooth', 6, 0.5]], a: 0.14, d: 0.25, s: 0.85, r: 0.35, level: 0.28 },
     brass:      { waves: [['sawtooth', 0, 0.6], ['square', -3, 0.25]],  a: 0.05, d: 0.12, s: 0.90, r: 0.18, level: 0.30 },
     woodwind:   { waves: [['triangle', 0, 0.7], ['sine', 0, 0.4]],      a: 0.05, d: 0.10, s: 0.90, r: 0.15, level: 0.35 },
     percussion: { waves: [['sine', 0, 1.0], ['triangle', 0, 0.3]],      a: 0.003, d: 0.5, s: 0, r: 0.3, level: 0.6, drop: 1.6, noise: true, oneShot: true },
     electronic: { waves: [['sawtooth', 0, 0.45], ['square', -1200, 0.3]], a: 0.005, d: 0.15, s: 0.7, r: 0.12, level: 0.26 },
+    keys:       { waves: [['triangle', 0, 0.7], ['sine', 1200, 0.25], ['sawtooth', 0, 0.12]], a: 0.004, d: 0.9, s: 0.25, r: 0.35, level: 0.32, oneShot: false },
+    plucked:    { waves: [['triangle', 0, 0.8], ['sawtooth', 0, 0.15]], a: 0.003, d: 0.5, s: 0, r: 0.2, level: 0.34, oneShot: true },
+    drums:      { waves: [['sine', 0, 1.0]], a: 0.002, d: 0.3, s: 0, r: 0.1, level: 0.6, oneShot: true },
   }[family] || { waves: [['sine', 0, 1]], a: 0.02, d: 0.1, s: 0.8, r: 0.2, level: 0.3 };
   const p = Object.assign({}, base);
+  if (patch) return p;   // patches are complete voices; articulations do not reshape them
   switch (art) {
     case 'leg': p.a = Math.max(0.03, p.a * 0.5); p.r *= 0.7; break;
     case 'stc': p.a = 0.01; p.d = 0.12; p.s = 0.25; p.r = 0.08; break;
@@ -70,7 +75,7 @@ export class SynthSink {
     if (!this.enabled) return;
     this.ensure();
     const t = this.when(atMs);
-    if (ev.type === 'on') this.noteOn(ev.track, ev.family, ev.pitch, ev.vel, ev.art, t);
+    if (ev.type === 'on') this.noteOn(ev.track, ev.family, ev.pitch, ev.vel, ev.art, t, ev.trackRef ? ev.trackRef.instrument : null);
     else if (ev.type === 'off') this.noteOff(ev.track, ev.pitch, t);
     else if (ev.type === 'cc') this.control(ev.track, ev.cc, ev.value, t);
   }
@@ -79,10 +84,12 @@ export class SynthSink {
     if (cc === 1) b.dyn = value; else if (cc === 11) b.expr = value; else if (cc === 7) b.vol = value; else if (cc === 10) b.panv = value; else return;
     this.applyBus(b, t);
   }
-  noteOn(track, family, pitch, vel, art, t) {
+  noteOn(track, family, pitch, vel, art, t, instId) {
     const ctx = this.ctx, b = this.bus(track), key = track + ':' + pitch;
     if (this.active.has(key)) this.release(this.active.get(key), t, 0.05);
-    const P = voiceParams(family, art);
+    const ins = instId ? INST[instId] : null;
+    if (ins && ins.kit && !ins.samples) { if (ins.kit[pitch]) this.drum(b, pitch, vel, t); return; }
+    const P = voiceParams(family, art, ins ? ins.patch : null);
     const f = 440 * Math.pow(2, (pitch - 69) / 12);
     const vg = ctx.createGain(); vg.gain.value = 0;
     let tail = vg;
@@ -128,13 +135,41 @@ export class SynthSink {
     const stopAt = t + r * 2 + 0.1;
     v.oscs.forEach(o => o.stop(stopAt)); v.extra.forEach(o => o.stop(stopAt));
   }
+  // Synthesized drum machine, 808-flavoured: kick, snare, clap, hats, toms, crash, ride by GM note.
+  drum(b, pitch, vel, t) {
+    const ctx = this.ctx, g = ctx.createGain(), v = 0.3 + 0.7 * vel / 127; g.connect(b.filter);
+    const noise = (len, hp, lp, level) => {
+      const src = ctx.createBufferSource(); src.buffer = this.noise; src.loop = true;
+      const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = Math.sqrt(hp * lp); f.Q.value = 0.7;
+      const e = ctx.createGain(); e.gain.setValueAtTime(level * v, t); e.gain.exponentialRampToValueAtTime(0.001, t + len);
+      src.connect(f).connect(e).connect(g); src.start(t); src.stop(t + len + 0.05);
+    };
+    const tone = (f0, f1, len, level, type = 'sine') => {
+      const o = ctx.createOscillator(); o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + Math.min(len, 0.2));
+      const e = ctx.createGain(); e.gain.setValueAtTime(level * v, t); e.gain.exponentialRampToValueAtTime(0.001, t + len);
+      o.connect(e).connect(g); o.start(t); o.stop(t + len + 0.05);
+    };
+    switch (pitch) {
+      case 36: tone(160, 45, 0.45, 1.0); noise(0.02, 800, 4000, 0.3); break;                 // kick
+      case 38: tone(190, 150, 0.18, 0.5); noise(0.22, 1200, 7000, 0.8); break;               // snare
+      case 39: for (const d of [0, 0.012, 0.024]) { const tt = t + d; const src = ctx.createBufferSource(); src.buffer = this.noise; const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1800; f.Q.value = 1.2; const e = ctx.createGain(); e.gain.setValueAtTime(0.6 * v, tt); e.gain.exponentialRampToValueAtTime(0.001, tt + (d < 0.02 ? 0.03 : 0.25)); src.connect(f).connect(e).connect(g); src.start(tt); src.stop(tt + 0.3); } break;   // clap
+      case 42: noise(0.06, 6000, 14000, 0.5); break;                                          // closed hat
+      case 46: noise(0.45, 5000, 14000, 0.45); break;                                         // open hat
+      case 41: tone(120, 70, 0.4, 0.8); break;                                                // low tom
+      case 45: tone(170, 100, 0.35, 0.8); break;                                              // mid tom
+      case 48: tone(240, 140, 0.3, 0.8); break;                                               // high tom
+      case 49: noise(1.2, 3000, 12000, 0.5); break;                                           // crash
+      case 51: noise(0.6, 4000, 9000, 0.3); tone(3200, 3200, 0.5, 0.15, 'square'); break;    // ride
+      default: tone(200, 100, 0.2, 0.5);
+    }
+  }
   noteOff(track, pitch, t) {
     const v = this.active.get(track + ':' + pitch);
     if (v) this.release(v, t);
   }
-  audition(family, pitch, art) {
+  audition(family, pitch, art, instId) {
     const t = this.ensure().currentTime + 0.01;
-    this.noteOn('_audition', family, pitch, 100, art, t);
+    this.noteOn('_audition', family, pitch, 100, art, t, instId);
     this.noteOff('_audition', pitch, t + 0.35);
   }
   allOff() {

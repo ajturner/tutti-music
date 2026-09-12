@@ -1,0 +1,777 @@
+{
+ "instrument": "fiddle",
+ "source": "VSCO 2 CE / VCSL (CC0) by Versilian Studios, converted",
+ "license": "CC0-1.0",
+ "zones": [
+  {
+   "art": "piz",
+   "note": 55,
+   "layer": 0,
+   "file": "piz_n67_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Pizz/LLVln_Pizz_G3_p_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 55,
+   "layer": 1,
+   "file": "piz_n67_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Pizz/LLVln_Pizz_G3_f_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 57,
+   "layer": 0,
+   "file": "piz_n69_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Pizz/LLVln_Pizz_A3_p_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 57,
+   "layer": 1,
+   "file": "piz_n69_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Pizz/LLVln_Pizz_A3_f_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 60,
+   "layer": 0,
+   "file": "piz_n72_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Pizz/LLVln_Pizz_C4_p_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 60,
+   "layer": 1,
+   "file": "piz_n72_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Pizz/LLVln_Pizz_C4_f_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 64,
+   "layer": 0,
+   "file": "piz_n76_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Pizz/LLVln_Pizz_E4_p_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 64,
+   "layer": 1,
+   "file": "piz_n76_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Pizz/LLVln_Pizz_E4_f_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 67,
+   "layer": 0,
+   "file": "piz_n79_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Pizz/LLVln_Pizz_G4_p_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 67,
+   "layer": 1,
+   "file": "piz_n79_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Pizz/LLVln_Pizz_G4_f_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 69,
+   "layer": 0,
+   "file": "piz_n81_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Pizz/LLVln_Pizz_A4_p_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 69,
+   "layer": 1,
+   "file": "piz_n81_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Pizz/LLVln_Pizz_A4_f_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 72,
+   "layer": 0,
+   "file": "piz_n84_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Pizz/LLVln_Pizz_C5_p_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 72,
+   "layer": 1,
+   "file": "piz_n84_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Pizz/LLVln_Pizz_C5_f_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 76,
+   "layer": 0,
+   "file": "piz_n88_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Pizz/LLVln_Pizz_E5_p_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 76,
+   "layer": 1,
+   "file": "piz_n88_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Pizz/LLVln_Pizz_E5_f_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 79,
+   "layer": 0,
+   "file": "piz_n91_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Pizz/LLVln_Pizz_G5_p_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 79,
+   "layer": 1,
+   "file": "piz_n91_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Pizz/LLVln_Pizz_G5_f_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 81,
+   "layer": 0,
+   "file": "piz_n93_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Pizz/LLVln_Pizz_A5_p_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 81,
+   "layer": 1,
+   "file": "piz_n93_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Pizz/LLVln_Pizz_A5_f_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 88,
+   "layer": 1,
+   "file": "piz_n100_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Pizz/LLVln_Pizz_E6_f_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 93,
+   "layer": 1,
+   "file": "piz_n105_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Pizz/LLVln_Pizz_A6_f_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 96,
+   "layer": 1,
+   "file": "piz_n108_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Pizz/LLVln_Pizz_C7_f.wav"
+  },
+  {
+   "art": "stc",
+   "note": 55,
+   "layer": 0,
+   "file": "stc_n55_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/spic/LLVln_spic_G2_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 55,
+   "layer": 1,
+   "file": "stc_n55_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/spic/LLVln_spic_G2_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 57,
+   "layer": 0,
+   "file": "stc_n57_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/spic/LLVln_spic_A2_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 57,
+   "layer": 1,
+   "file": "stc_n57_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/spic/LLVln_spic_A2_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 60,
+   "layer": 0,
+   "file": "stc_n60_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/spic/LLVln_spic_C3_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 60,
+   "layer": 1,
+   "file": "stc_n60_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/spic/LLVln_spic_C3_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 64,
+   "layer": 0,
+   "file": "stc_n64_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/spic/LLVln_spic_E3_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 64,
+   "layer": 1,
+   "file": "stc_n64_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/spic/LLVln_spic_E3_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 67,
+   "layer": 0,
+   "file": "stc_n67_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/spic/LLVln_spic_G3_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 67,
+   "layer": 1,
+   "file": "stc_n67_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/spic/LLVln_spic_G3_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 69,
+   "layer": 0,
+   "file": "stc_n69_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/spic/LLVln_spic_A3_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 69,
+   "layer": 1,
+   "file": "stc_n69_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/spic/LLVln_spic_A3_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 72,
+   "layer": 0,
+   "file": "stc_n72_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/spic/LLVln_spic_C4_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 72,
+   "layer": 1,
+   "file": "stc_n72_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/spic/LLVln_spic_C4_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 76,
+   "layer": 0,
+   "file": "stc_n76_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/spic/LLVln_spic_E4_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 76,
+   "layer": 1,
+   "file": "stc_n76_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/spic/LLVln_spic_E4_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 79,
+   "layer": 0,
+   "file": "stc_n79_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/spic/LLVln_spic_G4_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 79,
+   "layer": 1,
+   "file": "stc_n79_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/spic/LLVln_spic_G4_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 81,
+   "layer": 0,
+   "file": "stc_n81_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/spic/LLVln_spic_A4_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 81,
+   "layer": 1,
+   "file": "stc_n81_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/spic/LLVln_spic_A4_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 84,
+   "layer": 0,
+   "file": "stc_n84_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/spic/LLVln_spic_C5_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 84,
+   "layer": 1,
+   "file": "stc_n84_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/spic/LLVln_spic_C5_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 88,
+   "layer": 0,
+   "file": "stc_n88_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/spic/LLVln_spic_E5_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 88,
+   "layer": 1,
+   "file": "stc_n88_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/spic/LLVln_spic_E5_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 91,
+   "layer": 0,
+   "file": "stc_n91_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/spic/LLVln_spic_G5_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 91,
+   "layer": 1,
+   "file": "stc_n91_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/spic/LLVln_spic_G5_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 93,
+   "layer": 0,
+   "file": "stc_n93_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/spic/LLVln_spic_A5_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 93,
+   "layer": 1,
+   "file": "stc_n93_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/spic/LLVln_spic_A5_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 96,
+   "layer": 0,
+   "file": "stc_n96_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/spic/LLVln_spic_C6_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 96,
+   "layer": 1,
+   "file": "stc_n96_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/spic/LLVln_spic_C6_v2_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 55,
+   "layer": 0,
+   "file": "sus_n67_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_G3_p.wav"
+  },
+  {
+   "art": "sus",
+   "note": 55,
+   "layer": 1,
+   "file": "sus_n67_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_G3_f.wav"
+  },
+  {
+   "art": "sus",
+   "note": 57,
+   "layer": 0,
+   "file": "sus_n69_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_A3_p.wav"
+  },
+  {
+   "art": "sus",
+   "note": 57,
+   "layer": 1,
+   "file": "sus_n69_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_A3_f.wav"
+  },
+  {
+   "art": "sus",
+   "note": 60,
+   "layer": 0,
+   "file": "sus_n72_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_C4_p.wav"
+  },
+  {
+   "art": "sus",
+   "note": 60,
+   "layer": 1,
+   "file": "sus_n72_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_C4_f.wav"
+  },
+  {
+   "art": "sus",
+   "note": 64,
+   "layer": 0,
+   "file": "sus_n76_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_E4_p.wav"
+  },
+  {
+   "art": "sus",
+   "note": 64,
+   "layer": 1,
+   "file": "sus_n76_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_E4_f.wav"
+  },
+  {
+   "art": "sus",
+   "note": 67,
+   "layer": 0,
+   "file": "sus_n79_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_G4_p.wav"
+  },
+  {
+   "art": "sus",
+   "note": 67,
+   "layer": 1,
+   "file": "sus_n79_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_G4_f.wav"
+  },
+  {
+   "art": "sus",
+   "note": 69,
+   "layer": 0,
+   "file": "sus_n81_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_A4_p.wav"
+  },
+  {
+   "art": "sus",
+   "note": 69,
+   "layer": 1,
+   "file": "sus_n81_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_A4_f.wav"
+  },
+  {
+   "art": "sus",
+   "note": 72,
+   "layer": 0,
+   "file": "sus_n84_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_C5_p.wav"
+  },
+  {
+   "art": "sus",
+   "note": 72,
+   "layer": 1,
+   "file": "sus_n84_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_C5_f.wav"
+  },
+  {
+   "art": "sus",
+   "note": 76,
+   "layer": 0,
+   "file": "sus_n88_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_E5_p.wav"
+  },
+  {
+   "art": "sus",
+   "note": 76,
+   "layer": 1,
+   "file": "sus_n88_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_E5_f.wav"
+  },
+  {
+   "art": "sus",
+   "note": 79,
+   "layer": 0,
+   "file": "sus_n91_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_G5_p.wav"
+  },
+  {
+   "art": "sus",
+   "note": 79,
+   "layer": 1,
+   "file": "sus_n91_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_G5_f.wav"
+  },
+  {
+   "art": "sus",
+   "note": 81,
+   "layer": 0,
+   "file": "sus_n93_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_A5_p.wav"
+  },
+  {
+   "art": "sus",
+   "note": 81,
+   "layer": 1,
+   "file": "sus_n93_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_A5_f.wav"
+  },
+  {
+   "art": "sus",
+   "note": 84,
+   "layer": 0,
+   "file": "sus_n96_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_C6_p.wav"
+  },
+  {
+   "art": "sus",
+   "note": 84,
+   "layer": 1,
+   "file": "sus_n96_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_C6_f.wav"
+  },
+  {
+   "art": "sus",
+   "note": 88,
+   "layer": 0,
+   "file": "sus_n100_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_E6_p.wav"
+  },
+  {
+   "art": "sus",
+   "note": 88,
+   "layer": 1,
+   "file": "sus_n100_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_E6_f.wav"
+  },
+  {
+   "art": "sus",
+   "note": 91,
+   "layer": 0,
+   "file": "sus_n103_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_G6_p.wav"
+  },
+  {
+   "art": "sus",
+   "note": 91,
+   "layer": 1,
+   "file": "sus_n103_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_G6_f.wav"
+  },
+  {
+   "art": "sus",
+   "note": 93,
+   "layer": 0,
+   "file": "sus_n105_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_A6_p.wav"
+  },
+  {
+   "art": "sus",
+   "note": 93,
+   "layer": 1,
+   "file": "sus_n105_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_A6_f.wav"
+  },
+  {
+   "art": "sus",
+   "note": 96,
+   "layer": 0,
+   "file": "sus_n108_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_C7_p.wav"
+  },
+  {
+   "art": "sus",
+   "note": 96,
+   "layer": 1,
+   "file": "sus_n108_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Arco Vib/LLVln_ArcoVib_C7_f.wav"
+  },
+  {
+   "art": "trm",
+   "note": 55,
+   "layer": 0,
+   "file": "trm_n55_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Trem/LLVln_trem_G2_v1_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 55,
+   "layer": 1,
+   "file": "trm_n55_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Trem/LLVln_trem_G2_v2_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 57,
+   "layer": 0,
+   "file": "trm_n57_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Trem/LLVln_trem_A2_v1_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 57,
+   "layer": 1,
+   "file": "trm_n57_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Trem/LLVln_trem_A2_v2_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 60,
+   "layer": 0,
+   "file": "trm_n60_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Trem/LLVln_trem_C3_v1_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 60,
+   "layer": 1,
+   "file": "trm_n60_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Trem/LLVln_trem_C3_v2_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 64,
+   "layer": 0,
+   "file": "trm_n64_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Trem/LLVln_trem_E3_v1_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 64,
+   "layer": 1,
+   "file": "trm_n64_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Trem/LLVln_trem_E3_v2_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 67,
+   "layer": 0,
+   "file": "trm_n67_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Trem/LLVln_trem_G3_v1_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 67,
+   "layer": 1,
+   "file": "trm_n67_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Trem/LLVln_trem_G3_v2_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 69,
+   "layer": 0,
+   "file": "trm_n69_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Trem/LLVln_trem_A3_v1_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 69,
+   "layer": 1,
+   "file": "trm_n69_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Trem/LLVln_trem_A3_v2_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 72,
+   "layer": 0,
+   "file": "trm_n72_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Trem/LLVln_trem_C4_v1_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 72,
+   "layer": 1,
+   "file": "trm_n72_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Trem/LLVln_trem_C4_v2_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 76,
+   "layer": 0,
+   "file": "trm_n76_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Trem/LLVln_trem_E4_v1_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 76,
+   "layer": 1,
+   "file": "trm_n76_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Trem/LLVln_trem_E4_v2_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 79,
+   "layer": 0,
+   "file": "trm_n79_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Trem/LLVln_trem_G4_v1_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 79,
+   "layer": 1,
+   "file": "trm_n79_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Trem/LLVln_trem_G4_v2_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 81,
+   "layer": 0,
+   "file": "trm_n81_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Trem/LLVln_trem_A4_v1_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 81,
+   "layer": 1,
+   "file": "trm_n81_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Trem/LLVln_trem_A4_v2_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 84,
+   "layer": 0,
+   "file": "trm_n84_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Trem/LLVln_trem_C5_v1_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 84,
+   "layer": 1,
+   "file": "trm_n84_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Trem/LLVln_trem_C5_v2_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 88,
+   "layer": 0,
+   "file": "trm_n88_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Trem/LLVln_trem_E5_v1_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 88,
+   "layer": 1,
+   "file": "trm_n88_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Trem/LLVln_trem_E5_v2_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 91,
+   "layer": 0,
+   "file": "trm_n91_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Trem/LLVln_trem_G5_v1_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 91,
+   "layer": 1,
+   "file": "trm_n91_1.m4a",
+   "source": "VSCO:Strings/Solo Violin/Trem/LLVln_trem_G5_v2_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 96,
+   "layer": 1,
+   "file": "trm_n96_0.m4a",
+   "source": "VSCO:Strings/Solo Violin/Trem/LLVln_trem_C6_v2_rr1.wav"
+  }
+ ]
+}

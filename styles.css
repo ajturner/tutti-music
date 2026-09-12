@@ -214,3 +214,16 @@ dialog.m8 .dlgHead button { padding: 1px 7px; font-size: 11px; }
   .view #tracksTable input, .view #tracksTable select { min-height: 32px; font-size: 13px; }
   #tracksView { overflow: auto; }
 }
+
+/* Banks in the Sounds panel */
+#bankBar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 2px 0 8px; }
+#bankBar .lbl { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: #6C7597; margin-right: 4px; }
+#bankBar .bank { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; border: 1px solid #1F2647; border-radius: 3px; background: #0A0D1C; font-size: 11px; color: #6C7597; cursor: pointer; }
+#bankBar .bank.on { color: var(--accent); border-color: var(--accent); }
+#bankBar .bank i { font-style: normal; opacity: .7; }
+#bankBar .bank.busy { opacity: .6; }
+#bankUrlForm { display: inline-flex; gap: 4px; margin-left: auto; }
+#bankUrlForm input { width: 16em; font-size: 11px; min-height: 0; padding: 2px 6px; }
+#bankUrlForm button { font-size: 11px; padding: 1px 7px; min-height: 0; }
+#soundsTable .bankcell { color: #6C7597; font-size: 11px; }
+@media (max-width: 760px) { #bankUrlForm { margin-left: 0; width: 100%; } #bankUrlForm input { flex: 1; } #soundsTable th:nth-child(2), #soundsTable td:nth-child(2) { display: none; } }

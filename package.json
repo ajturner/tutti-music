@@ -1,6 +1,6 @@
 {
   "name": "tutti-music",
-  "version": "2.4.1",
+  "version": "2.5.0",
   "description": "Tutti \u2014 a symphonic tracker: compose orchestral music in a tracker-style grid and export to MIDI. Single-file browser app with no dependencies.",
   "homepage": "https://ajturner.github.io/tutti-music/",
   "repository": {
@@ -30,7 +30,8 @@
     "test:core": "node test/core.test.mjs",
     "test:schema": "node test/schema.test.mjs",
     "test:ui": "mkdir -p test/out && node test/ui.test.mjs",
-    "build:samples": "node scripts/build-samples.mjs"
+    "build:samples": "node scripts/build-samples.mjs",
+    "build:banks": "node scripts/build-banks.mjs"
   },
   "files": [
     "index.html",
@@ -41,7 +42,8 @@
     "samples",
     "assets",
     "manifest.webmanifest",
-    "sw.js"
+    "sw.js",
+    "banks"
   ],
   "devDependencies": {
     "ajv": "^8.20.0",

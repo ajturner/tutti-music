@@ -187,7 +187,8 @@ export function updateStatus(playRow) {
     const ins = INST[tr.instrument];
     let s = '<b>' + tr.name + '</b> col ' + ((cell.col | 0) + 1) + ' row ' + row;
     const ev = noteCovering(pat, tr.id, cell.col | 0, row);
-    if (ev) s += ' <b>' + noteName(ev.pitch) + '</b> vel ' + ev.vel + ' len ' + (ev.len / pat.ticksPerRow) + ' rows ' + (ev.art || ins.articulations[0]);
+    if (ev) s += ' <b>' + noteName(ev.pitch) + '</b>' + (ins.kit && ins.kit[ev.pitch] ? ' ' + esc(ins.kit[ev.pitch]) : '') + ' vel ' + ev.vel + ' len ' + (ev.len / pat.ticksPerRow) + ' rows ' + (ev.art || ins.articulations[0]);
+    if (ins.kit && !ev) s += ' kit: ' + Object.entries(ins.kit).map(([n, l]) => noteName(+n) + ' ' + esc(l)).join(', ');
     parts.push(s);
     parts.push('articulations ' + ins.articulations.map((a, i) => '<b>' + (i + 1) + '</b>' + a).join(' '));
     parts.push('range ' + noteName(ins.range[0]) + '–' + noteName(ins.range[1]));
@@ -207,8 +208,14 @@ export function updateStatus(playRow) {
   if (html !== lastStatus) { $('status').innerHTML = html; lastStatus = html; }
 }
 
+let lastDrawError = '';
 export function frame(now) {
-  pollGamepad(now || performance.now());
-  if (state.dirty || sched.playing) { state.dirty = false; draw(); }
+  try {
+    pollGamepad(now || performance.now());
+    if (state.dirty || sched.playing) { state.dirty = false; draw(); }
+  } catch (e) {
+    // never let one bad frame stop the loop; report once per distinct error
+    if (e.message !== lastDrawError) { lastDrawError = e.message; console.error('draw:', e); state.message = 'Display error: ' + e.message; }
+  }
   requestAnimationFrame(frame);
 }

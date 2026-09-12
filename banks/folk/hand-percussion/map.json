@@ -1,0 +1,98 @@
+{
+ "instrument": "hand-percussion",
+ "source": "VSCO 2 CE / VCSL (CC0) by Versilian Studios, converted",
+ "license": "CC0-1.0",
+ "zones": [
+  {
+   "art": "sus",
+   "note": 42,
+   "layer": 0,
+   "file": "sus_n42_0.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Tambourine 1/Tamb1_Hit_v1_rr1_Mid.wav"
+  },
+  {
+   "art": "sus",
+   "note": 42,
+   "layer": 1,
+   "file": "sus_n42_1.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Tambourine 1/Tamb1_Hit_v2_rr1_Mid.wav"
+  },
+  {
+   "art": "sus",
+   "note": 44,
+   "layer": 1,
+   "file": "sus_n44_0.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Tambourine 1/Tamb1_Shake_rr1_Mid.wav"
+  },
+  {
+   "art": "sus",
+   "note": 46,
+   "layer": 0,
+   "file": "sus_n46_0.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Tambourine 1/Tamb1_Roll_v1_rr1_Mid.wav"
+  },
+  {
+   "art": "sus",
+   "note": 46,
+   "layer": 1,
+   "file": "sus_n46_1.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Tambourine 1/Tamb1_Roll_v3_rr1_Mid.wav"
+  },
+  {
+   "art": "sus",
+   "note": 48,
+   "layer": 1,
+   "file": "sus_n48_0.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Shaker, Large/LShaker_Shake1D_rr2_Mid.wav"
+  },
+  {
+   "art": "sus",
+   "note": 50,
+   "layer": 1,
+   "file": "sus_n50_0.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Shaker, Large/LShaker_Hit_rr1_Mid.wav"
+  },
+  {
+   "art": "sus",
+   "note": 52,
+   "layer": 0,
+   "file": "sus_n52_0.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Woodblock/wood_click_pp_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 52,
+   "layer": 1,
+   "file": "sus_n52_1.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Woodblock/wood_click_f_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 54,
+   "layer": 0,
+   "file": "sus_n54_0.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Cajon/Cajon_hit1_mp_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 54,
+   "layer": 1,
+   "file": "sus_n54_1.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Cajon/Cajon_hit1_fff_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 56,
+   "layer": 0,
+   "file": "sus_n56_0.m4a",
+   "source": "VCSL:Membranophones/Struck Membranophones/Bongos/BongoH_Hit1_v1_rr1_Mid.wav"
+  },
+  {
+   "art": "sus",
+   "note": 56,
+   "layer": 1,
+   "file": "sus_n56_1.m4a",
+   "source": "VCSL:Membranophones/Struck Membranophones/Bongos/BongoH_Hit1_v3_rr1_Mid.wav"
+  }
+ ]
+}

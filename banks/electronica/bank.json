@@ -1,0 +1,171 @@
+{
+ "$schema": "https://ajturner.github.io/tutti-music/schema/tutti-bank.schema.json",
+ "id": "electronica",
+ "name": "Electronica",
+ "description": "FM piano and clavisynth from a TX81Z, a synthesized drum machine, and lead, pad and pluck synth patches; plus the synth bass and arp.",
+ "license": "CC0-1.0",
+ "source": "VSCO 2 Community Edition and VCSL by Versilian Studios",
+ "include": [
+  "synth-bass",
+  "synth-arp"
+ ],
+ "instruments": [
+  {
+   "id": "fm-piano",
+   "name": "FM piano",
+   "family": "keys",
+   "range": [
+    24,
+    108
+   ],
+   "program": 5,
+   "articulations": [
+    "sus"
+   ],
+   "samples": "./fm-piano/"
+  },
+  {
+   "id": "clavisynth",
+   "name": "Clavisynth",
+   "family": "keys",
+   "range": [
+    24,
+    108
+   ],
+   "program": 7,
+   "articulations": [
+    "sus"
+   ],
+   "samples": "./clavisynth/"
+  },
+  {
+   "id": "drum-machine",
+   "name": "Drum machine",
+   "family": "drums",
+   "range": [
+    36,
+    51
+   ],
+   "program": 0,
+   "articulations": [
+    "sus"
+   ],
+   "kit": {
+    "36": "kick",
+    "38": "snare",
+    "39": "clap",
+    "41": "low tom",
+    "42": "closed hat",
+    "45": "mid tom",
+    "46": "open hat",
+    "48": "high tom",
+    "49": "crash",
+    "51": "ride"
+   },
+   "synthKit": true
+  },
+  {
+   "id": "lead",
+   "name": "Lead",
+   "family": "electronic",
+   "range": [
+    36,
+    96
+   ],
+   "program": 81,
+   "articulations": [
+    "sus"
+   ],
+   "patch": {
+    "waves": [
+     [
+      "sawtooth",
+      -7,
+      0.5
+     ],
+     [
+      "sawtooth",
+      7,
+      0.5
+     ]
+    ],
+    "a": 0.01,
+    "d": 0.25,
+    "s": 0.7,
+    "r": 0.12,
+    "level": 0.24
+   }
+  },
+  {
+   "id": "pad",
+   "name": "Pad",
+   "family": "electronic",
+   "range": [
+    36,
+    96
+   ],
+   "program": 89,
+   "articulations": [
+    "sus"
+   ],
+   "patch": {
+    "waves": [
+     [
+      "sawtooth",
+      -10,
+      0.35
+     ],
+     [
+      "triangle",
+      10,
+      0.5
+     ],
+     [
+      "sawtooth",
+      0,
+      0.3
+     ]
+    ],
+    "a": 0.6,
+    "d": 0.5,
+    "s": 0.85,
+    "r": 0.9,
+    "level": 0.2,
+    "lfo": 0.25
+   }
+  },
+  {
+   "id": "pluck",
+   "name": "Pluck",
+   "family": "electronic",
+   "range": [
+    36,
+    96
+   ],
+   "program": 104,
+   "articulations": [
+    "sus"
+   ],
+   "patch": {
+    "waves": [
+     [
+      "square",
+      0,
+      0.5
+     ],
+     [
+      "sawtooth",
+      0,
+      0.3
+     ]
+    ],
+    "a": 0.003,
+    "d": 0.28,
+    "s": 0,
+    "r": 0.15,
+    "level": 0.28,
+    "oneShot": true
+   }
+  }
+ ]
+}

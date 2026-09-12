@@ -58,3 +58,10 @@ Each instrument MAY declare a speak delay. During live playback note-on and note
 #### Scenario: Strings sit behind the beat
 - **WHEN** cellos (30 ms speak delay) and timpani (0 ms) both have a note at tick 0
 - **THEN** during playback the cello note is sent 30 ms after the timpani note, and in the exported file both are at tick 0
+
+### Requirement: Extensible registry
+Instruments SHALL be registrable at run time from bank definitions, each tagged with its bank, and removable when no song uses them. Families SHALL include keys, plucked and drums in addition to woodwind, brass, percussion, strings and electronic. An instrument MAY declare a fixed-pitch kit map or a synth patch.
+
+#### Scenario: Register and remove
+- **WHEN** a bank with a zither is installed and later unloaded while a song uses the zither
+- **THEN** the zither stays registered and other instruments of the bank are removed

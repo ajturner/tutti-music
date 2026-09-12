@@ -86,6 +86,13 @@
         }
       ],
       "description": "Key and scale used for scale highlighting and diatonic transposition. null or absent means no key (chromatic)."
+    },
+    "banks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Sound banks the song's tracks need: bundled bank ids (jazz, folk, electronica) or URLs of bank.json files. Loaded before the song plays."
     }
   },
   "$defs": {

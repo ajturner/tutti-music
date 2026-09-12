@@ -6,14 +6,19 @@ import { mkdir, writeFile, readFile, stat } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 const run = promisify(execFile);
+import { execFileSync } from 'node:child_process';
+let _tok;
+function ghToken() { if (_tok === undefined) { try { _tok = execFileSync('gh', ['auth', 'token']).toString().trim(); } catch { _tok = ''; } } return _tok; }   // authenticated API calls: 5000/h instead of 60/h
 
-const REPO = 'sgossner/VSCO-2-CE', RAW = 'https://raw.githubusercontent.com/' + REPO + '/master/';
+export const REPOS = { VSCO: 'sgossner/VSCO-2-CE', VCSL: 'sgossner/VCSL' };
+const REPO = REPOS.VSCO, RAW = 'https://raw.githubusercontent.com/' + REPO + '/master/';
 const OUT = new URL('../samples/', import.meta.url).pathname;
 const SECONDS = { sus: 6, trm: 6, rll: 6, mut: 6, stc: 3, piz: 4 };
-const NOTE_NUM = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+export const NOTE_NUM = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
 // VSCO names octaves one lower than scientific pitch (its C3 is MIDI 60).
-const midiOf = s => { const m = /^([A-G])(#?)(-?\d)$/.exec(s); return m ? NOTE_NUM[m[1]] + (m[2] ? 1 : 0) + (parseInt(m[3], 10) + 2) * 12 : null; };
+export const midiOf = s => { const m = /^([A-G])(#?)(-?\d)$/.exec(s); return m ? NOTE_NUM[m[1]] + (m[2] ? 1 : 0) + (parseInt(m[3], 10) + 2) * 12 : null; };
 
 // instrument -> articulation -> source folder. Missing articulations fall back in the sampler.
 const SOURCES = {
@@ -32,14 +37,16 @@ const SOURCES = {
   'timpani':   { dir: 'Percussion/Timpani',     arts: { sus: '.', rll: 'Rolls' } },
 };
 
-async function gh(pathname) {
-  const url = 'https://api.github.com/repos/' + REPO + '/contents/' + pathname.split('/').map(encodeURIComponent).join('/');
-  const res = await fetch(url, { headers: { 'User-Agent': 'tutti-build', Accept: 'application/vnd.github+json' } });
+export async function gh(pathname, repo = REPO) {
+  const url = 'https://api.github.com/repos/' + repo + '/contents/' + pathname.split('/').map(encodeURIComponent).join('/');
+  const headers = { 'User-Agent': 'tutti-build', Accept: 'application/vnd.github+json' };
+  const token = process.env.GITHUB_TOKEN || ghToken(); if (token) headers.Authorization = 'Bearer ' + token;
+  const res = await fetch(url, { headers });
   if (!res.ok) throw new Error(url + ' ' + res.status);
   return res.json();
 }
 // Parse "<prefix>_<art>_<NOTE>_v<N>[_rr<K>|_<K>][_Sum|_Main|_sum].wav" and timpani "TimpaniN_Hit_vN_rrK_Sum.wav".
-function parseName(name) {
+export function parseName(name) {
   const base = name.replace(/\.wav$/i, '');
   const m = /(?:^|_)([A-G]#?-?\d)_v(\d+)(?:_(?:rr)?(\d+))?/.exec(base);
   if (m) return { note: midiOf(m[1]), layer: parseInt(m[2], 10), rr: m[3] ? parseInt(m[3], 10) : 1, drum: null };
@@ -51,7 +58,7 @@ function parseName(name) {
 // method, which is unreliable on decaying hits). Override the estimate with the measured value.
 const TIMPANI_PITCH = { 1: 42, 2: 35, 3: 48, 4: 49, 5: 53 };
 // Pitch of a WAV by autocorrelation.
-function wavPitch(buf) {
+export function wavPitch(buf) {
   const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
   let p = 12, fmt = null, data = null;
   while (p + 8 <= view.byteLength) {
@@ -62,29 +69,35 @@ function wavPitch(buf) {
   }
   if (!fmt || !data) return null;
   const bytes = fmt.bits / 8, frames = Math.min(Math.floor(data[1] / bytes / fmt.ch), fmt.rate * 2);
-  const start = Math.floor(fmt.rate * 0.15), x = new Float32Array(frames);
+  const x = new Float32Array(frames);
   for (let i = 0; i < frames; i++) {
     const o = data[0] + i * bytes * fmt.ch;
     x[i] = fmt.tag === 3 ? view.getFloat32(o, true) : bytes === 2 ? view.getInt16(o, true) / 32768 : bytes === 3 ? ((view.getUint8(o) | view.getUint8(o + 1) << 8 | view.getInt8(o + 2) << 16) / 8388608) : view.getInt32(o, true) / 2147483648;
   }
-  const lo = Math.floor(fmt.rate / 200), hi = Math.floor(fmt.rate / 40), n = Math.min(frames - start, fmt.rate);
-  let best = 0, bestLag = 0;
-  for (let lag = lo; lag <= hi; lag++) { let s = 0; for (let i = start; i < start + n - lag; i += 2) s += x[i] * x[i + lag]; if (s > best) { best = s; bestLag = lag; } }
-  if (!bestLag) return null;
-  return Math.round(69 + 12 * Math.log2(fmt.rate / bestLag / 440));
+  // normalised autocorrelation; take the SHORTEST lag whose peak is within 85% of the best, which
+  // avoids the sub-octave errors a plain maximum makes on rich or decaying tones
+  const start = Math.floor(fmt.rate * 0.2), n = Math.min(x.length - start, fmt.rate);
+  if (n < fmt.rate / 10) return null;
+  const lo = Math.floor(fmt.rate / 2000), hi = Math.floor(fmt.rate / 35);
+  let e = 0; for (let i = start; i < start + n; i++) e += x[i] * x[i];
+  if (!e) return null;
+  const ac = new Float64Array(hi + 2); let best = 0;
+  for (let lag = lo; lag <= hi; lag++) { let s = 0; for (let i = start; i < start + n - lag; i += 2) s += x[i] * x[i + lag]; ac[lag] = s * 2 / e; if (ac[lag] > best) best = ac[lag]; }
+  for (let lag = lo; lag <= hi; lag++) if (ac[lag] >= best * 0.85 && ac[lag] >= ac[lag - 1] && ac[lag] >= ac[lag + 1]) return Math.round(69 + 12 * Math.log2(fmt.rate / lag / 440));
+  return null;
 }
-async function download(pathname) {
-  const res = await fetch(RAW + pathname.split('/').map(encodeURIComponent).join('/'));
+export async function download(pathname, repo = REPO) {
+  const res = await fetch('https://raw.githubusercontent.com/' + repo + '/master/' + pathname.split('/').map(encodeURIComponent).join('/'));
   if (!res.ok) throw new Error(pathname + ' ' + res.status);
   return Buffer.from(await res.arrayBuffer());
 }
-async function encode(wav, out, seconds) {
+export async function encode(wav, out, seconds) {
   const tmp = out + '.wav'; await writeFile(tmp, wav);
   const fade = Math.max(0.3, seconds - 0.8);
   await run('ffmpeg', ['-y', '-loglevel', 'error', '-i', tmp, '-ac', '1', '-ar', '44100', '-t', String(seconds), '-af', `afade=t=out:st=${fade}:d=0.8`, '-c:a', 'aac', '-b:a', '56k', out]);
   await run('rm', [tmp]);
 }
-async function build(id) {
+export async function build(id) {
   const src = SOURCES[id]; if (src.alias) return;
   const dir = path.join(OUT, id); await mkdir(dir, { recursive: true });
   const zones = []; let n = 0;
@@ -113,7 +126,9 @@ async function build(id) {
   await writeFile(path.join(dir, 'map.json'), JSON.stringify({ instrument: id, source: 'VSCO 2 Community Edition (CC0) by Versilian Studios, converted', license: 'CC0-1.0', zones }, null, 1) + '\n');
   console.log(id + ': ' + n + ' samples');
 }
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
 const wanted = process.argv.slice(2).length ? process.argv.slice(2) : Object.keys(SOURCES);
 for (const id of wanted) { try { await build(id); } catch (e) { console.error('FAILED', id, e.message); } }
 // aliases share a folder: violins-2 uses violins-1's map
 await writeFile(path.join(OUT, 'index.json'), JSON.stringify({ instruments: Object.fromEntries(Object.entries(SOURCES).map(([id, s]) => [id, s.alias || id])) }, null, 1) + '\n');
+}

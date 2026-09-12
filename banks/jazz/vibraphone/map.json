@@ -1,0 +1,161 @@
+{
+ "instrument": "vibraphone",
+ "source": "VSCO 2 CE / VCSL (CC0) by Versilian Studios, converted",
+ "license": "CC0-1.0",
+ "zones": [
+  {
+   "art": "sus",
+   "note": 53,
+   "layer": 0,
+   "file": "sus_n53_0.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Vibraphone/Hard Mallets/Vibes_hard_F2_v2_rr1_Main.wav"
+  },
+  {
+   "art": "sus",
+   "note": 53,
+   "layer": 1,
+   "file": "sus_n53_1.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Vibraphone/Hard Mallets/Vibes_hard_F2_v3_rr1_Main.wav"
+  },
+  {
+   "art": "sus",
+   "note": 57,
+   "layer": 0,
+   "file": "sus_n57_0.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Vibraphone/Hard Mallets/Vibes_hard_A2_v2_rr1_Main.wav"
+  },
+  {
+   "art": "sus",
+   "note": 57,
+   "layer": 1,
+   "file": "sus_n57_1.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Vibraphone/Hard Mallets/Vibes_hard_A2_v3_rr1_Main.wav"
+  },
+  {
+   "art": "sus",
+   "note": 60,
+   "layer": 0,
+   "file": "sus_n60_0.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Vibraphone/Hard Mallets/Vibes_hard_C3_v2_rr1_Main.wav"
+  },
+  {
+   "art": "sus",
+   "note": 60,
+   "layer": 1,
+   "file": "sus_n60_1.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Vibraphone/Hard Mallets/Vibes_hard_C3_v3_rr1_Main.wav"
+  },
+  {
+   "art": "sus",
+   "note": 64,
+   "layer": 0,
+   "file": "sus_n64_0.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Vibraphone/Hard Mallets/Vibes_hard_E3_v2_rr1_Main.wav"
+  },
+  {
+   "art": "sus",
+   "note": 64,
+   "layer": 1,
+   "file": "sus_n64_1.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Vibraphone/Hard Mallets/Vibes_hard_E3_v3_rr1_Main.wav"
+  },
+  {
+   "art": "sus",
+   "note": 67,
+   "layer": 0,
+   "file": "sus_n67_0.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Vibraphone/Hard Mallets/Vibes_hard_G3_v2_rr1_Main.wav"
+  },
+  {
+   "art": "sus",
+   "note": 67,
+   "layer": 1,
+   "file": "sus_n67_1.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Vibraphone/Hard Mallets/Vibes_hard_G3_v3_rr1_Main.wav"
+  },
+  {
+   "art": "sus",
+   "note": 71,
+   "layer": 0,
+   "file": "sus_n71_0.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Vibraphone/Hard Mallets/Vibes_hard_B3_v2_rr1_Main.wav"
+  },
+  {
+   "art": "sus",
+   "note": 71,
+   "layer": 1,
+   "file": "sus_n71_1.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Vibraphone/Hard Mallets/Vibes_hard_B3_v3_rr1_Main.wav"
+  },
+  {
+   "art": "sus",
+   "note": 74,
+   "layer": 0,
+   "file": "sus_n74_0.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Vibraphone/Hard Mallets/Vibes_hard_D4_v2_rr1_Main.wav"
+  },
+  {
+   "art": "sus",
+   "note": 74,
+   "layer": 1,
+   "file": "sus_n74_1.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Vibraphone/Hard Mallets/Vibes_hard_D4_v3_rr1_Main.wav"
+  },
+  {
+   "art": "sus",
+   "note": 77,
+   "layer": 0,
+   "file": "sus_n77_0.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Vibraphone/Hard Mallets/Vibes_hard_F4_v2_rr1_Main.wav"
+  },
+  {
+   "art": "sus",
+   "note": 77,
+   "layer": 1,
+   "file": "sus_n77_1.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Vibraphone/Hard Mallets/Vibes_hard_F4_v3_rr1_Main.wav"
+  },
+  {
+   "art": "sus",
+   "note": 81,
+   "layer": 0,
+   "file": "sus_n81_0.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Vibraphone/Hard Mallets/Vibes_hard_A4_v2_rr1_Main.wav"
+  },
+  {
+   "art": "sus",
+   "note": 81,
+   "layer": 1,
+   "file": "sus_n81_1.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Vibraphone/Hard Mallets/Vibes_hard_A4_v3_rr1_Main.wav"
+  },
+  {
+   "art": "sus",
+   "note": 84,
+   "layer": 0,
+   "file": "sus_n84_0.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Vibraphone/Hard Mallets/Vibes_hard_C5_v2_rr1_Main.wav"
+  },
+  {
+   "art": "sus",
+   "note": 84,
+   "layer": 1,
+   "file": "sus_n84_1.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Vibraphone/Hard Mallets/Vibes_hard_C5_v3_rr1_Main.wav"
+  },
+  {
+   "art": "sus",
+   "note": 88,
+   "layer": 0,
+   "file": "sus_n88_0.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Vibraphone/Hard Mallets/Vibes_hard_E5_v2_rr1_Main.wav"
+  },
+  {
+   "art": "sus",
+   "note": 88,
+   "layer": 1,
+   "file": "sus_n88_1.m4a",
+   "source": "VCSL:Idiophones/Struck Idiophones/Vibraphone/Hard Mallets/Vibes_hard_E5_v3_rr1_Main.wav"
+  }
+ ]
+}

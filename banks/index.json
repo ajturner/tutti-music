@@ -1,0 +1,22 @@
+{
+ "banks": [
+  {
+   "id": "jazz",
+   "name": "Jazz combo",
+   "description": "Piano, vibes, tenor sax, upright bass and a drum kit; plus the orchestral trumpets and trombones.",
+   "url": "jazz/bank.json"
+  },
+  {
+   "id": "folk",
+   "name": "Folk group",
+   "description": "Fiddle, folk harp, recorder, harmonica, frame drum and hand percussion; plus flute, clarinet, cellos and basses.",
+   "url": "folk/bank.json"
+  },
+  {
+   "id": "electronica",
+   "name": "Electronica",
+   "description": "FM piano and clavisynth from a TX81Z, a synthesized drum machine, and lead, pad and pluck synth patches; plus the synth bass and arp.",
+   "url": "electronica/bank.json"
+  }
+ ]
+}

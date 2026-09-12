@@ -5,6 +5,7 @@ import { patMeter } from '../core/song.js';
 import { Scheduler } from '../core/scheduler.js';
 import { SynthSink } from '../core/synth.js';
 import { SamplerSink } from '../core/sampler.js';
+import { setCatalogUrl, ensureSongBanks } from '../core/banks.js';
 import { MidiSink } from '../core/midi.js';
 import { EXAMPLES } from '../core/examples.js';
 
@@ -53,6 +54,7 @@ export const synth = new SynthSink();
 // Sampled orchestra over the synth: plays bundled samples when it has them, else the synth.
 export const sampler = new SamplerSink(synth, new URL('../../samples/', import.meta.url).href);
 export const midi = new MidiSink();
+setCatalogUrl(new URL('../../banks/index.json', import.meta.url).href);
 export const previewSink = () => (state.sound === 'samples' ? sampler : synth);
 // Audition one note through whichever preview sound is active.
 export function auditionPreview(ins, pitch, art) {
@@ -61,10 +63,13 @@ export function auditionPreview(ins, pitch, art) {
   if (state.sound === 'samples') sampler.audition(ins.id, ins.family, pitch, a); else synth.audition(ins.family, pitch, a);
 }
 // Fetch and decode the samples every track of the song needs; progress goes to the status line.
-export function preloadSamples(song = state.song) {
-  if (state.sound !== 'samples') return Promise.resolve();
+export async function preloadSamples(song = state.song) {
+  const missing = await ensureSongBanks(song);
+  if (missing.length) { state.message = 'Missing sound bank or instrument: ' + missing.join(', ') + ' (playing through the synth)'; }
+  state.dirty = true;
+  if (state.sound !== 'samples') return;
   const ids = [...new Set(song.tracks.map(t => t.instrument))];
-  return sampler.preload(ids).then(() => { state.loadingSamples = null; state.dirty = true; });
+  await sampler.preload(ids); state.loadingSamples = null; state.dirty = true;
 }
 export const sched = new Scheduler(() => {
   const s = [];

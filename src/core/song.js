@@ -17,7 +17,7 @@ export const SONG_FORMAT = 'tutti-song';
 export const SONG_VERSION = 2;   // 2: order entries may be objects with repeat counts and per-track chains
 export const newUid = () => (globalThis.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 export function newSong() {
-  return { $schema: SONG_SCHEMA, format: SONG_FORMAT, version: SONG_VERSION, uid: newUid(), title: 'Untitled', notes: '', bpm: 100, key: null, order: [0], patterns: [newPattern('A')], tracks: DEFAULT_TRACKS.map(t => Object.assign({}, t)) };
+  return { $schema: SONG_SCHEMA, format: SONG_FORMAT, version: SONG_VERSION, uid: newUid(), title: 'Untitled', notes: '', bpm: 100, key: null, banks: [], order: [0], patterns: [newPattern('A')], tracks: DEFAULT_TRACKS.map(t => Object.assign({}, t)) };
 }
 // Accept a parsed JSON object as a song: reject anything without patterns and tracks, and fill in
 // the fields older files may lack (format marker, notes, pattern meter, per-track lanes).
@@ -25,7 +25,8 @@ export function normalizeSong(s, fallbackTitle) {
   if (!s || typeof s !== 'object' || !Array.isArray(s.patterns) || !Array.isArray(s.tracks)) throw new Error('not a Tutti song');
   if (s.format != null && s.format !== SONG_FORMAT) throw new Error('unknown format ' + s.format);
   if (s.version != null && s.version > SONG_VERSION) throw new Error('song version ' + s.version + ' is newer than this app');
-  const out = Object.assign({ $schema: SONG_SCHEMA, format: SONG_FORMAT, version: SONG_VERSION, notes: '', bpm: 100, key: null, order: [0] }, s);
+  const out = Object.assign({ $schema: SONG_SCHEMA, format: SONG_FORMAT, version: SONG_VERSION, notes: '', bpm: 100, key: null, order: [0], banks: [] }, s);
+  if (!Array.isArray(out.banks)) out.banks = [];
   if (!out.uid) out.uid = newUid();
   if (!out.title) out.title = fallbackTitle || 'Untitled';
   normalizeOrder(out);
@@ -74,6 +75,7 @@ export function freeChannel(song) {
 }
 export function addTrack(song, instrumentId, opts = {}) {
   const ins = INST[instrumentId]; if (!ins) throw new Error('unknown instrument ' + instrumentId);
+  if (ins.bank && ins.bank !== 'orchestra' && ins.bank !== 'missing') { song.banks = song.banks || []; if (!song.banks.includes(ins.bank)) song.banks.push(ins.bank); }
   let id = instrumentId, n = 2;
   while (song.tracks.some(t => t.id === id)) id = instrumentId + '-' + n++;
   const tr = { id, name: opts.name || ins.name, instrument: instrumentId, channel: opts.channel || freeChannel(song), columns: 1, mute: false, volume: 100, pan: 64 };
@@ -95,6 +97,7 @@ export function moveTrack(song, index, d) {
 // Change a track's instrument; articulations the new instrument lacks fall back to its default.
 export function setTrackInstrument(song, id, instrumentId) {
   const ins = INST[instrumentId], tr = song.tracks.find(t => t.id === id); if (!ins || !tr) return false;
+  if (ins.bank && ins.bank !== 'orchestra' && ins.bank !== 'missing') { song.banks = song.banks || []; if (!song.banks.includes(ins.bank)) song.banks.push(ins.bank); }
   tr.instrument = instrumentId;
   for (const p of song.patterns) { const pt = p.tracks[id]; if (pt) for (const e of pt.events) if (e.art && !ins.articulations.includes(e.art)) e.art = null; }
   return true;

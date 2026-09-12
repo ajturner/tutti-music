@@ -394,6 +394,31 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   await ctx.setOffline(false);
   check('pwa: app and used samples load offline', offline.app && offline.sample, JSON.stringify(offline));
   await page.evaluate(() => { for (const k of Object.keys(tutti)) if (!(k in window)) Object.defineProperty(window, k, { get: () => tutti[k], configurable: true }); for (const k of ['lastDraw', 'ROW_H']) Object.defineProperty(window, k, { get: () => tutti.view[k], configurable: true }); });
+  // --- sound banks ---
+  await page.click('#soundsBtn'); await page.waitForTimeout(600);
+  const bankBtns = await page.$$eval('#bankList .bank', b => b.map(x => x.dataset.bank));
+  check('banks: catalogue lists the bundled banks', ['jazz', 'folk', 'electronica'].every(id => bankBtns.includes(id)), bankBtns.join(','));
+  await page.click('#bankList [data-bank="jazz"]'); await page.waitForTimeout(1500);
+  const jazz = await page.evaluate(() => ({ loaded: tutti.banks.has('jazz'), sax: !!INST['tenor-sax'], kit: INST['drum-kit'] && INST['drum-kit'].kit['36'], rows: document.querySelectorAll('#soundsBody tr').length, saxSrc: document.querySelector('#soundsBody tr[data-id="tenor-sax"] .status')?.textContent }));
+  check('banks: loading jazz registers its instruments with samples', jazz.loaded && jazz.sax && jazz.kit === 'kick' && jazz.rows > 15 && jazz.saxSrc && jazz.saxSrc.startsWith('SMP'), JSON.stringify(jazz));
+  await page.click('#soundsClose');
+  await page.click('#tracksBtn'); await page.waitForTimeout(50);
+  const groups = await page.$$eval('#trackAddInst optgroup', g => g.map(x => x.label));
+  check('banks: instrument picker groups by bank', groups.includes('Orchestra') && groups.includes('Jazz combo'), groups.join(','));
+  await page.selectOption('#trackAddInst', 'drum-kit'); await page.click('#trackAdd'); await page.waitForTimeout(80);
+  const bankAdd = await page.evaluate(() => ({ banks: state.song.banks, inst: state.song.tracks[state.song.tracks.length - 1].instrument, status: document.getElementById('status').textContent }));
+  check('banks: adding a bank track records the bank and shows kit pieces', bankAdd.banks.includes('jazz') && bankAdd.inst === 'drum-kit' && bankAdd.status.includes('kick'), JSON.stringify(bankAdd));
+  await page.click('#tracksClose');
+  await page.evaluate(() => { const t = curTrack(); const pat = curPat(); state.cursor.cell = 0; state.cursor.row = 0; enterPitch(36, 100, 0); state.dirty = true; });
+  await page.waitForTimeout(40);
+  check('banks: kit note names in the status', (await page.textContent('#status')).includes('kick'));
+  await page.waitForTimeout(600);
+  await page.reload(); await page.waitForTimeout(1500);
+  await page.evaluate(() => { for (const k of Object.keys(tutti)) if (!(k in window)) Object.defineProperty(window, k, { get: () => tutti[k], configurable: true }); for (const k of ['lastDraw', 'ROW_H']) Object.defineProperty(window, k, { get: () => tutti.view[k], configurable: true }); });
+  const bankBack = await page.evaluate(() => ({ loaded: tutti.banks.has('jazz'), inst: !!INST['drum-kit'] && INST['drum-kit'].bank === 'jazz', track: state.song.tracks.some(t => t.instrument === 'drum-kit') }));
+  check('banks: a song that uses a bank loads it on reopen', bankBack.loaded && bankBack.inst && bankBack.track, JSON.stringify(bankBack));
+  await page.evaluate(() => { const i = state.song.tracks.findIndex(t => t.instrument === 'drum-kit'); tutti.removeTrack(state.song, state.song.tracks[i].id); state.song.banks = []; tutti.markEdited(); state.dirty = true; });
+  await page.waitForTimeout(500);
   // gamepad: mock, press down then A tap
   await page.evaluate(() => {
     window.__gp = { id: 'Mock Pad (STANDARD GAMEPAD)', connected: true, mapping: 'standard', axes: [0, 0], buttons: Array.from({ length: 17 }, () => ({ pressed: false, value: 0 })) };
