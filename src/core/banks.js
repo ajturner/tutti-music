@@ -1,9 +1,10 @@
 // Sound banks: JSON files that add instruments (and their sample folders) at run time. The bundled
 // catalogue lives in banks/index.json; any URL to a bank.json works too. Songs record the banks they
 // use so opening a song loads them first.
-import { INST, registerInstrument, unregisterInstrument, placeholderInstrument } from './instruments.js';
+import { INST, INSTRUMENTS, registerInstrument, unregisterInstrument, placeholderInstrument } from './instruments.js';
 
-export const banks = new Map();          // id -> { id, name, description, url, instruments: [ids], includes: [ids] }
+export const banks = new Map();          // id -> { id, name, description, url, instruments: [ids], includes: [ids], builtin }
+banks.set('orchestra', { id: 'orchestra', name: 'Symphony orchestra', description: 'Woodwinds, brass, timpani and strings from VSCO 2 CE, plus two synths. Built in.', license: 'CC0-1.0', url: '', instruments: INSTRUMENTS.map(i => i.id), includes: [], builtin: true });
 let catalog = null, catalogUrl = null;
 
 export function setCatalogUrl(url) { catalogUrl = url; catalog = null; }
@@ -35,7 +36,7 @@ export async function loadBank(idOrUrl) {
   return installBank(await r.json(), url);
 }
 export function unloadBank(id, inUse = () => false) {
-  const b = banks.get(id); if (!b) return false;
+  const b = banks.get(id); if (!b || b.builtin) return false;
   for (const iid of b.instruments) if (!inUse(iid)) unregisterInstrument(iid);
   banks.delete(id); return true;
 }

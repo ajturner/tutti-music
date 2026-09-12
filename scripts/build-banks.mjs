@@ -5,6 +5,7 @@
 import { mkdir, writeFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { REPOS, gh, download, encode, wavPitch, midiOf } from './build-samples.mjs';
+import { GM_DRUMS } from '../src/core/constants.js';
 
 const OUT = new URL('../banks/', import.meta.url).pathname;
 const SECONDS = { sus: 6, leg: 6, trm: 6, stc: 3, piz: 4, kit: 3 };
@@ -81,7 +82,7 @@ const BANKS = {
     instruments: {
       'fm-piano':   { name: 'FM piano', family: 'keys', range: [24, 108], program: 5, arts: { sus: src('VCSL', 'Electrophones/TX81Z/FM Piano') }, seconds: 6 },
       'clavisynth': { name: 'Clavisynth', family: 'keys', range: [24, 108], program: 7, arts: { sus: src('VCSL', 'Electrophones/TX81Z/Clavisynth') }, seconds: 4 },
-      'drum-machine': { name: 'Drum machine', family: 'drums', range: [36, 51], program: 0, synthKit: { 36: 'kick', 38: 'snare', 39: 'clap', 41: 'low tom', 42: 'closed hat', 45: 'mid tom', 46: 'open hat', 48: 'high tom', 49: 'crash', 51: 'ride' } },
+      'drum-machine': { name: 'Drum machine', family: 'drums', range: [35, 77], program: 0, synthKit: GM_DRUMS },
       'lead':  { name: 'Lead', family: 'electronic', range: [36, 96], program: 81, patch: { waves: [['sawtooth', -7, 0.5], ['sawtooth', 7, 0.5]], a: 0.01, d: 0.25, s: 0.7, r: 0.12, level: 0.24 } },
       'pad':   { name: 'Pad', family: 'electronic', range: [36, 96], program: 89, patch: { waves: [['sawtooth', -10, 0.35], ['triangle', 10, 0.5], ['sawtooth', 0, 0.3]], a: 0.6, d: 0.5, s: 0.85, r: 0.9, level: 0.2, lfo: 0.25 } },
       'pluck': { name: 'Pluck', family: 'electronic', range: [36, 96], program: 104, patch: { waves: [['square', 0, 0.5], ['sawtooth', 0, 0.3]], a: 0.003, d: 0.28, s: 0, r: 0.15, level: 0.28, oneShot: true } },

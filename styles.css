@@ -222,6 +222,7 @@ dialog.m8 .dlgHead button { padding: 1px 7px; font-size: 11px; }
 #bankBar .bank.on { color: var(--accent); border-color: var(--accent); }
 #bankBar .bank i { font-style: normal; opacity: .7; }
 #bankBar .bank.busy { opacity: .6; }
+#bankBar .bank.builtin { cursor: default; border-style: dashed; }
 #bankUrlForm { display: inline-flex; gap: 4px; margin-left: auto; }
 #bankUrlForm input { width: 16em; font-size: 11px; min-height: 0; padding: 2px 6px; }
 #bankUrlForm button { font-size: 11px; padding: 1px 7px; min-height: 0; }

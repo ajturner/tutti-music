@@ -1,0 +1,2 @@
+# Design
+`GM_DRUMS` in constants is the single source for the drum machine's kit map and the synth's recipes; `synth.drum` is a table of tone and noise recipes per note and returns how many sources it started so tests can prove coverage. Built-in instruments carry `samples: 'orchestra/<id>/'` resolved against the sampler's base (`banks/`); the alias index is gone. `banks` holds an `orchestra` entry marked builtin that `unloadBank` refuses. `scripts/build-samples.mjs` writes `banks/orchestra/bank.json` from the table. No JSON change for songs.

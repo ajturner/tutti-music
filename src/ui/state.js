@@ -52,7 +52,7 @@ state.song = state.songs[0];
 
 export const synth = new SynthSink();
 // Sampled orchestra over the synth: plays bundled samples when it has them, else the synth.
-export const sampler = new SamplerSink(synth, new URL('../../samples/', import.meta.url).href);
+export const sampler = new SamplerSink(synth, new URL('../../banks/', import.meta.url).href);
 export const midi = new MidiSink();
 setCatalogUrl(new URL('../../banks/index.json', import.meta.url).href);
 export const previewSink = () => (state.sound === 'samples' ? sampler : synth);

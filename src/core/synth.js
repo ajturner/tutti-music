@@ -135,33 +135,65 @@ export class SynthSink {
     const stopAt = t + r * 2 + 0.1;
     v.oscs.forEach(o => o.stop(stopAt)); v.extra.forEach(o => o.stop(stopAt));
   }
-  // Synthesized drum machine, 808-flavoured: kick, snare, clap, hats, toms, crash, ride by GM note.
+  // Synthesized drum machine covering the General MIDI percussion map (GM_DRUMS). Each piece is a
+  // recipe of pitched tones (with a pitch drop) and filtered noise bursts. Returns how many sources started.
   drum(b, pitch, vel, t) {
     const ctx = this.ctx, g = ctx.createGain(), v = 0.3 + 0.7 * vel / 127; g.connect(b.filter);
-    const noise = (len, hp, lp, level) => {
+    let made = 0;
+    const noise = (len, hp, lp, level, q = 0.7, delay = 0) => {
       const src = ctx.createBufferSource(); src.buffer = this.noise; src.loop = true;
-      const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = Math.sqrt(hp * lp); f.Q.value = 0.7;
-      const e = ctx.createGain(); e.gain.setValueAtTime(level * v, t); e.gain.exponentialRampToValueAtTime(0.001, t + len);
-      src.connect(f).connect(e).connect(g); src.start(t); src.stop(t + len + 0.05);
+      const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = Math.sqrt(hp * lp); f.Q.value = q;
+      const e = ctx.createGain(); e.gain.setValueAtTime(level * v, t + delay); e.gain.exponentialRampToValueAtTime(0.001, t + delay + len);
+      src.connect(f).connect(e).connect(g); src.start(t + delay); src.stop(t + delay + len + 0.05); made++;
     };
-    const tone = (f0, f1, len, level, type = 'sine') => {
-      const o = ctx.createOscillator(); o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + Math.min(len, 0.2));
-      const e = ctx.createGain(); e.gain.setValueAtTime(level * v, t); e.gain.exponentialRampToValueAtTime(0.001, t + len);
-      o.connect(e).connect(g); o.start(t); o.stop(t + len + 0.05);
+    const tone = (f0, f1, len, level, type = 'sine', delay = 0) => {
+      const o = ctx.createOscillator(); o.type = type; o.frequency.setValueAtTime(f0, t + delay); o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + delay + Math.min(len, 0.2));
+      const e = ctx.createGain(); e.gain.setValueAtTime(level * v, t + delay); e.gain.exponentialRampToValueAtTime(0.001, t + delay + len);
+      o.connect(e).connect(g); o.start(t + delay); o.stop(t + delay + len + 0.05); made++;
     };
+    const metal = (len, f, level) => { for (const r of [1, 1.34, 1.58, 2.1]) tone(f * r, f * r, len, level * 0.25, 'square'); noise(len, f, f * 4, level * 0.5, 1.5); };
     switch (pitch) {
-      case 36: tone(160, 45, 0.45, 1.0); noise(0.02, 800, 4000, 0.3); break;                 // kick
-      case 38: tone(190, 150, 0.18, 0.5); noise(0.22, 1200, 7000, 0.8); break;               // snare
-      case 39: for (const d of [0, 0.012, 0.024]) { const tt = t + d; const src = ctx.createBufferSource(); src.buffer = this.noise; const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1800; f.Q.value = 1.2; const e = ctx.createGain(); e.gain.setValueAtTime(0.6 * v, tt); e.gain.exponentialRampToValueAtTime(0.001, tt + (d < 0.02 ? 0.03 : 0.25)); src.connect(f).connect(e).connect(g); src.start(tt); src.stop(tt + 0.3); } break;   // clap
-      case 42: noise(0.06, 6000, 14000, 0.5); break;                                          // closed hat
-      case 46: noise(0.45, 5000, 14000, 0.45); break;                                         // open hat
-      case 41: tone(120, 70, 0.4, 0.8); break;                                                // low tom
-      case 45: tone(170, 100, 0.35, 0.8); break;                                              // mid tom
-      case 48: tone(240, 140, 0.3, 0.8); break;                                               // high tom
-      case 49: noise(1.2, 3000, 12000, 0.5); break;                                           // crash
-      case 51: noise(0.6, 4000, 9000, 0.3); tone(3200, 3200, 0.5, 0.15, 'square'); break;    // ride
-      default: tone(200, 100, 0.2, 0.5);
+      case 35: tone(140, 40, 0.5, 1.0); break;                                                 // kick 2 (softer, longer)
+      case 36: tone(160, 45, 0.45, 1.0); noise(0.02, 800, 4000, 0.3); break;                   // kick
+      case 37: tone(900, 700, 0.06, 0.5, 'triangle'); noise(0.03, 2000, 6000, 0.5); break;      // side stick
+      case 38: tone(190, 150, 0.18, 0.5); noise(0.22, 1200, 7000, 0.8); break;                 // snare
+      case 39: for (const d of [0, 0.012, 0.024]) noise(d < 0.02 ? 0.03 : 0.25, 1200, 2600, 0.6, 1.2, d); break;   // clap
+      case 40: tone(170, 140, 0.2, 0.4); noise(0.3, 900, 6000, 0.9, 0.5); break;               // snare 2 (looser)
+      case 41: tone(95, 60, 0.45, 0.8); break;                                                  // low floor tom
+      case 42: noise(0.06, 6000, 14000, 0.5); break;                                            // closed hat
+      case 43: tone(120, 70, 0.4, 0.8); break;                                                  // high floor tom
+      case 44: noise(0.1, 5000, 12000, 0.4); tone(300, 300, 0.03, 0.15, 'square'); break;      // pedal hat
+      case 45: tone(150, 90, 0.38, 0.8); break;                                                 // low tom
+      case 46: noise(0.45, 5000, 14000, 0.45); break;                                           // open hat
+      case 47: tone(180, 110, 0.35, 0.8); break;                                                // low-mid tom
+      case 48: tone(220, 130, 0.32, 0.8); break;                                                // high-mid tom
+      case 49: noise(1.2, 3000, 12000, 0.5); break;                                             // crash
+      case 50: tone(260, 160, 0.3, 0.8); break;                                                 // high tom
+      case 51: noise(0.6, 4000, 9000, 0.3); tone(3200, 3200, 0.5, 0.15, 'square'); break;      // ride
+      case 52: noise(0.9, 2500, 9000, 0.55, 0.4); tone(1800, 1800, 0.3, 0.1, 'square'); break; // china
+      case 53: tone(2800, 2800, 0.5, 0.35, 'square'); tone(4200, 4200, 0.4, 0.15, 'sine'); break;   // ride bell
+      case 54: for (const d of [0, 0.03]) noise(0.12, 5000, 11000, 0.35, 2, d); break;         // tambourine
+      case 55: noise(0.4, 6000, 14000, 0.4); break;                                             // splash
+      case 56: tone(560, 560, 0.25, 0.5, 'square'); tone(845, 845, 0.2, 0.3, 'square'); break;  // cowbell
+      case 57: noise(1.4, 2500, 11000, 0.5); break;                                             // crash 2
+      case 59: noise(0.7, 3500, 8000, 0.3); tone(2600, 2600, 0.6, 0.15, 'square'); break;      // ride 2
+      case 60: tone(420, 380, 0.15, 0.6, 'sine'); break;                                        // high bongo
+      case 61: tone(300, 270, 0.18, 0.6, 'sine'); break;                                        // low bongo
+      case 62: tone(320, 300, 0.06, 0.6, 'triangle'); break;                                    // mute conga
+      case 63: tone(250, 230, 0.3, 0.7, 'sine'); break;                                         // open conga
+      case 64: tone(190, 170, 0.35, 0.7, 'sine'); break;                                        // low conga
+      case 65: tone(520, 450, 0.25, 0.5, 'triangle'); noise(0.05, 2000, 6000, 0.3); break;      // high timbale
+      case 66: tone(380, 330, 0.3, 0.5, 'triangle'); noise(0.05, 1500, 5000, 0.3); break;       // low timbale
+      case 67: tone(1200, 1200, 0.2, 0.4, 'square'); break;                                     // high agogo
+      case 68: tone(900, 900, 0.22, 0.4, 'square'); break;                                      // low agogo
+      case 69: noise(0.12, 4000, 10000, 0.35, 3); break;                                        // cabasa
+      case 70: for (const d of [0, 0.02, 0.04]) noise(0.05, 5000, 12000, 0.25, 3, d); break;   // maracas
+      case 75: tone(2500, 2500, 0.05, 0.5, 'sine'); break;                                      // claves
+      case 76: tone(1500, 1500, 0.07, 0.5, 'triangle'); break;                                  // high woodblock
+      case 77: tone(1100, 1100, 0.08, 0.5, 'triangle'); break;                                  // low woodblock
+      default: if (pitch > 77) metal(0.3, 800 + (pitch - 77) * 60, 0.3); else tone(200, 100, 0.2, 0.5);
     }
+    return made;
   }
   noteOff(track, pitch, t) {
     const v = this.active.get(track + ':' + pitch);

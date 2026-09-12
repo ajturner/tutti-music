@@ -1,7 +1,7 @@
 // Service worker: the app shell is cached at install so Tutti opens offline; samples are cached the
 // first time they play, so instruments you have used keep working without a network. The cache is
 // named after the app version, and old caches are dropped on activation.
-const VERSION = '2.5.0';
+const VERSION = '2.6.0';
 const SHELL = 'tutti-shell-' + VERSION, SAMPLES = 'tutti-samples-v1';
 const SHELL_FILES = [
   './', 'index.html', 'help.html', 'styles.css', 'manifest.webmanifest', 'assets/icon-192.png', 'assets/icon-512.png',
@@ -11,7 +11,7 @@ const SHELL_FILES = [
   'src/ui/state.js', 'src/ui/layout.js', 'src/ui/sync.js', 'src/ui/edit.js', 'src/ui/selection.js', 'src/ui/transport.js', 'src/ui/keyboard.js',
   'src/ui/pointer.js', 'src/ui/draw.js', 'src/ui/gamepad.js', 'src/ui/pad.js', 'src/ui/midi-in.js', 'src/ui/toolbar.js', 'src/ui/storage.js',
   'src/ui/session.js', 'src/ui/tracks.js', 'src/ui/arranger.js', 'src/ui/mixer.js', 'src/ui/sounds.js', 'src/ui/views.js',
-  'samples/index.json', 'banks/index.json',
+  'banks/index.json',
   'src/core/banks.js',
 ];
 self.addEventListener('install', e => {

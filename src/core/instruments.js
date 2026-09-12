@@ -28,7 +28,8 @@ export const INSTRUMENTS = [
   inst('synth-arp',  'Synth arp',  'electronic', [48, 96], ['sus','stc','leg'], { keyswitches: {}, program: 81 }),
 ];
 export const INST = Object.fromEntries(INSTRUMENTS.map(i => [i.id, i]));
-for (const i of INSTRUMENTS) i.bank = 'orchestra';
+// The built-in orchestra is a bank like any other: its samples live in banks/orchestra/<id>/ (violins II share Violins I).
+for (const i of INSTRUMENTS) { i.bank = 'orchestra'; if (i.family !== 'electronic') i.samples = 'orchestra/' + (i.id === 'violins-2' ? 'violins-1' : i.id) + '/'; }
 
 // ---- Banks: instruments added at run time --------------------------------------------------
 // A bank definition lists instruments in the same shape as the table above plus optional fields:

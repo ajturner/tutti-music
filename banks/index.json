@@ -1,6 +1,13 @@
 {
  "banks": [
   {
+   "id": "orchestra",
+   "name": "Symphony orchestra",
+   "description": "Woodwinds, brass, timpani and strings sampled from VSCO 2 Community Edition, plus two synths. Built in: always loaded.",
+   "url": "orchestra/bank.json",
+   "builtin": true
+  },
+  {
    "id": "jazz",
    "name": "Jazz combo",
    "description": "Piano, vibes, tenor sax, upright bass and a drum kit; plus the orchestral trumpets and trombones.",

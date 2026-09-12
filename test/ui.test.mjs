@@ -390,14 +390,21 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   check('pwa: page is controlled after reload', controlled);
   await ctx.setOffline(true);
   await page.reload(); await page.waitForTimeout(600);
-  const offline = await page.evaluate(async () => ({ app: typeof tutti === 'object' && !!tutti.state.song, sample: (await fetch('samples/flute/map.json')).ok }));
+  const offline = await page.evaluate(async () => ({ app: typeof tutti === 'object' && !!tutti.state.song, sample: (await fetch('banks/orchestra/flute/map.json')).ok }));
   await ctx.setOffline(false);
   check('pwa: app and used samples load offline', offline.app && offline.sample, JSON.stringify(offline));
   await page.evaluate(() => { for (const k of Object.keys(tutti)) if (!(k in window)) Object.defineProperty(window, k, { get: () => tutti[k], configurable: true }); for (const k of ['lastDraw', 'ROW_H']) Object.defineProperty(window, k, { get: () => tutti.view[k], configurable: true }); });
   // --- sound banks ---
   await page.click('#soundsBtn'); await page.waitForTimeout(600);
   const bankBtns = await page.$$eval('#bankList .bank', b => b.map(x => x.dataset.bank));
-  check('banks: catalogue lists the bundled banks', ['jazz', 'folk', 'electronica'].every(id => bankBtns.includes(id)), bankBtns.join(','));
+  check('banks: catalogue lists the bundled banks', ['orchestra', 'jazz', 'folk', 'electronica'].every(id => bankBtns.includes(id)), bankBtns.join(','));
+  check('banks: orchestra is built in and on', await page.$eval('#bankList [data-bank="orchestra"]', b => b.classList.contains('on') && b.classList.contains('builtin')));
+  const drums = await page.evaluate(async () => {
+    await tutti.loadBank('electronica'); const s = tutti.synth; s.ensure(); const kit = tutti.INST['drum-machine'].kit, silent = [];
+    for (const n of Object.keys(kit)) { const made = s.drum(s.bus('dm'), +n, 100, s.ctx.currentTime); if (!made) silent.push(n); }
+    return { pieces: Object.keys(kit).length, silent };
+  });
+  check('drum machine: every GM piece makes sound', drums.pieces >= 38 && drums.silent.length === 0, JSON.stringify(drums));
   await page.click('#bankList [data-bank="jazz"]'); await page.waitForTimeout(1500);
   const jazz = await page.evaluate(() => ({ loaded: tutti.banks.has('jazz'), sax: !!INST['tenor-sax'], kit: INST['drum-kit'] && INST['drum-kit'].kit['36'], rows: document.querySelectorAll('#soundsBody tr').length, saxSrc: document.querySelector('#soundsBody tr[data-id="tenor-sax"] .status')?.textContent }));
   check('banks: loading jazz registers its instruments with samples', jazz.loaded && jazz.sax && jazz.kit === 'kick' && jazz.rows > 15 && jazz.saxSrc && jazz.saxSrc.startsWith('SMP'), JSON.stringify(jazz));

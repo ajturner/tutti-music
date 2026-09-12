@@ -1,5 +1,5 @@
 // Headless tests of the core: it must import and run under Node with no DOM.
-import { PPQ, noteName, clamp } from '../src/core/constants.js';
+import { PPQ, noteName, clamp, GM_DRUMS } from '../src/core/constants.js';
 import { INSTRUMENTS, INST } from '../src/core/instruments.js';
 import { newSong, newPattern, patTrack, laneSet, laneValueAt, normalizeSong, SONG_FORMAT } from '../src/core/song.js';
 import { renderSong, TimeMap, TYPE_ORDER, rowTicks, tickMapper, rowAtTick, applyFx, expShape } from '../src/core/render.js';
@@ -239,7 +239,7 @@ check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[1
   check('sampler: articulation fallback chain', pickZones(map, 'leg', 60, 64, 100)[0].zone.art === 'sus' && pickZones(map, 'mrc', 60, 64, 100)[0].zone.art === 'stc' && pickZones(map, 'trm', 60, 64, 100)[0].zone.art === 'sus');
   check('sampler: single layer gets full gain', pickZones(map, 'stc', 64, 0, 10)[0].gain === 1);
   check('sampler: empty map yields nothing', pickZones({ zones: [] }, 'sus', 60, 64, 100).length === 0);
-  const dir = new URL('../samples/', import.meta.url);
+  const dir = new URL('../banks/orchestra/', import.meta.url);
   let maps = 0, files = 0, bad = [];
   for (const id of (await readdir(dir, { withFileTypes: true })).filter(d => d.isDirectory()).map(d => d.name)) {
     const m = JSON.parse(await readFile(new URL(id + '/map.json', dir)));
@@ -248,6 +248,11 @@ check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[1
     if (!INST[id] || !m.zones.some(z => z.art === 'sus')) bad.push(id + ' no sus');
   }
   check('samples: every bundled map is complete', maps >= 12 && files > 200 && bad.length === 0, maps + ' maps, ' + files + ' files' + (bad.length ? ' bad: ' + bad.slice(0, 3).join(', ') : ''));
+  const ob = JSON.parse(await readFile(new URL('bank.json', dir)));
+  check('orchestra: bank.json matches the instrument table', ob.builtin === true && ob.instruments.length === INSTRUMENTS.filter(i => i.bank === 'orchestra').length && ob.instruments.every(d => INST[d.id] && (!d.samples || INST[d.id].samples === 'orchestra/' + d.samples.replace(/^\.\//, ''))));
+  const eb = JSON.parse(await readFile(new URL('../banks/electronica/bank.json', import.meta.url)));
+  const dm = eb.instruments.find(i => i.id === 'drum-machine');
+  check('drum machine: kit map is the full GM set', Object.keys(dm.kit).length === Object.keys(GM_DRUMS).length && Object.entries(GM_DRUMS).every(([n, name]) => dm.kit[n] === name));
 }
 
 // Banks: install, register, song banks, kits, placeholders
@@ -277,7 +282,7 @@ check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[1
     const bj = JSON.parse(await readFile(new URL(e.url, dir))); nb++;
     for (const d of bj.instruments) { ninst++; if (d.samples) { try { const m = JSON.parse(await readFile(new URL(d.samples + 'map.json', new URL(e.url, dir)))); if (!m.zones.length) bad.push(d.id + ' empty'); for (const z of m.zones) { try { await readFile(new URL(d.samples + z.file, new URL(e.url, dir))); } catch { bad.push(d.id + '/' + z.file); } } } catch { bad.push(d.id + ' no map'); } } }
   }
-  check('banks: every bundled bank is complete', nb === 3 && ninst >= 15 && bad.length === 0, nb + ' banks, ' + ninst + ' instruments' + (bad.length ? ' bad: ' + bad.slice(0, 3).join(', ') : ''));
+  check('banks: every bundled bank is complete', nb === 4 && ninst >= 30 && bad.length === 0, nb + ' banks, ' + ninst + ' instruments' + (bad.length ? ' bad: ' + bad.slice(0, 3).join(', ') : ''));
 }
 
 // Every example renders and exports

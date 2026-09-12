@@ -19,6 +19,7 @@ function saveSoundSettings() { try { localStorage.setItem(KEY, JSON.stringify(sa
 
 const PHRASES = { strings: [55, 62, 67, 74], brass: [48, 55, 60, 67], woodwind: [67, 71, 74, 79], percussion: [43, 43, 50, 43], electronic: [48, 55, 60, 63] };
 function phraseFor(ins) {
+  if (ins.kit) { const notes = Object.keys(ins.kit).map(Number).sort((a, b) => a - b); return [notes[0], notes[Math.min(2, notes.length - 1)], notes[Math.min(1, notes.length - 1)], notes[Math.min(4, notes.length - 1)]]; }   // kit: a little pattern on its first pieces
   const base = PHRASES[ins.family] || [60, 64, 67, 72];
   return base.map(p => { let q = p; while (q < ins.range[0]) q += 12; while (q > ins.range[1]) q -= 12; return q; });
 }
@@ -63,13 +64,15 @@ export function renderBanks() {
   for (const b of banks.values()) if (!known.has(b.id)) known.set(b.id, { id: b.id, name: b.name, description: b.description, url: b.url });
   el.innerHTML = [...known.values()].map(b => {
     const on = banks.has(b.id), used = state.song.banks.includes(b.id), n = on ? banks.get(b.id).instruments.length : '';
-    return `<button class="bank${on ? ' on' : ''}" data-bank="${b.id}" title="${(b.description || '').replace(/"/g, '&quot;')}${used ? ' (used by this song)' : ''}">${b.name}${n !== '' ? '<i>' + n + '</i>' : ''}${on ? ' ✓' : ''}</button>`;
+    const builtin = on && banks.get(b.id).builtin;
+    return `<button class="bank${on ? ' on' : ''}${builtin ? ' builtin' : ''}" data-bank="${b.id}" title="${(b.description || '').replace(/"/g, '&quot;')}${used ? ' (used by this song)' : ''}">${b.name}${n !== '' ? '<i>' + n + '</i>' : ''}${builtin ? ' ●' : on ? ' ✓' : ''}</button>`;
   }).join('');
 }
 async function toggleBank(id) {
   const btn = $('bankList').querySelector(`[data-bank="${id}"]`); if (btn) btn.classList.add('busy');
   try {
     if (banks.has(id)) {
+      if (banks.get(id).builtin) { state.message = 'The orchestra is built in and always loaded'; state.dirty = true; return; }
       if (state.song.banks.includes(id)) { state.message = 'This song uses ' + id + '; remove its tracks first'; state.dirty = true; return; }
       unloadBank(id, iid => state.songs.some(s => s.tracks.some(t => t.instrument === iid)));
     } else { await loadBank(id); await sampler.preload(banks.get(id).instruments); }

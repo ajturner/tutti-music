@@ -1,4 +1,4 @@
-// Sampled orchestra: a sink that plays bundled multisamples (see samples/) and falls back to the
+// Sampled instruments: a sink that plays bundled multisamples (see banks/) and falls back to the
 // sketch synth for instruments without samples or while they load. Zones are chosen by articulation
 // (with fallbacks), nearest root note, and a dynamic layer blended from the dynamics lane (CC1) for
 // sustained articulations or from velocity for short ones.
@@ -32,7 +32,7 @@ export class SamplerSink {
     this.buffers = new Map();                         // url -> AudioBuffer | Promise
     this.loading = new Map();                         // instrument id -> Promise
     this.buses = new Map(); this.voices = new Map();  // track -> bus; track:pitch -> [voice]
-    this.enabled = true; this.onProgress = null; this.alias = null;
+    this.enabled = true; this.onProgress = null;
     this.settings = {};                               // instrument id -> { tune, cents, trim, release }
     this.lastZone = null;                             // { instrument, zone, buffer, pitch } of the last voice, for the scope
     this.onZone = null;
@@ -40,19 +40,14 @@ export class SamplerSink {
   get ctx() { return this.synth.ctx; }
   ensure() { return this.synth.ensure(); }
   // ---- loading ------------------------------------------------------------------------------
-  async index() {
-    if (this.alias) return this.alias;
-    try { const r = await fetch(this.base + 'index.json'); this.alias = r.ok ? (await r.json()).instruments : {}; } catch { this.alias = {}; }
-    return this.alias;
-  }
   has(instrumentId) { const m = this.maps.get(instrumentId); return !!(m && m.zones); }
   known(instrumentId) { return this.maps.has(instrumentId); }
   async load(instrumentId) {
     if (this.maps.has(instrumentId)) return this.has(instrumentId);
     if (this.loading.has(instrumentId)) return this.loading.get(instrumentId);
     const p = (async () => {
-      const own = INST[instrumentId] && INST[instrumentId].samples;   // bank instruments carry their own folder URL
-      const alias = own ? null : await this.index(), folder = own ? own : (alias[instrumentId] ? this.base + alias[instrumentId] + '/' : null);
+      let folder = INST[instrumentId] && INST[instrumentId].samples;   // every sampled instrument names its folder
+      if (folder && !/^(https?:)?\/\//.test(folder) && !folder.startsWith('/')) folder = this.base + folder;   // relative to banks/
       let map = null;
       if (folder) try { const r = await fetch(folder + 'map.json'); if (r.ok) map = await r.json(); } catch { map = null; }
       if (!map) { this.maps.set(instrumentId, null); return false; }

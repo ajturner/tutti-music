@@ -1,0 +1,379 @@
+{
+ "$schema": "https://ajturner.github.io/tutti-music/schema/tutti-bank.schema.json",
+ "id": "orchestra",
+ "name": "Symphony orchestra",
+ "description": "Woodwinds, brass, timpani and strings sampled from VSCO 2 Community Edition, plus two synths. Built in: always loaded.",
+ "license": "CC0-1.0",
+ "source": "VSCO 2 Community Edition by Versilian Studios",
+ "builtin": true,
+ "instruments": [
+  {
+   "id": "flute",
+   "name": "Flute",
+   "family": "woodwind",
+   "range": [
+    60,
+    96
+   ],
+   "articulations": [
+    "sus",
+    "leg",
+    "stc"
+   ],
+   "program": 73,
+   "speakDelayMs": 8,
+   "keyswitches": {
+    "sus": 24,
+    "leg": 25,
+    "stc": 26
+   },
+   "samples": "./flute/"
+  },
+  {
+   "id": "oboe",
+   "name": "Oboe",
+   "family": "woodwind",
+   "range": [
+    58,
+    91
+   ],
+   "articulations": [
+    "sus",
+    "leg",
+    "stc"
+   ],
+   "program": 68,
+   "speakDelayMs": 10,
+   "keyswitches": {
+    "sus": 24,
+    "leg": 25,
+    "stc": 26
+   },
+   "samples": "./oboe/"
+  },
+  {
+   "id": "clarinet",
+   "name": "Clarinet",
+   "family": "woodwind",
+   "range": [
+    50,
+    94
+   ],
+   "articulations": [
+    "sus",
+    "leg",
+    "stc"
+   ],
+   "program": 71,
+   "speakDelayMs": 10,
+   "keyswitches": {
+    "sus": 24,
+    "leg": 25,
+    "stc": 26
+   },
+   "samples": "./clarinet/"
+  },
+  {
+   "id": "bassoon",
+   "name": "Bassoon",
+   "family": "woodwind",
+   "range": [
+    34,
+    75
+   ],
+   "articulations": [
+    "sus",
+    "leg",
+    "stc"
+   ],
+   "program": 70,
+   "speakDelayMs": 14,
+   "keyswitches": {
+    "sus": 24,
+    "leg": 25,
+    "stc": 26
+   },
+   "samples": "./bassoon/"
+  },
+  {
+   "id": "horns",
+   "name": "Horns",
+   "family": "brass",
+   "range": [
+    41,
+    77
+   ],
+   "articulations": [
+    "sus",
+    "leg",
+    "stc",
+    "mrc",
+    "mut"
+   ],
+   "program": 60,
+   "speakDelayMs": 16,
+   "keyswitches": {
+    "sus": 24,
+    "leg": 25,
+    "stc": 26,
+    "mrc": 27,
+    "mut": 28
+   },
+   "samples": "./horns/"
+  },
+  {
+   "id": "trumpets",
+   "name": "Trumpets",
+   "family": "brass",
+   "range": [
+    55,
+    82
+   ],
+   "articulations": [
+    "sus",
+    "leg",
+    "stc",
+    "mrc",
+    "mut"
+   ],
+   "program": 56,
+   "speakDelayMs": 8,
+   "keyswitches": {
+    "sus": 24,
+    "leg": 25,
+    "stc": 26,
+    "mrc": 27,
+    "mut": 28
+   },
+   "samples": "./trumpets/"
+  },
+  {
+   "id": "trombones",
+   "name": "Trombones",
+   "family": "brass",
+   "range": [
+    40,
+    72
+   ],
+   "articulations": [
+    "sus",
+    "leg",
+    "stc",
+    "mrc",
+    "mut"
+   ],
+   "program": 57,
+   "speakDelayMs": 14,
+   "keyswitches": {
+    "sus": 24,
+    "leg": 25,
+    "stc": 26,
+    "mrc": 27,
+    "mut": 28
+   },
+   "samples": "./trombones/"
+  },
+  {
+   "id": "timpani",
+   "name": "Timpani",
+   "family": "percussion",
+   "range": [
+    40,
+    55
+   ],
+   "articulations": [
+    "sus",
+    "rll",
+    "stc"
+   ],
+   "program": 47,
+   "speakDelayMs": 0,
+   "keyswitches": {
+    "sus": 24,
+    "rll": 25,
+    "stc": 26
+   },
+   "samples": "./timpani/"
+  },
+  {
+   "id": "violins-1",
+   "name": "Violins I",
+   "family": "strings",
+   "range": [
+    55,
+    103
+   ],
+   "articulations": [
+    "sus",
+    "leg",
+    "stc",
+    "piz",
+    "trm",
+    "mrc"
+   ],
+   "program": 48,
+   "speakDelayMs": 24,
+   "keyswitches": {
+    "sus": 24,
+    "leg": 25,
+    "stc": 26,
+    "piz": 27,
+    "trm": 28,
+    "mrc": 29
+   },
+   "samples": "./violins-1/"
+  },
+  {
+   "id": "violins-2",
+   "name": "Violins II",
+   "family": "strings",
+   "range": [
+    55,
+    100
+   ],
+   "articulations": [
+    "sus",
+    "leg",
+    "stc",
+    "piz",
+    "trm",
+    "mrc"
+   ],
+   "program": 48,
+   "speakDelayMs": 24,
+   "keyswitches": {
+    "sus": 24,
+    "leg": 25,
+    "stc": 26,
+    "piz": 27,
+    "trm": 28,
+    "mrc": 29
+   },
+   "samples": "./violins-1/"
+  },
+  {
+   "id": "violas",
+   "name": "Violas",
+   "family": "strings",
+   "range": [
+    48,
+    91
+   ],
+   "articulations": [
+    "sus",
+    "leg",
+    "stc",
+    "piz",
+    "trm",
+    "mrc"
+   ],
+   "program": 48,
+   "speakDelayMs": 26,
+   "keyswitches": {
+    "sus": 24,
+    "leg": 25,
+    "stc": 26,
+    "piz": 27,
+    "trm": 28,
+    "mrc": 29
+   },
+   "samples": "./violas/"
+  },
+  {
+   "id": "cellos",
+   "name": "Cellos",
+   "family": "strings",
+   "range": [
+    36,
+    76
+   ],
+   "articulations": [
+    "sus",
+    "leg",
+    "stc",
+    "piz",
+    "trm",
+    "mrc"
+   ],
+   "program": 48,
+   "speakDelayMs": 30,
+   "keyswitches": {
+    "sus": 24,
+    "leg": 25,
+    "stc": 26,
+    "piz": 27,
+    "trm": 28,
+    "mrc": 29
+   },
+   "samples": "./cellos/"
+  },
+  {
+   "id": "basses",
+   "name": "Basses",
+   "family": "strings",
+   "range": [
+    28,
+    60
+   ],
+   "articulations": [
+    "sus",
+    "leg",
+    "stc",
+    "piz",
+    "trm",
+    "mrc"
+   ],
+   "program": 48,
+   "speakDelayMs": 36,
+   "keyswitches": {
+    "sus": 24,
+    "leg": 25,
+    "stc": 26,
+    "piz": 27,
+    "trm": 28,
+    "mrc": 29
+   },
+   "samples": "./basses/"
+  },
+  {
+   "id": "synth-bass",
+   "name": "Synth bass",
+   "family": "electronic",
+   "range": [
+    24,
+    60
+   ],
+   "articulations": [
+    "sus",
+    "stc",
+    "leg"
+   ],
+   "program": 0,
+   "keyswitches": {
+    "sus": 24,
+    "stc": 25,
+    "leg": 26
+   }
+  },
+  {
+   "id": "synth-arp",
+   "name": "Synth arp",
+   "family": "electronic",
+   "range": [
+    48,
+    96
+   ],
+   "articulations": [
+    "sus",
+    "stc",
+    "leg"
+   ],
+   "program": 0,
+   "keyswitches": {
+    "sus": 24,
+    "stc": 25,
+    "leg": 26
+   }
+  }
+ ]
+}
