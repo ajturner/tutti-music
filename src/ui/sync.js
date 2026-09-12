@@ -46,6 +46,7 @@ export function syncSongUI() {
   sel.value = state.songIndex;
   $('title').value = state.song.title || '';
   $('notes').textContent = state.song.notes || '';
+  $('sound').value = state.sound;
   syncKeyUI();
 }
 export function syncPatternUI() {

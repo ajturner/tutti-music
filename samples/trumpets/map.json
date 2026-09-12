@@ -1,0 +1,413 @@
+{
+ "instrument": "trumpets",
+ "source": "VSCO 2 Community Edition (CC0) by Versilian Studios, converted",
+ "license": "CC0-1.0",
+ "zones": [
+  {
+   "art": "mut",
+   "note": 58,
+   "layer": 0,
+   "file": "mut_n58_0.m4a",
+   "source": "Brass/Trumpet/straightM-sus/Sum_SHTrumpet_straightM-sus_A#2_v1_rr1.wav"
+  },
+  {
+   "art": "mut",
+   "note": 58,
+   "layer": 1,
+   "file": "mut_n58_1.m4a",
+   "source": "Brass/Trumpet/straightM-sus/Sum_SHTrumpet_straightM-sus_A#2_v3_rr1.wav"
+  },
+  {
+   "art": "mut",
+   "note": 60,
+   "layer": 0,
+   "file": "mut_n60_0.m4a",
+   "source": "Brass/Trumpet/straightM-sus/Sum_SHTrumpet_straightM-sus_C3_v1_rr1.wav"
+  },
+  {
+   "art": "mut",
+   "note": 60,
+   "layer": 1,
+   "file": "mut_n60_1.m4a",
+   "source": "Brass/Trumpet/straightM-sus/Sum_SHTrumpet_straightM-sus_C3_v3_rr1.wav"
+  },
+  {
+   "art": "mut",
+   "note": 62,
+   "layer": 0,
+   "file": "mut_n62_0.m4a",
+   "source": "Brass/Trumpet/straightM-sus/Sum_SHTrumpet_straightM-sus_D3_v1_rr1.wav"
+  },
+  {
+   "art": "mut",
+   "note": 62,
+   "layer": 1,
+   "file": "mut_n62_1.m4a",
+   "source": "Brass/Trumpet/straightM-sus/Sum_SHTrumpet_straightM-sus_D3_v3_rr1.wav"
+  },
+  {
+   "art": "mut",
+   "note": 67,
+   "layer": 0,
+   "file": "mut_n67_0.m4a",
+   "source": "Brass/Trumpet/straightM-sus/Sum_SHTrumpet_straightM-sus_G3_v1_rr1.wav"
+  },
+  {
+   "art": "mut",
+   "note": 67,
+   "layer": 1,
+   "file": "mut_n67_1.m4a",
+   "source": "Brass/Trumpet/straightM-sus/Sum_SHTrumpet_straightM-sus_G3_v3_rr1.wav"
+  },
+  {
+   "art": "mut",
+   "note": 70,
+   "layer": 0,
+   "file": "mut_n70_0.m4a",
+   "source": "Brass/Trumpet/straightM-sus/Sum_SHTrumpet_straightM-sus_A#3_v1_rr1.wav"
+  },
+  {
+   "art": "mut",
+   "note": 70,
+   "layer": 1,
+   "file": "mut_n70_1.m4a",
+   "source": "Brass/Trumpet/straightM-sus/Sum_SHTrumpet_straightM-sus_A#3_v3_rr1.wav"
+  },
+  {
+   "art": "mut",
+   "note": 74,
+   "layer": 0,
+   "file": "mut_n74_0.m4a",
+   "source": "Brass/Trumpet/straightM-sus/Sum_SHTrumpet_straightM-sus_D4_v1_rr1.wav"
+  },
+  {
+   "art": "mut",
+   "note": 74,
+   "layer": 1,
+   "file": "mut_n74_1.m4a",
+   "source": "Brass/Trumpet/straightM-sus/Sum_SHTrumpet_straightM-sus_D4_v3_rr1.wav"
+  },
+  {
+   "art": "mut",
+   "note": 77,
+   "layer": 0,
+   "file": "mut_n77_0.m4a",
+   "source": "Brass/Trumpet/straightM-sus/Sum_SHTrumpet_straightM-sus_F4_v1_rr1.wav"
+  },
+  {
+   "art": "mut",
+   "note": 77,
+   "layer": 1,
+   "file": "mut_n77_1.m4a",
+   "source": "Brass/Trumpet/straightM-sus/Sum_SHTrumpet_straightM-sus_F4_v3_rr1.wav"
+  },
+  {
+   "art": "mut",
+   "note": 81,
+   "layer": 0,
+   "file": "mut_n81_0.m4a",
+   "source": "Brass/Trumpet/straightM-sus/Sum_SHTrumpet_straightM-sus_A4_v1_rr1.wav"
+  },
+  {
+   "art": "mut",
+   "note": 81,
+   "layer": 1,
+   "file": "mut_n81_1.m4a",
+   "source": "Brass/Trumpet/straightM-sus/Sum_SHTrumpet_straightM-sus_A4_v3_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 53,
+   "layer": 0,
+   "file": "stc_n53_0.m4a",
+   "source": "Brass/Trumpet/stac/Sum_SHTrumpet_stac_F2_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 53,
+   "layer": 1,
+   "file": "stc_n53_1.m4a",
+   "source": "Brass/Trumpet/stac/Sum_SHTrumpet_stac_F2_v3_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 57,
+   "layer": 0,
+   "file": "stc_n57_0.m4a",
+   "source": "Brass/Trumpet/stac/Sum_SHTrumpet_stac_A2_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 57,
+   "layer": 1,
+   "file": "stc_n57_1.m4a",
+   "source": "Brass/Trumpet/stac/Sum_SHTrumpet_stac_A2_v3_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 60,
+   "layer": 0,
+   "file": "stc_n60_0.m4a",
+   "source": "Brass/Trumpet/stac/Sum_SHTrumpet_stac_C3_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 60,
+   "layer": 1,
+   "file": "stc_n60_1.m4a",
+   "source": "Brass/Trumpet/stac/Sum_SHTrumpet_stac_C3_v3_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 63,
+   "layer": 0,
+   "file": "stc_n63_0.m4a",
+   "source": "Brass/Trumpet/stac/Sum_SHTrumpet_stac_D#3_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 63,
+   "layer": 1,
+   "file": "stc_n63_1.m4a",
+   "source": "Brass/Trumpet/stac/Sum_SHTrumpet_stac_D#3_v3_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 65,
+   "layer": 0,
+   "file": "stc_n65_0.m4a",
+   "source": "Brass/Trumpet/stac/Sum_SHTrumpet_stac_F3_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 65,
+   "layer": 1,
+   "file": "stc_n65_1.m4a",
+   "source": "Brass/Trumpet/stac/Sum_SHTrumpet_stac_F3_v3_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 67,
+   "layer": 0,
+   "file": "stc_n67_0.m4a",
+   "source": "Brass/Trumpet/stac/Sum_SHTrumpet_stac_G3_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 67,
+   "layer": 1,
+   "file": "stc_n67_1.m4a",
+   "source": "Brass/Trumpet/stac/Sum_SHTrumpet_stac_G3_v3_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 70,
+   "layer": 0,
+   "file": "stc_n70_0.m4a",
+   "source": "Brass/Trumpet/stac/Sum_SHTrumpet_stac_A#3_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 70,
+   "layer": 1,
+   "file": "stc_n70_1.m4a",
+   "source": "Brass/Trumpet/stac/Sum_SHTrumpet_stac_A#3_v3_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 74,
+   "layer": 0,
+   "file": "stc_n74_0.m4a",
+   "source": "Brass/Trumpet/stac/Sum_SHTrumpet_stac_D4_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 74,
+   "layer": 1,
+   "file": "stc_n74_1.m4a",
+   "source": "Brass/Trumpet/stac/Sum_SHTrumpet_stac_D4_v3_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 77,
+   "layer": 0,
+   "file": "stc_n77_0.m4a",
+   "source": "Brass/Trumpet/stac/Sum_SHTrumpet_stac_F4_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 77,
+   "layer": 1,
+   "file": "stc_n77_1.m4a",
+   "source": "Brass/Trumpet/stac/Sum_SHTrumpet_stac_F4_v3_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 81,
+   "layer": 0,
+   "file": "stc_n81_0.m4a",
+   "source": "Brass/Trumpet/stac/Sum_SHTrumpet_stac_A4_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 81,
+   "layer": 1,
+   "file": "stc_n81_1.m4a",
+   "source": "Brass/Trumpet/stac/Sum_SHTrumpet_stac_A4_v3_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 84,
+   "layer": 0,
+   "file": "stc_n84_0.m4a",
+   "source": "Brass/Trumpet/stac/Sum_SHTrumpet_stac_C5_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 84,
+   "layer": 1,
+   "file": "stc_n84_1.m4a",
+   "source": "Brass/Trumpet/stac/Sum_SHTrumpet_stac_C5_v3_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 53,
+   "layer": 0,
+   "file": "sus_n53_0.m4a",
+   "source": "Brass/Trumpet/sus/Sum_SHTrumpet_sus_F2_v1_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 53,
+   "layer": 1,
+   "file": "sus_n53_1.m4a",
+   "source": "Brass/Trumpet/sus/Sum_SHTrumpet_sus_F2_v3_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 57,
+   "layer": 0,
+   "file": "sus_n57_0.m4a",
+   "source": "Brass/Trumpet/sus/Sum_SHTrumpet_sus_A2_v1_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 57,
+   "layer": 1,
+   "file": "sus_n57_1.m4a",
+   "source": "Brass/Trumpet/sus/Sum_SHTrumpet_sus_A2_v3_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 60,
+   "layer": 0,
+   "file": "sus_n60_0.m4a",
+   "source": "Brass/Trumpet/sus/Sum_SHTrumpet_sus_C3_v1_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 60,
+   "layer": 1,
+   "file": "sus_n60_1.m4a",
+   "source": "Brass/Trumpet/sus/Sum_SHTrumpet_sus_C3_v3_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 63,
+   "layer": 0,
+   "file": "sus_n63_0.m4a",
+   "source": "Brass/Trumpet/sus/Sum_SHTrumpet_sus_D#3_v1_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 63,
+   "layer": 1,
+   "file": "sus_n63_1.m4a",
+   "source": "Brass/Trumpet/sus/Sum_SHTrumpet_sus_D#3_v3_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 67,
+   "layer": 0,
+   "file": "sus_n67_0.m4a",
+   "source": "Brass/Trumpet/sus/Sum_SHTrumpet_sus_G3_v1_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 67,
+   "layer": 1,
+   "file": "sus_n67_1.m4a",
+   "source": "Brass/Trumpet/sus/Sum_SHTrumpet_sus_G3_v3_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 70,
+   "layer": 0,
+   "file": "sus_n70_0.m4a",
+   "source": "Brass/Trumpet/sus/Sum_SHTrumpet_sus_A#3_v1_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 70,
+   "layer": 1,
+   "file": "sus_n70_1.m4a",
+   "source": "Brass/Trumpet/sus/Sum_SHTrumpet_sus_A#3_v3_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 74,
+   "layer": 0,
+   "file": "sus_n74_0.m4a",
+   "source": "Brass/Trumpet/sus/Sum_SHTrumpet_sus_D4_v1_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 74,
+   "layer": 1,
+   "file": "sus_n74_1.m4a",
+   "source": "Brass/Trumpet/sus/Sum_SHTrumpet_sus_D4_v3_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 77,
+   "layer": 0,
+   "file": "sus_n77_0.m4a",
+   "source": "Brass/Trumpet/sus/Sum_SHTrumpet_sus_F4_v1_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 77,
+   "layer": 1,
+   "file": "sus_n77_1.m4a",
+   "source": "Brass/Trumpet/sus/Sum_SHTrumpet_sus_F4_v3_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 81,
+   "layer": 0,
+   "file": "sus_n81_0.m4a",
+   "source": "Brass/Trumpet/sus/Sum_SHTrumpet_sus_A4_v1_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 81,
+   "layer": 1,
+   "file": "sus_n81_1.m4a",
+   "source": "Brass/Trumpet/sus/Sum_SHTrumpet_sus_A4_v3_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 84,
+   "layer": 0,
+   "file": "sus_n84_0.m4a",
+   "source": "Brass/Trumpet/sus/Sum_SHTrumpet_sus_C5_v1_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 84,
+   "layer": 1,
+   "file": "sus_n84_1.m4a",
+   "source": "Brass/Trumpet/sus/Sum_SHTrumpet_sus_C5_v3_rr1.wav"
+  }
+ ]
+}

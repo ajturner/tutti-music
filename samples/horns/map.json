@@ -1,0 +1,399 @@
+{
+ "instrument": "horns",
+ "source": "VSCO 2 Community Edition (CC0) by Versilian Studios, converted",
+ "license": "CC0-1.0",
+ "zones": [
+  {
+   "art": "mut",
+   "note": 46,
+   "layer": 0,
+   "file": "mut_n46_0.m4a",
+   "source": "Brass/F Horn/mute/MOHorn_mute_A#1_v1_1.wav"
+  },
+  {
+   "art": "mut",
+   "note": 46,
+   "layer": 1,
+   "file": "mut_n46_1.m4a",
+   "source": "Brass/F Horn/mute/MOHorn_mute_A#1_v2_1.wav"
+  },
+  {
+   "art": "mut",
+   "note": 51,
+   "layer": 0,
+   "file": "mut_n51_0.m4a",
+   "source": "Brass/F Horn/mute/MOHorn_mute_D#2_v1_1.wav"
+  },
+  {
+   "art": "mut",
+   "note": 51,
+   "layer": 1,
+   "file": "mut_n51_1.m4a",
+   "source": "Brass/F Horn/mute/MOHorn_mute_D#2_v2_1.wav"
+  },
+  {
+   "art": "mut",
+   "note": 53,
+   "layer": 0,
+   "file": "mut_n53_0.m4a",
+   "source": "Brass/F Horn/mute/MOHorn_mute_F2_v1_1.wav"
+  },
+  {
+   "art": "mut",
+   "note": 53,
+   "layer": 1,
+   "file": "mut_n53_1.m4a",
+   "source": "Brass/F Horn/mute/MOHorn_mute_F2_v2_1.wav"
+  },
+  {
+   "art": "mut",
+   "note": 60,
+   "layer": 0,
+   "file": "mut_n60_0.m4a",
+   "source": "Brass/F Horn/mute/MOHorn_mute_C3_v1_1.wav"
+  },
+  {
+   "art": "mut",
+   "note": 60,
+   "layer": 1,
+   "file": "mut_n60_1.m4a",
+   "source": "Brass/F Horn/mute/MOHorn_mute_C3_v3_1.wav"
+  },
+  {
+   "art": "mut",
+   "note": 63,
+   "layer": 0,
+   "file": "mut_n63_0.m4a",
+   "source": "Brass/F Horn/mute/MOHorn_mute_D#3_v1_1.wav"
+  },
+  {
+   "art": "mut",
+   "note": 63,
+   "layer": 1,
+   "file": "mut_n63_1.m4a",
+   "source": "Brass/F Horn/mute/MOHorn_mute_D#3_v2_1.wav"
+  },
+  {
+   "art": "mut",
+   "note": 68,
+   "layer": 0,
+   "file": "mut_n68_0.m4a",
+   "source": "Brass/F Horn/mute/MOHorn_mute_G#3_v1_1.wav"
+  },
+  {
+   "art": "mut",
+   "note": 68,
+   "layer": 1,
+   "file": "mut_n68_1.m4a",
+   "source": "Brass/F Horn/mute/MOHorn_mute_G#3_v2_1.wav"
+  },
+  {
+   "art": "mut",
+   "note": 70,
+   "layer": 0,
+   "file": "mut_n70_0.m4a",
+   "source": "Brass/F Horn/mute/MOHorn_mute_A#3_v1_1.wav"
+  },
+  {
+   "art": "mut",
+   "note": 70,
+   "layer": 1,
+   "file": "mut_n70_1.m4a",
+   "source": "Brass/F Horn/mute/MOHorn_mute_A#3_v2_1.wav"
+  },
+  {
+   "art": "mut",
+   "note": 74,
+   "layer": 1,
+   "file": "mut_n74_0.m4a",
+   "source": "Brass/F Horn/mute/MOHorn_mute_D4_v1_1.wav"
+  },
+  {
+   "art": "mut",
+   "note": 77,
+   "layer": 1,
+   "file": "mut_n77_0.m4a",
+   "source": "Brass/F Horn/mute/MOHorn_mute_F4_v1_1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 33,
+   "layer": 1,
+   "file": "stc_n33_0.m4a",
+   "source": "Brass/F Horn/stac/MOHorn_stac_A0_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 36,
+   "layer": 0,
+   "file": "stc_n36_0.m4a",
+   "source": "Brass/F Horn/stac/MOHorn_stac_C1_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 36,
+   "layer": 1,
+   "file": "stc_n36_1.m4a",
+   "source": "Brass/F Horn/stac/MOHorn_stac_C1_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 39,
+   "layer": 0,
+   "file": "stc_n39_0.m4a",
+   "source": "Brass/F Horn/stac/MOHorn_stac_D#1_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 39,
+   "layer": 1,
+   "file": "stc_n39_1.m4a",
+   "source": "Brass/F Horn/stac/MOHorn_stac_D#1_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 43,
+   "layer": 0,
+   "file": "stc_n43_0.m4a",
+   "source": "Brass/F Horn/stac/MOHorn_stac_G1_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 43,
+   "layer": 1,
+   "file": "stc_n43_1.m4a",
+   "source": "Brass/F Horn/stac/MOHorn_stac_G1_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 46,
+   "layer": 0,
+   "file": "stc_n46_0.m4a",
+   "source": "Brass/F Horn/stac/MOHorn_stac_A#1_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 46,
+   "layer": 1,
+   "file": "stc_n46_1.m4a",
+   "source": "Brass/F Horn/stac/MOHorn_stac_A#1_v3_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 50,
+   "layer": 0,
+   "file": "stc_n50_0.m4a",
+   "source": "Brass/F Horn/stac/MOHorn_stac_D2_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 50,
+   "layer": 1,
+   "file": "stc_n50_1.m4a",
+   "source": "Brass/F Horn/stac/MOHorn_stac_D2_v3_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 53,
+   "layer": 0,
+   "file": "stc_n53_0.m4a",
+   "source": "Brass/F Horn/stac/MOHorn_stac_F2_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 53,
+   "layer": 1,
+   "file": "stc_n53_1.m4a",
+   "source": "Brass/F Horn/stac/MOHorn_stac_F2_v3_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 57,
+   "layer": 0,
+   "file": "stc_n57_0.m4a",
+   "source": "Brass/F Horn/stac/MOHorn_stac_A2_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 57,
+   "layer": 1,
+   "file": "stc_n57_1.m4a",
+   "source": "Brass/F Horn/stac/MOHorn_stac_A2_v3_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 60,
+   "layer": 0,
+   "file": "stc_n60_0.m4a",
+   "source": "Brass/F Horn/stac/MOHorn_stac_C3_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 60,
+   "layer": 1,
+   "file": "stc_n60_1.m4a",
+   "source": "Brass/F Horn/stac/MOHorn_stac_C3_v3_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 74,
+   "layer": 0,
+   "file": "stc_n74_0.m4a",
+   "source": "Brass/F Horn/stac/MOHorn_stac_D4_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 74,
+   "layer": 1,
+   "file": "stc_n74_1.m4a",
+   "source": "Brass/F Horn/stac/MOHorn_stac_D4_v3_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 77,
+   "layer": 0,
+   "file": "stc_n77_0.m4a",
+   "source": "Brass/F Horn/stac/MOHorn_stac_F4_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 77,
+   "layer": 1,
+   "file": "stc_n77_1.m4a",
+   "source": "Brass/F Horn/stac/MOHorn_stac_F4_v3_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 33,
+   "layer": 1,
+   "file": "sus_n33_0.m4a",
+   "source": "Brass/F Horn/sus/MOHorn_sus_A0_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 36,
+   "layer": 0,
+   "file": "sus_n36_0.m4a",
+   "source": "Brass/F Horn/sus/MOHorn_sus_C1_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 36,
+   "layer": 1,
+   "file": "sus_n36_1.m4a",
+   "source": "Brass/F Horn/sus/MOHorn_sus_C1_v3_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 39,
+   "layer": 0,
+   "file": "sus_n39_0.m4a",
+   "source": "Brass/F Horn/sus/MOHorn_sus_D#1_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 39,
+   "layer": 1,
+   "file": "sus_n39_1.m4a",
+   "source": "Brass/F Horn/sus/MOHorn_sus_D#1_v3_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 43,
+   "layer": 0,
+   "file": "sus_n43_0.m4a",
+   "source": "Brass/F Horn/sus/MOHorn_sus_G1_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 43,
+   "layer": 1,
+   "file": "sus_n43_1.m4a",
+   "source": "Brass/F Horn/sus/MOHorn_sus_G1_v3_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 46,
+   "layer": 0,
+   "file": "sus_n46_0.m4a",
+   "source": "Brass/F Horn/sus/MOHorn_sus_A#1_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 46,
+   "layer": 1,
+   "file": "sus_n46_1.m4a",
+   "source": "Brass/F Horn/sus/MOHorn_sus_A#1_v3_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 50,
+   "layer": 0,
+   "file": "sus_n50_0.m4a",
+   "source": "Brass/F Horn/sus/MOHorn_sus_D2_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 50,
+   "layer": 1,
+   "file": "sus_n50_1.m4a",
+   "source": "Brass/F Horn/sus/MOHorn_sus_D2_v4_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 53,
+   "layer": 0,
+   "file": "sus_n53_0.m4a",
+   "source": "Brass/F Horn/sus/MOHorn_sus_F2_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 53,
+   "layer": 1,
+   "file": "sus_n53_1.m4a",
+   "source": "Brass/F Horn/sus/MOHorn_sus_F2_v3_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 57,
+   "layer": 0,
+   "file": "sus_n57_0.m4a",
+   "source": "Brass/F Horn/sus/MOHorn_sus_A2_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 57,
+   "layer": 1,
+   "file": "sus_n57_1.m4a",
+   "source": "Brass/F Horn/sus/MOHorn_sus_A2_v3_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 60,
+   "layer": 0,
+   "file": "sus_n60_0.m4a",
+   "source": "Brass/F Horn/sus/MOHorn_sus_C3_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 60,
+   "layer": 1,
+   "file": "sus_n60_1.m4a",
+   "source": "Brass/F Horn/sus/MOHorn_sus_C3_v4_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 74,
+   "layer": 1,
+   "file": "sus_n74_0.m4a",
+   "source": "Brass/F Horn/sus/MOHorn_sus_D4_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 77,
+   "layer": 1,
+   "file": "sus_n77_0.m4a",
+   "source": "Brass/F Horn/sus/MOHorn_sus_F4_v1_1.wav"
+  }
+ ]
+}

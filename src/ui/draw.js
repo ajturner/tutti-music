@@ -195,7 +195,7 @@ export function updateStatus(playRow) {
   parts.push('octave <b>' + state.octave + '</b>');
   parts.push('key <b>' + keyName(activeKey()) + '</b>' + (pat.key ? ' (pattern)' : '') + (grooveOf(pat) ? ' | groove <b>on</b>' : ''));
   if (state.queued != null) parts.push('next <b>' + state.queued + ' ' + (state.song.patterns[state.queued] || {}).name + '</b>');
-  parts.push('preview ' + (state.preview ? 'on' : 'off') + ' | MIDI ' + (midi.out ? '<b>' + esc(midi.out.name) + '</b>' : 'off'));
+  parts.push('preview ' + (state.preview ? (state.sound === 'samples' ? 'samples' : 'synth') + (state.loadingSamples ? ' <span class="warn">loading ' + esc(state.loadingSamples) + '</span>' : '') : 'off') + ' | MIDI ' + (midi.out ? '<b>' + esc(midi.out.name) + '</b>' : 'off'));
   if (state.sel) parts.push('selected <b>' + (state.sel.r1 - state.sel.r0 + 1) + '</b> rows × <b>' + (state.sel.g1 - state.sel.g0 + 1) + '</b> cells');
   if (midi.in) parts.push('MIDI in <b>' + esc(midi.in.name) + '</b>');
   if (gamepad.name) parts.push('\u{1F3AE} <b>' + esc(gamepad.name.replace(/\s*\(.*$/, '')) + '</b>');

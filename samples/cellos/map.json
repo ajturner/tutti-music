@@ -1,0 +1,728 @@
+{
+ "instrument": "cellos",
+ "source": "VSCO 2 Community Edition (CC0) by Versilian Studios, converted",
+ "license": "CC0-1.0",
+ "zones": [
+  {
+   "art": "piz",
+   "note": 36,
+   "layer": 0,
+   "file": "piz_n36_0.m4a",
+   "source": "Strings/Cello Section/pizzT/pizzT_C1_v1_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 36,
+   "layer": 1,
+   "file": "piz_n36_1.m4a",
+   "source": "Strings/Cello Section/pizzT/pizzT_C1_v2_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 40,
+   "layer": 0,
+   "file": "piz_n40_0.m4a",
+   "source": "Strings/Cello Section/pizzT/pizzT_E1_v1_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 40,
+   "layer": 1,
+   "file": "piz_n40_1.m4a",
+   "source": "Strings/Cello Section/pizzT/pizzT_E1_v2_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 43,
+   "layer": 0,
+   "file": "piz_n43_0.m4a",
+   "source": "Strings/Cello Section/pizzT/pizzT_G1_v1_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 43,
+   "layer": 1,
+   "file": "piz_n43_1.m4a",
+   "source": "Strings/Cello Section/pizzT/pizzT_G1_v2_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 47,
+   "layer": 0,
+   "file": "piz_n47_0.m4a",
+   "source": "Strings/Cello Section/pizzT/pizzT_B1_v1_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 47,
+   "layer": 1,
+   "file": "piz_n47_1.m4a",
+   "source": "Strings/Cello Section/pizzT/pizzT_B1_v2_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 50,
+   "layer": 0,
+   "file": "piz_n50_0.m4a",
+   "source": "Strings/Cello Section/pizzT/pizzT_D2_v1_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 50,
+   "layer": 1,
+   "file": "piz_n50_1.m4a",
+   "source": "Strings/Cello Section/pizzT/pizzT_D2_v2_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 53,
+   "layer": 0,
+   "file": "piz_n53_0.m4a",
+   "source": "Strings/Cello Section/pizzT/pizzT_F2_v1_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 53,
+   "layer": 1,
+   "file": "piz_n53_1.m4a",
+   "source": "Strings/Cello Section/pizzT/pizzT_F2_v2_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 57,
+   "layer": 0,
+   "file": "piz_n57_0.m4a",
+   "source": "Strings/Cello Section/pizzT/pizzT_A2_v1_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 57,
+   "layer": 1,
+   "file": "piz_n57_1.m4a",
+   "source": "Strings/Cello Section/pizzT/pizzT_A2_v2_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 60,
+   "layer": 0,
+   "file": "piz_n60_0.m4a",
+   "source": "Strings/Cello Section/pizzT/pizzT_C3_v1_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 60,
+   "layer": 1,
+   "file": "piz_n60_1.m4a",
+   "source": "Strings/Cello Section/pizzT/pizzT_C3_v2_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 64,
+   "layer": 0,
+   "file": "piz_n64_0.m4a",
+   "source": "Strings/Cello Section/pizzT/pizzT_E3_v1_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 64,
+   "layer": 1,
+   "file": "piz_n64_1.m4a",
+   "source": "Strings/Cello Section/pizzT/pizzT_E3_v2_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 67,
+   "layer": 0,
+   "file": "piz_n67_0.m4a",
+   "source": "Strings/Cello Section/pizzT/pizzT_G3_v1_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 67,
+   "layer": 1,
+   "file": "piz_n67_1.m4a",
+   "source": "Strings/Cello Section/pizzT/pizzT_G3_v2_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 71,
+   "layer": 0,
+   "file": "piz_n71_0.m4a",
+   "source": "Strings/Cello Section/pizzT/pizzT_B3_v1_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 71,
+   "layer": 1,
+   "file": "piz_n71_1.m4a",
+   "source": "Strings/Cello Section/pizzT/pizzT_B3_v2_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 74,
+   "layer": 0,
+   "file": "piz_n74_0.m4a",
+   "source": "Strings/Cello Section/pizzT/pizzT_D4_v1_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 74,
+   "layer": 1,
+   "file": "piz_n74_1.m4a",
+   "source": "Strings/Cello Section/pizzT/pizzT_D4_v2_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 77,
+   "layer": 0,
+   "file": "piz_n77_0.m4a",
+   "source": "Strings/Cello Section/pizzT/pizzT_F4_v1_RR1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 77,
+   "layer": 1,
+   "file": "piz_n77_1.m4a",
+   "source": "Strings/Cello Section/pizzT/pizzT_F4_v2_RR1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 36,
+   "layer": 0,
+   "file": "stc_n36_0.m4a",
+   "source": "Strings/Cello Section/spic/spic_C1_v1_RR1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 36,
+   "layer": 1,
+   "file": "stc_n36_1.m4a",
+   "source": "Strings/Cello Section/spic/spic_C1_v2_RR1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 40,
+   "layer": 0,
+   "file": "stc_n40_0.m4a",
+   "source": "Strings/Cello Section/spic/spic_E1_v1_RR1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 40,
+   "layer": 1,
+   "file": "stc_n40_1.m4a",
+   "source": "Strings/Cello Section/spic/spic_E1_v2_RR1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 43,
+   "layer": 0,
+   "file": "stc_n43_0.m4a",
+   "source": "Strings/Cello Section/spic/spic_G1_v1_RR1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 43,
+   "layer": 1,
+   "file": "stc_n43_1.m4a",
+   "source": "Strings/Cello Section/spic/spic_G1_v2_RR1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 47,
+   "layer": 0,
+   "file": "stc_n47_0.m4a",
+   "source": "Strings/Cello Section/spic/spic_B1_v1_RR1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 47,
+   "layer": 1,
+   "file": "stc_n47_1.m4a",
+   "source": "Strings/Cello Section/spic/spic_B1_v2_RR1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 50,
+   "layer": 0,
+   "file": "stc_n50_0.m4a",
+   "source": "Strings/Cello Section/spic/spic_D2_v1_RR1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 50,
+   "layer": 1,
+   "file": "stc_n50_1.m4a",
+   "source": "Strings/Cello Section/spic/spic_D2_v2_RR1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 53,
+   "layer": 0,
+   "file": "stc_n53_0.m4a",
+   "source": "Strings/Cello Section/spic/spic_F2_v1_RR1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 53,
+   "layer": 1,
+   "file": "stc_n53_1.m4a",
+   "source": "Strings/Cello Section/spic/spic_F2_v2_RR1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 57,
+   "layer": 0,
+   "file": "stc_n57_0.m4a",
+   "source": "Strings/Cello Section/spic/spic_A2_v1_RR1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 57,
+   "layer": 1,
+   "file": "stc_n57_1.m4a",
+   "source": "Strings/Cello Section/spic/spic_A2_v2_RR1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 60,
+   "layer": 0,
+   "file": "stc_n60_0.m4a",
+   "source": "Strings/Cello Section/spic/spic_C3_v1_RR1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 60,
+   "layer": 1,
+   "file": "stc_n60_1.m4a",
+   "source": "Strings/Cello Section/spic/spic_C3_v2_RR1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 64,
+   "layer": 0,
+   "file": "stc_n64_0.m4a",
+   "source": "Strings/Cello Section/spic/spic_E3_v1_RR1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 64,
+   "layer": 1,
+   "file": "stc_n64_1.m4a",
+   "source": "Strings/Cello Section/spic/spic_E3_v2_RR1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 67,
+   "layer": 0,
+   "file": "stc_n67_0.m4a",
+   "source": "Strings/Cello Section/spic/spic_G3_v1_RR1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 67,
+   "layer": 1,
+   "file": "stc_n67_1.m4a",
+   "source": "Strings/Cello Section/spic/spic_G3_v2_RR1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 71,
+   "layer": 0,
+   "file": "stc_n71_0.m4a",
+   "source": "Strings/Cello Section/spic/spic_B3_v1_RR1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 71,
+   "layer": 1,
+   "file": "stc_n71_1.m4a",
+   "source": "Strings/Cello Section/spic/spic_B3_v2_RR1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 74,
+   "layer": 0,
+   "file": "stc_n74_0.m4a",
+   "source": "Strings/Cello Section/spic/spic_D4_v1_RR1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 74,
+   "layer": 1,
+   "file": "stc_n74_1.m4a",
+   "source": "Strings/Cello Section/spic/spic_D4_v2_RR1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 77,
+   "layer": 0,
+   "file": "stc_n77_0.m4a",
+   "source": "Strings/Cello Section/spic/spic_F4_v1_RR1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 77,
+   "layer": 1,
+   "file": "stc_n77_1.m4a",
+   "source": "Strings/Cello Section/spic/spic_F4_v2_RR1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 36,
+   "layer": 0,
+   "file": "sus_n36_0.m4a",
+   "source": "Strings/Cello Section/susvib/susvib_C1_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 36,
+   "layer": 1,
+   "file": "sus_n36_1.m4a",
+   "source": "Strings/Cello Section/susvib/susvib_C1_v3_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 40,
+   "layer": 0,
+   "file": "sus_n40_0.m4a",
+   "source": "Strings/Cello Section/susvib/susvib_E1_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 40,
+   "layer": 1,
+   "file": "sus_n40_1.m4a",
+   "source": "Strings/Cello Section/susvib/susvib_E1_v3_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 43,
+   "layer": 0,
+   "file": "sus_n43_0.m4a",
+   "source": "Strings/Cello Section/susvib/susvib_G1_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 43,
+   "layer": 1,
+   "file": "sus_n43_1.m4a",
+   "source": "Strings/Cello Section/susvib/susvib_G1_v3_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 47,
+   "layer": 0,
+   "file": "sus_n47_0.m4a",
+   "source": "Strings/Cello Section/susvib/susvib_B1_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 47,
+   "layer": 1,
+   "file": "sus_n47_1.m4a",
+   "source": "Strings/Cello Section/susvib/susvib_B1_v3_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 50,
+   "layer": 0,
+   "file": "sus_n50_0.m4a",
+   "source": "Strings/Cello Section/susvib/susvib_D2_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 50,
+   "layer": 1,
+   "file": "sus_n50_1.m4a",
+   "source": "Strings/Cello Section/susvib/susvib_D2_v3_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 53,
+   "layer": 0,
+   "file": "sus_n53_0.m4a",
+   "source": "Strings/Cello Section/susvib/susvib_F2_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 53,
+   "layer": 1,
+   "file": "sus_n53_1.m4a",
+   "source": "Strings/Cello Section/susvib/susvib_F2_v3_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 57,
+   "layer": 0,
+   "file": "sus_n57_0.m4a",
+   "source": "Strings/Cello Section/susvib/susvib_A2_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 57,
+   "layer": 1,
+   "file": "sus_n57_1.m4a",
+   "source": "Strings/Cello Section/susvib/susvib_A2_v3_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 60,
+   "layer": 0,
+   "file": "sus_n60_0.m4a",
+   "source": "Strings/Cello Section/susvib/susvib_C3_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 60,
+   "layer": 1,
+   "file": "sus_n60_1.m4a",
+   "source": "Strings/Cello Section/susvib/susvib_C3_v3_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 64,
+   "layer": 0,
+   "file": "sus_n64_0.m4a",
+   "source": "Strings/Cello Section/susvib/susvib_E3_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 64,
+   "layer": 1,
+   "file": "sus_n64_1.m4a",
+   "source": "Strings/Cello Section/susvib/susvib_E3_v3_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 67,
+   "layer": 0,
+   "file": "sus_n67_0.m4a",
+   "source": "Strings/Cello Section/susvib/susvib_G3_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 67,
+   "layer": 1,
+   "file": "sus_n67_1.m4a",
+   "source": "Strings/Cello Section/susvib/susvib_G3_v3_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 71,
+   "layer": 0,
+   "file": "sus_n71_0.m4a",
+   "source": "Strings/Cello Section/susvib/susvib_B3_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 71,
+   "layer": 1,
+   "file": "sus_n71_1.m4a",
+   "source": "Strings/Cello Section/susvib/susvib_B3_v3_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 74,
+   "layer": 0,
+   "file": "sus_n74_0.m4a",
+   "source": "Strings/Cello Section/susvib/susvib_D4_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 74,
+   "layer": 1,
+   "file": "sus_n74_1.m4a",
+   "source": "Strings/Cello Section/susvib/susvib_D4_v3_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 77,
+   "layer": 0,
+   "file": "sus_n77_0.m4a",
+   "source": "Strings/Cello Section/susvib/susvib_F4_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 77,
+   "layer": 1,
+   "file": "sus_n77_1.m4a",
+   "source": "Strings/Cello Section/susvib/susvib_F4_v3_1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 36,
+   "layer": 1,
+   "file": "trm_n36_0.m4a",
+   "source": "Strings/Cello Section/trem/trem_C1_v2_1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 40,
+   "layer": 0,
+   "file": "trm_n40_0.m4a",
+   "source": "Strings/Cello Section/trem/trem_E1_v1_1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 40,
+   "layer": 1,
+   "file": "trm_n40_1.m4a",
+   "source": "Strings/Cello Section/trem/trem_E1_v2_1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 43,
+   "layer": 0,
+   "file": "trm_n43_0.m4a",
+   "source": "Strings/Cello Section/trem/trem_G1_v1_1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 43,
+   "layer": 1,
+   "file": "trm_n43_1.m4a",
+   "source": "Strings/Cello Section/trem/trem_G1_v2_1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 47,
+   "layer": 1,
+   "file": "trm_n47_0.m4a",
+   "source": "Strings/Cello Section/trem/trem_B1_v1_1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 50,
+   "layer": 0,
+   "file": "trm_n50_0.m4a",
+   "source": "Strings/Cello Section/trem/trem_D2_v1_1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 50,
+   "layer": 1,
+   "file": "trm_n50_1.m4a",
+   "source": "Strings/Cello Section/trem/trem_D2_v2_1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 53,
+   "layer": 0,
+   "file": "trm_n53_0.m4a",
+   "source": "Strings/Cello Section/trem/trem_F2_v1_1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 53,
+   "layer": 1,
+   "file": "trm_n53_1.m4a",
+   "source": "Strings/Cello Section/trem/trem_F2_v2_1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 57,
+   "layer": 0,
+   "file": "trm_n57_0.m4a",
+   "source": "Strings/Cello Section/trem/trem_A2_v1_1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 57,
+   "layer": 1,
+   "file": "trm_n57_1.m4a",
+   "source": "Strings/Cello Section/trem/trem_A2_v2_1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 59,
+   "layer": 1,
+   "file": "trm_n59_0.m4a",
+   "source": "Strings/Cello Section/trem/trem_B2_v2_1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 60,
+   "layer": 0,
+   "file": "trm_n60_0.m4a",
+   "source": "Strings/Cello Section/trem/trem_C3_v1_1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 60,
+   "layer": 1,
+   "file": "trm_n60_1.m4a",
+   "source": "Strings/Cello Section/trem/trem_C3_v2_1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 64,
+   "layer": 0,
+   "file": "trm_n64_0.m4a",
+   "source": "Strings/Cello Section/trem/trem_E3_v1_1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 64,
+   "layer": 1,
+   "file": "trm_n64_1.m4a",
+   "source": "Strings/Cello Section/trem/trem_E3_v2_1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 67,
+   "layer": 0,
+   "file": "trm_n67_0.m4a",
+   "source": "Strings/Cello Section/trem/trem_G3_v1_1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 67,
+   "layer": 1,
+   "file": "trm_n67_1.m4a",
+   "source": "Strings/Cello Section/trem/trem_G3_v2_1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 71,
+   "layer": 0,
+   "file": "trm_n71_0.m4a",
+   "source": "Strings/Cello Section/trem/trem_B3_v1_1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 71,
+   "layer": 1,
+   "file": "trm_n71_1.m4a",
+   "source": "Strings/Cello Section/trem/trem_B3_v2_1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 74,
+   "layer": 0,
+   "file": "trm_n74_0.m4a",
+   "source": "Strings/Cello Section/trem/trem_D4_v1_1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 74,
+   "layer": 1,
+   "file": "trm_n74_1.m4a",
+   "source": "Strings/Cello Section/trem/trem_D4_v2_1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 77,
+   "layer": 0,
+   "file": "trm_n77_0.m4a",
+   "source": "Strings/Cello Section/trem/trem_F4_v1_1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 77,
+   "layer": 1,
+   "file": "trm_n77_1.m4a",
+   "source": "Strings/Cello Section/trem/trem_F4_v2_1.wav"
+  }
+ ]
+}

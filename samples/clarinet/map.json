@@ -1,0 +1,315 @@
+{
+ "instrument": "clarinet",
+ "source": "VSCO 2 Community Edition (CC0) by Versilian Studios, converted",
+ "license": "CC0-1.0",
+ "zones": [
+  {
+   "art": "stc",
+   "note": 50,
+   "layer": 0,
+   "file": "stc_n50_0.m4a",
+   "source": "Woodwinds/Clarinet/stac/DCClar_stac_D2_v1_rr1_sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 50,
+   "layer": 1,
+   "file": "stc_n50_1.m4a",
+   "source": "Woodwinds/Clarinet/stac/DCClar_stac_D2_v3_rr1_sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 53,
+   "layer": 0,
+   "file": "stc_n53_0.m4a",
+   "source": "Woodwinds/Clarinet/stac/DCClar_stac_F2_v1_rr1_sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 53,
+   "layer": 1,
+   "file": "stc_n53_1.m4a",
+   "source": "Woodwinds/Clarinet/stac/DCClar_stac_F2_v3_rr1_sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 58,
+   "layer": 0,
+   "file": "stc_n58_0.m4a",
+   "source": "Woodwinds/Clarinet/stac/DCClar_stac_A#2_v1_rr1_sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 58,
+   "layer": 1,
+   "file": "stc_n58_1.m4a",
+   "source": "Woodwinds/Clarinet/stac/DCClar_stac_A#2_v3_rr1_sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 62,
+   "layer": 0,
+   "file": "stc_n62_0.m4a",
+   "source": "Woodwinds/Clarinet/stac/DCClar_stac_D3_v1_rr1_sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 62,
+   "layer": 1,
+   "file": "stc_n62_1.m4a",
+   "source": "Woodwinds/Clarinet/stac/DCClar_stac_D3_v3_rr1_sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 65,
+   "layer": 0,
+   "file": "stc_n65_0.m4a",
+   "source": "Woodwinds/Clarinet/stac/DCClar_stac_F3_v1_rr1_sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 65,
+   "layer": 1,
+   "file": "stc_n65_1.m4a",
+   "source": "Woodwinds/Clarinet/stac/DCClar_stac_F3_v3_rr1_sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 70,
+   "layer": 0,
+   "file": "stc_n70_0.m4a",
+   "source": "Woodwinds/Clarinet/stac/DCClar_stac_A#3_v1_rr1_sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 70,
+   "layer": 1,
+   "file": "stc_n70_1.m4a",
+   "source": "Woodwinds/Clarinet/stac/DCClar_stac_A#3_v3_rr1_sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 74,
+   "layer": 0,
+   "file": "stc_n74_0.m4a",
+   "source": "Woodwinds/Clarinet/stac/DCClar_stac_D4_v1_rr1_sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 74,
+   "layer": 1,
+   "file": "stc_n74_1.m4a",
+   "source": "Woodwinds/Clarinet/stac/DCClar_stac_D4_v3_rr1_sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 77,
+   "layer": 0,
+   "file": "stc_n77_0.m4a",
+   "source": "Woodwinds/Clarinet/stac/DCClar_stac_F4_v1_rr1_sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 77,
+   "layer": 1,
+   "file": "stc_n77_1.m4a",
+   "source": "Woodwinds/Clarinet/stac/DCClar_stac_F4_v3_rr1_sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 82,
+   "layer": 0,
+   "file": "stc_n82_0.m4a",
+   "source": "Woodwinds/Clarinet/stac/DCClar_stac_A#4_v1_rr1_sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 82,
+   "layer": 1,
+   "file": "stc_n82_1.m4a",
+   "source": "Woodwinds/Clarinet/stac/DCClar_stac_A#4_v3_rr1_sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 86,
+   "layer": 0,
+   "file": "stc_n86_0.m4a",
+   "source": "Woodwinds/Clarinet/stac/DCClar_stac_D5_v2_rr1_sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 86,
+   "layer": 1,
+   "file": "stc_n86_1.m4a",
+   "source": "Woodwinds/Clarinet/stac/DCClar_stac_D5_v3_rr1_sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 89,
+   "layer": 0,
+   "file": "stc_n89_0.m4a",
+   "source": "Woodwinds/Clarinet/stac/DCClar_stac_F5_v1_rr1_sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 89,
+   "layer": 1,
+   "file": "stc_n89_1.m4a",
+   "source": "Woodwinds/Clarinet/stac/DCClar_stac_F5_v3_rr1_sum.wav"
+  },
+  {
+   "art": "sus",
+   "note": 50,
+   "layer": 0,
+   "file": "sus_n50_0.m4a",
+   "source": "Woodwinds/Clarinet/susLong/DCClar_susLong_D2_v1_rr1_sum.wav"
+  },
+  {
+   "art": "sus",
+   "note": 50,
+   "layer": 1,
+   "file": "sus_n50_1.m4a",
+   "source": "Woodwinds/Clarinet/susLong/DCClar_susLong_D2_v3_rr1_sum.wav"
+  },
+  {
+   "art": "sus",
+   "note": 53,
+   "layer": 0,
+   "file": "sus_n53_0.m4a",
+   "source": "Woodwinds/Clarinet/susLong/DCClar_susLong_F2_v1_rr1_sum.wav"
+  },
+  {
+   "art": "sus",
+   "note": 53,
+   "layer": 1,
+   "file": "sus_n53_1.m4a",
+   "source": "Woodwinds/Clarinet/susLong/DCClar_susLong_F2_v3_rr1_sum.wav"
+  },
+  {
+   "art": "sus",
+   "note": 58,
+   "layer": 0,
+   "file": "sus_n58_0.m4a",
+   "source": "Woodwinds/Clarinet/susLong/DCClar_susLong_A#2_v1_rr1_sum.wav"
+  },
+  {
+   "art": "sus",
+   "note": 58,
+   "layer": 1,
+   "file": "sus_n58_1.m4a",
+   "source": "Woodwinds/Clarinet/susLong/DCClar_susLong_A#2_v3_rr1_sum.wav"
+  },
+  {
+   "art": "sus",
+   "note": 62,
+   "layer": 0,
+   "file": "sus_n62_0.m4a",
+   "source": "Woodwinds/Clarinet/susLong/DCClar_susLong_D3_v1_rr1_sum.wav"
+  },
+  {
+   "art": "sus",
+   "note": 62,
+   "layer": 1,
+   "file": "sus_n62_1.m4a",
+   "source": "Woodwinds/Clarinet/susLong/DCClar_susLong_D3_v3_rr1_sum.wav"
+  },
+  {
+   "art": "sus",
+   "note": 65,
+   "layer": 0,
+   "file": "sus_n65_0.m4a",
+   "source": "Woodwinds/Clarinet/susLong/DCClar_susLong_F3_v1_rr1_sum.wav"
+  },
+  {
+   "art": "sus",
+   "note": 65,
+   "layer": 1,
+   "file": "sus_n65_1.m4a",
+   "source": "Woodwinds/Clarinet/susLong/DCClar_susLong_F3_v3_rr1_sum.wav"
+  },
+  {
+   "art": "sus",
+   "note": 70,
+   "layer": 0,
+   "file": "sus_n70_0.m4a",
+   "source": "Woodwinds/Clarinet/susLong/DCClar_susLong_A#3_v1_rr1_sum.wav"
+  },
+  {
+   "art": "sus",
+   "note": 70,
+   "layer": 1,
+   "file": "sus_n70_1.m4a",
+   "source": "Woodwinds/Clarinet/susLong/DCClar_susLong_A#3_v3_rr1_sum.wav"
+  },
+  {
+   "art": "sus",
+   "note": 74,
+   "layer": 0,
+   "file": "sus_n74_0.m4a",
+   "source": "Woodwinds/Clarinet/susLong/DCClar_susLong_D4_v1_rr1_sum.wav"
+  },
+  {
+   "art": "sus",
+   "note": 74,
+   "layer": 1,
+   "file": "sus_n74_1.m4a",
+   "source": "Woodwinds/Clarinet/susLong/DCClar_susLong_D4_v3_rr1_sum.wav"
+  },
+  {
+   "art": "sus",
+   "note": 77,
+   "layer": 0,
+   "file": "sus_n77_0.m4a",
+   "source": "Woodwinds/Clarinet/susLong/DCClar_susLong_F4_v1_rr1_sum.wav"
+  },
+  {
+   "art": "sus",
+   "note": 77,
+   "layer": 1,
+   "file": "sus_n77_1.m4a",
+   "source": "Woodwinds/Clarinet/susLong/DCClar_susLong_F4_v3_rr1_sum.wav"
+  },
+  {
+   "art": "sus",
+   "note": 82,
+   "layer": 0,
+   "file": "sus_n82_0.m4a",
+   "source": "Woodwinds/Clarinet/susLong/DCClar_susLong_A#4_v1_rr1_sum.wav"
+  },
+  {
+   "art": "sus",
+   "note": 82,
+   "layer": 1,
+   "file": "sus_n82_1.m4a",
+   "source": "Woodwinds/Clarinet/susLong/DCClar_susLong_A#4_v3_rr1_sum.wav"
+  },
+  {
+   "art": "sus",
+   "note": 86,
+   "layer": 0,
+   "file": "sus_n86_0.m4a",
+   "source": "Woodwinds/Clarinet/susLong/DCClar_susLong_D5_v1_rr1_sum.wav"
+  },
+  {
+   "art": "sus",
+   "note": 86,
+   "layer": 1,
+   "file": "sus_n86_1.m4a",
+   "source": "Woodwinds/Clarinet/susLong/DCClar_susLong_D5_v3_rr1_sum.wav"
+  },
+  {
+   "art": "sus",
+   "note": 90,
+   "layer": 0,
+   "file": "sus_n90_0.m4a",
+   "source": "Woodwinds/Clarinet/susLong/DCClar_susLong_F#5_v1_rr1_sum.wav"
+  },
+  {
+   "art": "sus",
+   "note": 90,
+   "layer": 1,
+   "file": "sus_n90_1.m4a",
+   "source": "Woodwinds/Clarinet/susLong/DCClar_susLong_F#5_v3_rr1_sum.wav"
+  }
+ ]
+}

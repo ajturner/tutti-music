@@ -6,6 +6,8 @@ import { renderSong, TimeMap, TYPE_ORDER, rowTicks, tickMapper, rowAtTick, apply
 import { addTrack, removeTrack, moveTrack, setTrackInstrument, freeChannel, normalizeOrder, orderText, parseOrderText, trackDataFor } from '../src/core/song.js';
 import { inScale, transposeDiatonic, snapToScale, degreeOf, effectiveKey } from '../src/core/scales.js';
 import { Scheduler } from '../src/core/scheduler.js';
+import { pickZones } from '../src/core/sampler.js';
+import { readdir } from 'node:fs/promises';
 import { midiFileBytes } from '../src/core/midifile.js';
 import { EXAMPLES, line } from '../src/core/examples.js';
 import { setNote, putNote, resizeNote, removeNotesAt, noteAt, noteCovering, notesIn, maxLength } from '../src/core/edit.js';
@@ -210,6 +212,29 @@ check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[1
   sched.swapToQueued();
   check('scheduler: swap adopts the queued render', sched.rendered.starts[0].pattern === 1 && sched.next == null);
   sched.stop();
+}
+
+// Sampler zone selection (pure) and the bundled sample maps
+{
+  const map = { zones: [
+    { art: 'sus', note: 60, layer: 0, file: 'a' }, { art: 'sus', note: 60, layer: 1, file: 'b' },
+    { art: 'sus', note: 67, layer: 0, file: 'c' }, { art: 'sus', note: 67, layer: 1, file: 'd' },
+    { art: 'stc', note: 64, layer: 1, file: 'e' } ] };
+  const soft = pickZones(map, 'sus', 62, 0, 100), loud = pickZones(map, 'sus', 62, 127, 100), mid = pickZones(map, 'sus', 65, 64, 100);
+  check('sampler: nearest note, lower on ties', soft[0].zone.note === 60 && mid[0].zone.note === 67 && pickZones(map, 'sus', 63, 0, 100)[0].zone.note === 60);
+  check('sampler: dynamics crossfade layers', soft[0].gain === 1 && soft[1].gain < 1e-9 && loud[1].gain === 1 && Math.abs(mid[0].gain * mid[0].gain + mid[1].gain * mid[1].gain - 1) < 1e-9);
+  check('sampler: articulation fallback chain', pickZones(map, 'leg', 60, 64, 100)[0].zone.art === 'sus' && pickZones(map, 'mrc', 60, 64, 100)[0].zone.art === 'stc' && pickZones(map, 'trm', 60, 64, 100)[0].zone.art === 'sus');
+  check('sampler: single layer gets full gain', pickZones(map, 'stc', 64, 0, 10)[0].gain === 1);
+  check('sampler: empty map yields nothing', pickZones({ zones: [] }, 'sus', 60, 64, 100).length === 0);
+  const dir = new URL('../samples/', import.meta.url);
+  let maps = 0, files = 0, bad = [];
+  for (const id of (await readdir(dir, { withFileTypes: true })).filter(d => d.isDirectory()).map(d => d.name)) {
+    const m = JSON.parse(await readFile(new URL(id + '/map.json', dir)));
+    maps++;
+    for (const z of m.zones) { files++; try { await readFile(new URL(id + '/' + z.file, dir)); } catch { bad.push(id + '/' + z.file); } if (!(z.note >= 0 && z.note <= 127) || !z.art) bad.push(id + ' zone ' + JSON.stringify(z)); }
+    if (!INST[id] || !m.zones.some(z => z.art === 'sus')) bad.push(id + ' no sus');
+  }
+  check('samples: every bundled map is complete', maps >= 12 && files > 200 && bad.length === 0, maps + ' maps, ' + files + ' files' + (bad.length ? ' bad: ' + bad.slice(0, 3).join(', ') : ''));
 }
 
 // Every example renders and exports

@@ -3,7 +3,7 @@
 import { INSTRUMENTS, INST } from '../core/instruments.js';
 import { FAMILIES } from '../core/constants.js';
 import { addTrack, removeTrack, moveTrack, setTrackInstrument } from '../core/song.js';
-import { $, sched, state } from './state.js';
+import { $, sched, state, preloadSamples } from './state.js';
 import { deselect } from './selection.js';
 import { withSongUndo } from './edit.js';
 import { markEdited } from './storage.js';
@@ -73,6 +73,7 @@ function onClick(e) {
 }
 export function addTrackFromPanel() {
   let tr; withSongUndo(() => { tr = addTrack(state.song, $('trackAddInst').value); });
+  preloadSamples();
   state.cursor.track = state.song.tracks.indexOf(tr); state.cursor.cell = 0; state.ensureVisible = true;
   afterChange();
   return tr;

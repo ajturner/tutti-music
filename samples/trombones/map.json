@@ -1,0 +1,259 @@
+{
+ "instrument": "trombones",
+ "source": "VSCO 2 Community Edition (CC0) by Versilian Studios, converted",
+ "license": "CC0-1.0",
+ "zones": [
+  {
+   "art": "stc",
+   "note": 34,
+   "layer": 0,
+   "file": "stc_n34_0.m4a",
+   "source": "Brass/Tenor Trombone/stac/tenortbn_stac_A#0_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 34,
+   "layer": 1,
+   "file": "stc_n34_1.m4a",
+   "source": "Brass/Tenor Trombone/stac/tenortbn_stac_A#0_v4_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 41,
+   "layer": 0,
+   "file": "stc_n41_0.m4a",
+   "source": "Brass/Tenor Trombone/stac/tenortbn_stac_F1_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 41,
+   "layer": 1,
+   "file": "stc_n41_1.m4a",
+   "source": "Brass/Tenor Trombone/stac/tenortbn_stac_F1_v4_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 46,
+   "layer": 0,
+   "file": "stc_n46_0.m4a",
+   "source": "Brass/Tenor Trombone/stac/tenortbn_stac_A#1_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 46,
+   "layer": 1,
+   "file": "stc_n46_1.m4a",
+   "source": "Brass/Tenor Trombone/stac/tenortbn_stac_A#1_v4_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 53,
+   "layer": 0,
+   "file": "stc_n53_0.m4a",
+   "source": "Brass/Tenor Trombone/stac/tenortbn_stac_F2_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 53,
+   "layer": 1,
+   "file": "stc_n53_1.m4a",
+   "source": "Brass/Tenor Trombone/stac/tenortbn_stac_F2_v4_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 58,
+   "layer": 0,
+   "file": "stc_n58_0.m4a",
+   "source": "Brass/Tenor Trombone/stac/tenortbn_stac_A#2_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 58,
+   "layer": 1,
+   "file": "stc_n58_1.m4a",
+   "source": "Brass/Tenor Trombone/stac/tenortbn_stac_A#2_v4_r2.wav"
+  },
+  {
+   "art": "stc",
+   "note": 62,
+   "layer": 0,
+   "file": "stc_n62_0.m4a",
+   "source": "Brass/Tenor Trombone/stac/tenortbn_stac_D3_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 62,
+   "layer": 1,
+   "file": "stc_n62_1.m4a",
+   "source": "Brass/Tenor Trombone/stac/tenortbn_stac_D3_v4_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 65,
+   "layer": 0,
+   "file": "stc_n65_0.m4a",
+   "source": "Brass/Tenor Trombone/stac/tenortbn_stac_F3_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 65,
+   "layer": 1,
+   "file": "stc_n65_1.m4a",
+   "source": "Brass/Tenor Trombone/stac/tenortbn_stac_F3_v4_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 34,
+   "layer": 0,
+   "file": "sus_n34_0.m4a",
+   "source": "Brass/Tenor Trombone/sus/tenortbn_sus_A#0_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 34,
+   "layer": 1,
+   "file": "sus_n34_1.m4a",
+   "source": "Brass/Tenor Trombone/sus/tenortbn_sus_A#0_v2_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 37,
+   "layer": 0,
+   "file": "sus_n37_0.m4a",
+   "source": "Brass/Tenor Trombone/sus/tenortbn_sus_C#1_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 37,
+   "layer": 1,
+   "file": "sus_n37_1.m4a",
+   "source": "Brass/Tenor Trombone/sus/tenortbn_sus_C#1_v2_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 39,
+   "layer": 0,
+   "file": "sus_n39_0.m4a",
+   "source": "Brass/Tenor Trombone/sus/tenortbn_sus_D#1_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 39,
+   "layer": 1,
+   "file": "sus_n39_1.m4a",
+   "source": "Brass/Tenor Trombone/sus/tenortbn_sus_D#1_v3_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 41,
+   "layer": 0,
+   "file": "sus_n41_0.m4a",
+   "source": "Brass/Tenor Trombone/sus/tenortbn_sus_F1_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 41,
+   "layer": 1,
+   "file": "sus_n41_1.m4a",
+   "source": "Brass/Tenor Trombone/sus/tenortbn_sus_F1_v3_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 46,
+   "layer": 0,
+   "file": "sus_n46_0.m4a",
+   "source": "Brass/Tenor Trombone/sus/tenortbn_sus_A#1_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 46,
+   "layer": 1,
+   "file": "sus_n46_1.m4a",
+   "source": "Brass/Tenor Trombone/sus/tenortbn_sus_A#1_v3_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 50,
+   "layer": 0,
+   "file": "sus_n50_0.m4a",
+   "source": "Brass/Tenor Trombone/sus/tenortbn_sus_D2_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 50,
+   "layer": 1,
+   "file": "sus_n50_1.m4a",
+   "source": "Brass/Tenor Trombone/sus/tenortbn_sus_D2_v3_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 53,
+   "layer": 0,
+   "file": "sus_n53_0.m4a",
+   "source": "Brass/Tenor Trombone/sus/tenortbn_sus_F2_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 53,
+   "layer": 1,
+   "file": "sus_n53_1.m4a",
+   "source": "Brass/Tenor Trombone/sus/tenortbn_sus_F2_v3_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 60,
+   "layer": 0,
+   "file": "sus_n60_0.m4a",
+   "source": "Brass/Tenor Trombone/sus/tenortbn_sus_C3_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 60,
+   "layer": 1,
+   "file": "sus_n60_1.m4a",
+   "source": "Brass/Tenor Trombone/sus/tenortbn_sus_C3_v3_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 61,
+   "layer": 0,
+   "file": "sus_n61_0.m4a",
+   "source": "Brass/Tenor Trombone/sus/tenortbn_sus_C#3_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 61,
+   "layer": 1,
+   "file": "sus_n61_1.m4a",
+   "source": "Brass/Tenor Trombone/sus/tenortbn_sus_C#3_v3_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 63,
+   "layer": 0,
+   "file": "sus_n63_0.m4a",
+   "source": "Brass/Tenor Trombone/sus/tenortbn_sus_D#3_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 63,
+   "layer": 1,
+   "file": "sus_n63_1.m4a",
+   "source": "Brass/Tenor Trombone/sus/tenortbn_sus_D#3_v3_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 65,
+   "layer": 0,
+   "file": "sus_n65_0.m4a",
+   "source": "Brass/Tenor Trombone/sus/tenortbn_sus_F3_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 65,
+   "layer": 1,
+   "file": "sus_n65_1.m4a",
+   "source": "Brass/Tenor Trombone/sus/tenortbn_sus_F3_v3_1.wav"
+  }
+ ]
+}

@@ -1,0 +1,343 @@
+{
+ "instrument": "bassoon",
+ "source": "VSCO 2 Community Edition (CC0) by Versilian Studios, converted",
+ "license": "CC0-1.0",
+ "zones": [
+  {
+   "art": "stc",
+   "note": 34,
+   "layer": 1,
+   "file": "stc_n34_0.m4a",
+   "source": "Woodwinds/Bassoon/stac/PSBassoon_A#0_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 38,
+   "layer": 1,
+   "file": "stc_n38_0.m4a",
+   "source": "Woodwinds/Bassoon/stac/PSBassoon_D1_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 41,
+   "layer": 0,
+   "file": "stc_n41_0.m4a",
+   "source": "Woodwinds/Bassoon/stac/PSBassoon_F1_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 41,
+   "layer": 1,
+   "file": "stc_n41_1.m4a",
+   "source": "Woodwinds/Bassoon/stac/PSBassoon_F1_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 45,
+   "layer": 0,
+   "file": "stc_n45_0.m4a",
+   "source": "Woodwinds/Bassoon/stac/PSBassoon_A1_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 45,
+   "layer": 1,
+   "file": "stc_n45_1.m4a",
+   "source": "Woodwinds/Bassoon/stac/PSBassoon_A1_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 48,
+   "layer": 0,
+   "file": "stc_n48_0.m4a",
+   "source": "Woodwinds/Bassoon/stac/PSBassoon_C2_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 48,
+   "layer": 1,
+   "file": "stc_n48_1.m4a",
+   "source": "Woodwinds/Bassoon/stac/PSBassoon_C2_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 51,
+   "layer": 1,
+   "file": "stc_n51_0.m4a",
+   "source": "Woodwinds/Bassoon/stac/PSBassoon_D#2_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 52,
+   "layer": 0,
+   "file": "stc_n52_0.m4a",
+   "source": "Woodwinds/Bassoon/stac/PSBassoon_E2_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 52,
+   "layer": 1,
+   "file": "stc_n52_1.m4a",
+   "source": "Woodwinds/Bassoon/stac/PSBassoon_E2_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 55,
+   "layer": 0,
+   "file": "stc_n55_0.m4a",
+   "source": "Woodwinds/Bassoon/stac/PSBassoon_G2_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 55,
+   "layer": 1,
+   "file": "stc_n55_1.m4a",
+   "source": "Woodwinds/Bassoon/stac/PSBassoon_G2_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 57,
+   "layer": 0,
+   "file": "stc_n57_0.m4a",
+   "source": "Woodwinds/Bassoon/stac/PSBassoon_A2_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 57,
+   "layer": 1,
+   "file": "stc_n57_1.m4a",
+   "source": "Woodwinds/Bassoon/stac/PSBassoon_A2_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 60,
+   "layer": 0,
+   "file": "stc_n60_0.m4a",
+   "source": "Woodwinds/Bassoon/stac/PSBassoon_C3_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 60,
+   "layer": 1,
+   "file": "stc_n60_1.m4a",
+   "source": "Woodwinds/Bassoon/stac/PSBassoon_C3_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 64,
+   "layer": 0,
+   "file": "stc_n64_0.m4a",
+   "source": "Woodwinds/Bassoon/stac/PSBassoon_E3_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 64,
+   "layer": 1,
+   "file": "stc_n64_1.m4a",
+   "source": "Woodwinds/Bassoon/stac/PSBassoon_E3_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 67,
+   "layer": 0,
+   "file": "stc_n67_0.m4a",
+   "source": "Woodwinds/Bassoon/stac/PSBassoon_G3_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 67,
+   "layer": 1,
+   "file": "stc_n67_1.m4a",
+   "source": "Woodwinds/Bassoon/stac/PSBassoon_G3_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 72,
+   "layer": 0,
+   "file": "stc_n72_0.m4a",
+   "source": "Woodwinds/Bassoon/stac/PSBassoon_C4_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 72,
+   "layer": 1,
+   "file": "stc_n72_1.m4a",
+   "source": "Woodwinds/Bassoon/stac/PSBassoon_C4_v2_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 34,
+   "layer": 0,
+   "file": "sus_n34_0.m4a",
+   "source": "Woodwinds/Bassoon/sus/PSBassoon_A#0_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 34,
+   "layer": 1,
+   "file": "sus_n34_1.m4a",
+   "source": "Woodwinds/Bassoon/sus/PSBassoon_A#0_v2_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 37,
+   "layer": 0,
+   "file": "sus_n37_0.m4a",
+   "source": "Woodwinds/Bassoon/sus/PSBassoon_C#1_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 37,
+   "layer": 1,
+   "file": "sus_n37_1.m4a",
+   "source": "Woodwinds/Bassoon/sus/PSBassoon_C#1_v2_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 41,
+   "layer": 0,
+   "file": "sus_n41_0.m4a",
+   "source": "Woodwinds/Bassoon/sus/PSBassoon_F1_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 41,
+   "layer": 1,
+   "file": "sus_n41_1.m4a",
+   "source": "Woodwinds/Bassoon/sus/PSBassoon_F1_v2_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 45,
+   "layer": 0,
+   "file": "sus_n45_0.m4a",
+   "source": "Woodwinds/Bassoon/sus/PSBassoon_A1_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 45,
+   "layer": 1,
+   "file": "sus_n45_1.m4a",
+   "source": "Woodwinds/Bassoon/sus/PSBassoon_A1_v2_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 46,
+   "layer": 0,
+   "file": "sus_n46_0.m4a",
+   "source": "Woodwinds/Bassoon/sus/PSBassoon_A#1_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 46,
+   "layer": 1,
+   "file": "sus_n46_1.m4a",
+   "source": "Woodwinds/Bassoon/sus/PSBassoon_A#1_v2_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 48,
+   "layer": 0,
+   "file": "sus_n48_0.m4a",
+   "source": "Woodwinds/Bassoon/sus/PSBassoon_C2_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 48,
+   "layer": 1,
+   "file": "sus_n48_1.m4a",
+   "source": "Woodwinds/Bassoon/sus/PSBassoon_C2_v2_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 55,
+   "layer": 0,
+   "file": "sus_n55_0.m4a",
+   "source": "Woodwinds/Bassoon/sus/PSBassoon_G2_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 55,
+   "layer": 1,
+   "file": "sus_n55_1.m4a",
+   "source": "Woodwinds/Bassoon/sus/PSBassoon_G2_v2_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 60,
+   "layer": 0,
+   "file": "sus_n60_0.m4a",
+   "source": "Woodwinds/Bassoon/sus/PSBassoon_C3_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 60,
+   "layer": 1,
+   "file": "sus_n60_1.m4a",
+   "source": "Woodwinds/Bassoon/sus/PSBassoon_C3_v2_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 63,
+   "layer": 0,
+   "file": "sus_n63_0.m4a",
+   "source": "Woodwinds/Bassoon/sus/PSBassoon_D#3_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 63,
+   "layer": 1,
+   "file": "sus_n63_1.m4a",
+   "source": "Woodwinds/Bassoon/sus/PSBassoon_D#3_v2_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 68,
+   "layer": 0,
+   "file": "sus_n68_0.m4a",
+   "source": "Woodwinds/Bassoon/sus/PSBassoon_G#3_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 68,
+   "layer": 1,
+   "file": "sus_n68_1.m4a",
+   "source": "Woodwinds/Bassoon/sus/PSBassoon_G#3_v2_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 69,
+   "layer": 0,
+   "file": "sus_n69_0.m4a",
+   "source": "Woodwinds/Bassoon/sus/PSBassoon_A3_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 69,
+   "layer": 1,
+   "file": "sus_n69_1.m4a",
+   "source": "Woodwinds/Bassoon/sus/PSBassoon_A3_v2_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 72,
+   "layer": 0,
+   "file": "sus_n72_0.m4a",
+   "source": "Woodwinds/Bassoon/sus/PSBassoon_C4_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 72,
+   "layer": 1,
+   "file": "sus_n72_1.m4a",
+   "source": "Woodwinds/Bassoon/sus/PSBassoon_C4_v2_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 75,
+   "layer": 1,
+   "file": "sus_n75_0.m4a",
+   "source": "Woodwinds/Bassoon/sus/PSBassoon_D#4_v2_1.wav"
+  }
+ ]
+}

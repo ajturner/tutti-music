@@ -1,0 +1,686 @@
+{
+ "instrument": "violas",
+ "source": "VSCO 2 Community Edition (CC0) by Versilian Studios, converted",
+ "license": "CC0-1.0",
+ "zones": [
+  {
+   "art": "piz",
+   "note": 48,
+   "layer": 0,
+   "file": "piz_n48_0.m4a",
+   "source": "Strings/Viola Section/pizz/ViolaEns_pizz_C2_v1_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 48,
+   "layer": 1,
+   "file": "piz_n48_1.m4a",
+   "source": "Strings/Viola Section/pizz/ViolaEns_pizz_C2_v2_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 52,
+   "layer": 0,
+   "file": "piz_n52_0.m4a",
+   "source": "Strings/Viola Section/pizz/ViolaEns_pizz_E2_v1_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 52,
+   "layer": 1,
+   "file": "piz_n52_1.m4a",
+   "source": "Strings/Viola Section/pizz/ViolaEns_pizz_E2_v2_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 55,
+   "layer": 0,
+   "file": "piz_n55_0.m4a",
+   "source": "Strings/Viola Section/pizz/ViolaEns_pizz_G2_v1_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 55,
+   "layer": 1,
+   "file": "piz_n55_1.m4a",
+   "source": "Strings/Viola Section/pizz/ViolaEns_pizz_G2_v2_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 59,
+   "layer": 0,
+   "file": "piz_n59_0.m4a",
+   "source": "Strings/Viola Section/pizz/ViolaEns_pizz_B2_v1_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 59,
+   "layer": 1,
+   "file": "piz_n59_1.m4a",
+   "source": "Strings/Viola Section/pizz/ViolaEns_pizz_B2_v2_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 62,
+   "layer": 0,
+   "file": "piz_n62_0.m4a",
+   "source": "Strings/Viola Section/pizz/ViolaEns_pizz_D3_v1_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 62,
+   "layer": 1,
+   "file": "piz_n62_1.m4a",
+   "source": "Strings/Viola Section/pizz/ViolaEns_pizz_D3_v2_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 65,
+   "layer": 0,
+   "file": "piz_n65_0.m4a",
+   "source": "Strings/Viola Section/pizz/ViolaEns_pizz_F3_v1_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 65,
+   "layer": 1,
+   "file": "piz_n65_1.m4a",
+   "source": "Strings/Viola Section/pizz/ViolaEns_pizz_F3_v2_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 69,
+   "layer": 0,
+   "file": "piz_n69_0.m4a",
+   "source": "Strings/Viola Section/pizz/ViolaEns_pizz_A3_v1_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 69,
+   "layer": 1,
+   "file": "piz_n69_1.m4a",
+   "source": "Strings/Viola Section/pizz/ViolaEns_pizz_A3_v2_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 72,
+   "layer": 0,
+   "file": "piz_n72_0.m4a",
+   "source": "Strings/Viola Section/pizz/ViolaEns_pizz_C4_v1_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 72,
+   "layer": 1,
+   "file": "piz_n72_1.m4a",
+   "source": "Strings/Viola Section/pizz/ViolaEns_pizz_C4_v2_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 76,
+   "layer": 0,
+   "file": "piz_n76_0.m4a",
+   "source": "Strings/Viola Section/pizz/ViolaEns_pizz_E4_v1_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 76,
+   "layer": 1,
+   "file": "piz_n76_1.m4a",
+   "source": "Strings/Viola Section/pizz/ViolaEns_pizz_E4_v2_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 79,
+   "layer": 0,
+   "file": "piz_n79_0.m4a",
+   "source": "Strings/Viola Section/pizz/ViolaEns_pizz_G4_v1_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 79,
+   "layer": 1,
+   "file": "piz_n79_1.m4a",
+   "source": "Strings/Viola Section/pizz/ViolaEns_pizz_G4_v2_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 83,
+   "layer": 0,
+   "file": "piz_n83_0.m4a",
+   "source": "Strings/Viola Section/pizz/ViolaEns_pizz_B4_v1_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 83,
+   "layer": 1,
+   "file": "piz_n83_1.m4a",
+   "source": "Strings/Viola Section/pizz/ViolaEns_pizz_B4_v2_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 86,
+   "layer": 1,
+   "file": "piz_n86_0.m4a",
+   "source": "Strings/Viola Section/pizz/ViolaEns_pizz_D5_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 48,
+   "layer": 0,
+   "file": "stc_n48_0.m4a",
+   "source": "Strings/Viola Section/spic/Violas_spic_C2_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 48,
+   "layer": 1,
+   "file": "stc_n48_1.m4a",
+   "source": "Strings/Viola Section/spic/Violas_spic_C2_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 52,
+   "layer": 0,
+   "file": "stc_n52_0.m4a",
+   "source": "Strings/Viola Section/spic/Violas_spic_E2_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 52,
+   "layer": 1,
+   "file": "stc_n52_1.m4a",
+   "source": "Strings/Viola Section/spic/Violas_spic_E2_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 55,
+   "layer": 0,
+   "file": "stc_n55_0.m4a",
+   "source": "Strings/Viola Section/spic/Violas_spic_G2_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 55,
+   "layer": 1,
+   "file": "stc_n55_1.m4a",
+   "source": "Strings/Viola Section/spic/Violas_spic_G2_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 59,
+   "layer": 0,
+   "file": "stc_n59_0.m4a",
+   "source": "Strings/Viola Section/spic/Violas_spic_B2_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 59,
+   "layer": 1,
+   "file": "stc_n59_1.m4a",
+   "source": "Strings/Viola Section/spic/Violas_spic_B2_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 62,
+   "layer": 0,
+   "file": "stc_n62_0.m4a",
+   "source": "Strings/Viola Section/spic/Violas_spic_D3_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 62,
+   "layer": 1,
+   "file": "stc_n62_1.m4a",
+   "source": "Strings/Viola Section/spic/Violas_spic_D3_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 65,
+   "layer": 0,
+   "file": "stc_n65_0.m4a",
+   "source": "Strings/Viola Section/spic/Violas_spic_F3_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 65,
+   "layer": 1,
+   "file": "stc_n65_1.m4a",
+   "source": "Strings/Viola Section/spic/Violas_spic_F3_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 69,
+   "layer": 0,
+   "file": "stc_n69_0.m4a",
+   "source": "Strings/Viola Section/spic/Violas_spic_A3_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 69,
+   "layer": 1,
+   "file": "stc_n69_1.m4a",
+   "source": "Strings/Viola Section/spic/Violas_spic_A3_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 72,
+   "layer": 0,
+   "file": "stc_n72_0.m4a",
+   "source": "Strings/Viola Section/spic/Violas_spic_C4_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 72,
+   "layer": 1,
+   "file": "stc_n72_1.m4a",
+   "source": "Strings/Viola Section/spic/Violas_spic_C4_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 76,
+   "layer": 0,
+   "file": "stc_n76_0.m4a",
+   "source": "Strings/Viola Section/spic/Violas_spic_E4_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 76,
+   "layer": 1,
+   "file": "stc_n76_1.m4a",
+   "source": "Strings/Viola Section/spic/Violas_spic_E4_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 79,
+   "layer": 0,
+   "file": "stc_n79_0.m4a",
+   "source": "Strings/Viola Section/spic/Violas_spic_G4_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 79,
+   "layer": 1,
+   "file": "stc_n79_1.m4a",
+   "source": "Strings/Viola Section/spic/Violas_spic_G4_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 83,
+   "layer": 0,
+   "file": "stc_n83_0.m4a",
+   "source": "Strings/Viola Section/spic/Violas_spic_B4_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 83,
+   "layer": 1,
+   "file": "stc_n83_1.m4a",
+   "source": "Strings/Viola Section/spic/Violas_spic_B4_v2_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 86,
+   "layer": 0,
+   "file": "stc_n86_0.m4a",
+   "source": "Strings/Viola Section/spic/Violas_spic_D5_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 86,
+   "layer": 1,
+   "file": "stc_n86_1.m4a",
+   "source": "Strings/Viola Section/spic/Violas_spic_D5_v2_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 48,
+   "layer": 0,
+   "file": "sus_n48_0.m4a",
+   "source": "Strings/Viola Section/susvib/ViolaEns_susvib_C2_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 48,
+   "layer": 1,
+   "file": "sus_n48_1.m4a",
+   "source": "Strings/Viola Section/susvib/ViolaEns_susvib_C2_v2_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 50,
+   "layer": 0,
+   "file": "sus_n50_0.m4a",
+   "source": "Strings/Viola Section/susvib/ViolaEns_susvib_D2_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 50,
+   "layer": 1,
+   "file": "sus_n50_1.m4a",
+   "source": "Strings/Viola Section/susvib/ViolaEns_susvib_D2_v2_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 52,
+   "layer": 0,
+   "file": "sus_n52_0.m4a",
+   "source": "Strings/Viola Section/susvib/ViolaEns_susvib_E2_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 52,
+   "layer": 1,
+   "file": "sus_n52_1.m4a",
+   "source": "Strings/Viola Section/susvib/ViolaEns_susvib_E2_v2_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 55,
+   "layer": 0,
+   "file": "sus_n55_0.m4a",
+   "source": "Strings/Viola Section/susvib/ViolaEns_susvib_G2_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 55,
+   "layer": 1,
+   "file": "sus_n55_1.m4a",
+   "source": "Strings/Viola Section/susvib/ViolaEns_susvib_G2_v2_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 59,
+   "layer": 0,
+   "file": "sus_n59_0.m4a",
+   "source": "Strings/Viola Section/susvib/ViolaEns_susvib_B2_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 59,
+   "layer": 1,
+   "file": "sus_n59_1.m4a",
+   "source": "Strings/Viola Section/susvib/ViolaEns_susvib_B2_v2_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 62,
+   "layer": 0,
+   "file": "sus_n62_0.m4a",
+   "source": "Strings/Viola Section/susvib/ViolaEns_susvib_D3_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 62,
+   "layer": 1,
+   "file": "sus_n62_1.m4a",
+   "source": "Strings/Viola Section/susvib/ViolaEns_susvib_D3_v2_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 65,
+   "layer": 0,
+   "file": "sus_n65_0.m4a",
+   "source": "Strings/Viola Section/susvib/ViolaEns_susvib_F3_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 65,
+   "layer": 1,
+   "file": "sus_n65_1.m4a",
+   "source": "Strings/Viola Section/susvib/ViolaEns_susvib_F3_v2_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 69,
+   "layer": 0,
+   "file": "sus_n69_0.m4a",
+   "source": "Strings/Viola Section/susvib/ViolaEns_susvib_A3_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 69,
+   "layer": 1,
+   "file": "sus_n69_1.m4a",
+   "source": "Strings/Viola Section/susvib/ViolaEns_susvib_A3_v2_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 72,
+   "layer": 0,
+   "file": "sus_n72_0.m4a",
+   "source": "Strings/Viola Section/susvib/ViolaEns_susvib_C4_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 72,
+   "layer": 1,
+   "file": "sus_n72_1.m4a",
+   "source": "Strings/Viola Section/susvib/ViolaEns_susvib_C4_v2_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 76,
+   "layer": 0,
+   "file": "sus_n76_0.m4a",
+   "source": "Strings/Viola Section/susvib/ViolaEns_susvib_E4_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 76,
+   "layer": 1,
+   "file": "sus_n76_1.m4a",
+   "source": "Strings/Viola Section/susvib/ViolaEns_susvib_E4_v2_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 79,
+   "layer": 0,
+   "file": "sus_n79_0.m4a",
+   "source": "Strings/Viola Section/susvib/ViolaEns_susvib_G4_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 79,
+   "layer": 1,
+   "file": "sus_n79_1.m4a",
+   "source": "Strings/Viola Section/susvib/ViolaEns_susvib_G4_v2_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 83,
+   "layer": 0,
+   "file": "sus_n83_0.m4a",
+   "source": "Strings/Viola Section/susvib/ViolaEns_susvib_B4_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 83,
+   "layer": 1,
+   "file": "sus_n83_1.m4a",
+   "source": "Strings/Viola Section/susvib/ViolaEns_susvib_B4_v2_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 86,
+   "layer": 0,
+   "file": "sus_n86_0.m4a",
+   "source": "Strings/Viola Section/susvib/ViolaEns_susvib_D5_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 86,
+   "layer": 1,
+   "file": "sus_n86_1.m4a",
+   "source": "Strings/Viola Section/susvib/ViolaEns_susvib_D5_v2_1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 48,
+   "layer": 0,
+   "file": "trm_n48_0.m4a",
+   "source": "Strings/Viola Section/trem/Violas_trem_C2_v1_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 48,
+   "layer": 1,
+   "file": "trm_n48_1.m4a",
+   "source": "Strings/Viola Section/trem/Violas_trem_C2_v2_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 52,
+   "layer": 0,
+   "file": "trm_n52_0.m4a",
+   "source": "Strings/Viola Section/trem/Violas_trem_E2_v1_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 52,
+   "layer": 1,
+   "file": "trm_n52_1.m4a",
+   "source": "Strings/Viola Section/trem/Violas_trem_E2_v2_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 55,
+   "layer": 0,
+   "file": "trm_n55_0.m4a",
+   "source": "Strings/Viola Section/trem/Violas_trem_G2_v1_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 55,
+   "layer": 1,
+   "file": "trm_n55_1.m4a",
+   "source": "Strings/Viola Section/trem/Violas_trem_G2_v2_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 59,
+   "layer": 0,
+   "file": "trm_n59_0.m4a",
+   "source": "Strings/Viola Section/trem/Violas_trem_B2_v1_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 59,
+   "layer": 1,
+   "file": "trm_n59_1.m4a",
+   "source": "Strings/Viola Section/trem/Violas_trem_B2_v2_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 62,
+   "layer": 0,
+   "file": "trm_n62_0.m4a",
+   "source": "Strings/Viola Section/trem/Violas_trem_D3_v1_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 62,
+   "layer": 1,
+   "file": "trm_n62_1.m4a",
+   "source": "Strings/Viola Section/trem/Violas_trem_D3_v2_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 65,
+   "layer": 0,
+   "file": "trm_n65_0.m4a",
+   "source": "Strings/Viola Section/trem/Violas_trem_F3_v1_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 65,
+   "layer": 1,
+   "file": "trm_n65_1.m4a",
+   "source": "Strings/Viola Section/trem/Violas_trem_F3_v2_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 69,
+   "layer": 0,
+   "file": "trm_n69_0.m4a",
+   "source": "Strings/Viola Section/trem/Violas_trem_A3_v1_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 69,
+   "layer": 1,
+   "file": "trm_n69_1.m4a",
+   "source": "Strings/Viola Section/trem/Violas_trem_A3_v2_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 72,
+   "layer": 0,
+   "file": "trm_n72_0.m4a",
+   "source": "Strings/Viola Section/trem/Violas_trem_C4_v1_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 72,
+   "layer": 1,
+   "file": "trm_n72_1.m4a",
+   "source": "Strings/Viola Section/trem/Violas_trem_C4_v2_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 76,
+   "layer": 0,
+   "file": "trm_n76_0.m4a",
+   "source": "Strings/Viola Section/trem/Violas_trem_E4_v1_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 76,
+   "layer": 1,
+   "file": "trm_n76_1.m4a",
+   "source": "Strings/Viola Section/trem/Violas_trem_E4_v2_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 79,
+   "layer": 0,
+   "file": "trm_n79_0.m4a",
+   "source": "Strings/Viola Section/trem/Violas_trem_G4_v1_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 79,
+   "layer": 1,
+   "file": "trm_n79_1.m4a",
+   "source": "Strings/Viola Section/trem/Violas_trem_G4_v2_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 83,
+   "layer": 0,
+   "file": "trm_n83_0.m4a",
+   "source": "Strings/Viola Section/trem/Violas_trem_B4_v1_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 83,
+   "layer": 1,
+   "file": "trm_n83_1.m4a",
+   "source": "Strings/Viola Section/trem/Violas_trem_B4_v2_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 86,
+   "layer": 0,
+   "file": "trm_n86_0.m4a",
+   "source": "Strings/Viola Section/trem/Violas_trem_D5_v1_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 86,
+   "layer": 1,
+   "file": "trm_n86_1.m4a",
+   "source": "Strings/Viola Section/trem/Violas_trem_D5_v2_rr1.wav"
+  }
+ ]
+}

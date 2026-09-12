@@ -8,7 +8,7 @@ import { padSigReset } from './pad.js';
 import { clamp } from '../core/constants.js';
 import { newPattern, newSong, normalizeSong, orderEntry, orderText, parseOrderText, patMeter } from '../core/song.js';
 import { midiFileBytes } from '../core/midifile.js';
-import { $, curPat, state, synth } from './state.js';
+import { $, curPat, preloadSamples, sampler, state, synth } from './state.js';
 import { setOctave, setStep, withSongUndo, withUndo } from './edit.js';
 import { articulationSel, batchOp } from './selection.js';
 import { playPattern, playSong, stopAll } from './transport.js';
@@ -21,6 +21,7 @@ export function selectSong(i) {
   state.undo.length = 0; state.redo.length = 0;
   state.cursor = { row: 0, track: 0, cell: 0 }; state.scrollX = 0; state.typing = null; state.message = '';
   syncSongUI(); syncPatternUI(); state.dirty = true;
+  preloadSamples();
 }
 export function addSong(song) { state.songs.push(song); selectSong(state.songs.length - 1); markEdited(song); }
 $('song').onchange = e => selectSong(parseInt(e.target.value, 10));
@@ -80,7 +81,12 @@ $('order').onchange = e => {
 $('octave').onchange = e => setOctave(parseInt(e.target.value, 10) || 0);
 $('step').onchange = e => setStep(parseInt(e.target.value, 10) || 0);
 $('follow').onchange = e => { state.follow = e.target.checked; };
-$('preview').onchange = e => { state.preview = e.target.checked; synth.enabled = state.preview; if (!state.preview) synth.allOff(); state.dirty = true; };
+$('preview').onchange = e => { state.preview = e.target.checked; synth.enabled = sampler.enabled = state.preview; if (!state.preview) sampler.allOff(); else preloadSamples(); state.dirty = true; };
+$('sound').onchange = e => {
+  state.sound = e.target.value; sampler.allOff();
+  try { localStorage.setItem('tutti.sound', state.sound); } catch { /* no storage */ }
+  preloadSamples(); state.dirty = true;
+};
 $('padToggle').onchange = e => setPad(e.target.checked);
 $('selbar').addEventListener('pointerdown', e => { const b = e.target.closest('button[data-op]'); if (!b) return; e.preventDefault(); batchOp(b.dataset.op); });
 $('selbar').addEventListener('click', e => { if (e.target.closest('button')) e.preventDefault(); });

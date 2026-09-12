@@ -1,0 +1,588 @@
+{
+ "instrument": "basses",
+ "source": "VSCO 2 Community Edition (CC0) by Versilian Studios, converted",
+ "license": "CC0-1.0",
+ "zones": [
+  {
+   "art": "piz",
+   "note": 28,
+   "layer": 0,
+   "file": "piz_n28_0.m4a",
+   "source": "Strings/Solo Contrabass/Pizz/BKCtbss_Pizz_E0_v1_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 28,
+   "layer": 1,
+   "file": "piz_n28_1.m4a",
+   "source": "Strings/Solo Contrabass/Pizz/BKCtbss_Pizz_E0_v3_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 30,
+   "layer": 0,
+   "file": "piz_n30_0.m4a",
+   "source": "Strings/Solo Contrabass/Pizz/BKCtbss_Pizz_F#0_v1_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 30,
+   "layer": 1,
+   "file": "piz_n30_1.m4a",
+   "source": "Strings/Solo Contrabass/Pizz/BKCtbss_Pizz_F#0_v3_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 31,
+   "layer": 0,
+   "file": "piz_n31_0.m4a",
+   "source": "Strings/Solo Contrabass/Pizz/BKCtbss_Pizz_G0_v1_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 31,
+   "layer": 1,
+   "file": "piz_n31_1.m4a",
+   "source": "Strings/Solo Contrabass/Pizz/BKCtbss_Pizz_G0_v3_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 34,
+   "layer": 0,
+   "file": "piz_n34_0.m4a",
+   "source": "Strings/Solo Contrabass/Pizz/BKCtbss_Pizz_A#0_v1_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 34,
+   "layer": 1,
+   "file": "piz_n34_1.m4a",
+   "source": "Strings/Solo Contrabass/Pizz/BKCtbss_Pizz_A#0_v3_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 36,
+   "layer": 0,
+   "file": "piz_n36_0.m4a",
+   "source": "Strings/Solo Contrabass/Pizz/BKCtbss_Pizz_C1_v1_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 36,
+   "layer": 1,
+   "file": "piz_n36_1.m4a",
+   "source": "Strings/Solo Contrabass/Pizz/BKCtbss_Pizz_C1_v3_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 38,
+   "layer": 1,
+   "file": "piz_n38_0.m4a",
+   "source": "Strings/Solo Contrabass/Pizz/BKCtbss_Pizz_D1_v1_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 40,
+   "layer": 0,
+   "file": "piz_n40_0.m4a",
+   "source": "Strings/Solo Contrabass/Pizz/BKCtbss_Pizz_E1_v1_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 40,
+   "layer": 1,
+   "file": "piz_n40_1.m4a",
+   "source": "Strings/Solo Contrabass/Pizz/BKCtbss_Pizz_E1_v3_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 42,
+   "layer": 1,
+   "file": "piz_n42_0.m4a",
+   "source": "Strings/Solo Contrabass/Pizz/BKCtbss_Pizz_F#1_v1_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 44,
+   "layer": 1,
+   "file": "piz_n44_0.m4a",
+   "source": "Strings/Solo Contrabass/Pizz/BKCtbss_Pizz_G#1_v1_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 45,
+   "layer": 1,
+   "file": "piz_n45_0.m4a",
+   "source": "Strings/Solo Contrabass/Pizz/BKCtbss_Pizz_A1_v1_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 49,
+   "layer": 1,
+   "file": "piz_n49_0.m4a",
+   "source": "Strings/Solo Contrabass/Pizz/BKCtbss_Pizz_C#2_v1_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 52,
+   "layer": 1,
+   "file": "piz_n52_0.m4a",
+   "source": "Strings/Solo Contrabass/Pizz/BKCtbss_Pizz_E2_v1_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 56,
+   "layer": 1,
+   "file": "piz_n56_0.m4a",
+   "source": "Strings/Solo Contrabass/Pizz/BKCtbss_Pizz_G#2_v1_rr1.wav"
+  },
+  {
+   "art": "piz",
+   "note": 59,
+   "layer": 1,
+   "file": "piz_n59_0.m4a",
+   "source": "Strings/Solo Contrabass/Pizz/BKCtbss_Pizz_B2_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 28,
+   "layer": 0,
+   "file": "stc_n28_0.m4a",
+   "source": "Strings/Solo Contrabass/Spic/BKCtbss_Spic_E0_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 28,
+   "layer": 1,
+   "file": "stc_n28_1.m4a",
+   "source": "Strings/Solo Contrabass/Spic/BKCtbss_Spic_E0_v3_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 30,
+   "layer": 0,
+   "file": "stc_n30_0.m4a",
+   "source": "Strings/Solo Contrabass/Spic/BKCtbss_Spic_F#0_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 30,
+   "layer": 1,
+   "file": "stc_n30_1.m4a",
+   "source": "Strings/Solo Contrabass/Spic/BKCtbss_Spic_F#0_v3_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 31,
+   "layer": 0,
+   "file": "stc_n31_0.m4a",
+   "source": "Strings/Solo Contrabass/Spic/BKCtbss_Spic_G0_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 31,
+   "layer": 1,
+   "file": "stc_n31_1.m4a",
+   "source": "Strings/Solo Contrabass/Spic/BKCtbss_Spic_G0_v3_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 34,
+   "layer": 0,
+   "file": "stc_n34_0.m4a",
+   "source": "Strings/Solo Contrabass/Spic/BKCtbss_Spic_A#0_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 34,
+   "layer": 1,
+   "file": "stc_n34_1.m4a",
+   "source": "Strings/Solo Contrabass/Spic/BKCtbss_Spic_A#0_v3_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 36,
+   "layer": 0,
+   "file": "stc_n36_0.m4a",
+   "source": "Strings/Solo Contrabass/Spic/BKCtbss_Spic_C1_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 36,
+   "layer": 1,
+   "file": "stc_n36_1.m4a",
+   "source": "Strings/Solo Contrabass/Spic/BKCtbss_Spic_C1_v3_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 38,
+   "layer": 0,
+   "file": "stc_n38_0.m4a",
+   "source": "Strings/Solo Contrabass/Spic/BKCtbss_Spic_D1_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 38,
+   "layer": 1,
+   "file": "stc_n38_1.m4a",
+   "source": "Strings/Solo Contrabass/Spic/BKCtbss_Spic_D1_v3_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 40,
+   "layer": 0,
+   "file": "stc_n40_0.m4a",
+   "source": "Strings/Solo Contrabass/Spic/BKCtbss_Spic_E1_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 40,
+   "layer": 1,
+   "file": "stc_n40_1.m4a",
+   "source": "Strings/Solo Contrabass/Spic/BKCtbss_Spic_E1_v3_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 42,
+   "layer": 1,
+   "file": "stc_n42_0.m4a",
+   "source": "Strings/Solo Contrabass/Spic/BKCtbss_Spic_F#1_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 44,
+   "layer": 1,
+   "file": "stc_n44_0.m4a",
+   "source": "Strings/Solo Contrabass/Spic/BKCtbss_Spic_G#1_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 45,
+   "layer": 1,
+   "file": "stc_n45_0.m4a",
+   "source": "Strings/Solo Contrabass/Spic/BKCtbss_Spic_A1_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 49,
+   "layer": 1,
+   "file": "stc_n49_0.m4a",
+   "source": "Strings/Solo Contrabass/Spic/BKCtbss_Spic_C#2_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 52,
+   "layer": 1,
+   "file": "stc_n52_0.m4a",
+   "source": "Strings/Solo Contrabass/Spic/BKCtbss_Spic_E2_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 56,
+   "layer": 1,
+   "file": "stc_n56_0.m4a",
+   "source": "Strings/Solo Contrabass/Spic/BKCtbss_Spic_G#2_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 59,
+   "layer": 1,
+   "file": "stc_n59_0.m4a",
+   "source": "Strings/Solo Contrabass/Spic/BKCtbss_Spic_B2_v1_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 30,
+   "layer": 0,
+   "file": "sus_n30_0.m4a",
+   "source": "Strings/Solo Contrabass/SusVib/BKCtbss_SusVib_F#0_v1_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 30,
+   "layer": 1,
+   "file": "sus_n30_1.m4a",
+   "source": "Strings/Solo Contrabass/SusVib/BKCtbss_SusVib_F#0_v3_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 31,
+   "layer": 0,
+   "file": "sus_n31_0.m4a",
+   "source": "Strings/Solo Contrabass/SusVib/BKCtbss_SusVib_G0_v1_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 31,
+   "layer": 1,
+   "file": "sus_n31_1.m4a",
+   "source": "Strings/Solo Contrabass/SusVib/BKCtbss_SusVib_G0_v3_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 34,
+   "layer": 0,
+   "file": "sus_n34_0.m4a",
+   "source": "Strings/Solo Contrabass/SusVib/BKCtbss_SusVib_A#0_v1_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 34,
+   "layer": 1,
+   "file": "sus_n34_1.m4a",
+   "source": "Strings/Solo Contrabass/SusVib/BKCtbss_SusVib_A#0_v3_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 36,
+   "layer": 0,
+   "file": "sus_n36_0.m4a",
+   "source": "Strings/Solo Contrabass/SusVib/BKCtbss_SusVib_C1_v1_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 36,
+   "layer": 1,
+   "file": "sus_n36_1.m4a",
+   "source": "Strings/Solo Contrabass/SusVib/BKCtbss_SusVib_C1_v3_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 38,
+   "layer": 0,
+   "file": "sus_n38_0.m4a",
+   "source": "Strings/Solo Contrabass/SusVib/BKCtbss_SusVib_D1_v1_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 38,
+   "layer": 1,
+   "file": "sus_n38_1.m4a",
+   "source": "Strings/Solo Contrabass/SusVib/BKCtbss_SusVib_D1_v3_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 40,
+   "layer": 0,
+   "file": "sus_n40_0.m4a",
+   "source": "Strings/Solo Contrabass/SusVib/BKCtbss_SusVib_E1_v1_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 40,
+   "layer": 1,
+   "file": "sus_n40_1.m4a",
+   "source": "Strings/Solo Contrabass/SusVib/BKCtbss_SusVib_E1_v3_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 42,
+   "layer": 0,
+   "file": "sus_n42_0.m4a",
+   "source": "Strings/Solo Contrabass/SusVib/BKCtbss_SusVib_F#1_v1_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 42,
+   "layer": 1,
+   "file": "sus_n42_1.m4a",
+   "source": "Strings/Solo Contrabass/SusVib/BKCtbss_SusVib_F#1_v3_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 44,
+   "layer": 0,
+   "file": "sus_n44_0.m4a",
+   "source": "Strings/Solo Contrabass/SusVib/BKCtbss_SusVib_G#1_v1_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 44,
+   "layer": 1,
+   "file": "sus_n44_1.m4a",
+   "source": "Strings/Solo Contrabass/SusVib/BKCtbss_SusVib_G#1_v3_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 45,
+   "layer": 0,
+   "file": "sus_n45_0.m4a",
+   "source": "Strings/Solo Contrabass/SusVib/BKCtbss_SusVib_A1_v1_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 45,
+   "layer": 1,
+   "file": "sus_n45_1.m4a",
+   "source": "Strings/Solo Contrabass/SusVib/BKCtbss_SusVib_A1_v3_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 49,
+   "layer": 0,
+   "file": "sus_n49_0.m4a",
+   "source": "Strings/Solo Contrabass/SusVib/BKCtbss_SusVib_C#2_v1_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 49,
+   "layer": 1,
+   "file": "sus_n49_1.m4a",
+   "source": "Strings/Solo Contrabass/SusVib/BKCtbss_SusVib_C#2_v3_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 52,
+   "layer": 0,
+   "file": "sus_n52_0.m4a",
+   "source": "Strings/Solo Contrabass/SusVib/BKCtbss_SusVib_E2_v1_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 52,
+   "layer": 1,
+   "file": "sus_n52_1.m4a",
+   "source": "Strings/Solo Contrabass/SusVib/BKCtbss_SusVib_E2_v3_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 56,
+   "layer": 0,
+   "file": "sus_n56_0.m4a",
+   "source": "Strings/Solo Contrabass/SusVib/BKCtbss_SusVib_G#2_v1_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 56,
+   "layer": 1,
+   "file": "sus_n56_1.m4a",
+   "source": "Strings/Solo Contrabass/SusVib/BKCtbss_SusVib_G#2_v3_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 59,
+   "layer": 0,
+   "file": "sus_n59_0.m4a",
+   "source": "Strings/Solo Contrabass/SusVib/BKCtbss_SusVib_B2_v1_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 59,
+   "layer": 1,
+   "file": "sus_n59_1.m4a",
+   "source": "Strings/Solo Contrabass/SusVib/BKCtbss_SusVib_B2_v3_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 28,
+   "layer": 0,
+   "file": "trm_n28_0.m4a",
+   "source": "Strings/Solo Contrabass/Trem/BKCtbss_Trem_E0_v1_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 28,
+   "layer": 1,
+   "file": "trm_n28_1.m4a",
+   "source": "Strings/Solo Contrabass/Trem/BKCtbss_Trem_E0_v2_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 31,
+   "layer": 0,
+   "file": "trm_n31_0.m4a",
+   "source": "Strings/Solo Contrabass/Trem/BKCtbss_Trem_G0_v1_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 31,
+   "layer": 1,
+   "file": "trm_n31_1.m4a",
+   "source": "Strings/Solo Contrabass/Trem/BKCtbss_Trem_G0_v2_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 36,
+   "layer": 0,
+   "file": "trm_n36_0.m4a",
+   "source": "Strings/Solo Contrabass/Trem/BKCtbss_Trem_C1_v1_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 36,
+   "layer": 1,
+   "file": "trm_n36_1.m4a",
+   "source": "Strings/Solo Contrabass/Trem/BKCtbss_Trem_C1_v2_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 40,
+   "layer": 0,
+   "file": "trm_n40_0.m4a",
+   "source": "Strings/Solo Contrabass/Trem/BKCtbss_Trem_E1_v1_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 40,
+   "layer": 1,
+   "file": "trm_n40_1.m4a",
+   "source": "Strings/Solo Contrabass/Trem/BKCtbss_Trem_E1_v2_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 44,
+   "layer": 0,
+   "file": "trm_n44_0.m4a",
+   "source": "Strings/Solo Contrabass/Trem/BKCtbss_Trem_G#1_v1_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 44,
+   "layer": 1,
+   "file": "trm_n44_1.m4a",
+   "source": "Strings/Solo Contrabass/Trem/BKCtbss_Trem_G#1_v2_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 52,
+   "layer": 0,
+   "file": "trm_n52_0.m4a",
+   "source": "Strings/Solo Contrabass/Trem/BKCtbss_Trem_E2_v1_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 52,
+   "layer": 1,
+   "file": "trm_n52_1.m4a",
+   "source": "Strings/Solo Contrabass/Trem/BKCtbss_Trem_E2_v2_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 56,
+   "layer": 0,
+   "file": "trm_n56_0.m4a",
+   "source": "Strings/Solo Contrabass/Trem/BKCtbss_Trem_G#2_v1_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 56,
+   "layer": 1,
+   "file": "trm_n56_1.m4a",
+   "source": "Strings/Solo Contrabass/Trem/BKCtbss_Trem_G#2_v2_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 59,
+   "layer": 0,
+   "file": "trm_n59_0.m4a",
+   "source": "Strings/Solo Contrabass/Trem/BKCtbss_Trem_B2_v1_rr1.wav"
+  },
+  {
+   "art": "trm",
+   "note": 59,
+   "layer": 1,
+   "file": "trm_n59_1.m4a",
+   "source": "Strings/Solo Contrabass/Trem/BKCtbss_Trem_B2_v2_rr1.wav"
+  }
+ ]
+}

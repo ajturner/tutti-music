@@ -4,6 +4,7 @@ import { effectiveKey } from '../core/scales.js';
 import { patMeter } from '../core/song.js';
 import { Scheduler } from '../core/scheduler.js';
 import { SynthSink } from '../core/synth.js';
+import { SamplerSink } from '../core/sampler.js';
 import { MidiSink } from '../core/midi.js';
 import { EXAMPLES } from '../core/examples.js';
 
@@ -42,15 +43,32 @@ export const state = {
   clipboard: null,
   queued: null,
   mixer: false,          // mixer sidebar shown
-  record: false,         // real-time MIDI record while the pattern loops          // pattern index waiting to take over when the current loop ends
+  record: false,         // real-time MIDI record while the pattern loops
+  sound: 'samples',      // preview sound: 'samples' (bundled orchestra, synth fallback) or 'synth'
+  loadingSamples: null,  // 'violins-1 12/44' while samples decode          // pattern index waiting to take over when the current loop ends
 };
 state.song = state.songs[0];
 
 export const synth = new SynthSink();
+// Sampled orchestra over the synth: plays bundled samples when it has them, else the synth.
+export const sampler = new SamplerSink(synth, new URL('../../samples/', import.meta.url).href);
 export const midi = new MidiSink();
+export const previewSink = () => (state.sound === 'samples' ? sampler : synth);
+// Audition one note through whichever preview sound is active.
+export function auditionPreview(ins, pitch, art) {
+  if (!state.preview) return;
+  const a = art || ins.articulations[0];
+  if (state.sound === 'samples') sampler.audition(ins.id, ins.family, pitch, a); else synth.audition(ins.family, pitch, a);
+}
+// Fetch and decode the samples every track of the song needs; progress goes to the status line.
+export function preloadSamples(song = state.song) {
+  if (state.sound !== 'samples') return Promise.resolve();
+  const ids = [...new Set(song.tracks.map(t => t.instrument))];
+  return sampler.preload(ids).then(() => { state.loadingSamples = null; state.dirty = true; });
+}
 export const sched = new Scheduler(() => {
   const s = [];
-  if (state.preview) s.push(synth);
+  if (state.preview) s.push(previewSink());
   if (midi.out) s.push(midi);
   return s;
 });
@@ -66,3 +84,6 @@ export const rowsPerBeat = () => { const [, unit] = patMeter(curPat()); return M
 export const rowsPerBar = () => patMeter(curPat())[0] * rowsPerBeat();
 // In compound meters (6/8, 9/8, 12/8) the felt beat is every three written beats.
 export const rowsPerStrongBeat = () => { const [beats, unit] = patMeter(curPat()); return rowsPerBeat() * (unit === 8 && beats % 3 === 0 ? 3 : 1); };
+
+sampler.onProgress = (id, done, total) => { state.loadingSamples = done < total ? id + ' ' + done + '/' + total : null; state.dirty = true; };
+try { const v = localStorage.getItem('tutti.sound'); if (v === 'synth' || v === 'samples') state.sound = v; } catch { /* no storage */ }

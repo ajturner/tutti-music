@@ -1,0 +1,189 @@
+{
+ "instrument": "flute",
+ "source": "VSCO 2 Community Edition (CC0) by Versilian Studios, converted",
+ "license": "CC0-1.0",
+ "zones": [
+  {
+   "art": "stc",
+   "note": 69,
+   "layer": 0,
+   "file": "stc_n69_0.m4a",
+   "source": "Woodwinds/Flute/stac/LDFlute_stac_A3_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 69,
+   "layer": 1,
+   "file": "stc_n69_1.m4a",
+   "source": "Woodwinds/Flute/stac/LDFlute_stac_A3_v3_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 72,
+   "layer": 0,
+   "file": "stc_n72_0.m4a",
+   "source": "Woodwinds/Flute/stac/LDFlute_stac_C4_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 72,
+   "layer": 1,
+   "file": "stc_n72_1.m4a",
+   "source": "Woodwinds/Flute/stac/LDFlute_stac_C4_v4_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 76,
+   "layer": 0,
+   "file": "stc_n76_0.m4a",
+   "source": "Woodwinds/Flute/stac/LDFlute_stac_E4_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 76,
+   "layer": 1,
+   "file": "stc_n76_1.m4a",
+   "source": "Woodwinds/Flute/stac/LDFlute_stac_E4_v3_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 81,
+   "layer": 0,
+   "file": "stc_n81_0.m4a",
+   "source": "Woodwinds/Flute/stac/LDFlute_stac_A4_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 81,
+   "layer": 1,
+   "file": "stc_n81_1.m4a",
+   "source": "Woodwinds/Flute/stac/LDFlute_stac_A4_v3_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 84,
+   "layer": 0,
+   "file": "stc_n84_0.m4a",
+   "source": "Woodwinds/Flute/stac/LDFlute_stac_C5_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 84,
+   "layer": 1,
+   "file": "stc_n84_1.m4a",
+   "source": "Woodwinds/Flute/stac/LDFlute_stac_C5_v3_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 88,
+   "layer": 0,
+   "file": "stc_n88_0.m4a",
+   "source": "Woodwinds/Flute/stac/LDFlute_stac_E5_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 88,
+   "layer": 1,
+   "file": "stc_n88_1.m4a",
+   "source": "Woodwinds/Flute/stac/LDFlute_stac_E5_v3_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 93,
+   "layer": 0,
+   "file": "stc_n93_0.m4a",
+   "source": "Woodwinds/Flute/stac/LDFlute_stac_A5_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 93,
+   "layer": 1,
+   "file": "stc_n93_1.m4a",
+   "source": "Woodwinds/Flute/stac/LDFlute_stac_A5_v3_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 96,
+   "layer": 0,
+   "file": "stc_n96_0.m4a",
+   "source": "Woodwinds/Flute/stac/LDFlute_stac_C6_v1_rr1.wav"
+  },
+  {
+   "art": "stc",
+   "note": 96,
+   "layer": 1,
+   "file": "stc_n96_1.m4a",
+   "source": "Woodwinds/Flute/stac/LDFlute_stac_C6_v2_rr1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 60,
+   "layer": 1,
+   "file": "sus_n60_0.m4a",
+   "source": "Woodwinds/Flute/susvib/LDFlute_susvib_C3_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 64,
+   "layer": 1,
+   "file": "sus_n64_0.m4a",
+   "source": "Woodwinds/Flute/susvib/LDFlute_susvib_E3_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 69,
+   "layer": 1,
+   "file": "sus_n69_0.m4a",
+   "source": "Woodwinds/Flute/susvib/LDFlute_susvib_A3_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 72,
+   "layer": 1,
+   "file": "sus_n72_0.m4a",
+   "source": "Woodwinds/Flute/susvib/LDFlute_susvib_C4_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 76,
+   "layer": 1,
+   "file": "sus_n76_0.m4a",
+   "source": "Woodwinds/Flute/susvib/LDFlute_susvib_E4_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 81,
+   "layer": 1,
+   "file": "sus_n81_0.m4a",
+   "source": "Woodwinds/Flute/susvib/LDFlute_susvib_A4_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 84,
+   "layer": 1,
+   "file": "sus_n84_0.m4a",
+   "source": "Woodwinds/Flute/susvib/LDFlute_susvib_C5_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 88,
+   "layer": 1,
+   "file": "sus_n88_0.m4a",
+   "source": "Woodwinds/Flute/susvib/LDFlute_susvib_E5_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 93,
+   "layer": 1,
+   "file": "sus_n93_0.m4a",
+   "source": "Woodwinds/Flute/susvib/LDFlute_susvib_A5_v1_1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 96,
+   "layer": 1,
+   "file": "sus_n96_0.m4a",
+   "source": "Woodwinds/Flute/susvib/LDFlute_susvib_C6_v1_1.wav"
+  }
+ ]
+}

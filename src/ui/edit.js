@@ -5,7 +5,7 @@ import { laneRemove, laneSet, patTrack } from '../core/song.js';
 import { setNote as coreSetNote, noteAt, noteCovering, notesStartingAt, removeNotesAt, resizeNote, fxAtRow, setFx, removeFx } from '../core/edit.js';
 import { FX_COMMANDS, FX_DEFAULTS } from '../core/render.js';
 import { transposeDiatonic } from '../core/scales.js';
-import { $, KEYMAP, activeKey, curPat, curTrack, midi, state, synth } from './state.js';
+import { $, KEYMAP, activeKey, auditionPreview, curPat, curTrack, midi, state } from './state.js';
 import { currentCell } from './layout.js';
 import { syncPatternUI, syncSongUI } from './sync.js';
 import { markEdited } from './storage.js';
@@ -59,7 +59,7 @@ export function setNote(pat, trackId, col, tick, pitch) {
 }
 export function audition(track, pitch, art) {
   const ins = INST[track.instrument];
-  if (state.preview) synth.audition(ins.family, pitch, art || ins.articulations[0]);
+  auditionPreview(ins, pitch, art);
   if (midi.out) midi.audition(track.channel - 1, pitch);
 }
 export function typingFor(cell, digits) {

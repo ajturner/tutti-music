@@ -4,7 +4,7 @@ import { putNote, noteAt, maxLength } from '../core/edit.js';
 import { markEdited } from './storage.js';
 import { INST } from '../core/instruments.js';
 import { laneSet, patTrack } from '../core/song.js';
-import { $, curPat, curTrack, midi, sched, state, synth } from './state.js';
+import { $, auditionPreview, curPat, curTrack, midi, sched, state } from './state.js';
 import { currentCell } from './layout.js';
 import { enterPitch, moveRow } from './edit.js';
 import { esc } from './sync.js';
@@ -57,7 +57,7 @@ export function recordPitch(pitch, vel) {
   if (col >= tr.columns) tr.columns = col + 1;
   enterPitch(pitch, vel, col);
   const ins = INST[tr.instrument];
-  if (state.preview) synth.audition(ins.family, pitch, ins.articulations[0]);
+  auditionPreview(ins, pitch, null);
   midiRec.timer = setTimeout(() => { midiRec.timer = 0; moveRow(state.step); }, 80);
   state.dirty = true;
 }

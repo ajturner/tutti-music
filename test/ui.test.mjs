@@ -10,7 +10,7 @@ import path from 'node:path';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const server = createServer(async (req, res) => {
   const file = path.join(root, req.url === '/' ? 'index.html' : decodeURIComponent(req.url.split('?')[0]));
-  const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json' };
+  const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.m4a': 'audio/mp4' };
   try { res.setHeader('Content-Type', types[path.extname(file)] || 'application/octet-stream'); res.end(await readFile(file)); }
   catch { res.statusCode = 404; res.end(); }
 });
@@ -354,6 +354,15 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   await page.keyboard.press('Escape'); await page.waitForTimeout(30);
   check('record: stop disarms', await page.evaluate(() => !state.record && !sched.playing));
   await page.evaluate(() => { state.preview = true; curPat().tracks.fl.events = []; state.song.tracks[0].columns = 1; });
+  // --- sampled orchestra ---
+  check('samples: sound selector defaults to samples', (await page.inputValue('#sound')) === 'samples' && (await page.evaluate(() => state.sound)) === 'samples');
+  const loaded = await page.evaluate(async () => { await tutti.sampler.load('violins-1'); await tutti.sampler.load('synth-arp'); return { v1: tutti.sampler.has('violins-1'), zones: (tutti.sampler.maps.get('violins-1') || {}).zones?.length || 0, arp: tutti.sampler.has('synth-arp'), known: tutti.sampler.known('synth-arp') }; });
+  check('samples: violins load and decode, synth instruments fall back', loaded.v1 && loaded.zones > 20 && !loaded.arp && loaded.known, JSON.stringify(loaded));
+  const picked = await page.evaluate(() => tutti.pickZones(tutti.sampler.maps.get('violins-1'), 'piz', 64, 100, 90).map(p => [p.zone.art, p.zone.note, +p.gain.toFixed(2)]));
+  check('samples: pizzicato zones picked near the pitch', picked.length === 2 && picked.every(p => p[0] === 'piz' && Math.abs(p[1] - 64) <= 4), JSON.stringify(picked));
+  await page.selectOption('#sound', 'synth'); await page.waitForTimeout(30);
+  check('samples: switching to synth persists', (await page.evaluate(() => state.sound + '/' + localStorage.getItem('tutti.sound'))) === 'synth/synth');
+  await page.selectOption('#sound', 'samples');
   // gamepad: mock, press down then A tap
   await page.evaluate(() => {
     window.__gp = { id: 'Mock Pad (STANDARD GAMEPAD)', connected: true, mapping: 'standard', axes: [0, 0], buttons: Array.from({ length: 17 }, () => ({ pressed: false, value: 0 })) };
