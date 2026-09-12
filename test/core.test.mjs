@@ -3,7 +3,7 @@ import { PPQ, noteName, clamp } from '../src/core/constants.js';
 import { INSTRUMENTS, INST } from '../src/core/instruments.js';
 import { newSong, newPattern, patTrack, laneSet, laneValueAt, normalizeSong, SONG_FORMAT } from '../src/core/song.js';
 import { renderSong, TimeMap, TYPE_ORDER, rowTicks, tickMapper, rowAtTick, applyFx, expShape } from '../src/core/render.js';
-import { addTrack, removeTrack, moveTrack, setTrackInstrument, freeChannel } from '../src/core/song.js';
+import { addTrack, removeTrack, moveTrack, setTrackInstrument, freeChannel, normalizeOrder, orderText, parseOrderText, trackDataFor } from '../src/core/song.js';
 import { inScale, transposeDiatonic, snapToScale, degreeOf, effectiveKey } from '../src/core/scales.js';
 import { Scheduler } from '../src/core/scheduler.js';
 import { midiFileBytes } from '../src/core/midifile.js';
@@ -29,10 +29,10 @@ check('lane: step holds', laneValueAt(pts, 480) === 40);
 
 // New song and normalisation
 const song = newSong();
-check('newSong carries format marker and uid', song.format === SONG_FORMAT && song.version === 1 && song.$schema.endsWith('tutti-song.schema.json') && typeof song.uid === 'string' && song.uid.length > 8);
+check('newSong carries format marker and uid', song.format === SONG_FORMAT && song.version === 2 && song.$schema.endsWith('tutti-song.schema.json') && typeof song.uid === 'string' && song.uid.length > 8);
 const legacy = JSON.parse(JSON.stringify(song)); delete legacy.format; delete legacy.version; delete legacy.$schema; delete legacy.patterns[0].meter;
 const norm = normalizeSong(legacy, 'x');
-check('normalizeSong fills legacy fields', norm.format === SONG_FORMAT && norm.patterns[0].meter[0] === 4);
+check('normalizeSong fills legacy fields', norm.format === SONG_FORMAT && norm.version === 2 && norm.patterns[0].meter[0] === 4 && typeof norm.order[0] === 'object');
 let threw = false; try { normalizeSong({ title: 'nope' }); } catch { threw = true; }
 check('normalizeSong rejects non-songs', threw);
 
@@ -166,6 +166,31 @@ check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[1
   check('tracks: piz falls back on flute', s.patterns[0].tracks[t.id].events[0].art === null);
   check('tracks: move', moveTrack(s, n, -1) && s.tracks[n - 1].id === t.id && !moveTrack(s, 0, -1));
   check('tracks: remove drops pattern data', removeTrack(s, t.id) && !s.tracks.some(x => x.id === t.id) && !s.patterns[0].tracks[t.id]);
+}
+
+// Order entries, repeats and chains
+{
+  const s = newSong(); const B = newPattern('B', 16, 240); s.patterns.push(B);
+  line(s.patterns[0], 'fl', 0, 0, 16, 'C5 D5 E5 F5');      // 4-bar melody
+  line(B, 'cb', 0, 0, 4, 'A1 . E2 .');                      // 1-bar bass figure
+  s.order = [0, 1, 0];
+  const o = normalizeOrder(s);
+  check('order: integers normalise to entries', o.length === 3 && o[0].pattern === 0 && o[0].repeat === 1 && Object.keys(o[0].tracks).length === 0);
+  s.order[0].repeat = 2; s.order[0].tracks = { cb: 1 };
+  check('order: text form', orderText(s) === '0x2 1 0');
+  const parsed = parseOrderText('0x3 0 1', s);
+  check('order: parse keeps chains on unchanged positions', parsed[0].repeat === 3 && parsed[0].tracks.cb === 1 && parsed[1].tracks.cb == null && parsed.length === 3);
+  const td = trackDataFor(s, s.order[0], 'cb');
+  check('chain: short pattern loops to fill the entry', td.events.length === 8 && td.events[7].tick === 13440 && td.events.every(e => e.tick + e.len <= 64 * 240), JSON.stringify(td.events.map(e => e.tick)));
+  const r = renderSong(s);
+  const cbOns = r.events.filter(e => e.track === 'cb' && e.type === 'on');
+  const flOns = r.events.filter(e => e.track === 'fl' && e.type === 'on');
+  check('chain: render length is entries × repeats', r.lengthTicks === (64 * 2 + 16 + 64) * 240 && r.starts.length === 4 && r.starts[1].repeat === 1);
+  check('chain: bass figure sounds eight times across the repeated entry, melody twice', cbOns.filter(e => e.tick < 128 * 240).length === 16 && flOns.filter(e => e.tick < 128 * 240).length === 8, cbOns.length + ' ' + flOns.length);
+  check('chain: entry 2 plays pattern B itself', r.starts[2].pattern === 1 && r.starts[2].tick === 128 * 240);
+  const st = newSong(); st.order = [{ pattern: 5 }, 0, { pattern: 0, tracks: { fl: 0, ob: 9 } }];
+  normalizeOrder(st);
+  check('order: invalid patterns and self/missing chains are dropped', st.order.length === 2 && Object.keys(st.order[1].tracks).length === 0);
 }
 
 // Scheduler: solo gating and live queue

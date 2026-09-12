@@ -32,9 +32,9 @@ export function draw() {
   ctx.font = view.FONT; ctx.textBaseline = 'middle';
   const song = state.song;
   const playTick = sched.positionTick();
-  let playRow = null, playPat = null;
+  let playRow = null, playPat = null, playStart = null;
   if (playTick != null && sched.rendered) {
-    for (const s of sched.rendered.starts) if (playTick >= s.tick && playTick < s.tick + s.rows * s.ticksPerRow) { playPat = s.pattern; playRow = rowAtTick(song.patterns[s.pattern], playTick - s.tick); }
+    for (const s of sched.rendered.starts) if (playTick >= s.tick && playTick < s.tick + s.rows * s.ticksPerRow) { playPat = s.pattern; playStart = s; playRow = rowAtTick(song.patterns[s.pattern], playTick - s.tick); }
     if (state.follow && playPat != null && playPat !== state.pat) { state.pat = playPat; syncPatternUI(); }
   }
   const pat = curPat();
@@ -162,6 +162,8 @@ export function draw() {
     ctx.fillText(tr.name, lay.x, nameY);
     if (tr.mute) ctx.fillRect(lay.x, nameY, ctx.measureText(tr.name).width, 1);
     if (tr.solo) { ctx.fillStyle = COLORS.accent; ctx.fillText('S', lay.x + ctx.measureText(tr.name).width + view.charW * 0.6, nameY); }
+    // During song playback a chained track plays another pattern's data: show which.
+    if (playStart && playStart.tracks && playStart.tracks[tr.id] != null) { const p = song.patterns[playStart.tracks[tr.id]]; ctx.fillStyle = COLORS.accent; ctx.fillText('\u25b8' + (p ? p.name : '?'), lay.x + ctx.measureText(tr.name).width + view.charW * (tr.solo ? 2 : 0.6), nameY); }
     const tag = 'ch' + tr.channel, tagX = lay.x + lay.w - view.charW * (tag.length + 1.5);
     if (!labelEnd.has(ti) || labelEnd.get(ti) <= tagX) { ctx.fillStyle = COLORS.num; ctx.fillText(tag, tagX, bandY); }
   });

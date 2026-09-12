@@ -6,7 +6,7 @@ import { queuePattern, toggleRecord } from './transport.js';
 import { GROOVES, syncKeyUI, syncGrooveUI } from './sync.js';
 import { padSigReset } from './pad.js';
 import { clamp } from '../core/constants.js';
-import { newPattern, newSong, patMeter, normalizeSong } from '../core/song.js';
+import { newPattern, newSong, normalizeSong, orderEntry, orderText, parseOrderText, patMeter } from '../core/song.js';
 import { midiFileBytes } from '../core/midifile.js';
 import { $, curPat, state, synth } from './state.js';
 import { setOctave, setStep, withSongUndo, withUndo } from './edit.js';
@@ -38,7 +38,7 @@ export function choosePattern(i) {
 }
 $('pattern').onchange = e => choosePattern(parseInt(e.target.value, 10));
 arranger.onPick = choosePattern;
-arranger.onChange = () => { $('order').value = state.song.order.join(' '); };
+arranger.onChange = () => { $('order').value = orderText(state.song); };
 wireArranger();
 wireTracks();
 // The key selects edit the pattern's key when "this pattern" is ticked, else the song's.
@@ -67,15 +67,15 @@ $('deleteSong').onclick = () => { stopAll(); selectSong(deleteCurrentSong()); };
 $('addPattern').onclick = () => {
   const p = state.song.patterns;
   p.push(newPattern(String.fromCharCode(65 + (p.length % 26)), curPat().rows, curPat().ticksPerRow, patMeter(curPat())));
-  state.song.order.push(p.length - 1); state.pat = p.length - 1; syncPatternUI(); state.dirty = true;
+  state.song.order.push(orderEntry(p.length - 1)); state.pat = p.length - 1; syncPatternUI(); state.dirty = true;
 };
 $('rows').onchange = e => { const n = clamp(parseInt(e.target.value, 10) || 64, 1, 512); withUndo(() => { curPat().rows = n; }); syncPatternUI(); };
 $('tpr').onchange = e => { const n = parseInt(e.target.value, 10); withUndo(() => { curPat().ticksPerRow = n; }); };
 $('meterNum').onchange = e => { const n = clamp(parseInt(e.target.value, 10) || 4, 1, 16); withUndo(() => { curPat().meter = [n, patMeter(curPat())[1]]; }); syncPatternUI(); };
 $('meterDen').onchange = e => { const n = parseInt(e.target.value, 10); withUndo(() => { curPat().meter = [patMeter(curPat())[0], n]; }); };
 $('order').onchange = e => {
-  const o = e.target.value.split(/[\s,]+/).map(s => parseInt(s, 10)).filter(n => Number.isInteger(n) && state.song.patterns[n]);
-  withSongUndo(() => { state.song.order = o.length ? o : [0]; }); e.target.value = state.song.order.join(' '); syncArranger();
+  const o = parseOrderText(e.target.value, state.song);
+  withSongUndo(() => { state.song.order = o; }); e.target.value = orderText(state.song); syncArranger();
 };
 $('octave').onchange = e => setOctave(parseInt(e.target.value, 10) || 0);
 $('step').onchange = e => setStep(parseInt(e.target.value, 10) || 0);

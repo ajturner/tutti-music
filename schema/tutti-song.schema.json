@@ -22,8 +22,11 @@
     },
     "version": {
       "type": "integer",
-      "const": 1,
-      "description": "Format version. Incremented only for incompatible changes."
+      "enum": [
+        1,
+        2
+      ],
+      "description": "Format version. 2 adds order entries with repeat counts and per-track chains."
     },
     "title": {
       "type": "string"
@@ -42,10 +45,18 @@
       "type": "array",
       "minItems": 1,
       "items": {
-        "type": "integer",
-        "minimum": 0
+        "oneOf": [
+          {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Pattern index (version 1 form; plays once)."
+          },
+          {
+            "$ref": "#/$defs/orderEntry"
+          }
+        ]
       },
-      "description": "Pattern indices in playback sequence. Indices must exist in patterns."
+      "description": "Playback sequence. Each entry plays a pattern a number of times; tracks may follow another pattern (chains)."
     },
     "patterns": {
       "type": "array",
@@ -407,6 +418,34 @@
             "whole-tone",
             "chromatic"
           ]
+        }
+      }
+    },
+    "orderEntry": {
+      "type": "object",
+      "required": [
+        "pattern"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "pattern": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Pattern that sets the entry's length, tempo lane and groove, and plays on every track not overridden."
+        },
+        "repeat": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64,
+          "default": 1
+        },
+        "tracks": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "description": "Track id to pattern index: that track plays the other pattern's data, looped or clipped to the entry's length."
         }
       }
     }

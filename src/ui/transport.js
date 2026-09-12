@@ -14,8 +14,8 @@ export function playPattern(fromCursor) {
 export function playSong() {
   if (state.preview) synth.ensure();
   const r = renderSong(state.song);
-  const oi = state.song.order.indexOf(state.pat);
-  sched.play(state.song, r, { loop: false, startTick: oi >= 0 && r.starts[oi] ? r.starts[oi].tick : 0 });
+  const st = r.starts.find(s => s.pattern === state.pat);   // first appearance of the open pattern
+  sched.play(state.song, r, { loop: false, startTick: st ? st.tick : 0 });
   state.dirty = true;
 }
 export function stopAll() { sched.stop(); state.queued = null; state.record = false; syncRecordUI(); state.dirty = true; }

@@ -51,7 +51,7 @@
     </div>
     <div class="group arrgrp" data-label="arrangement">
       <span id="arranger" title="Song order"></span>
-      <input id="order" type="text" value="0" title="Pattern indices played in sequence, as text">
+      <input id="order" type="text" value="0" title="Order as text: pattern index with optional xN repeat, e.g. 0x2 1 0">
     </div>
     <div class="group keygrp" data-label="key">
       <select id="keyRoot" title="Tonic"><option value="">none</option></select>
@@ -88,6 +88,13 @@
     <tbody id="tracksBody"></tbody>
   </table>
   <div class="dlgFoot"><select id="trackAddInst" title="Instrument for the new track"></select><button id="trackAdd">Add track</button></div>
+</dialog>
+<dialog id="chainDlg" aria-label="Repeats and chains">
+  <div class="dlgHead"><b id="chainTitle">Entry</b><span class="spacer"></span><button id="chainCancel" title="Close">✕</button></div>
+  <p class="dim">Repeat this entry, and let any track follow another pattern instead (looped or clipped to this entry's length), like independent chains.</p>
+  <label>repeat <input id="chainRepeat" type="number" min="1" max="64" value="1" style="width:4em"></label>
+  <table id="chainTable"><thead><tr><th>track</th><th>plays</th></tr></thead><tbody id="chainBody"></tbody></table>
+  <div class="dlgFoot"><span class="spacer"></span><button id="chainOk" class="primary">Apply</button></div>
 </dialog>
 <div id="selbar" hidden aria-label="Selection">
   <span id="selInfo"></span>

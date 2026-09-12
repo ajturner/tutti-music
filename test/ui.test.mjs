@@ -253,13 +253,19 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   // --- arranger ---
   await page.evaluate(() => { if (state.song.patterns.length < 2) document.getElementById('addPattern').click(); state.pat = 0; state.song.order = [0, 1, 0]; tutti.syncPatternUI(); });
   check('arranger: one chip per order entry', (await page.$$eval('#arranger .chip', c => c.length)) === 3);
-  await page.click('#arranger .chip:nth-child(2)'); await page.waitForTimeout(30);
+  await page.click('#arranger .chip:nth-child(2)', { position: { x: 6, y: 6 } }); await page.waitForTimeout(30);
   check('arranger: click opens the pattern', (await page.evaluate(() => state.pat)) === 1);
   await page.click('#arranger #arrAdd'); await page.waitForTimeout(30);
-  check('arranger: + appends the current pattern', (await page.evaluate(() => state.song.order.join(' '))) === '0 1 0 1' && (await page.inputValue('#order')) === '0 1 0 1');
-  await page.click('#arranger .chip:nth-child(3) button'); await page.waitForTimeout(30);
-  check('arranger: × removes an entry', (await page.evaluate(() => state.song.order.join(' '))) === '0 1 1');
-  await page.evaluate(() => { state.song.order = [0]; state.pat = 0; tutti.syncPatternUI(); });
+  check('arranger: + appends the current pattern', (await page.evaluate(() => tutti.orderText(state.song))) === '0 1 0 1' && (await page.inputValue('#order')) === '0 1 0 1');
+  await page.click('#arranger .chip:nth-child(3) button[data-x]'); await page.waitForTimeout(30);
+  check('arranger: × removes an entry', (await page.evaluate(() => tutti.orderText(state.song))) === '0 1 1');
+  await page.click('#arranger .chip:nth-child(1) button[data-edit]'); await page.waitForTimeout(50);
+  await page.fill('#chainRepeat', '2'); await page.selectOption('#chainBody select[data-track="cb"]', '1'); await page.click('#chainOk'); await page.waitForTimeout(50);
+  const chain = await page.evaluate(() => ({ text: tutti.orderText(state.song), e: state.song.order[0], chip: document.querySelector('#arranger .chip').textContent, len: tutti.renderSong(state.song).lengthTicks }));
+  check('arranger: dialog sets repeat and a chain', chain.e.repeat === 2 && chain.e.tracks.cb === 1 && chain.text.startsWith('0x2') && chain.chip.includes('×2') && chain.chip.includes('⛓'), JSON.stringify(chain));
+  await page.fill('#order', '0x3 1'); await page.dispatchEvent('#order', 'change'); await page.waitForTimeout(30);
+  check('arranger: order text with repeats keeps the chain', await page.evaluate(() => state.song.order.length === 2 && state.song.order[0].repeat === 3 && state.song.order[0].tracks.cb === 1));
+  await page.evaluate(() => { state.song.order = [0]; tutti.normalizeOrder(state.song); state.pat = 0; tutti.syncPatternUI(); });
   check('version: footer shows semver', /^v\d+\.\d+\.\d+$/.test(await page.textContent('#version')));
   // --- header groups and mixer sidebar ---
   const labels = await page.$$eval('header .group[data-label]', g => g.map(x => x.dataset.label));

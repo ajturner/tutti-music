@@ -2,7 +2,8 @@
 import { DEFAULT_TRACKS, INST } from './instruments.js';
 
 // ---- Song model ------------------------------------------------------------
-// song    { title, bpm, order:[patternIndex...], patterns:[...], tracks:[...] }
+// song    { title, bpm, order:[entry...], patterns:[...], tracks:[...] }
+// entry   { pattern, repeat, tracks:{ trackId: patternIndex } }  a plain integer is accepted as { pattern: n }
 // pattern { name, rows, ticksPerRow, meter:[beats, unit], tempo:[point], tracks:{ trackId: { events:[event], dyn:[point], expr:[point] } } }
 // event   { tick, len, pitch, vel, col, art }   tick/len in ticks relative to the pattern; col = note column
 // point   { tick, value, interp }               interp 'lin' ramps to the next point, 'step' holds
@@ -13,7 +14,7 @@ export const patMeter = pat => pat.meter || [4, 4];
 // File format identity. Saved files carry these so other tools can recognise them; see schema/tutti-song.schema.json.
 export const SONG_SCHEMA = 'https://ajturner.github.io/tutti-music/schema/tutti-song.schema.json';
 export const SONG_FORMAT = 'tutti-song';
-export const SONG_VERSION = 1;
+export const SONG_VERSION = 2;   // 2: order entries may be objects with repeat counts and per-track chains
 export const newUid = () => (globalThis.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 export function newSong() {
   return { $schema: SONG_SCHEMA, format: SONG_FORMAT, version: SONG_VERSION, uid: newUid(), title: 'Untitled', notes: '', bpm: 100, key: null, order: [0], patterns: [newPattern('A')], tracks: DEFAULT_TRACKS.map(t => Object.assign({}, t)) };
@@ -27,6 +28,7 @@ export function normalizeSong(s, fallbackTitle) {
   const out = Object.assign({ $schema: SONG_SCHEMA, format: SONG_FORMAT, version: SONG_VERSION, notes: '', bpm: 100, key: null, order: [0] }, s);
   if (!out.uid) out.uid = newUid();
   if (!out.title) out.title = fallbackTitle || 'Untitled';
+  normalizeOrder(out);
   for (const pat of out.patterns) {
     if (!pat.meter) pat.meter = [4, 4];
     if (!pat.tempo) pat.tempo = [];
@@ -96,4 +98,44 @@ export function setTrackInstrument(song, id, instrumentId) {
   tr.instrument = instrumentId;
   for (const p of song.patterns) { const pt = p.tracks[id]; if (pt) for (const e of pt.events) if (e.art && !ins.articulations.includes(e.art)) e.art = null; }
   return true;
+}
+
+// ---- Song order: entries with repeat counts and per-track chains ----------------------------------
+// An entry plays its pattern `repeat` times; `tracks` maps a track id to another pattern whose data
+// that track plays instead (looped or clipped to the entry's length), like independent chains.
+export const orderEntry = e => typeof e === 'number'
+  ? { pattern: e, repeat: 1, tracks: {} }
+  : { pattern: e.pattern | 0, repeat: Math.min(64, Math.max(1, e.repeat | 0 || 1)), tracks: Object.assign({}, e.tracks || {}) };
+export function normalizeOrder(song) {
+  const list = (Array.isArray(song.order) ? song.order : [0]).map(orderEntry).filter(e => song.patterns[e.pattern]);
+  song.order = list.length ? list : [orderEntry(0)];
+  for (const e of song.order) for (const id of Object.keys(e.tracks)) if (!song.patterns[e.tracks[id]] || e.tracks[id] === e.pattern) delete e.tracks[id];
+  return song.order;
+}
+// Text form: "0x2 1 0" (pattern index, optional xN repeat). Overrides survive when the pattern at a position is unchanged.
+export function orderText(song) { return normalizeOrder(song).map(e => e.pattern + (e.repeat > 1 ? 'x' + e.repeat : '')).join(' '); }
+export function parseOrderText(text, song) {
+  const prev = normalizeOrder(song), out = [];
+  for (const tok of String(text).split(/[\s,]+/)) {
+    const m = /^(\d+)(?:x(\d+))?$/i.exec(tok); if (!m) continue;
+    const pattern = parseInt(m[1], 10); if (!song.patterns[pattern]) continue;
+    const old = prev[out.length];
+    out.push({ pattern, repeat: m[2] ? Math.min(64, Math.max(1, parseInt(m[2], 10))) : 1, tracks: old && old.pattern === pattern ? Object.assign({}, old.tracks) : {} });
+  }
+  return out.length ? out : [orderEntry(0)];
+}
+// The data a track plays inside an entry: its own pattern's data, or another pattern's looped/clipped to fit.
+export function trackDataFor(song, entry, trackId) {
+  const base = song.patterns[entry.pattern], srcIndex = entry.tracks[trackId];
+  const src = srcIndex == null ? base : song.patterns[srcIndex];
+  if (!src || src === base) return base.tracks[trackId] || null;
+  const pt = src.tracks[trackId]; if (!pt) return null;
+  const len = base.rows * base.ticksPerRow, srcLen = src.rows * src.ticksPerRow, scale = base.ticksPerRow / src.ticksPerRow;
+  const out = { events: [], dyn: [], expr: [], fx: [] };
+  for (let off = 0; off < len; off += Math.round(srcLen * scale)) {
+    for (const e of pt.events) { const t = off + Math.round(e.tick * scale); if (t < len) out.events.push(Object.assign({}, e, { tick: t, len: Math.min(Math.round(e.len * scale), len - t) })); }
+    for (const k of ['dyn', 'expr', 'fx']) for (const p of pt[k] || []) { const t = off + Math.round(p.tick * scale); if (t < len) out[k].push(Object.assign({}, p, { tick: t })); }
+    if (srcLen * scale < 1) break;
+  }
+  return out;
 }

@@ -1,4 +1,5 @@
 // Compact text notation for writing songs in code, and the built-in example songs.
+import { normalizeOrder } from './song.js';
 import { FAMILIES, PPQ, noteName } from './constants.js';
 import { INST, SYNTH_TRACKS, addTracks } from './instruments.js';
 import { laneSet, laneValueAt, newPattern, newSong, patMeter, patTrack } from './song.js';
@@ -335,6 +336,6 @@ const EXAMPLE_LIST = [
 ];
 // Built-in examples get stable ids so autosave can tell an edited example from a fresh one.
 export const EXAMPLES = EXAMPLE_LIST.map(e => ({ title: e.title, uid: 'example:' + e.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-  build: () => Object.assign(e.build(), { uid: 'example:' + e.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') }) }));
+  build: () => { const s = Object.assign(e.build(), { uid: 'example:' + e.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') }); normalizeOrder(s); return s; } }));
 
 if (typeof module !== 'undefined') module.exports = { PPQ, INST, FAMILIES, newSong, newPattern, patTrack, laneSet, laneValueAt, renderSong, TimeMap, midiFileBytes, seedSong, noteName, line, lane, rep, EXAMPLES, patMeter };

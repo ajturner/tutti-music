@@ -153,7 +153,9 @@
 <p>A groove stretches and shrinks rows in a cycle without moving notes. Choose a preset in the pattern group (swing 8ths light, medium, hard; swing 16ths) or type a custom list of multipliers such as <code>1.33 0.67</code>. Playback, export and the playing-row highlight all follow it.</p>
 
 <h2 id="arrange">Patterns, arrangement, live</h2>
-<p><b>+</b> adds a pattern with the current one's settings. The <b>arrangement</b> chips are the song order: click a chip to open that pattern, drag to reorder, × to remove, + to append the current pattern. The text field beside them accepts indices directly.</p>
+<p><b>+</b> adds a pattern with the current one's settings. The <b>arrangement</b> chips are the song order: click a chip to open that pattern, drag to reorder, × to remove, + to append the current pattern. The text field beside them accepts indices directly, with an optional repeat such as <code>0x2 1 0</code>.</p>
+<h3>Repeats and chains</h3>
+<p>Each chip's <b>…</b> opens the entry: a <b>repeat</b> count, and for every track a choice of which pattern it plays during that entry. A track that follows another pattern loops or clips it to the entry's length, so a one-bar bass figure in pattern B can run under a four-bar melody in pattern A without copying it. The chip shows <b>×N</b> and a <b>⛓</b> badge, and while that entry plays the grid header marks each chained track with the pattern it is sounding. The entry's own pattern sets the length, tempo lane and groove.</p>
 <p>While a pattern loops, choosing another pattern (selector or chip) queues it; it takes over when the loop ends and the status shows <b>next</b>. Solo a track with ⇧-click or a long press on its name: with any solo on, only soloed tracks sound.</p>
 
 <h2 id="mixer">Mixer and tracks</h2>

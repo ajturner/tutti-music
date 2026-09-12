@@ -1,7 +1,7 @@
 // Render a song to a flat, absolute-tick event list and map ticks to milliseconds under a changing tempo.
 import { PPQ, clamp } from './constants.js';
 import { INST } from './instruments.js';
-import { laneValueAt } from './song.js';
+import { laneValueAt, normalizeOrder, orderEntry, trackDataFor } from './song.js';
 
 // ---- Render: song -> flat, absolute-tick event list --------------------------
 // Event types: 'ks' keyswitch, 'cc' controller, 'off' note off, 'on' note on. Order at equal tick matters:
@@ -113,14 +113,16 @@ export function applyFx(note, fx, transpose, tpr, random) {
 }
 
 export function renderSong(song, opts = {}) {
-  const seq = (opts.patterns || song.order).filter(i => song.patterns[i]);
+  const entries = opts.patterns ? opts.patterns.map(orderEntry) : normalizeOrder(song);
   const random = opts.random || Math.random;
   const events = [], tempo = [{ tick: 0, bpm: song.bpm }], starts = [];
   let offset = 0;
-  for (const pi of seq) {
-    const pat = song.patterns[pi];
+  const plays = [];
+  entries.forEach((e, ei) => { if (song.patterns[e.pattern]) for (let k = 0; k < e.repeat; k++) plays.push({ e, ei, k }); });
+  for (const { e, ei, k } of plays) {
+    const pi = e.pattern, pat = song.patterns[pi];
     const len = pat.rows * pat.ticksPerRow, tpr = pat.ticksPerRow, map = tickMapper(pat);
-    starts.push({ pattern: pi, tick: offset, rows: pat.rows, ticksPerRow: tpr, groove: !!grooveOf(pat) });
+    starts.push({ pattern: pi, tick: offset, rows: pat.rows, ticksPerRow: tpr, groove: !!grooveOf(pat), entry: ei, repeat: k, tracks: e.tracks });
     renderLane(pat.tempo, len, offset, (t, v) => tempo.push({ tick: offset + map(t - offset), bpm: v }), fmtBpm);
     for (const tr of song.tracks) {
       const ins = INST[tr.instrument];
@@ -128,7 +130,7 @@ export function renderSong(song, opts = {}) {
         events.push({ tick: 0, type: 'cc', track: tr.id, cc: 7, value: fmtCC(tr.volume == null ? 100 : tr.volume) });
         events.push({ tick: 0, type: 'cc', track: tr.id, cc: 10, value: fmtCC(tr.pan == null ? 64 : tr.pan) });
       }
-      const pt = pat.tracks[tr.id];
+      const pt = trackDataFor(song, e, tr.id);
       if (!pt) continue;
       const evs = pt.events.slice().sort((a, b) => a.tick - b.tick || a.col - b.col);
       const fx = (pt.fx || []).slice().sort((a, b) => a.tick - b.tick);

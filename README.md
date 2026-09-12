@@ -16,7 +16,7 @@ A browser-based tracker for composing orchestral music, with MIDI export. Plain 
 - **Live:** solo tracks with shift-click or long press; pick another pattern while one loops to queue it.
 - **Mixer sidebar:** volume, pan, mute and solo per track beside the grid while editing; a captioned header groups transport, pattern, song, arrangement, key, entry and output.
 - **Tracks and mixer:** add any instrument as a track, rename, reorder, remove, set channel and columns, volume and pan (CC7 and CC10), mute and solo.
-- **Arranger:** the song order as chips: click to open, drag to reorder, × to remove, + to append.
+- **Arranger:** the song order as chips: click to open, drag to reorder, × to remove, + to append; each entry has a repeat count and per-track chains so a track can follow another pattern (song format 2).
 - **Shaping and variation:** EXP fx command for per-note swell, sfz, fade in and out; Fill, Rnd vel, Rnd pitch and Humanize on selections.
 - **Pattern keys, live record, full undo:** a pattern can override the song key; ⇧Return records played MIDI onto the passing row; undo covers tracks, mixer, key, order, tempo and title.
 - **Autosave:** songs persist in the browser and the URL names the open song and pattern, so a refresh or bookmark reopens it. Delete resets an example or removes your song.

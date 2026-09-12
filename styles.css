@@ -140,6 +140,11 @@
 #arranger .chip.cur { border-color: var(--accent); color: var(--accent); }
 #arranger .chip.next { border-style: dashed; border-color: var(--accent); }
 #arranger .chip button, #arranger #arrAdd { padding: 0 5px; min-height: 0; line-height: 1.4; }
+#arranger .chip i { font-style: normal; color: var(--dim); margin-left: 2px; }
+#chainTable { border-collapse: collapse; margin-top: 8px; }
+#chainTable th { color: var(--dim); font-weight: normal; text-align: left; padding: 2px 8px; }
+#chainTable td { padding: 2px 8px; }
+.dim { color: var(--dim); max-width: 46em; }
 /* Tracks and mixer dialog */
 dialog { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; max-width: min(96vw, 900px); max-height: 90vh; overflow: auto; font: inherit; }
 dialog::backdrop { background: rgba(0, 0, 0, .55); }
