@@ -31,6 +31,7 @@ export function handleKey(e) {
     if (lower === 'z' && !sh) { undo(); return true; }
     if ((lower === 'z' && sh) || lower === 'y') { redo(); return true; }
     if (lower === 'a') { selectTrackOrAll(); return true; }
+    if (k === '?' || (code === 'Slash' && sh)) { openGuide(); return true; }   // ⌘? full guide in a new window
     if (lower === 'c') { copySel(); return true; }
     if (lower === 'x') { cutSel(); return true; }
     if (lower === 'v') { pasteSel(); return true; }
@@ -39,6 +40,7 @@ export function handleKey(e) {
     if (k === 'ArrowDown') { sh ? moveRow(rowsPerBar()) : setRow(curPat().rows - 1); return true; }  // ⌘↓ end, ⌘⇧↓ bar
     return false;                                              // let the browser have the rest
   }
+  if (k === '?' || (code === 'Slash' && sh)) { toggleQuickKeys(); return true; }   // ? quick keys in the footer
   // With a selection, the octave/step and length keys act on the selection instead.
   if (state.sel) {
     if (code === 'Minus' || k === '-' || k === '_') { transposeSel(sh ? -12 : -1); return true; }
@@ -79,4 +81,15 @@ export function handleKey(e) {
   }
   if (k.length === 1) return typeIntoCell(k);
   return false;
+}
+
+// ---- Help --------------------------------------------------------------------------------
+export function toggleQuickKeys(open) {
+  const d = document.querySelector('footer details');
+  d.open = open == null ? !d.open : open;
+  if (d.open) d.scrollIntoView({ block: 'nearest' });
+}
+export function openGuide() {
+  const w = window.open('help.html', 'tutti-guide');
+  if (w) w.focus(); else location.assign('help.html');   // popup blocked: same tab
 }

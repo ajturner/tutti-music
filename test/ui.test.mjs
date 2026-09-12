@@ -284,6 +284,17 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   await page.evaluate(() => { for (const k of Object.keys(tutti)) if (!(k in window)) Object.defineProperty(window, k, { get: () => tutti[k], configurable: true }); for (const k of ['lastDraw', 'ROW_H']) Object.defineProperty(window, k, { get: () => tutti.view[k], configurable: true }); });
   check('mixer: choice persists across reload', await page.isVisible('#mixer'));
   // --- help: quick reference in the footer, full guide in a new tab ---
+  await page.evaluate(() => document.getElementById('grid').focus());
+  await page.keyboard.press('Shift+/'); await page.waitForTimeout(30);
+  check('help: ? opens the quick keys', await page.evaluate(() => document.querySelector('footer details').open));
+  await page.keyboard.press('Shift+/'); await page.waitForTimeout(30);
+  check('help: ? again closes them', !(await page.evaluate(() => document.querySelector('footer details').open)));
+  {
+    const [win] = await Promise.all([ctx.waitForEvent('page'), page.keyboard.press('Meta+Shift+/')]);
+    await win.waitForLoadState();
+    check('help: cmd+? opens the guide in a new window', win.url().endsWith('help.html'));
+    await win.close();
+  }
   check('help: footer link opens in a new tab', (await page.getAttribute('#helpLink', 'target')) === '_blank' && (await page.getAttribute('#helpLink', 'href')) === 'help.html');
   {
     const [tab] = await Promise.all([ctx.waitForEvent('page'), page.click('#helpLink')]);
