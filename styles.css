@@ -65,6 +65,7 @@
   #padKeys button.white { grid-row: 2; }
   .padrow button { flex: 1 1 0; min-width: 0; min-height: 40px; padding: 0 2px; touch-action: manipulation; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .padrow button.black { background: #0A0D1C; color: var(--dim); }
+  .padrow button.out { opacity: .4; }
   .padrow button.act { color: var(--accent); }
   .padrow button.small { font-size: 12px; }
   @media (pointer: coarse) {

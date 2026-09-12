@@ -48,3 +48,24 @@ Events SHALL be scheduled ahead of time (about 120 ms lookahead) with timestamps
 #### Scenario: Position while looping
 - **WHEN** a 4-bar pattern has looped twice
 - **THEN** the reported position is within the pattern, not past its end
+
+### Requirement: FX rendering
+Rendering SHALL expand each note through the fx command on its row and the track's running transpose before emitting note events, and SHALL accept a random source so chance is reproducible in tests.
+
+#### Scenario: Deterministic chance
+- **WHEN** a song with CHA 80 is rendered twice with the same random sequence
+- **THEN** both renders contain the same notes
+
+### Requirement: Solo
+When any track is soloed, only soloed tracks SHALL send note on, keyswitch and controller events; note offs always pass. Solo is toggled with shift-click or a long press on the track name.
+
+#### Scenario: Solo one track
+- **WHEN** Oboe is soloed and the pattern plays
+- **THEN** only Oboe sounds
+
+### Requirement: Queue the next pattern
+While a pattern loops, choosing another pattern SHALL queue it instead of switching; the current loop finishes, the queued pattern starts seamlessly and becomes the current pattern. The status SHALL show the queued pattern. Stopping clears the queue.
+
+#### Scenario: Queue while looping
+- **WHEN** pattern A loops and the user selects B
+- **THEN** A finishes its loop, B starts at the boundary, and the grid shows B

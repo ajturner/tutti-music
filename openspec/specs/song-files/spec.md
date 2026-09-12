@@ -7,11 +7,15 @@ Defines how songs are listed, created, saved, and loaded, and what survives a pa
 ## Requirements
 
 ### Requirement: Song list
-The app SHALL offer a song list containing the built-in examples plus any songs created or loaded during the session. Selecting a song SHALL stop playback, reset the cursor to the first pattern, and clear undo history. Songs live in memory only; reloading the page discards unsaved songs.
+The app SHALL offer a song list containing the built-in examples plus any songs created or loaded, restored from browser storage on load. Selecting a song SHALL stop playback, reset the cursor to the first pattern, and clear undo history.
 
 #### Scenario: Built-in examples present
 - **WHEN** the app loads
 - **THEN** the list contains at least "Sketch in C" and it is selected
+
+#### Scenario: Restored on load
+- **WHEN** a user created a song in a previous session in the same browser
+- **THEN** it appears in the list on the next load
 
 ### Requirement: New song
 The New button SHALL add an empty song titled "Untitled N" with default patterns and tracks and select it. The title field SHALL rename the current song; an empty title becomes "Untitled".
@@ -52,3 +56,24 @@ The pattern selector SHALL list patterns by index and name. Adding a pattern SHA
 #### Scenario: Invalid order entry
 - **WHEN** the user types "0 9 1" and only patterns 0 to 2 exist
 - **THEN** the order becomes "0 1"
+
+### Requirement: Pattern selector during a loop
+While a pattern loops, the pattern selector SHALL queue the chosen pattern rather than switch, and SHALL keep showing the playing pattern until the switch happens.
+
+#### Scenario: Selector stays
+- **WHEN** A loops and the user selects B
+- **THEN** the selector still shows A until B starts
+
+### Requirement: Autosave
+Every song that was created, loaded or edited SHALL be written to browser storage within a second of the last change and restored on the next load. An edited built-in example SHALL replace its built-in copy. Storage failures SHALL NOT interrupt editing.
+
+#### Scenario: Edit survives reload
+- **WHEN** the user enters a note and reloads the page
+- **THEN** the note is still there
+
+### Requirement: Delete song
+A Delete control SHALL remove the current song from storage: a built-in example returns to its pristine copy, a user song leaves the list.
+
+#### Scenario: Reset an example
+- **WHEN** the user edits "Sketch in C" and presses Delete
+- **THEN** the example is back to its original notes and storage no longer holds it

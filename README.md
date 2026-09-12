@@ -10,6 +10,11 @@ A browser-based tracker for composing orchestral music, with MIDI export. Plain 
 - **Touch:** tap to place the cursor, drag to scroll, long-press to clear. An on-screen pad appears on touch screens (or tick *pad* in the menu).
 - **Game controller:** Bluetooth or USB gamepad, LSDJ-style. D-pad moves, A + d-pad edits, B clears, Start plays. Works on iPhone and iPad.
 - **Selection and batch edits:** Shift+arrows or mouse drag select a block. Copy, cut, paste, duplicate, clear, transpose, velocity, note length, articulation, and linear ramps from the toolbar or keyboard.
+- **Key and scale:** set the song's key; the pad dims out-of-scale notes, selections transpose by scale degree, controller nudges follow the scale.
+- **FX column:** one command per row per track: CHA chance, RET retrigger, DEL delay, ARP arpeggio, TSP transpose.
+- **Groove:** per-pattern swing presets or a custom cycle of row-length multipliers.
+- **Live:** solo tracks with shift-click or long press; pick another pattern while one loops to queue it.
+- **Autosave:** songs persist in the browser; Delete resets an example or removes your song.
 - **MIDI in:** step-record from a keyboard into the cursor cell, with chords spread across note columns. Chromium browsers only.
 
 ## Run locally

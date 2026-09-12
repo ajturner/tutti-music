@@ -5,6 +5,9 @@ import { laneValueAt } from '../core/song.js';
 import { $, COLORS, applyDensity, canvas, ctx, curPat, curTrack, midi, rowsPerBar, rowsPerStrongBeat, sched, state, view } from './state.js';
 import { computeLayout, currentCell } from './layout.js';
 import { indexTrack, noteCovering } from './edit.js';
+import { rowAtTick, grooveOf, FX_HELP } from '../core/render.js';
+import { fxAtRow } from '../core/edit.js';
+import { keyName } from '../core/scales.js';
 import { inSel } from './selection.js';
 import { gamepad, pollGamepad } from './gamepad.js';
 import { syncPad, syncSelBar } from './pad.js';
@@ -30,7 +33,7 @@ export function draw() {
   const playTick = sched.positionTick();
   let playRow = null, playPat = null;
   if (playTick != null && sched.rendered) {
-    for (const s of sched.rendered.starts) if (playTick >= s.tick && playTick < s.tick + s.rows * s.ticksPerRow) { playPat = s.pattern; playRow = Math.floor((playTick - s.tick) / s.ticksPerRow); }
+    for (const s of sched.rendered.starts) if (playTick >= s.tick && playTick < s.tick + s.rows * s.ticksPerRow) { playPat = s.pattern; playRow = rowAtTick(song.patterns[s.pattern], playTick - s.tick); }
     if (state.follow && playPat != null && playPat !== state.pat) { state.pat = playPat; syncPatternUI(); }
   }
   const pat = curPat();
@@ -105,6 +108,10 @@ export function draw() {
           const p = idx.dyn.find(x => x.tick === r * pat.ticksPerRow);
           ctx.fillStyle = p ? textColor : (isCursor ? COLORS.cursorText : COLORS.dim);
           ctx.fillText(p ? hex2(p.value) + (p.interp === 'lin' ? '~' : ' ') : '·', cell.x, ym);
+        } else if (cell.kind === 'fx') {
+          const f = idx.fx.find(x => x.tick === r * pat.ticksPerRow);
+          ctx.fillStyle = f ? textColor : (isCursor ? COLORS.cursorText : COLORS.dim);
+          ctx.fillText(f ? f.cmd + ' ' + hex2(f.value) : '·', cell.x, ym);
         }
       }
     }
@@ -146,11 +153,14 @@ export function draw() {
     labelEnd.set(i, x0 + ctx.measureText(FAMILIES[fam].label).width + view.charW);
     i = j + 1;
   }
+  const anySolo = song.tracks.some(t => t.solo);
   L.tracks.forEach((lay, ti) => {
     const tr = lay.track, fam = FAMILIES[INST[tr.instrument].family];
-    ctx.fillStyle = tr.mute ? COLORS.num : fam.color;
+    const silent = tr.mute || (anySolo && !tr.solo);
+    ctx.fillStyle = silent ? COLORS.num : fam.color;
     ctx.fillText(tr.name, lay.x, nameY);
     if (tr.mute) ctx.fillRect(lay.x, nameY, ctx.measureText(tr.name).width, 1);
+    if (tr.solo) { ctx.fillStyle = COLORS.accent; ctx.fillText('S', lay.x + ctx.measureText(tr.name).width + view.charW * 0.6, nameY); }
     const tag = 'ch' + tr.channel, tagX = lay.x + lay.w - view.charW * (tag.length + 1.5);
     if (!labelEnd.has(ti) || labelEnd.get(ti) <= tagX) { ctx.fillStyle = COLORS.num; ctx.fillText(tag, tagX, bandY); }
   });
@@ -178,7 +188,10 @@ export function updateStatus(playRow) {
     parts.push('articulations ' + ins.articulations.map((a, i) => '<b>' + (i + 1) + '</b>' + a).join(' '));
     parts.push('range ' + noteName(ins.range[0]) + '–' + noteName(ins.range[1]));
   } else parts.push('<b>tempo</b> row ' + row + ' (digits, L ramp, S hold)');
+  if (cell.kind === 'fx') { const f = fxAtRow(pat, tr.id, row); parts.push('fx ' + (f ? '<b>' + f.cmd + ' ' + hex2(f.value) + '</b> ' + FX_HELP[f.cmd] : 'C R D A T pick a command, hex sets its value')); }
   parts.push('octave <b>' + state.octave + '</b>');
+  parts.push('key <b>' + keyName(state.song.key) + '</b>' + (grooveOf(pat) ? ' | groove <b>on</b>' : ''));
+  if (state.queued != null) parts.push('next <b>' + state.queued + ' ' + (state.song.patterns[state.queued] || {}).name + '</b>');
   parts.push('preview ' + (state.preview ? 'on' : 'off') + ' | MIDI ' + (midi.out ? '<b>' + esc(midi.out.name) + '</b>' : 'off'));
   if (state.sel) parts.push('selected <b>' + (state.sel.r1 - state.sel.r0 + 1) + '</b> rows × <b>' + (state.sel.g1 - state.sel.g0 + 1) + '</b> cells');
   if (midi.in) parts.push('MIDI in <b>' + esc(midi.in.name) + '</b>');

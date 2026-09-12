@@ -28,39 +28,118 @@ export function renderLane(points, laneLen, offset, emit, fmt) {
 export const fmtCC = v => clamp(Math.round(v), 0, 127);
 export const fmtBpm = v => clamp(Math.round(v), 20, 300);
 
+// ---- Groove: grid ticks -> performed ticks -----------------------------------------------------
+// pattern.groove is a list of row-length multipliers applied cyclically (for example [1.33, 0.67] swings
+// eighths at sixteenth rows). The cycle is normalised so the pattern keeps its length.
+export function grooveOf(pat) {
+  const g = Array.isArray(pat.groove) ? pat.groove.filter(x => typeof x === 'number' && x > 0) : [];
+  if (!g.length || g.every(x => x === 1)) return null;
+  const mean = g.reduce((a, b) => a + b, 0) / g.length;
+  return g.map(x => x / mean);
+}
+// Performed start tick of every row (rows + 1 entries, the last is the pattern end).
+export function rowTicks(pat) {
+  const g = grooveOf(pat), tpr = pat.ticksPerRow, out = new Array(pat.rows + 1);
+  let t = 0;
+  for (let r = 0; r < pat.rows; r++) { out[r] = Math.round(t); t += g ? tpr * g[r % g.length] : tpr; }
+  out[pat.rows] = pat.rows * tpr;
+  return out;
+}
+export function tickMapper(pat) {
+  if (!grooveOf(pat)) return t => t;
+  const rt = rowTicks(pat), tpr = pat.ticksPerRow, len = pat.rows * tpr;
+  return t => {
+    if (t <= 0) return 0; if (t >= len) return len;
+    const r = Math.floor(t / tpr), f = (t - r * tpr) / tpr;
+    return Math.round(rt[r] + (rt[r + 1] - rt[r]) * f);
+  };
+}
+// Inverse for the play-position highlight: performed tick within the pattern -> row.
+export function rowAtTick(pat, tick) {
+  if (!grooveOf(pat)) return Math.floor(tick / pat.ticksPerRow);
+  const rt = rowTicks(pat);
+  let lo = 0, hi = pat.rows - 1;
+  while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (rt[mid] <= tick) lo = mid; else hi = mid - 1; }
+  return lo;
+}
+
+// ---- FX column --------------------------------------------------------------------------------
+// One command per row per track (pattern.tracks[id].fx = [{ tick, cmd, value }], value 0-255):
+//   CHA  chance the notes on this row play, value/255 (FF always, 80 about half)
+//   RET  retrigger: play each note on this row `value` times, evenly across its length
+//   DEL  delay the notes on this row by value/256 of a row (humanise, play behind the beat)
+//   ARP  arpeggio: cycle pitch, +high nibble, +low nibble semitones every row for the note's length
+//   TSP  transpose this track by a signed byte of semitones from this row until the next TSP
+export const FX_COMMANDS = ['CHA', 'RET', 'DEL', 'ARP', 'TSP'];
+export const FX_DEFAULTS = { CHA: 0x80, RET: 0x02, DEL: 0x20, ARP: 0x47, TSP: 0x0C };
+export const FX_HELP = {
+  CHA: 'chance the row plays, 00 never to FF always', RET: 'retrigger count across the note', DEL: 'delay by value/256 of a row',
+  ARP: 'arpeggio, two semitone offsets per nibble', TSP: 'transpose track from here, signed semitones',
+};
+const signedByte = v => (v & 0xFF) > 127 ? (v & 0xFF) - 256 : (v & 0xFF);
+export function fxAt(fx, tick) { return fx.find(f => f.tick === tick) || null; }
+// Expand one note through the FX on its row and the track's running transpose. Returns [{tick, end, pitch, vel}].
+export function applyFx(note, fx, transpose, tpr, random) {
+  let pitch = clamp(note.pitch + transpose, 0, 127);
+  let start = note.tick, end = note.tick + note.len;
+  if (fx && fx.cmd === 'CHA' && random() * 255 >= (fx.value & 0xFF)) return [];
+  if (fx && fx.cmd === 'DEL') { const d = Math.round((fx.value & 0xFF) / 256 * tpr); start += d; end += d; }
+  if (fx && fx.cmd === 'RET' && (fx.value & 0xFF) > 1) {
+    const n = fx.value & 0xFF, span = (end - start) / n, out = [];
+    for (let i = 0; i < n; i++) out.push({ tick: Math.round(start + i * span), end: Math.round(start + (i + 1) * span), pitch, vel: note.vel });
+    return out;
+  }
+  if (fx && fx.cmd === 'ARP' && (fx.value & 0xFF) > 0) {
+    const a = (fx.value >> 4) & 15, b = fx.value & 15, cycle = b ? [0, a, b] : [0, a], out = [];
+    for (let t = start, i = 0; t < end; t += tpr, i++) out.push({ tick: t, end: Math.min(end, t + tpr), pitch: clamp(pitch + cycle[i % cycle.length], 0, 127), vel: note.vel });
+    return out;
+  }
+  return [{ tick: start, end, pitch, vel: note.vel }];
+}
+
 export function renderSong(song, opts = {}) {
   const seq = (opts.patterns || song.order).filter(i => song.patterns[i]);
+  const random = opts.random || Math.random;
   const events = [], tempo = [{ tick: 0, bpm: song.bpm }], starts = [];
   let offset = 0;
   for (const pi of seq) {
     const pat = song.patterns[pi];
-    const len = pat.rows * pat.ticksPerRow;
-    starts.push({ pattern: pi, tick: offset, rows: pat.rows, ticksPerRow: pat.ticksPerRow });
-    renderLane(pat.tempo, len, offset, (t, v) => tempo.push({ tick: t, bpm: v }), fmtBpm);
+    const len = pat.rows * pat.ticksPerRow, tpr = pat.ticksPerRow, map = tickMapper(pat);
+    starts.push({ pattern: pi, tick: offset, rows: pat.rows, ticksPerRow: tpr, groove: !!grooveOf(pat) });
+    renderLane(pat.tempo, len, offset, (t, v) => tempo.push({ tick: offset + map(t - offset), bpm: v }), fmtBpm);
     for (const tr of song.tracks) {
       const pt = pat.tracks[tr.id];
       if (!pt) continue;
       const ins = INST[tr.instrument];
       const evs = pt.events.slice().sort((a, b) => a.tick - b.tick || a.col - b.col);
+      const fx = (pt.fx || []).slice().sort((a, b) => a.tick - b.tick);
+      const tsp = fx.filter(f => f.cmd === 'TSP');
       const open = {};            // pitch -> the pending 'off' event, so same-pitch overlaps truncate
       let lastArt = null;
       for (const e of evs) {
         if (e.tick >= len || e.len <= 0) continue;
-        const end = Math.min(e.tick + e.len, len);
         const art = e.art || ins.articulations[0];
         const ks = ins.keyswitches[art];
+        let transpose = 0; for (const f of tsp) { if (f.tick <= e.tick) transpose = signedByte(f.value); else break; }
+        const rowFx = fx.find(f => f.tick === e.tick && f.cmd !== 'TSP') || null;
+        const parts = applyFx({ tick: e.tick, len: Math.min(e.tick + e.len, len) - e.tick, pitch: e.pitch, vel: e.vel }, rowFx, transpose, tpr, random);
+        if (!parts.length) continue;
         if (art !== lastArt && ks != null) {
-          events.push({ tick: offset + Math.max(0, e.tick - KS_LEAD_TICKS), type: 'ks', track: tr.id, pitch: ks });
+          events.push({ tick: offset + Math.max(0, map(parts[0].tick) - KS_LEAD_TICKS), type: 'ks', track: tr.id, pitch: ks });
           lastArt = art;
         }
-        if (open[e.pitch] && open[e.pitch].tick > offset + e.tick) open[e.pitch].tick = offset + e.tick;
-        const off = { tick: offset + end, type: 'off', track: tr.id, pitch: e.pitch };
-        events.push({ tick: offset + e.tick, type: 'on', track: tr.id, pitch: e.pitch, vel: e.vel, art });
-        events.push(off);
-        open[e.pitch] = off;
+        for (const p of parts) {
+          if (p.tick >= len) continue;
+          const t0 = offset + map(p.tick), t1 = offset + map(Math.min(p.end, len));
+          if (open[p.pitch] && open[p.pitch].tick > t0) open[p.pitch].tick = t0;
+          const off = { tick: t1, type: 'off', track: tr.id, pitch: p.pitch };
+          events.push({ tick: t0, type: 'on', track: tr.id, pitch: p.pitch, vel: p.vel, art });
+          events.push(off);
+          open[p.pitch] = off;
+        }
       }
-      renderLane(pt.dyn,  len, offset, (t, v) => events.push({ tick: t, type: 'cc', track: tr.id, cc: ins.dynCC,  value: v }), fmtCC);
-      renderLane(pt.expr, len, offset, (t, v) => events.push({ tick: t, type: 'cc', track: tr.id, cc: ins.exprCC, value: v }), fmtCC);
+      renderLane(pt.dyn,  len, offset, (t, v) => events.push({ tick: offset + map(t - offset), type: 'cc', track: tr.id, cc: ins.dynCC,  value: v }), fmtCC);
+      renderLane(pt.expr, len, offset, (t, v) => events.push({ tick: offset + map(t - offset), type: 'cc', track: tr.id, cc: ins.exprCC, value: v }), fmtCC);
     }
     offset += len;
   }

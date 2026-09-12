@@ -46,6 +46,8 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   const box = await page.locator('#grid').boundingBox();
   // tap a cell: gutter is ~90px wide; header ~44px; click row 5 in first track
   const before = await cur(page);
+  await page.evaluate(() => { state.cursor.track = 0; state.cursor.cell = 0; state.ensureVisible = true; state.dirty = true; });
+  await page.waitForTimeout(60);
   const y5 = await page.evaluate(() => lastDraw.headerH + (5 - lastDraw.top) * ROW_H + 9);
   await page.mouse.click(box.x + 130, box.y + y5);
   await page.waitForTimeout(50);
@@ -112,7 +114,7 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   // select all: track then pattern
   await page.keyboard.press('Meta+a'); await page.waitForTimeout(30);
   let all = await page.evaluate(() => ({ sel: state.sel, n: allCells().length, rows: curPat().rows }));
-  check('sel: cmd+A selects the track', all.sel.r0 === 0 && all.sel.r1 === all.rows - 1 && all.sel.g0 === 1 && all.sel.g1 === 4, JSON.stringify(all.sel));
+  check('sel: cmd+A selects the track', all.sel.r0 === 0 && all.sel.r1 === all.rows - 1 && all.sel.g0 === 1 && all.sel.g1 === 5, JSON.stringify(all.sel));
   await page.keyboard.press('Meta+a'); await page.waitForTimeout(30);
   all = await page.evaluate(() => ({ sel: state.sel, n: allCells().length }));
   check('sel: cmd+A twice selects everything', all.sel.g0 === 0 && all.sel.g1 === all.n - 1, JSON.stringify(all.sel));
@@ -129,6 +131,71 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   await page.waitForTimeout(200);
   const rec = await page.evaluate(() => { const t = curTrack(); return { a: noteAt(curPat(), t.id, 0, 8), b: noteAt(curPat(), t.id, 1, 8), row: state.cursor.row, cols: t.columns }; });
   check('midi in: chord recorded across columns and advanced', rec.a && rec.a.pitch === 67 && rec.a.vel === 90 && rec.b && rec.b.pitch === 71 && rec.row === 12 && rec.cols >= 2, JSON.stringify(rec));
+  // --- key and diatonic transpose ---
+  await page.selectOption('#keyRoot', '0'); await page.selectOption('#keyScale', 'major'); await page.waitForTimeout(30);
+  check('key: song key set from the menu', await page.evaluate(() => state.song.key && state.song.key.root === 0 && state.song.key.scale === 'major'));
+  await page.evaluate(() => { deselect(); const t = curTrack(); curPat().tracks[t.id].events = []; state.cursor.track = 0; state.cursor.cell = 0; state.cursor.row = 0; enterPitch(64, null, 0); state.cursor.row = 0; state.dirty = true; });
+  await page.keyboard.press('Shift+ArrowDown'); await page.keyboard.press('.'); await page.waitForTimeout(30);
+  check('key: . moves a selection up a scale degree (E to F)', (await page.evaluate(() => noteAt(curPat(), curTrack().id, 0, 0).pitch)) === 65);
+  await page.locator('#selbar button[data-op="deg:1"]').dispatchEvent('pointerdown'); await page.waitForTimeout(30);
+  check('key: +deg button (F to G)', (await page.evaluate(() => noteAt(curPat(), curTrack().id, 0, 0).pitch)) === 67);
+  await page.keyboard.press('Escape');
+  const outKeys = await page.evaluate(() => { state.pad = true; document.body.classList.add('padon'); tutti.padSigReset(); state.dirty = true; return new Promise(r => requestAnimationFrame(() => r([...document.querySelectorAll('#padKeys button.out')].map(b => b.textContent)))); });
+  check('key: pad dims out-of-scale keys', outKeys.length === 5 && outKeys[0].startsWith('C'), outKeys.join(','));
+  await page.evaluate(() => { state.pad = false; document.body.classList.remove('padon'); });
+  // --- FX column ---
+  await page.evaluate(() => { state.cursor.track = 0; state.cursor.cell = state.song.tracks[0].columns * 2 + 2; state.cursor.row = 0; state.dirty = true; });
+  check('fx: cursor lands on the fx cell', (await page.evaluate(() => currentCell().kind)) === 'fx');
+  await page.keyboard.press('r'); await page.waitForTimeout(20);
+  let fx = await page.evaluate(() => fxAtRow(curPat(), curTrack().id, 0));
+  check('fx: R creates RET with its default', fx && fx.cmd === 'RET' && fx.value === 2, JSON.stringify(fx));
+  await page.keyboard.press('0'); await page.keyboard.press('4'); await page.waitForTimeout(20);
+  fx = await page.evaluate(() => fxAtRow(curPat(), curTrack().id, 0));
+  check('fx: hex digits set the value', fx && fx.cmd === 'RET' && fx.value === 4, JSON.stringify(fx));
+  const retOns = await page.evaluate(() => renderSong(state.song, { patterns: [state.pat] }).events.filter(e => e.track === curTrack().id && e.type === 'on').length);
+  check('fx: RET 04 renders four onsets', retOns === 4, 'ons=' + retOns);
+  await page.keyboard.press('Delete'); await page.waitForTimeout(20);
+  check('fx: Delete clears the command', (await page.evaluate(() => fxAtRow(curPat(), curTrack().id, 0))) === null);
+  check('fx: status explains the cell', (await page.textContent('#status')).includes('pick a command'));
+  // --- groove ---
+  await page.selectOption('#groove', 'swing 16ths'); await page.waitForTimeout(30);
+  const gr = await page.evaluate(() => ({ g: curPat().groove, custom: document.getElementById('grooveList').hidden }));
+  check('groove: preset applies to the pattern', gr.g && gr.g.length === 2 && gr.g[0] > 1 && gr.custom, JSON.stringify(gr));
+  await page.selectOption('#groove', 'straight'); await page.waitForTimeout(30);
+  check('groove: straight clears', (await page.evaluate(() => curPat().groove.length)) === 0);
+  // --- solo via shift-click on the header ---
+  await page.keyboard.down('Shift'); await page.mouse.click(box.x + 130, box.y + 30); await page.keyboard.up('Shift'); await page.waitForTimeout(30);
+  check('solo: shift-click header solos the track', await page.evaluate(() => state.song.tracks[0].solo === true));
+  await page.keyboard.down('Shift'); await page.mouse.click(box.x + 130, box.y + 30); await page.keyboard.up('Shift'); await page.waitForTimeout(30);
+  check('solo: shift-click again clears', await page.evaluate(() => state.song.tracks[0].solo === false));
+  // --- live queue ---
+  await page.evaluate(() => { state.preview = false; });
+  await page.keyboard.press(' '); await page.waitForTimeout(50);
+  await page.evaluate(() => { if (state.song.patterns.length < 2) document.getElementById('addPattern').click(); });
+  await page.waitForTimeout(50);
+  await page.evaluate(() => { state.pat = 0; tutti.syncPatternUI(); });
+  await page.keyboard.press(' '); await page.waitForTimeout(30); await page.keyboard.press(' '); await page.waitForTimeout(50);
+  await page.selectOption('#pattern', '1'); await page.waitForTimeout(30);
+  const q = await page.evaluate(() => ({ queued: state.queued, pat: state.pat, playing: sched.playing, sel: document.getElementById('pattern').value }));
+  check('live: choosing a pattern while looping queues it', q.playing && q.queued === 1 && q.pat === 0 && q.sel === '0', JSON.stringify(q));
+  check('live: status shows next', (await page.textContent('#status')).includes('next'));
+  await page.evaluate(() => { sched.swapToQueued(); });
+  await page.waitForTimeout(30);
+  check('live: swap adopts the queued pattern', await page.evaluate(() => state.pat === 1 && state.queued === null));
+  await page.keyboard.press('Escape'); await page.evaluate(() => { state.pat = 0; tutti.syncPatternUI(); state.preview = true; });
+  // --- autosave ---
+  await page.evaluate(() => { state.cursor.track = 0; state.cursor.cell = 0; state.cursor.row = 40; });
+  await page.keyboard.press('z'); await page.waitForTimeout(600);
+  const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('tutti.songs.v1') || '[]'));
+  check('autosave: edit is written to localStorage', stored.length >= 1 && stored.some(s => s.uid === 'example:sketch-in-c'), 'n=' + stored.length);
+  await page.reload(); await page.waitForTimeout(400);
+  await page.evaluate(() => { for (const k of Object.keys(tutti)) if (!(k in window)) Object.defineProperty(window, k, { get: () => tutti[k], configurable: true }); });
+  const back = await page.evaluate(() => JSON.stringify(state.songs[0].patterns[0].tracks.fl.events) !== JSON.stringify(EXAMPLES[0].build().patterns[0].tracks.fl.events) && !!noteAt(state.songs[0].patterns[0], 'fl', 0, 40));
+  check('autosave: edit survives a reload', back);
+  await page.click('#deleteSong'); await page.waitForTimeout(300);
+  const reset = await page.evaluate(() => ({ same: JSON.stringify(state.songs[0].patterns[0].tracks.fl.events) === JSON.stringify(EXAMPLES[0].build().patterns[0].tracks.fl.events), stored: JSON.parse(localStorage.getItem('tutti.songs.v1') || '[]').length }));
+  check('autosave: delete resets the example and clears storage', reset.same && reset.stored === 0, JSON.stringify(reset));
+  await page.evaluate(() => { for (const k of ['lastDraw', 'ROW_H']) Object.defineProperty(window, k, { get: () => tutti.view[k], configurable: true }); });
   // gamepad: mock, press down then A tap
   await page.evaluate(() => {
     window.__gp = { id: 'Mock Pad (STANDARD GAMEPAD)', connected: true, mapping: 'standard', axes: [0, 0], buttons: Array.from({ length: 17 }, () => ({ pressed: false, value: 0 })) };

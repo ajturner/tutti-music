@@ -14,13 +14,9 @@ export class Scheduler {
   play(song, rendered, { loop = false, startTick = 0 } = {}) {
     this.stop();
     const tm = new TimeMap(rendered.tempo, rendered.lengthTicks, song.bpm);
-    const byId = Object.fromEntries(song.tracks.map(t => [t.id, t]));
-    const list = rendered.events.map(ev => {
-      const tr = byId[ev.track], ins = INST[tr.instrument];
-      const delay = (ev.type === 'on' || ev.type === 'off') ? (ins.speakDelayMs || 0) : 0;
-      return Object.assign({ ms: tm.msAt(ev.tick) + delay, channel: tr.channel - 1, family: ins.family, trackRef: tr }, ev);
-    }).sort((a, b) => a.ms - b.ms || TYPE_ORDER[a.type] - TYPE_ORDER[b.type]);
-    this.tm = tm; this.list = list; this.loop = loop; this.song = song; this.rendered = rendered;
+    this.song = song; this.tm = tm; this.next = null;
+    const list = this.buildList(rendered);
+    this.list = list; this.loop = loop; this.rendered = rendered;
     this.lengthMs = Math.max(1, tm.msAt(rendered.lengthTicks));
     const startMs = tm.msAt(startTick);
     const now = performance.now();
@@ -39,6 +35,14 @@ export class Scheduler {
     this.timer = setInterval(() => this.tick(), this.INTERVAL);
     this.tick();
   }
+  buildList(rendered) {
+    const tm = this.tm, byId = Object.fromEntries(this.song.tracks.map(t => [t.id, t]));
+    return rendered.events.map(ev => {
+      const tr = byId[ev.track], ins = INST[tr.instrument];
+      const delay = (ev.type === 'on' || ev.type === 'off') ? (ins.speakDelayMs || 0) : 0;
+      return Object.assign({ ms: tm.msAt(ev.tick) + delay, channel: tr.channel - 1, family: ins.family, trackRef: tr }, ev);
+    }).sort((a, b) => a.ms - b.ms || TYPE_ORDER[a.type] - TYPE_ORDER[b.type]);
+  }
   tick() {
     const now = performance.now(), horizon = now + this.LOOKAHEAD;
     for (let guard = 0; guard < 20000 && this.playing; guard++) {
@@ -47,6 +51,7 @@ export class Scheduler {
         if (!this.loop) { if (now >= endAt) this.stop(); break; }
         if (endAt > horizon) break;
         this.origin = endAt; this.idx = 0;
+        if (this.next) this.swapToQueued();
         continue;
       }
       const ev = this.list[this.idx], at = this.origin + ev.ms;
@@ -56,8 +61,22 @@ export class Scheduler {
     }
   }
   dispatch(ev, at) {
-    if (ev.trackRef.mute && ev.type !== 'off') return;
+    // Mute drops everything but note-offs. When any track is soloed, only soloed tracks sound.
+    if (ev.type !== 'off') {
+      if (ev.trackRef.mute) return;
+      if (this.anySolo() && !ev.trackRef.solo) return;
+    }
     for (const s of this.getSinks()) s.send(ev, at);
+  }
+  anySolo() { return this.song && this.song.tracks.some(t => t.solo); }
+  // Live mode: play `rendered` (looping) when the current loop ends, instead of repeating.
+  queue(rendered) { this.next = rendered; }
+  swapToQueued() {
+    const rendered = this.next; this.next = null;
+    const tm = new TimeMap(rendered.tempo, rendered.lengthTicks, this.song.bpm);
+    this.tm = tm; this.list = this.buildList(rendered); this.rendered = rendered;
+    this.lengthMs = Math.max(1, tm.msAt(rendered.lengthTicks));
+    if (this.onSwap) this.onSwap(rendered);
   }
   positionTick() {
     if (!this.playing) return null;

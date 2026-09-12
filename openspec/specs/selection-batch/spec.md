@@ -77,3 +77,10 @@ A toolbar SHALL appear whenever a selection exists, or on touch when select mode
 #### Scenario: Toolbar appears
 - **WHEN** the user makes a selection
 - **THEN** the toolbar shows the rows-by-cells size and the operations
+
+### Requirement: Transpose by scale degree
+With a selection, the comma and period keys and the −deg/+deg toolbar buttons SHALL move every selected note down or up one scale degree in the song's key, or a semitone when there is no key.
+
+#### Scenario: Move a phrase up a step in key
+- **WHEN** notes E4 and G4 are selected in C major and the user presses period
+- **THEN** they become F4 and A4

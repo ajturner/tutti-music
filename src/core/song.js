@@ -14,8 +14,9 @@ export const patMeter = pat => pat.meter || [4, 4];
 export const SONG_SCHEMA = 'https://ajturner.github.io/tutti-music/schema/tutti-song.schema.json';
 export const SONG_FORMAT = 'tutti-song';
 export const SONG_VERSION = 1;
+export const newUid = () => (globalThis.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 export function newSong() {
-  return { $schema: SONG_SCHEMA, format: SONG_FORMAT, version: SONG_VERSION, title: 'Untitled', notes: '', bpm: 100, order: [0], patterns: [newPattern('A')], tracks: DEFAULT_TRACKS.map(t => Object.assign({}, t)) };
+  return { $schema: SONG_SCHEMA, format: SONG_FORMAT, version: SONG_VERSION, uid: newUid(), title: 'Untitled', notes: '', bpm: 100, key: null, order: [0], patterns: [newPattern('A')], tracks: DEFAULT_TRACKS.map(t => Object.assign({}, t)) };
 }
 // Accept a parsed JSON object as a song: reject anything without patterns and tracks, and fill in
 // the fields older files may lack (format marker, notes, pattern meter, per-track lanes).
@@ -23,19 +24,22 @@ export function normalizeSong(s, fallbackTitle) {
   if (!s || typeof s !== 'object' || !Array.isArray(s.patterns) || !Array.isArray(s.tracks)) throw new Error('not a Tutti song');
   if (s.format != null && s.format !== SONG_FORMAT) throw new Error('unknown format ' + s.format);
   if (s.version != null && s.version > SONG_VERSION) throw new Error('song version ' + s.version + ' is newer than this app');
-  const out = Object.assign({ $schema: SONG_SCHEMA, format: SONG_FORMAT, version: SONG_VERSION, notes: '', bpm: 100, order: [0] }, s);
+  const out = Object.assign({ $schema: SONG_SCHEMA, format: SONG_FORMAT, version: SONG_VERSION, notes: '', bpm: 100, key: null, order: [0] }, s);
+  if (!out.uid) out.uid = newUid();
   if (!out.title) out.title = fallbackTitle || 'Untitled';
   for (const pat of out.patterns) {
     if (!pat.meter) pat.meter = [4, 4];
     if (!pat.tempo) pat.tempo = [];
     if (!pat.tracks) pat.tracks = {};
-    for (const pt of Object.values(pat.tracks)) { pt.events = pt.events || []; pt.dyn = pt.dyn || []; pt.expr = pt.expr || []; }
+    for (const pt of Object.values(pat.tracks)) { pt.events = pt.events || []; pt.dyn = pt.dyn || []; pt.expr = pt.expr || []; pt.fx = pt.fx || []; }
   }
   for (const tr of out.tracks) { if (tr.columns == null) tr.columns = 1; if (tr.mute == null) tr.mute = false; }
   return out;
 }
 export function patTrack(pat, trackId) {
-  return pat.tracks[trackId] || (pat.tracks[trackId] = { events: [], dyn: [], expr: [] });
+  const pt = pat.tracks[trackId] || (pat.tracks[trackId] = { events: [], dyn: [], expr: [], fx: [] });
+  if (!pt.fx) pt.fx = [];
+  return pt;
 }
 
 // ---- Lanes (continuous controllers, tempo) ---------------------------------

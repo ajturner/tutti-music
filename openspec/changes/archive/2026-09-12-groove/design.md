@@ -1,0 +1,2 @@
+# Design
+`pattern.groove: number[]` (1 to 16 positive multipliers). Core `grooveOf` normalises and returns null for straight; `rowTicks` gives performed start ticks per row; `tickMapper` maps any grid tick (interpolating within a row); `rowAtTick` inverts for the highlight. `renderSong` maps note starts and ends, lane points and tempo points. `starts[].groove` flags it for the UI. Schema updated. **Migration:** none.

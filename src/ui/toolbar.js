@@ -1,4 +1,8 @@
 // Header controls: songs, patterns, meter, order, files, menu.
+import { markEdited, deleteCurrentSong } from './storage.js';
+import { queuePattern } from './transport.js';
+import { GROOVES, syncKeyUI, syncGrooveUI } from './sync.js';
+import { padSigReset } from './pad.js';
 import { clamp } from '../core/constants.js';
 import { newPattern, newSong, patMeter, normalizeSong } from '../core/song.js';
 import { midiFileBytes } from '../core/midifile.js';
@@ -16,15 +20,35 @@ export function selectSong(i) {
   state.cursor = { row: 0, track: 0, cell: 0 }; state.scrollX = 0; state.typing = null; state.message = '';
   syncSongUI(); syncPatternUI(); state.dirty = true;
 }
-export function addSong(song) { state.songs.push(song); selectSong(state.songs.length - 1); }
+export function addSong(song) { state.songs.push(song); selectSong(state.songs.length - 1); markEdited(song); }
 $('song').onchange = e => selectSong(parseInt(e.target.value, 10));
 $('newSong').onclick = () => addSong(Object.assign(newSong(), { title: 'Untitled ' + (state.songs.length + 1) }));
-$('title').onchange = e => { state.song.title = e.target.value.trim() || 'Untitled'; syncSongUI(); };
+$('title').onchange = e => { state.song.title = e.target.value.trim() || 'Untitled'; syncSongUI(); markEdited(); };
 $('playPat').onclick = () => playPattern(false);
 $('playSong').onclick = () => playSong();
 $('stop').onclick = () => stopAll();
-$('bpm').onchange = e => { state.song.bpm = clamp(parseInt(e.target.value, 10) || 100, 20, 300); state.dirty = true; };
-$('pattern').onchange = e => { state.pat = parseInt(e.target.value, 10); syncPatternUI(); state.dirty = true; };
+$('bpm').onchange = e => { state.song.bpm = clamp(parseInt(e.target.value, 10) || 100, 20, 300); markEdited(); state.dirty = true; };
+$('pattern').onchange = e => {
+  const i = parseInt(e.target.value, 10);
+  if (queuePattern(i)) { e.target.value = state.pat; return; }   // live: takes over when the loop ends
+  state.pat = i; syncPatternUI(); state.dirty = true;
+};
+$('keyRoot').onchange = $('keyScale').onchange = () => {
+  const r = $('keyRoot').value;
+  state.song.key = r === '' ? null : { root: parseInt(r, 10), scale: $('keyScale').value };
+  syncKeyUI(); markEdited(); padSigReset(); state.dirty = true;
+};
+$('groove').onchange = e => {
+  const preset = GROOVES.find(([n]) => n === e.target.value);
+  if (preset && preset[1]) { withUndo(() => { curPat().groove = preset[1].slice(); }); markEdited(); }
+  syncGrooveUI();
+  if (e.target.value === 'custom') $('grooveList').focus();
+};
+$('grooveList').onchange = e => {
+  const g = e.target.value.split(/[\s,]+/).map(Number).filter(x => x > 0).slice(0, 16);
+  withUndo(() => { curPat().groove = g.length ? g : []; }); markEdited(); syncGrooveUI();
+};
+$('deleteSong').onclick = () => { stopAll(); selectSong(deleteCurrentSong()); };
 $('addPattern').onclick = () => {
   const p = state.song.patterns;
   p.push(newPattern(String.fromCharCode(65 + (p.length % 26)), curPat().rows, curPat().ticksPerRow, patMeter(curPat())));
@@ -36,7 +60,7 @@ $('meterNum').onchange = e => { const n = clamp(parseInt(e.target.value, 10) || 
 $('meterDen').onchange = e => { const n = parseInt(e.target.value, 10); withUndo(() => { curPat().meter = [patMeter(curPat())[0], n]; }); };
 $('order').onchange = e => {
   const o = e.target.value.split(/[\s,]+/).map(s => parseInt(s, 10)).filter(n => Number.isInteger(n) && state.song.patterns[n]);
-  state.song.order = o.length ? o : [0]; e.target.value = state.song.order.join(' ');
+  state.song.order = o.length ? o : [0]; e.target.value = state.song.order.join(' '); markEdited();
 };
 $('octave').onchange = e => setOctave(parseInt(e.target.value, 10) || 0);
 $('step').onchange = e => setStep(parseInt(e.target.value, 10) || 0);

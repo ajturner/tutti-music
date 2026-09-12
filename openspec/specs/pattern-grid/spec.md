@@ -7,11 +7,11 @@ Specifies how a pattern is displayed and navigated: the tracker grid of rows by 
 ## Requirements
 
 ### Requirement: Grid layout
-The grid SHALL show one row per pattern row, a fixed left gutter with the row number and the tempo lane, and, for each track, the cells: per note column a note cell and a velocity cell, then one articulation cell and one dynamics cell. Track headers SHALL show family, track name, and MIDI channel, colored by family.
+The grid SHALL show one row per pattern row, a fixed left gutter with the row number and the tempo lane, and, for each track, the cells: per note column a note cell and a velocity cell, then one articulation cell, one dynamics cell and one fx cell. Track headers SHALL show family, track name, and MIDI channel, colored by family.
 
 #### Scenario: Track with two columns
 - **WHEN** a track has 2 note columns
-- **THEN** its cells read note, vel, note, vel, art, dyn
+- **THEN** its cells read note, vel, note, vel, art, dyn, fx
 
 ### Requirement: Cell rendering
 A note cell SHALL show the note name (for example C-4, F#5) on the row a note starts, a continuation mark on rows the note sustains through, and dots when empty. Velocity, dynamics, and controller values SHALL be shown as two hex digits. Tempo SHALL be shown as decimal bpm. Ramp points SHALL carry a "~" suffix. The dynamics cell SHALL show a filled bar proportional to the current lane value.
@@ -46,11 +46,15 @@ When follow is on and the song is playing, the view SHALL switch to the pattern 
 - **THEN** the grid shows pattern B with the playing row highlighted
 
 ### Requirement: Mute from the header
-Clicking or tapping a track's name in the header SHALL toggle that track's mute. Muted tracks SHALL render their notes in a dimmed color.
+Clicking or tapping a track's name in the header SHALL toggle that track's mute; shift-click or a long press SHALL toggle solo. Muted tracks, and unsoloed tracks while any solo is on, SHALL render their names in a dimmed color; a soloed track shows an "S" marker.
 
 #### Scenario: Toggle mute
 - **WHEN** the user taps the Horns header
 - **THEN** Horns is muted; tapping again unmutes it
+
+#### Scenario: Toggle solo
+- **WHEN** the user shift-clicks the Horns header
+- **THEN** Horns shows S and every other track is dimmed
 
 ### Requirement: Status line
 A status line SHALL show the cursor's track, column, row, the note under the cursor with velocity, length, and articulation, the instrument's articulation list with their digit keys, its range, the current octave, preview and MIDI state, playback state, and the latest message or warning.

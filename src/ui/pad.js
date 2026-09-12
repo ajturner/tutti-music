@@ -1,7 +1,9 @@
 // On-screen entry pad for touch screens and the selection toolbar.
+import { inScale } from '../core/scales.js';
+import { FX_COMMANDS } from '../core/render.js';
 import { ART } from '../core/constants.js';
 import { INST } from '../core/instruments.js';
-import { $, curTrack, sched, state } from './state.js';
+import { $, KEYMAP, curTrack, sched, state } from './state.js';
 import { currentCell } from './layout.js';
 import { moveCell, moveRow, moveTrack, setOctave, setStep, typeIntoCell, undo } from './edit.js';
 import { clearSel, selCells, selRect } from './selection.js';
@@ -14,6 +16,7 @@ import { playPattern, stopAll } from './transport.js';
 // dynamics, decimal digits for tempo, the instrument's articulation names for the art column.
 export const PAD_NOTES = [['C', 'z'], ['C\u266f', 's'], ['D', 'x'], ['D\u266f', 'd'], ['E', 'c'], ['F', 'v'], ['F\u266f', 'g'], ['G', 'b'], ['G\u266f', 'h'], ['A', 'n'], ['A\u266f', 'j'], ['B', 'm'], ['C+', ',']];
 export let padSig = '';
+export function padSigReset() { padSig = ''; }
 export function padButton(label, cls, fn, title) {
   const b = document.createElement('button'); b.textContent = label; if (cls) b.className = cls; if (title) b.title = title;
   b.addEventListener('pointerdown', e => { e.preventDefault(); fn(); state.dirty = true; });
@@ -23,19 +26,25 @@ export function padButton(label, cls, fn, title) {
 export function syncPad() {
   if (!state.pad) return;
   const cell = currentCell(), tr = curTrack();
-  const sig = [cell.kind, tr ? tr.instrument : '', state.octave, state.step, sched.playing ? 1 : 0, state.selectMode ? 1 : 0].join(':');
+  const sig = [cell.kind, tr ? tr.instrument : '', state.octave, state.step, sched.playing ? 1 : 0, state.selectMode ? 1 : 0, JSON.stringify(state.song.key)].join(':');
   if (sig === padSig) return; padSig = sig;
   const keys = $('padKeys'); keys.innerHTML = '';
   if (cell.kind === 'note') {
     // Two rows like a keyboard: 8 white keys span 16 grid columns, black keys sit between them.
     keys.style.setProperty('--cols', 16);
     let col = 1;
+    const key = state.song.key;
     for (const [n, k] of PAD_NOTES) {
-      const black = n.indexOf('\u266f') >= 0;
-      const b = padButton(n === 'C+' ? 'C' + (state.octave + 1) : n, black ? 'black' : 'white', () => typeIntoCell(k));
+      const black = n.indexOf('\u266f') >= 0, off = KEYMAP[k], pitch = (state.octave + 1) * 12 + off;
+      const b = padButton(n === 'C+' ? 'C' + (state.octave + 1) : n, (black ? 'black' : 'white') + (key && !inScale(key, pitch) ? ' out' : ''), () => typeIntoCell(k));
       if (black) b.style.gridColumn = (col - 1) + ' / span 2'; else { b.style.gridColumn = col + ' / span 2'; col += 2; }
       keys.appendChild(b);
     }
+  } else if (cell.kind === 'fx') {
+    keys.style.setProperty('--cols', 16);
+    for (const c of FX_COMMANDS) { const b = padButton(c, 'small', () => typeIntoCell(c[0].toLowerCase())); b.style.gridColumn = 'span 3'; keys.appendChild(b); }
+    const gap = document.createElement('span'); keys.appendChild(gap);
+    for (const d of '0123456789abcdef') keys.appendChild(padButton(d.toUpperCase(), '', () => typeIntoCell(d)));
   } else if (cell.kind === 'art') {
     const arts = INST[tr.instrument].articulations;
     keys.style.setProperty('--cols', arts.length * 2);

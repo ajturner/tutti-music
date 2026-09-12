@@ -1,0 +1,2 @@
+# Design
+Scheduler: `dispatch` drops non-off events of muted tracks and, when any track has `solo`, of non-solo tracks. `queue(rendered)` stores a render; at the loop boundary `swapToQueued` rebuilds the event list with a new time map and calls `onSwap`. Transport `queuePattern(i)` renders that pattern and sets `state.queued`; `onSwap` moves `state.pat`. Track `solo` is an optional boolean in the song (schema). **Migration:** none.

@@ -83,3 +83,24 @@ A song object SHALL carry `format` equal to "tutti-song", an integer `version` (
 #### Scenario: Newer version
 - **WHEN** a file with version 2 is loaded by a version 1 app
 - **THEN** loading fails with a message naming the version
+
+### Requirement: FX data
+Each track in a pattern MAY hold an fx list of { tick, cmd, value } with cmd one of CHA, RET, DEL, ARP, TSP and value 0 to 255, at most one entry per tick. Files without the list SHALL load with an empty list.
+
+#### Scenario: Legacy file
+- **WHEN** a file without fx lists is loaded
+- **THEN** every track has an empty fx list and saves with it
+
+### Requirement: Groove data
+A pattern MAY carry a groove list; when present it SHALL hold 1 to 16 positive numbers.
+
+#### Scenario: Straight by default
+- **WHEN** a pattern is created
+- **THEN** it has no groove and plays straight
+
+### Requirement: Song identity
+A song SHALL carry a `uid` string. New songs get a random one, built-in examples a stable one, and loaded files without one receive a random one.
+
+#### Scenario: Load without uid
+- **WHEN** a file lacking uid is loaded
+- **THEN** the song has a uid after loading

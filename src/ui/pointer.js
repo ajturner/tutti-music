@@ -39,6 +39,7 @@ canvas.addEventListener('pointerdown', e => {
     if (!drag || drag.moved) return;
     const hit = hitTest(drag.x0, drag.y0);
     if (hit && !hit.header) { placeCursor(hit); clearCell(); drag.done = true; if (navigator.vibrate) navigator.vibrate(15); }
+    else if (hit && hit.header && hit.track >= 0) { toggleSolo(hit.track); drag.done = true; if (navigator.vibrate) navigator.vibrate(15); }
   }, 500);
 });
 canvas.addEventListener('pointermove', e => {
@@ -69,12 +70,14 @@ canvas.addEventListener('pointermove', e => {
   if (r !== state.cursor.row) { state.cursor.row = r; state.typing = null; }
   state.dirty = true;
 });
+// Solo is a performance toggle: with any track soloed, only soloed tracks sound.
+export function toggleSolo(ti) { const tr = state.song.tracks[ti]; tr.solo = !tr.solo; state.dirty = true; }
 export function endDrag(e) {
   if (!drag || e.pointerId !== drag.id) return;
   clearTimeout(drag.timer);
   if (!drag.moved && !drag.done && e.type === 'pointerup') {
     const hit = hitTest(e.offsetX, e.offsetY);
-    if (hit && hit.header) { if (hit.track >= 0) { state.song.tracks[hit.track].mute = !state.song.tracks[hit.track].mute; state.dirty = true; } }
+    if (hit && hit.header) { if (hit.track >= 0) { if (drag.shift) toggleSolo(hit.track); else { state.song.tracks[hit.track].mute = !state.song.tracks[hit.track].mute; state.dirty = true; } } }
     else if (hit) placeCursor(hit, drag.shift);
   }
   drag = null; state.topLock = null; state.dirty = true;

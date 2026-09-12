@@ -14,7 +14,8 @@ export function computeLayout() {
       cells.push({ kind: 'vel', col: c, x: cx, w: 2 * cw }); cx += 3 * cw;
     }
     cells.push({ kind: 'art', col: 0, x: cx, w: 3 * cw }); cx += 4 * cw;
-    cells.push({ kind: 'dyn', col: 0, x: cx, w: 3 * cw }); cx += 4.5 * cw;
+    cells.push({ kind: 'dyn', col: 0, x: cx, w: 3 * cw }); cx += 4 * cw;
+    cells.push({ kind: 'fx', col: 0, x: cx, w: 6 * cw }); cx += 6.5 * cw;
     const lay = { x, w: cx - x, cells, track: tr, g0: g };
     x = cx; g += cells.length;
     return lay;

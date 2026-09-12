@@ -320,7 +320,7 @@ export function exLament() {
   lane(A.tempo, '0:60_ 56:60 63:44', tpr);
   return fitColumns(song);
 }
-export const EXAMPLES = [
+const EXAMPLE_LIST = [
   { title: 'Sketch in C', build: seedSong },
   { title: 'Brass chorale', build: exBrassChorale },
   { title: 'Scherzo (pizzicato)', build: exScherzo },
@@ -333,5 +333,8 @@ export const EXAMPLES = [
   { title: 'Waltz (folk, 3/4)', build: exWaltz },
   { title: 'Lament (folk, A Dorian)', build: exLament },
 ];
+// Built-in examples get stable ids so autosave can tell an edited example from a fresh one.
+export const EXAMPLES = EXAMPLE_LIST.map(e => ({ title: e.title, uid: 'example:' + e.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+  build: () => Object.assign(e.build(), { uid: 'example:' + e.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') }) }));
 
 if (typeof module !== 'undefined') module.exports = { PPQ, INST, FAMILIES, newSong, newPattern, patTrack, laneSet, laneValueAt, renderSong, TimeMap, midiFileBytes, seedSong, noteName, line, lane, rep, EXAMPLES, patMeter };

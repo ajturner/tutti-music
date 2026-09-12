@@ -22,6 +22,12 @@
       <label for="song">song</label><select id="song"></select>
       <button id="newSong" title="Start an empty song">New</button>
       <input id="title" type="text" placeholder="title" title="Song title">
+      <button id="deleteSong" title="Remove this song from the list and from browser storage">Delete</button>
+    </div>
+    <div class="group">
+      <label for="keyRoot">key</label>
+      <select id="keyRoot" title="Tonic"><option value="">none</option></select>
+      <select id="keyScale" title="Scale"></select>
     </div>
     <div class="group"><label for="bpm">bpm</label><input id="bpm" type="number" min="20" max="300" value="100" title="Tempo"></div>
     <div class="group">
@@ -38,6 +44,9 @@
       <label for="meterNum">meter</label><input id="meterNum" type="number" min="1" max="16" value="4" style="width:3em" title="Beats per bar">
       <select id="meterDen" title="Beat unit"><option value="2">/2</option><option value="4" selected>/4</option><option value="8">/8</option></select>
       <label for="order">order</label><input id="order" type="text" value="0" title="Pattern indices played in sequence">
+      <label for="groove">groove</label>
+      <select id="groove" title="Row-length multipliers applied cyclically to this pattern"></select>
+      <input id="grooveList" type="text" placeholder="1.33 0.67" title="Custom groove: row-length multipliers, cycled" style="width:7em">
     </div>
     <div class="group">
       <label for="octave">octave</label><input id="octave" type="number" min="0" max="8" value="4">
@@ -73,6 +82,8 @@
   <button data-op="tr:1" title="Transpose up a semitone (=)">+1</button>
   <button data-op="tr:-12" title="Transpose down an octave (⇧−)">−oct</button>
   <button data-op="tr:12" title="Transpose up an octave (⇧=)">+oct</button>
+  <button data-op="deg:-1" title="Down a scale degree in the song's key (,)">−deg</button>
+  <button data-op="deg:1" title="Up a scale degree in the song's key (.)">+deg</button>
   <button data-op="vel:-8" title="Softer">vel −</button>
   <button data-op="vel:8" title="Louder">vel +</button>
   <button data-op="len:-1" title="Shorter notes ([)">len −</button>
@@ -112,6 +123,11 @@
           <tr><td><kbd>Esc</kbd></td><td>deselect</td></tr>
         </table>
         <p>The toolbar above the grid applies the same edits, plus velocity, articulation and a linear ramp of velocity, dynamics or tempo across the selected rows. Paste lines cells up by kind, so a block of notes pastes onto note columns and a dynamics run onto a dynamics column.</p>
+        <h3>Key, FX, groove, live</h3>
+        <p><em>Key</em> in the menu sets the song's key and scale. The pad dims out-of-scale keys, <kbd>,</kbd> and <kbd>.</kbd> (or −deg/+deg) move a selection by scale degrees, and the controller's single-step nudge follows the scale.</p>
+        <p>Each track's <em>fx</em> column takes one command per row: press <kbd>C</kbd> <kbd>R</kbd> <kbd>D</kbd> <kbd>A</kbd> <kbd>T</kbd> to pick it, then two hex digits. <b>CHA</b> chance the row plays (FF always). <b>RET</b> retrigger the note n times. <b>DEL</b> delay the row by xx/256 of a row. <b>ARP</b> arpeggiate: root, +high nibble, +low nibble semitones per row. <b>TSP</b> transpose the track by a signed byte from here until the next TSP.</p>
+        <p><em>Groove</em> per pattern stretches and shrinks rows in a cycle for swing; custom takes a list of multipliers. <em>Solo</em> a track with ⇧-click or a long-press on its name. While a pattern loops, choosing another pattern queues it for the end of the loop (the status shows <em>next</em>).</p>
+        <p>Songs autosave in this browser. Built-in examples reset when deleted; your own songs are removed.</p>
         <h3>Transport</h3>
         <table class="keys">
           <tr><td><kbd>Space</kbd></td><td>loop the pattern / stop</td></tr>

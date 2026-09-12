@@ -5,7 +5,8 @@ import { laneRemove, laneSet, laneValueAt, patTrack } from '../core/song.js';
 import { curPat, curTrack, state } from './state.js';
 import { currentCell } from './layout.js';
 import { audition, noteAt, noteCovering, notesStartingAt, withUndo } from './edit.js';
-import { notesIn, putNote, resizeNote } from '../core/edit.js';
+import { notesIn, putNote, resizeNote, setFx } from '../core/edit.js';
+import { transposeDiatonic } from '../core/scales.js';
 
 // ---- Selection ----------------------------------------------------------------------------
 // Cells are numbered globally left to right: 0 is the tempo column, then every track's cells in
@@ -16,14 +17,15 @@ export function allCells() {
     for (let c = 0; c < tr.columns; c++) { out.push({ track: ti, cell: c * 2, kind: 'note', col: c }); out.push({ track: ti, cell: c * 2 + 1, kind: 'vel', col: c }); }
     out.push({ track: ti, cell: tr.columns * 2, kind: 'art', col: 0 });
     out.push({ track: ti, cell: tr.columns * 2 + 1, kind: 'dyn', col: 0 });
+    out.push({ track: ti, cell: tr.columns * 2 + 2, kind: 'fx', col: 0 });
   });
   return out;
 }
 export function cellIndex(track, cell) {
   if (track < 0) return 0;
   let g = 1;
-  for (let i = 0; i < track; i++) g += state.song.tracks[i].columns * 2 + 2;
-  return g + clamp(cell, 0, state.song.tracks[track].columns * 2 + 1);
+  for (let i = 0; i < track; i++) g += state.song.tracks[i].columns * 2 + 3;
+  return g + clamp(cell, 0, state.song.tracks[track].columns * 2 + 2);
 }
 export const cursorIndex = () => cellIndex(state.cursor.track, state.cursor.cell);
 export function setCursorIndex(g) {
@@ -49,7 +51,7 @@ export function selExtend(dRow, dCell) {
 export function selectTrackOrAll() {
   const cells = allCells(), rows = curPat().rows;
   const tr = state.cursor.track;
-  const g0 = tr < 0 ? 0 : cellIndex(tr, 0), g1 = tr < 0 ? 0 : cellIndex(tr, state.song.tracks[tr].columns * 2 + 1);
+  const g0 = tr < 0 ? 0 : cellIndex(tr, 0), g1 = tr < 0 ? 0 : cellIndex(tr, state.song.tracks[tr].columns * 2 + 2);
   const whole = state.sel && state.sel.r0 === 0 && state.sel.r1 === rows - 1 && state.sel.g0 === g0 && state.sel.g1 === g1;
   state.sel = whole ? { r0: 0, r1: rows - 1, g0: 0, g1: cells.length - 1 } : { r0: 0, r1: rows - 1, g0, g1 };
   state.selAnchor = { row: state.sel.r0, g: state.sel.g0 };
@@ -65,7 +67,7 @@ export function inSel(g, r) { const s = state.sel; return !!s && g >= s.g0 && g 
 export function selNotes(rect, pat) {
   const seen = new Set(), out = [];
   for (const c of selCells(rect)) {
-    if (c.track < 0 || c.kind === 'dyn') continue;
+    if (c.track < 0 || c.kind === 'dyn' || c.kind === 'fx') continue;
     const tr = state.song.tracks[c.track];
     const cols = c.kind === 'art' ? Array.from({ length: tr.columns }, (_, i) => i) : [c.col];
     for (const col of cols) for (const ev of notesIn(pat, tr.id, col, rect.r0, rect.r1)) if (!seen.has(ev)) { seen.add(ev); out.push({ ev, tr }); }
@@ -83,6 +85,7 @@ export function copySel() {
       else if (c.kind === 'note') out.items = notesIn(pat, tr.id, c.col, rect.r0, rect.r1).map(e => ({ tick: e.tick - t0, len: e.len, pitch: e.pitch, vel: e.vel, art: e.art }));
       else if (c.kind === 'vel') out.items = notesIn(pat, tr.id, c.col, rect.r0, rect.r1).map(e => ({ tick: e.tick - t0, vel: e.vel }));
       else if (c.kind === 'art') out.items = (pt ? pt.events : []).filter(e => e.art && e.tick >= t0 && e.tick < t1).map(e => ({ tick: e.tick - t0, art: e.art }));
+      else if (c.kind === 'fx') out.items = (pt && pt.fx ? pt.fx : []).filter(f => f.tick >= t0 && f.tick < t1).map(f => ({ tick: f.tick - t0, cmd: f.cmd, value: f.value }));
     }
     return out;
   });
@@ -99,6 +102,7 @@ export function clearSel() {
       if (c.kind === 'note') pt.events = pt.events.filter(e => !(e.col === c.col && e.tick >= t0 && e.tick < t1));
       else if (c.kind === 'art') pt.events.forEach(e => { if (e.tick >= t0 && e.tick < t1) e.art = null; });
       else if (c.kind === 'dyn') pt.dyn = pt.dyn.filter(p => p.tick < t0 || p.tick >= t1);
+      else if (c.kind === 'fx') pt.fx = (pt.fx || []).filter(f => f.tick < t0 || f.tick >= t1);
     }
   });
   state.typing = null;
@@ -118,6 +122,7 @@ export function pasteAt(row, g, clip) {
         const tick = t0 + Math.round(it.tick * scale); if (tick >= endTick) continue;
         if (cc.kind === 'tempo') laneSet(pat.tempo, tick, it.value, it.interp);
         else if (cc.kind === 'dyn') laneSet(patTrack(pat, tr.id).dyn, tick, it.value, it.interp);
+        else if (cc.kind === 'fx') setFx(pat, tr.id, tick, it.cmd, it.value);
         else if (cc.kind === 'note') putNote(pat, tr.id, c.col, tick, { pitch: it.pitch, len: Math.round(it.len * scale), vel: it.vel, art: it.art });
         else if (cc.kind === 'vel') { const ev = noteAt(pat, tr.id, c.col, Math.floor(tick / tpr)); if (ev) ev.vel = it.vel; }
         else if (cc.kind === 'art') notesStartingAt(pat, tr.id, Math.floor(tick / tpr)).forEach(e => { if (INST[tr.instrument].articulations.includes(it.art)) e.art = it.art; });
@@ -137,6 +142,13 @@ export function transposeSel(d) {
   const pat = curPat(), notes = selNotes(selRect(), pat);
   if (!notes.length) { state.message = 'No notes in the selection'; state.dirty = true; return; }
   withUndo(() => notes.forEach(({ ev }) => { ev.pitch = clamp(ev.pitch + d, 0, 127); }));
+  const first = notes[0]; audition(first.tr, first.ev.pitch, first.ev.art);
+}
+// Move selected notes by scale degrees in the song's key (semitones when there is no key).
+export function transposeSelDiatonic(d) {
+  const pat = curPat(), notes = selNotes(selRect(), pat), key = state.song.key;
+  if (!notes.length) { state.message = 'No notes in the selection'; state.dirty = true; return; }
+  withUndo(() => notes.forEach(({ ev }) => { ev.pitch = transposeDiatonic(key, ev.pitch, d); }));
   const first = notes[0]; audition(first.tr, first.ev.pitch, first.ev.art);
 }
 export function velocitySel(d) {
@@ -185,6 +197,7 @@ export function batchOp(op) {
     case 'dup': duplicateSel(); break;
     case 'clear': clearSel(); break;
     case 'tr': transposeSel(n); break;
+    case 'deg': transposeSelDiatonic(n); break;
     case 'vel': velocitySel(n); break;
     case 'len': lengthSel(n); break;
     case 'interp': interpolateSel(); break;

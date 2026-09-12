@@ -79,3 +79,21 @@ export function resizeNote(pat, trackId, ev, dRows) {
   ev.len = clamp(ev.len + dRows * pat.ticksPerRow, pat.ticksPerRow, maxLength(pat, trackId, ev.col, ev.tick));
   return ev;
 }
+
+// ---- FX column ------------------------------------------------------------------------------
+export function fxAtRow(pat, trackId, row) {
+  const pt = pat.tracks[trackId]; if (!pt || !pt.fx) return null;
+  return pt.fx.find(f => f.tick === row * pat.ticksPerRow) || null;
+}
+export function setFx(pat, trackId, tick, cmd, value) {
+  const pt = patTrack(pat, trackId);
+  const f = pt.fx.find(x => x.tick === tick);
+  if (f) { f.cmd = cmd; f.value = clamp(value | 0, 0, 255); return f; }
+  const nf = { tick, cmd, value: clamp(value | 0, 0, 255) };
+  pt.fx.push(nf); pt.fx.sort((a, b) => a.tick - b.tick);
+  return nf;
+}
+export function removeFx(pat, trackId, tick) {
+  const pt = pat.tracks[trackId]; if (!pt || !pt.fx) return;
+  pt.fx = pt.fx.filter(f => f.tick !== tick);
+}

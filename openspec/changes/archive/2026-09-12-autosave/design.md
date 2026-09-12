@@ -1,0 +1,2 @@
+# Design
+`src/ui/storage.js`: `persisted` set of uids; `markEdited` (called from `withUndo`, header edits and `addSong`) debounces `saveNow` by 400 ms; `restoreSongs` merges stored songs into the list at startup (same uid replaces in place, else append); `deleteCurrentSong` removes from storage and restores the pristine example or removes the song. Storage key `tutti.songs.v1`, JSON array of songs. Examples get uids `example:<slug>`; new and loaded songs get random uids. Schema adds `uid`. **Migration:** loaded files without uid receive one.

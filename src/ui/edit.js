@@ -2,10 +2,13 @@
 import { clamp, noteName } from '../core/constants.js';
 import { INST } from '../core/instruments.js';
 import { laneRemove, laneSet, patTrack } from '../core/song.js';
-import { setNote as coreSetNote, noteAt, noteCovering, notesStartingAt, removeNotesAt, resizeNote } from '../core/edit.js';
+import { setNote as coreSetNote, noteAt, noteCovering, notesStartingAt, removeNotesAt, resizeNote, fxAtRow, setFx, removeFx } from '../core/edit.js';
+import { FX_COMMANDS, FX_DEFAULTS } from '../core/render.js';
+import { transposeDiatonic } from '../core/scales.js';
 import { $, KEYMAP, curPat, curTrack, midi, state, synth } from './state.js';
 import { currentCell } from './layout.js';
 import { syncPatternUI } from './sync.js';
+import { markEdited } from './storage.js';
 
 // Pattern lookups live in the core; re-exported so UI modules keep one import path.
 export { indexTrack, noteAt, noteCovering, notesStartingAt, notesIn, putNote, nextNote, maxLength } from '../core/edit.js';
@@ -16,6 +19,7 @@ export function withUndo(fn) {
   if (state.undo.length > 200) state.undo.shift();
   state.redo.length = 0;
   fn();
+  markEdited();
   state.dirty = true;
 }
 export function undo() { swapHistory(state.undo, state.redo); }
@@ -88,6 +92,15 @@ export function typeIntoCell(k) {
       }
       return typeHex(cell, k, () => 0, v => laneSet(pt.dyn, tick, clamp(v, 0, 127)));
     }
+    case 'fx': {
+      // A letter picks the command (c r d a t); hex digits set its value.
+      const cmd = FX_COMMANDS.find(c => c[0].toLowerCase() === lower);
+      const cur = fxAtRow(pat, tr.id, row);
+      if (cmd) { withUndo(() => setFx(pat, tr.id, tick, cmd, cur ? cur.value : FX_DEFAULTS[cmd])); state.typing = null; return true; }
+      if (!/^[0-9a-f]$/i.test(k)) return false;
+      const c = cur ? cur.cmd : 'CHA';
+      return typeHex(cell, k, () => (cur ? cur.value : 0), v => setFx(pat, tr.id, tick, c, v));
+    }
     case 'tempo': {
       if (lower === 'l' || lower === 's') {
         const p = pat.tempo.find(x => x.tick === tick);
@@ -134,9 +147,11 @@ export function nudgeCell(d) {
   const pat = curPat(), tr = curTrack(), cell = currentCell(), row = state.cursor.row, tick = row * pat.ticksPerRow;
   switch (cell.kind) {
     case 'note': {
+      // Single steps follow the song's key when one is set; octave jumps stay chromatic.
+      const key = state.song.key, move = p => (key && Math.abs(d) === 1) ? transposeDiatonic(key, p, d) : clamp(p + d, 0, 127);
       const ev = noteAt(pat, tr.id, cell.col, row);
-      if (!ev) { const p = clamp(state.lastPitch + d, 0, 127); enterPitch(p, null, cell.col); audition(tr, p, null); return; }
-      withUndo(() => { ev.pitch = clamp(ev.pitch + d, 0, 127); });
+      if (!ev) { const p = move(state.lastPitch); enterPitch(p, null, cell.col); audition(tr, p, null); return; }
+      withUndo(() => { ev.pitch = move(ev.pitch); });
       state.lastPitch = ev.pitch; audition(tr, ev.pitch, ev.art); return;
     }
     case 'vel': {
@@ -145,6 +160,12 @@ export function nudgeCell(d) {
       withUndo(() => { ev.vel = clamp(ev.vel + d, 1, 127); }); return;
     }
     case 'art': nudgeArticulation(d); return;
+    case 'fx': {
+      const f = fxAtRow(pat, tr.id, row);
+      if (!f) { withUndo(() => setFx(pat, tr.id, tick, 'CHA', FX_DEFAULTS.CHA)); return; }
+      if (Math.abs(d) > 1) { const i = FX_COMMANDS.indexOf(f.cmd), c = FX_COMMANDS[((i + Math.sign(d)) % FX_COMMANDS.length + FX_COMMANDS.length) % FX_COMMANDS.length]; withUndo(() => setFx(pat, tr.id, tick, c, f.value)); return; }
+      withUndo(() => setFx(pat, tr.id, tick, f.cmd, f.value + d)); return;
+    }
     case 'dyn': {
       const pts = patTrack(pat, tr.id).dyn, p = pts.find(x => x.tick === tick);
       const v = clamp((p ? p.value : 96) + d, 0, 127);
@@ -169,6 +190,7 @@ export function tapCell() {
     }
     case 'vel': case 'art': { const ev = noteAt(pat, tr.id, cell.col | 0, row); if (ev) audition(tr, ev.pitch, ev.art); return; }
     case 'dyn': { const pts = patTrack(pat, tr.id).dyn; if (!pts.find(x => x.tick === tick)) withUndo(() => laneSet(pts, tick, 96)); return; }
+    case 'fx': { if (!fxAtRow(pat, tr.id, row)) withUndo(() => setFx(pat, tr.id, tick, 'CHA', FX_DEFAULTS.CHA)); return; }
     case 'tempo': { if (!pat.tempo.find(x => x.tick === tick)) withUndo(() => laneSet(pat.tempo, tick, state.song.bpm)); return; }
   }
 }
@@ -178,7 +200,7 @@ export function setRow(r) { const n = curPat().rows; state.cursor.row = ((r % n)
 export function moveRow(d) { setRow(state.cursor.row + d); }
 export function moveCell(d) {
   const c = state.cursor, n = state.song.tracks.length;
-  const cellsOf = i => i < 0 ? 1 : state.song.tracks[i].columns * 2 + 2;
+  const cellsOf = i => i < 0 ? 1 : state.song.tracks[i].columns * 2 + 3;
   let cell = c.cell + d, track = c.track;
   while (cell < 0) { track = track <= -1 ? n - 1 : track - 1; cell += cellsOf(track); }
   while (cell >= cellsOf(track)) { cell -= cellsOf(track); track = track >= n - 1 ? -1 : track + 1; }
@@ -199,6 +221,7 @@ export function clearCell() {
     if (cell.kind === 'tempo') laneRemove(pat.tempo, tick);
     else if (cell.kind === 'dyn') laneRemove(patTrack(pat, tr.id).dyn, tick);
     else if (cell.kind === 'art') notesStartingAt(pat, tr.id, row).forEach(e => { e.art = null; });
+    else if (cell.kind === 'fx') removeFx(pat, tr.id, tick);
     else removeNotesAt(pat, tr.id, cell.col, row);
   });
   state.typing = null;
@@ -212,6 +235,6 @@ export function changeLength(d) {
 export function changeColumns(d) {
   const tr = curTrack(); if (!tr) return;
   tr.columns = clamp(tr.columns + d, 1, 4);
-  state.cursor.cell = clamp(state.cursor.cell, 0, tr.columns * 2 + 1);
+  state.cursor.cell = clamp(state.cursor.cell, 0, tr.columns * 2 + 2);
   state.dirty = true;
 }

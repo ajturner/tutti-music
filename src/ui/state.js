@@ -39,6 +39,7 @@ export const state = {
   selectMode: false,     // touch: drag selects instead of scrolling
   topLock: null,         // first visible row pinned during a drag selection
   clipboard: null,
+  queued: null,          // pattern index waiting to take over when the current loop ends
 };
 state.song = state.songs[0];
 

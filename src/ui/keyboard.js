@@ -1,7 +1,7 @@
 // Keyboard bindings. See the help panel for the scheme and its macOS constraints.
 import { curPat, rowsPerBar, sched, state } from './state.js';
 import { moveCell, moveRow, moveTrack, redo, setOctave, setRow, setStep, typeIntoCell, undo } from './edit.js';
-import { clearSel, copySel, cutSel, deselect, duplicateSel, lengthSel, pasteSel, selExtend, selectTrackOrAll, transposeSel } from './selection.js';
+import { clearSel, copySel, cutSel, deselect, duplicateSel, lengthSel, pasteSel, selExtend, selectTrackOrAll, transposeSel, transposeSelDiatonic } from './selection.js';
 import { changeColumns, changeLength, clearCell } from './edit.js';
 import { playPattern, playSong, stopAll } from './transport.js';
 
@@ -45,6 +45,8 @@ export function handleKey(e) {
     if (code === 'Equal' || k === '=' || k === '+') { transposeSel(sh ? 12 : 1); return true; }
     if (code === 'BracketLeft' || k === '[' || k === '{') { lengthSel(-1); return true; }
     if (code === 'BracketRight' || k === ']' || k === '}') { lengthSel(1); return true; }
+    if (code === 'Comma' || k === ',' || k === '<') { transposeSelDiatonic(-1); return true; }
+    if (code === 'Period' || k === '.' || k === '>') { transposeSelDiatonic(1); return true; }
   }
   // Octave and step: the two keys to the right of 0. Shift switches from octave to step.
   if (code === 'Minus' || k === '-' || k === '_') {
