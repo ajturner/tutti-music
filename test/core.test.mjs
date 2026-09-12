@@ -9,11 +9,14 @@ import { midiFileBytes } from '../src/core/midifile.js';
 import { EXAMPLES, line } from '../src/core/examples.js';
 import { setNote, putNote, resizeNote, removeNotesAt, noteAt, noteCovering, notesIn, maxLength } from '../src/core/edit.js';
 
+import { VERSION } from '../src/version.js';
+import { readFile } from 'node:fs/promises';
 const fails = [];
 const check = (name, ok, extra = '') => { console.log((ok ? 'PASS ' : 'FAIL ') + name + (extra ? '  ' + extra : '')); if (!ok) fails.push(name); };
 
 check('noteName: 60 is C-4', noteName(60) === 'C-4');
 check('PPQ is 960', PPQ === 960);
+check('version matches package.json', VERSION === JSON.parse(await readFile(new URL('../package.json', import.meta.url))).version && /^\d+\.\d+\.\d+$/.test(VERSION));
 check('instruments: keyswitches start at C1 in articulation order', INST.flute.keyswitches.sus === 24 && INST.flute.keyswitches.stc === 26);
 check('instruments: synths have no keyswitches', Object.keys(INST['synth-bass'].keyswitches).length === 0);
 

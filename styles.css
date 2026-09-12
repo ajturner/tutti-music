@@ -33,6 +33,7 @@
   #status b { color: var(--text); font-weight: 500; }
   #status .warn { color: #E9A26B; }
   details summary { cursor: pointer; color: var(--dim); margin-top: 4px; }
+  #version { float: right; color: var(--dim); font-size: 11px; }
   #help { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 4px 28px; margin-top: 8px; color: var(--dim); }
   #help p { margin: 2px 0; }
   #help kbd { color: var(--text); background: var(--field); border: 1px solid var(--line); border-radius: 3px; padding: 0 4px; }
