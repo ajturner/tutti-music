@@ -6,7 +6,7 @@ import { setNote as coreSetNote, noteAt, noteCovering, notesStartingAt, removeNo
 import { FX_COMMANDS, FX_DEFAULTS } from '../core/render.js';
 import { transposeDiatonic } from '../core/scales.js';
 import { $, KEYMAP, activeKey, auditionPreview, curPat, curTrack, midi, state } from './state.js';
-import { currentCell } from './layout.js';
+import { currentCell, cellKinds } from './layout.js';
 import { syncPatternUI, syncSongUI } from './sync.js';
 import { markEdited } from './storage.js';
 
@@ -219,7 +219,7 @@ export function setRow(r) { const n = curPat().rows; state.cursor.row = ((r % n)
 export function moveRow(d) { setRow(state.cursor.row + d); }
 export function moveCell(d) {
   const c = state.cursor, n = state.song.tracks.length;
-  const cellsOf = i => i < 0 ? 1 : state.song.tracks[i].columns * 2 + 3;
+  const cellsOf = i => i < 0 ? 1 : cellKinds(state.song.tracks[i]).length;
   let cell = c.cell + d, track = c.track;
   while (cell < 0) { track = track <= -1 ? n - 1 : track - 1; cell += cellsOf(track); }
   while (cell >= cellsOf(track)) { cell -= cellsOf(track); track = track >= n - 1 ? -1 : track + 1; }
@@ -254,6 +254,6 @@ export function changeLength(d) {
 export function changeColumns(d) {
   const tr = curTrack(); if (!tr) return;
   tr.columns = clamp(tr.columns + d, 1, 4);
-  state.cursor.cell = clamp(state.cursor.cell, 0, tr.columns * 2 + 2);
+  state.cursor.cell = clamp(state.cursor.cell, 0, cellKinds(tr).length - 1);
   state.dirty = true;
 }

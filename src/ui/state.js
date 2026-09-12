@@ -45,6 +45,7 @@ export const state = {
   queued: null,
   mixer: false,          // mixer sidebar shown
   record: false,         // real-time MIDI record while the pattern loops
+  show: { vel: true, art: true, dyn: true, fx: true },   // grid columns shown per track (note columns always)
   sound: 'samples',      // preview sound: 'samples' (bundled orchestra, synth fallback) or 'synth'
   loadingSamples: null,  // 'violins-1 12/44' while samples decode          // pattern index waiting to take over when the current loop ends
 };
@@ -92,3 +93,4 @@ export const rowsPerStrongBeat = () => { const [beats, unit] = patMeter(curPat()
 
 sampler.onProgress = (id, done, total) => { state.loadingSamples = done < total ? id + ' ' + done + '/' + total : null; state.dirty = true; };
 try { const v = localStorage.getItem('tutti.sound'); if (v === 'synth' || v === 'samples') state.sound = v; } catch { /* no storage */ }
+try { const v = JSON.parse(localStorage.getItem('tutti.show.v1') || 'null'); if (v && typeof v === 'object') Object.assign(state.show, v); } catch { /* no storage */ }

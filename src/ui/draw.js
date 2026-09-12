@@ -3,7 +3,7 @@ import { FAMILIES, clamp, hex2, noteName } from '../core/constants.js';
 import { INST } from '../core/instruments.js';
 import { laneValueAt } from '../core/song.js';
 import { $, COLORS, activeKey, applyDensity, canvas, ctx, curPat, curTrack, midi, rowsPerBar, rowsPerStrongBeat, sched, state, view } from './state.js';
-import { computeLayout, currentCell } from './layout.js';
+import { computeLayout, currentCell, HEADER_ROWS, CELL_LABEL } from './layout.js';
 import { indexTrack, noteCovering } from './edit.js';
 import { rowAtTick, grooveOf, FX_HELP } from '../core/render.js';
 import { fxAtRow } from '../core/edit.js';
@@ -40,7 +40,7 @@ export function draw() {
   }
   const pat = curPat();
   const L = computeLayout();
-  const headerH = view.ROW_H * 2 + 8;
+  const headerH = view.ROW_H * HEADER_ROWS + 8;
   const visible = Math.max(1, Math.floor((H - headerH) / view.ROW_H));
   const centerRow = (playRow != null && state.follow && playPat === state.pat) ? playRow : state.cursor.row;
   // While a drag selection is in progress the view stays put (state.topLock) so rows don't slide under the pointer.
@@ -143,7 +143,7 @@ export function draw() {
   ctx.save();
   ctx.beginPath(); ctx.rect(L.gutter.w, 0, W - L.gutter.w, headerH); ctx.clip();
   ctx.translate(-state.scrollX, 0);
-  const bandY = 8 + view.ROW_H / 2, nameY = view.ROW_H + 8 + view.ROW_H / 2;
+  const bandY = 8 + view.ROW_H / 2, nameY = view.ROW_H + 8 + view.ROW_H / 2, labelY = view.ROW_H * 2 + 8 + view.ROW_H / 2;
   const labelEnd = new Map();          // first track of each family group -> where its label ends
   let i = 0;
   while (i < L.tracks.length) {
@@ -165,14 +165,18 @@ export function draw() {
     if (tr.solo) { ctx.fillStyle = COLORS.accent; ctx.fillText('S', lay.x + ctx.measureText(tr.name).width + view.charW * 0.6, nameY); }
     // During song playback a chained track plays another pattern's data: show which.
     if (playStart && playStart.tracks && playStart.tracks[tr.id] != null) { const p = song.patterns[playStart.tracks[tr.id]]; ctx.fillStyle = COLORS.accent; ctx.fillText('\u25b8' + (p ? p.name : '?'), lay.x + ctx.measureText(tr.name).width + view.charW * (tr.solo ? 2 : 0.6), nameY); }
+    // third row: what each cell holds, so a new user can read the columns
+    ctx.fillStyle = COLORS.num; ctx.font = Math.round(parseInt(view.FONT, 10) * 0.78) + 'px ' + view.FONT.slice(view.FONT.indexOf(' ') + 1);   // small caps-sized labels fit inside each cell
+    for (const cell of lay.cells) { const label = cell.kind === 'note' && cell.col > 0 ? ['2nd', '3rd', '4th'][cell.col - 1] : CELL_LABEL[cell.kind]; ctx.fillText(label, cell.x, labelY); }
+    ctx.font = view.FONT;
     const tag = 'ch' + tr.channel, tagX = lay.x + lay.w - view.charW * (tag.length + 1.5);
     if (!labelEnd.has(ti) || labelEnd.get(ti) <= tagX) { ctx.fillStyle = COLORS.num; ctx.fillText(tag, tagX, bandY); }
   });
   ctx.restore();
   ctx.fillStyle = COLORS.header; ctx.fillRect(0, 0, L.gutter.w - view.charW * 0.5, headerH);
   ctx.fillStyle = COLORS.num;
-  ctx.fillText('row', L.gutter.rowX, view.ROW_H + 8 + view.ROW_H / 2);
-  ctx.fillText('bpm', L.gutter.tempoX, view.ROW_H + 8 + view.ROW_H / 2);
+  ctx.fillText('row', L.gutter.rowX, labelY);
+  ctx.fillText('bpm', L.gutter.tempoX, labelY);
 
   view.lastDraw = { L, top, headerH };
   syncPad(); syncSelBar(); syncMixer();

@@ -3,7 +3,7 @@ import { clamp } from '../core/constants.js';
 import { INST } from '../core/instruments.js';
 import { laneRemove, laneSet, laneValueAt, patTrack } from '../core/song.js';
 import { activeKey, curPat, curTrack, state } from './state.js';
-import { currentCell } from './layout.js';
+import { currentCell, cellKinds } from './layout.js';
 import { audition, noteAt, noteCovering, notesStartingAt, withUndo } from './edit.js';
 import { notesIn, putNote, resizeNote, setFx, fxAtRow } from '../core/edit.js';
 import { transposeDiatonic, inScale } from '../core/scales.js';
@@ -13,19 +13,14 @@ import { transposeDiatonic, inScale } from '../core/scales.js';
 // layout order. A selection is a rectangle of rows × global cell indices.
 export function allCells() {
   const out = [{ track: -1, cell: 0, kind: 'tempo', col: 0 }];
-  state.song.tracks.forEach((tr, ti) => {
-    for (let c = 0; c < tr.columns; c++) { out.push({ track: ti, cell: c * 2, kind: 'note', col: c }); out.push({ track: ti, cell: c * 2 + 1, kind: 'vel', col: c }); }
-    out.push({ track: ti, cell: tr.columns * 2, kind: 'art', col: 0 });
-    out.push({ track: ti, cell: tr.columns * 2 + 1, kind: 'dyn', col: 0 });
-    out.push({ track: ti, cell: tr.columns * 2 + 2, kind: 'fx', col: 0 });
-  });
+  state.song.tracks.forEach((tr, ti) => { cellKinds(tr).forEach((k, i) => out.push({ track: ti, cell: i, kind: k.kind, col: k.col })); });
   return out;
 }
 export function cellIndex(track, cell) {
   if (track < 0) return 0;
   let g = 1;
-  for (let i = 0; i < track; i++) g += state.song.tracks[i].columns * 2 + 3;
-  return g + clamp(cell, 0, state.song.tracks[track].columns * 2 + 2);
+  for (let i = 0; i < track; i++) g += cellKinds(state.song.tracks[i]).length;
+  return g + clamp(cell, 0, cellKinds(state.song.tracks[track]).length - 1);
 }
 export const cursorIndex = () => cellIndex(state.cursor.track, state.cursor.cell);
 export function setCursorIndex(g) {
@@ -51,7 +46,7 @@ export function selExtend(dRow, dCell) {
 export function selectTrackOrAll() {
   const cells = allCells(), rows = curPat().rows;
   const tr = state.cursor.track;
-  const g0 = tr < 0 ? 0 : cellIndex(tr, 0), g1 = tr < 0 ? 0 : cellIndex(tr, state.song.tracks[tr].columns * 2 + 2);
+  const g0 = tr < 0 ? 0 : cellIndex(tr, 0), g1 = tr < 0 ? 0 : cellIndex(tr, cellKinds(state.song.tracks[tr]).length - 1);
   const whole = state.sel && state.sel.r0 === 0 && state.sel.r1 === rows - 1 && state.sel.g0 === g0 && state.sel.g1 === g1;
   state.sel = whole ? { r0: 0, r1: rows - 1, g0: 0, g1: cells.length - 1 } : { r0: 0, r1: rows - 1, g0, g1 };
   state.selAnchor = { row: state.sel.r0, g: state.sel.g0 };

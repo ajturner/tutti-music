@@ -9,9 +9,10 @@ import { padSigReset } from './pad.js';
 import { clamp } from '../core/constants.js';
 import { newPattern, newSong, normalizeSong, orderEntry, orderText, parseOrderText, patMeter } from '../core/song.js';
 import { midiFileBytes } from '../core/midifile.js';
-import { $, curPat, preloadSamples, sampler, state, synth } from './state.js';
+import { $, curPat, curTrack, preloadSamples, sampler, state, synth } from './state.js';
 import { setOctave, setStep, withSongUndo, withUndo } from './edit.js';
-import { articulationSel, batchOp } from './selection.js';
+import { articulationSel, batchOp, deselect } from './selection.js';
+import { cellKinds } from './layout.js';
 import { playPattern, playSong, stopAll } from './transport.js';
 import { setPad } from './pad.js';
 import { syncPatternUI, syncSongUI } from './sync.js';
@@ -90,6 +91,16 @@ $('sound').onchange = e => {
   preloadSamples(); state.dirty = true;
 };
 $('padToggle').onchange = e => setPad(e.target.checked);
+// Column visibility: the layout, selection indices and cursor all follow state.show.
+for (const box of document.querySelectorAll('input[data-show]')) {
+  box.checked = state.show[box.dataset.show] !== false;
+  box.onchange = e => {
+    state.show[e.target.dataset.show] = e.target.checked;
+    try { localStorage.setItem('tutti.show.v1', JSON.stringify(state.show)); } catch { /* no storage */ }
+    const tr = curTrack(); if (tr) state.cursor.cell = Math.min(state.cursor.cell, cellKinds(tr).length - 1);
+    deselect(); padSigReset(); state.dirty = true;
+  };
+}
 $('selbar').addEventListener('pointerdown', e => { const b = e.target.closest('button[data-op]'); if (!b) return; e.preventDefault(); batchOp(b.dataset.op); });
 $('selbar').addEventListener('click', e => { if (e.target.closest('button')) e.preventDefault(); });
 $('selArt').onchange = e => { if (e.target.value) articulationSel(e.target.value); e.target.value = ''; state.dirty = true; };

@@ -450,6 +450,18 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   check('synth: voice, banjo and guitar start voices; plucked buffer has signal', synthNew.voice === 1 && synthNew.banjo === 1 && synthNew.guitar === 1 && synthNew.ksPeak > 0.1 && synthNew.ksLen >= 1, JSON.stringify(synthNew));
   await page.evaluate(() => { const i = state.song.tracks.findIndex(t => t.instrument === 'drum-kit'); tutti.removeTrack(state.song, state.song.tracks[i].id); state.song.banks = []; tutti.markEdited(); state.dirty = true; });
   await page.waitForTimeout(500);
+  // --- column visibility and the labelled header ---
+  const cols0 = await page.evaluate(() => ({ kinds: tutti.cellKinds(state.song.tracks[0]).map(k => k.kind).join(' '), header: tutti.view.lastDraw.headerH, rows: tutti.HEADER_ROWS, notes: !!document.getElementById('notes') }));
+  check('columns: header has three rows and the footer has no song description', cols0.header === 18 * 3 + 8 && cols0.rows === 3 && !cols0.notes, JSON.stringify(cols0));
+  await page.uncheck('input[data-show="fx"]'); await page.uncheck('input[data-show="dyn"]'); await page.waitForTimeout(60);
+  const cols1 = await page.evaluate(() => ({ kinds: tutti.cellKinds(state.song.tracks[0]).map(k => k.kind).join(' '), all: tutti.allCells().filter(c => c.track === 0).map(c => c.kind).join(' '), stored: JSON.parse(localStorage.getItem('tutti.show.v1')) }));
+  check('columns: hiding fx and dyn removes them from the layout and selection indices', cols1.kinds === 'note vel art' && cols1.all === 'note vel art' && cols1.stored.fx === false && cols1.stored.dyn === false, JSON.stringify(cols1));
+  await page.evaluate(() => { state.cursor.track = 0; state.cursor.cell = 2; });
+  await page.uncheck('input[data-show="art"]'); await page.waitForTimeout(60);
+  check('columns: hiding the cursor column clamps the cursor', (await page.evaluate(() => state.cursor.cell)) === 1);
+  await page.check('input[data-show="art"]'); await page.waitForTimeout(60);
+  await page.check('input[data-show="fx"]'); await page.check('input[data-show="dyn"]'); await page.waitForTimeout(60);
+  check('columns: showing again restores the cells', (await page.evaluate(() => tutti.cellKinds(state.song.tracks[0]).map(k => k.kind).join(' '))) === 'note vel art dyn fx');
   // gamepad: mock, press down then A tap
   await page.evaluate(() => {
     window.__gp = { id: 'Mock Pad (STANDARD GAMEPAD)', connected: true, mapping: 'standard', axes: [0, 0], buttons: Array.from({ length: 17 }, () => ({ pressed: false, value: 0 })) };

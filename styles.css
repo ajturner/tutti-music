@@ -46,8 +46,6 @@
   .strip .sl span { width: 2.2em; text-align: right; color: var(--text); }
   canvas { display: block; width: 100%; height: 100%; outline: none; touch-action: none; }
   footer { border-top: 1px solid var(--line); background: var(--panel); padding: 6px 14px; font-size: 12px; }
-  #notes { color: var(--dim); font-style: italic; margin-bottom: 3px; }
-  #notes:empty { display: none; }
   #status { display: flex; gap: 22px; flex-wrap: wrap; color: var(--dim); min-height: 1.4em; }
   #status b { color: var(--text); font-weight: 500; }
   #status .warn { color: #E9A26B; }
@@ -75,6 +73,7 @@
   .arrgrp { order: 1; }
   .keygrp { order: 2; }
   .entrygrp { order: 3; }
+  .colgrp { order: 3; }
   .spacer { order: 4; }
   .outgrp { order: 5; }
   #menuToggle { display: none; }
@@ -111,7 +110,6 @@
     header > .group { gap: 4px; }
     #more .group { flex-wrap: wrap; }
     #title { flex: 1 1 8em; min-width: 0; }
-    #notes { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     #menuToggle { display: inline-block; margin-left: auto; }
     #more { display: none; flex-basis: 100%; flex-wrap: wrap; gap: 8px 14px; padding-top: 6px; border-top: 1px solid var(--line); max-height: 55vh; overflow-y: auto; }
     #more .group { flex-basis: 100%; }

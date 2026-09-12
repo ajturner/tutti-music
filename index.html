@@ -69,6 +69,12 @@
       <label for="step">step</label><input id="step" type="number" min="0" max="64" value="4">
       <label title="On-screen entry pad under the grid"><input id="padToggle" type="checkbox"> pad</label>
     </div>
+    <div class="group colgrp" data-label="columns">
+      <label title="Velocity column per note"><input type="checkbox" data-show="vel" checked> vel</label>
+      <label title="Articulation column"><input type="checkbox" data-show="art" checked> art</label>
+      <label title="Dynamics lane"><input type="checkbox" data-show="dyn" checked> dyn</label>
+      <label title="FX column"><input type="checkbox" data-show="fx" checked> fx</label>
+    </div>
     <div class="spacer"></div>
     <div class="group outgrp" data-label="output">
       <label><input id="preview" type="checkbox" checked> preview</label>
@@ -167,7 +173,6 @@
   <button data-view="tracks">Tracks</button>
 </nav>
 <footer>
-  <div id="notes"></div>
   <div id="status"></div>
   <details>
     <summary>Quick keys <a id="helpLink" href="help.html" target="_blank" rel="noopener" title="Open the full guide in a new tab">full guide ↗</a> <span id="version" title="Version"></span></summary>

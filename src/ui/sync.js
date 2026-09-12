@@ -45,7 +45,8 @@ export function syncSongUI() {
   sel.innerHTML = state.songs.map((s, i) => '<option value="' + i + '">' + esc(s.title || 'Untitled') + '</option>').join('');
   sel.value = state.songIndex;
   $('title').value = state.song.title || '';
-  $('notes').textContent = state.song.notes || '';
+  $('title').title = state.song.notes ? 'Song title. ' + state.song.notes : 'Song title';
+  sel.title = state.song.notes || 'Song';
   $('sound').value = state.sound;
   syncKeyUI();
 }

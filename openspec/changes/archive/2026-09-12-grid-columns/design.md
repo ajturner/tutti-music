@@ -1,0 +1,2 @@
+# Design
+`cellKinds(track)` in `layout.js` is the single definition of a track's visible cells, driven by `state.show` (persisted under `tutti.show.v1`); `computeLayout`, `allCells`, `cellIndex`, cursor wrapping and column clamping all use it, so global cell indices stay consistent when columns hide. `HEADER_ROWS` is 3 and the header height derives from it; the third row draws `CELL_LABEL` per cell. Toggling a column clamps the cursor, clears the selection and re-renders the pad. No JSON change.
