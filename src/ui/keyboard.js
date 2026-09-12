@@ -3,7 +3,7 @@ import { curPat, rowsPerBar, sched, state } from './state.js';
 import { moveCell, moveRow, moveTrack, redo, setOctave, setRow, setStep, typeIntoCell, undo } from './edit.js';
 import { clearSel, copySel, cutSel, deselect, duplicateSel, lengthSel, pasteSel, selExtend, selectTrackOrAll, transposeSel, transposeSelDiatonic } from './selection.js';
 import { changeColumns, changeLength, clearCell } from './edit.js';
-import { playPattern, playSong, stopAll } from './transport.js';
+import { playPattern, playSong, stopAll, toggleRecord } from './transport.js';
 
 // ---- Keyboard -----------------------------------------------------------------------------
 // macOS constraints this scheme is built around:
@@ -75,7 +75,7 @@ export function handleKey(e) {
     case 'End': setRow(curPat().rows - 1); return true;
     case 'Tab': moveTrack(sh ? -1 : 1); return true;
     case ' ': if (sched.playing) stopAll(); else playPattern(sh); return true;
-    case 'Enter': playSong(); return true;
+    case 'Enter': sh ? toggleRecord() : playSong(); return true;
     case 'Escape': if (state.sel) deselect(); else stopAll(); return true;
     case 'Delete': case 'Backspace': state.sel ? clearSel() : clearCell(); return true;
   }

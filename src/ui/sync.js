@@ -26,7 +26,8 @@ export function syncKeyUI() {
   const root = $('keyRoot'), scale = $('keyScale');
   fillOnce(root, [['', 'none'], ...KEY_ROOTS.map((n, i) => [String(i), n])]);
   fillOnce(scale, SCALE_NAMES.map(n => [n, n]));
-  const key = state.song.key;
+  const pk = curPat().key, key = pk || state.song.key;
+  $('keyPattern').checked = !!pk;
   root.value = key ? String(key.root) : ''; scale.value = key ? key.scale : 'major';
 }
 export function syncGrooveUI() {
@@ -58,6 +59,7 @@ export function syncPatternUI() {
   $('bpm').value = state.song.bpm;
   state.cursor.row = clamp(state.cursor.row, 0, curPat().rows - 1);
   syncGrooveUI();
+  syncKeyUI();
   syncArranger();
   updateLocation();
 }

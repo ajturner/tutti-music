@@ -2,14 +2,14 @@
 import { markEdited, deleteCurrentSong } from './storage.js';
 import { arranger, syncArranger, wireArranger } from './arranger.js';
 import { wireTracks } from './tracks.js';
-import { queuePattern } from './transport.js';
+import { queuePattern, toggleRecord } from './transport.js';
 import { GROOVES, syncKeyUI, syncGrooveUI } from './sync.js';
 import { padSigReset } from './pad.js';
 import { clamp } from '../core/constants.js';
 import { newPattern, newSong, patMeter, normalizeSong } from '../core/song.js';
 import { midiFileBytes } from '../core/midifile.js';
 import { $, curPat, state, synth } from './state.js';
-import { setOctave, setStep, withUndo } from './edit.js';
+import { setOctave, setStep, withSongUndo, withUndo } from './edit.js';
 import { articulationSel, batchOp } from './selection.js';
 import { playPattern, playSong, stopAll } from './transport.js';
 import { setPad } from './pad.js';
@@ -25,11 +25,12 @@ export function selectSong(i) {
 export function addSong(song) { state.songs.push(song); selectSong(state.songs.length - 1); markEdited(song); }
 $('song').onchange = e => selectSong(parseInt(e.target.value, 10));
 $('newSong').onclick = () => addSong(Object.assign(newSong(), { title: 'Untitled ' + (state.songs.length + 1) }));
-$('title').onchange = e => { state.song.title = e.target.value.trim() || 'Untitled'; syncSongUI(); markEdited(); };
+$('title').onchange = e => { withSongUndo(() => { state.song.title = e.target.value.trim() || 'Untitled'; }); syncSongUI(); };
 $('playPat').onclick = () => playPattern(false);
 $('playSong').onclick = () => playSong();
 $('stop').onclick = () => stopAll();
-$('bpm').onchange = e => { state.song.bpm = clamp(parseInt(e.target.value, 10) || 100, 20, 300); markEdited(); state.dirty = true; };
+$('rec').onclick = () => toggleRecord();
+$('bpm').onchange = e => { withSongUndo(() => { state.song.bpm = clamp(parseInt(e.target.value, 10) || 100, 20, 300); }); };
 export function choosePattern(i) {
   if (!state.song.patterns[i]) return;
   if (queuePattern(i)) { $('pattern').value = state.pat; syncArranger(); return; }   // live: takes over when the loop ends
@@ -40,10 +41,17 @@ arranger.onPick = choosePattern;
 arranger.onChange = () => { $('order').value = state.song.order.join(' '); };
 wireArranger();
 wireTracks();
+// The key selects edit the pattern's key when "this pattern" is ticked, else the song's.
 $('keyRoot').onchange = $('keyScale').onchange = () => {
-  const r = $('keyRoot').value;
-  state.song.key = r === '' ? null : { root: parseInt(r, 10), scale: $('keyScale').value };
-  syncKeyUI(); markEdited(); padSigReset(); state.dirty = true;
+  const r = $('keyRoot').value, key = r === '' ? null : { root: parseInt(r, 10), scale: $('keyScale').value };
+  if ($('keyPattern').checked) withUndo(() => { curPat().key = key || { root: 0, scale: 'major' }; });
+  else withSongUndo(() => { state.song.key = key; });
+  syncKeyUI(); padSigReset(); state.dirty = true;
+};
+$('keyPattern').onchange = e => {
+  if (e.target.checked) withUndo(() => { curPat().key = Object.assign({}, state.song.key || { root: 0, scale: 'major' }); });
+  else withUndo(() => { curPat().key = null; });
+  syncKeyUI(); padSigReset(); state.dirty = true;
 };
 $('groove').onchange = e => {
   const preset = GROOVES.find(([n]) => n === e.target.value);
@@ -67,7 +75,7 @@ $('meterNum').onchange = e => { const n = clamp(parseInt(e.target.value, 10) || 
 $('meterDen').onchange = e => { const n = parseInt(e.target.value, 10); withUndo(() => { curPat().meter = [patMeter(curPat())[0], n]; }); };
 $('order').onchange = e => {
   const o = e.target.value.split(/[\s,]+/).map(s => parseInt(s, 10)).filter(n => Number.isInteger(n) && state.song.patterns[n]);
-  state.song.order = o.length ? o : [0]; e.target.value = state.song.order.join(' '); markEdited();
+  withSongUndo(() => { state.song.order = o.length ? o : [0]; }); e.target.value = state.song.order.join(' '); syncArranger();
 };
 $('octave').onchange = e => setOctave(parseInt(e.target.value, 10) || 0);
 $('step').onchange = e => setStep(parseInt(e.target.value, 10) || 0);

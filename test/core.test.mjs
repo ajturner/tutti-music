@@ -4,7 +4,7 @@ import { INSTRUMENTS, INST } from '../src/core/instruments.js';
 import { newSong, newPattern, patTrack, laneSet, laneValueAt, normalizeSong, SONG_FORMAT } from '../src/core/song.js';
 import { renderSong, TimeMap, TYPE_ORDER, rowTicks, tickMapper, rowAtTick, applyFx, expShape } from '../src/core/render.js';
 import { addTrack, removeTrack, moveTrack, setTrackInstrument, freeChannel } from '../src/core/song.js';
-import { inScale, transposeDiatonic, snapToScale, degreeOf } from '../src/core/scales.js';
+import { inScale, transposeDiatonic, snapToScale, degreeOf, effectiveKey } from '../src/core/scales.js';
 import { Scheduler } from '../src/core/scheduler.js';
 import { midiFileBytes } from '../src/core/midifile.js';
 import { EXAMPLES, line } from '../src/core/examples.js';
@@ -99,6 +99,8 @@ check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[1
   check('scale: snap nearest', snapToScale(c, 61, 0) === 60 && snapToScale(c, 61, 1) === 62 && snapToScale(c, 66, 0) === 65);
   check('scale: degree numbering crosses octaves', degreeOf(c, 72) === 42 && degreeOf(c, 60) === 35 && degreeOf(c, 59) === 34);
   check('scale: no key is chromatic', transposeDiatonic(null, 60, 3) === 63);
+  const ks = newSong(); ks.key = am; const kp = newPattern('B'); kp.key = c;
+  check('scale: pattern key overrides the song key', effectiveKey(ks, ks.patterns[0]) === am && effectiveKey(ks, kp) === c && effectiveKey({ key: null }, { key: null }) === null);
 }
 
 // Groove

@@ -1,0 +1,2 @@
+# Design
+`withSongUndo(fn)` pushes `{ song: json }`; `swapHistory` restores a song entry by replacing the song object in the list, clamping the pattern and cursor, clearing the selection and resyncing. Track panel, mixer, arranger, order field, key, bpm and title route through it; sliders snapshot when the interaction starts (pointerdown or a key press on the slider), so a drag is one step. No JSON change.

@@ -2,7 +2,7 @@
 import { FAMILIES, clamp, hex2, noteName } from '../core/constants.js';
 import { INST } from '../core/instruments.js';
 import { laneValueAt } from '../core/song.js';
-import { $, COLORS, applyDensity, canvas, ctx, curPat, curTrack, midi, rowsPerBar, rowsPerStrongBeat, sched, state, view } from './state.js';
+import { $, COLORS, activeKey, applyDensity, canvas, ctx, curPat, curTrack, midi, rowsPerBar, rowsPerStrongBeat, sched, state, view } from './state.js';
 import { computeLayout, currentCell } from './layout.js';
 import { indexTrack, noteCovering } from './edit.js';
 import { rowAtTick, grooveOf, FX_HELP } from '../core/render.js';
@@ -191,12 +191,13 @@ export function updateStatus(playRow) {
   } else parts.push('<b>tempo</b> row ' + row + ' (digits, L ramp, S hold)');
   if (cell.kind === 'fx') { const f = fxAtRow(pat, tr.id, row); parts.push('fx ' + (f ? '<b>' + f.cmd + ' ' + hex2(f.value) + '</b> ' + FX_HELP[f.cmd] : 'C R D A T pick a command, hex sets its value')); }
   parts.push('octave <b>' + state.octave + '</b>');
-  parts.push('key <b>' + keyName(state.song.key) + '</b>' + (grooveOf(pat) ? ' | groove <b>on</b>' : ''));
+  parts.push('key <b>' + keyName(activeKey()) + '</b>' + (pat.key ? ' (pattern)' : '') + (grooveOf(pat) ? ' | groove <b>on</b>' : ''));
   if (state.queued != null) parts.push('next <b>' + state.queued + ' ' + (state.song.patterns[state.queued] || {}).name + '</b>');
   parts.push('preview ' + (state.preview ? 'on' : 'off') + ' | MIDI ' + (midi.out ? '<b>' + esc(midi.out.name) + '</b>' : 'off'));
   if (state.sel) parts.push('selected <b>' + (state.sel.r1 - state.sel.r0 + 1) + '</b> rows × <b>' + (state.sel.g1 - state.sel.g0 + 1) + '</b> cells');
   if (midi.in) parts.push('MIDI in <b>' + esc(midi.in.name) + '</b>');
   if (gamepad.name) parts.push('\u{1F3AE} <b>' + esc(gamepad.name.replace(/\s*\(.*$/, '')) + '</b>');
+  if (state.record) parts.push('<b class="warn">REC</b> notes land on the passing row');
   if (sched.playing) parts.push('<b>playing</b>' + (sched.loop ? ' (loop)' : '') + (playRow != null ? ' row ' + playRow : ''));
   if (state.message) parts.push('<span class="warn">' + state.message + '</span>');
   const html = parts.map(p => '<span>' + p + '</span>').join('');

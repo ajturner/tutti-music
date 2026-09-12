@@ -3,7 +3,7 @@ import { inScale } from '../core/scales.js';
 import { FX_COMMANDS } from '../core/render.js';
 import { ART } from '../core/constants.js';
 import { INST } from '../core/instruments.js';
-import { $, KEYMAP, curTrack, sched, state } from './state.js';
+import { $, KEYMAP, activeKey, curTrack, sched, state } from './state.js';
 import { currentCell } from './layout.js';
 import { moveCell, moveRow, moveTrack, setOctave, setStep, typeIntoCell, undo } from './edit.js';
 import { clearSel, selCells, selRect } from './selection.js';
@@ -26,14 +26,14 @@ export function padButton(label, cls, fn, title) {
 export function syncPad() {
   if (!state.pad) return;
   const cell = currentCell(), tr = curTrack();
-  const sig = [cell.kind, tr ? tr.instrument : '', state.octave, state.step, sched.playing ? 1 : 0, state.selectMode ? 1 : 0, JSON.stringify(state.song.key)].join(':');
+  const sig = [cell.kind, tr ? tr.instrument : '', state.octave, state.step, sched.playing ? 1 : 0, state.selectMode ? 1 : 0, JSON.stringify(activeKey())].join(':');
   if (sig === padSig) return; padSig = sig;
   const keys = $('padKeys'); keys.innerHTML = '';
   if (cell.kind === 'note') {
     // Two rows like a keyboard: 8 white keys span 16 grid columns, black keys sit between them.
     keys.style.setProperty('--cols', 16);
     let col = 1;
-    const key = state.song.key;
+    const key = activeKey();
     for (const [n, k] of PAD_NOTES) {
       const black = n.indexOf('\u266f') >= 0, off = KEYMAP[k], pitch = (state.octave + 1) * 12 + off;
       const b = padButton(n === 'C+' ? 'C' + (state.octave + 1) : n, (black ? 'black' : 'white') + (key && !inScale(key, pitch) ? ' out' : ''), () => typeIntoCell(k));

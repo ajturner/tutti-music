@@ -306,6 +306,48 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
     check('help: guide links back to the app', (await tab.$eval('nav .back', a => a.getAttribute('href'))) === './');
     await tab.close();
   }
+  // --- pattern key ---
+  await page.evaluate(() => { if (state.song.patterns.length < 2) document.getElementById('addPattern').click(); state.pat = 1; tutti.syncPatternUI(); });
+  await page.selectOption('#keyRoot', '9'); await page.selectOption('#keyScale', 'natural-minor'); await page.waitForTimeout(30);
+  await page.check('#keyPattern'); await page.selectOption('#keyRoot', '0'); await page.selectOption('#keyScale', 'major'); await page.waitForTimeout(30);
+  const pk = await page.evaluate(() => ({ song: state.song.key, pat: curPat().key, active: tutti.activeKey(), status: document.getElementById('status').textContent }));
+  check('pattern key: override set without touching the song key', pk.song.root === 9 && pk.pat.root === 0 && pk.active.root === 0 && pk.status.includes('(pattern)'), JSON.stringify(pk));
+  await page.evaluate(() => { state.pat = 0; tutti.syncPatternUI(); });
+  check('pattern key: other pattern keeps the song key', await page.evaluate(() => tutti.activeKey().root === 9 && !document.getElementById('keyPattern').checked));
+  await page.evaluate(() => { state.pat = 1; tutti.syncPatternUI(); });
+  await page.uncheck('#keyPattern'); await page.waitForTimeout(30);
+  check('pattern key: untick removes the override', await page.evaluate(() => curPat().key === null && tutti.activeKey().root === 9));
+  await page.evaluate(() => { state.song.key = null; state.pat = 0; tutti.syncPatternUI(); });
+  // --- song-level undo ---
+  const nT = await page.evaluate(() => state.song.tracks.length);
+  await page.click('#tracksBtn'); await page.click('#tracksBody tr:nth-child(2) button[data-act="remove"]'); await page.click('#tracksClose'); await page.waitForTimeout(30);
+  check('song undo: track removed', (await page.evaluate(() => state.song.tracks.length)) === nT - 1);
+  await page.evaluate(() => document.getElementById('grid').focus()); await page.keyboard.press('Meta+z'); await page.waitForTimeout(30);
+  check('song undo: cmd+Z restores the track', (await page.evaluate(() => state.song.tracks.length)) === nT && (await page.evaluate(() => state.song.tracks[1].id)) === 'ob');
+  await page.keyboard.press('Meta+Shift+z'); await page.waitForTimeout(30);
+  check('song undo: redo removes it again', (await page.evaluate(() => state.song.tracks.length)) === nT - 1);
+  await page.keyboard.press('Meta+z'); await page.waitForTimeout(30);
+  await page.$eval('#mixerStrips .strip:nth-child(1) [data-f="volume"]', el => { el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); el.value = '40'; el.dispatchEvent(new Event('input', { bubbles: true })); el.value = '30'; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); });
+  await page.waitForTimeout(30);
+  await page.keyboard.press('Meta+z'); await page.waitForTimeout(30);
+  check('song undo: a slider drag is one step', await page.evaluate(() => state.song.tracks[0].volume == null || state.song.tracks[0].volume === 100));
+  // --- real-time record ---
+  await page.evaluate(() => { state.preview = false; state.cursor.track = 0; state.cursor.cell = 0; const pat = curPat(); pat.tracks.fl.events = []; state.song.tracks[0].columns = 1; });
+  await page.keyboard.press('Shift+Enter'); await page.waitForTimeout(80);
+  check('record: shift+return arms and loops', await page.evaluate(() => state.record && sched.playing && sched.loop) && (await page.$eval('#rec', b => b.classList.contains('on'))));
+  const recd = await page.evaluate(async () => {
+    const row0 = tutti.rowAtTick(curPat(), sched.positionTick());
+    onMidiMessage({ data: [0x90, 67, 88] }); onMidiMessage({ data: [0x90, 71, 80] });
+    await new Promise(r => setTimeout(r, 120));
+    onMidiMessage({ data: [0x80, 67, 0] }); onMidiMessage({ data: [0x90, 71, 0] });
+    const evs = curPat().tracks.fl.events.map(e => ({ row: Math.round(e.tick / curPat().ticksPerRow), pitch: e.pitch, vel: e.vel, col: e.col, len: e.len }));
+    return { row0, evs, cols: state.song.tracks[0].columns };
+  });
+  const rows = recd.evs.map(e => e.row);
+  check('record: chord lands on the passing row across columns', recd.evs.length === 2 && recd.cols === 2 && recd.evs[0].vel === 88 && rows.every(r => Math.abs(r - recd.row0) <= 1 || Math.abs(r - recd.row0) >= 62) && recd.evs.every(e => e.len >= 240), JSON.stringify(recd));
+  await page.keyboard.press('Escape'); await page.waitForTimeout(30);
+  check('record: stop disarms', await page.evaluate(() => !state.record && !sched.playing));
+  await page.evaluate(() => { state.preview = true; curPat().tracks.fl.events = []; state.song.tracks[0].columns = 1; });
   // gamepad: mock, press down then A tap
   await page.evaluate(() => {
     window.__gp = { id: 'Mock Pad (STANDARD GAMEPAD)', connected: true, mapping: 'standard', axes: [0, 0], buttons: Array.from({ length: 17 }, () => ({ pressed: false, value: 0 })) };

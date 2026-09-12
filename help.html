@@ -97,6 +97,7 @@
   <tr><td><kbd>Space</kbd></td><td>loop the pattern, or stop</td></tr>
   <tr><td><kbd>⇧Space</kbd></td><td>loop from the cursor row</td></tr>
   <tr><td><kbd>Return</kbd></td><td>play the song order</td></tr>
+  <tr><td><kbd>⇧Return</kbd></td><td>arm real-time record (loops the pattern)</td></tr>
   <tr><td><kbd>Esc</kbd></td><td>stop (or deselect)</td></tr>
 </table>
 </div>
@@ -113,7 +114,7 @@
   <tr><td><kbd>0</kbd>–<kbd>F</kbd></td><td>velocity, dynamics, fx value</td></tr>
   <tr><td><kbd>L</kbd> <kbd>S</kbd></td><td>ramp / hold a lane point</td></tr>
   <tr><td><kbd>Delete</kbd></td><td>clear the cell</td></tr>
-  <tr><td><kbd>⌘Z</kbd> <kbd>⌘⇧Z</kbd></td><td>undo / redo</td></tr>
+  <tr><td><kbd>⌘Z</kbd> <kbd>⌘⇧Z</kbd></td><td>undo / redo, including track, mixer, key and order changes</td></tr>
   <tr><td><kbd>?</kbd> <kbd>⌘?</kbd></td><td>quick keys panel / this guide in a new window</td></tr>
 </table>
 </div>
@@ -134,7 +135,7 @@
 <p>A toolbar appears with the selection and adds velocity up and down, an articulation list, <b>Interpolate</b> (ramp velocity, dynamics or tempo from the first row to the last), <b>Fill</b> (repeat the first row every step rows), <b>Rnd vel</b>, <b>Rnd pitch</b> (in key, within the selection's range) and <b>Humanize</b> (small random DEL on rows with notes). Paste lines cells up by kind: notes land on note columns, a dynamics run on a dynamics column.</p>
 
 <h2 id="key">Key and scale</h2>
-<p>Set the song's key in the key group. Entry stays chromatic, but the pad dims out-of-scale keys, <kbd>,</kbd> <kbd>.</kbd> and −deg / +deg move a selection by scale degrees, Rnd pitch draws from the key, and the controller's single-step nudge follows the scale. Scales: major, natural, harmonic and melodic minor, dorian, phrygian, lydian, mixolydian, pentatonics, whole tone, chromatic.</p>
+<p>Set the song's key in the key group, or tick <b>this pattern</b> to give the current pattern its own key for a modulation or a relative-major section. Entry stays chromatic, but the pad dims out-of-scale keys, <kbd>,</kbd> <kbd>.</kbd> and −deg / +deg move a selection by scale degrees, Rnd pitch draws from the key, and the controller's single-step nudge follows the scale. Scales: major, natural, harmonic and melodic minor, dorian, phrygian, lydian, mixolydian, pentatonics, whole tone, chromatic.</p>
 
 <h2 id="fx">FX column</h2>
 <p>Each track's <b>fx</b> cell takes one command per row. Press the command's first letter, then two hex digits for its value.</p>
@@ -182,6 +183,8 @@
 <p>Each track sends on its own channel. Articulation keyswitches default to C1–G1 in list order (Kontakt shows these as C0–G0); the dynamics lane drives CC1 and the expression lane CC11; the mixer sends CC7 and CC10. Edit the instrument table in <code>src/core/instruments.js</code> to match your library.</p>
 <h3>In from a keyboard</h3>
 <p>Choose an input after enabling MIDI. Played notes go into the cursor cell with their velocity and advance by step; chords spread across note columns. The sustain pedal skips a step, the mod wheel writes dynamics. WebMIDI is not available on iOS.</p>
+<h3>Real-time record</h3>
+<p>Press <b>● Rec</b> or <kbd>⇧Return</kbd> to arm; the pattern loops if it is not playing. Played notes land on the row the loop is passing, in the first free note column of the cursor's track (columns grow up to four for chords), and releasing the key sets the length. Stop disarms, and the whole pass is one undo step.</p>
 <h3>Export</h3>
 <p><b>Export .mid</b> writes a type 1 Standard MIDI File at 960 PPQ: a conductor track with tempo and meter, then one track per instrument with a program change, notes, controllers and keyswitches. Or drop the file on a DAW arranger.</p>
 

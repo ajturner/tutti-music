@@ -14,6 +14,7 @@
     <button id="playPat" class="primary" title="Space"><span class="full">Play pattern</span><span class="short">Play</span></button>
     <button id="playSong" title="Enter"><span class="full">Play song</span><span class="short">Song</span></button>
     <button id="stop" title="Esc">Stop</button>
+    <button id="rec" title="Record played MIDI notes into the loop (⇧Return)">● Rec</button>
     <label for="bpm">bpm</label><input id="bpm" type="number" min="20" max="300" value="100" title="Tempo">
     <label title="Scroll the grid with playback"><input id="follow" type="checkbox" checked> follow</label>
   </div>
@@ -55,6 +56,7 @@
     <div class="group keygrp" data-label="key">
       <select id="keyRoot" title="Tonic"><option value="">none</option></select>
       <select id="keyScale" title="Scale"></select>
+      <label title="Give this pattern its own key"><input id="keyPattern" type="checkbox"> this pattern</label>
     </div>
     <div class="group entrygrp" data-label="entry">
       <label for="octave">octave</label><input id="octave" type="number" min="0" max="8" value="4">
@@ -130,7 +132,7 @@
         <table class="keys">
           <tr><td><kbd>↑</kbd><kbd>↓</kbd> <kbd>←</kbd><kbd>→</kbd> <kbd>Tab</kbd></td><td>row, cell, track</td></tr>
           <tr><td><kbd>PgUp</kbd><kbd>PgDn</kbd> · <kbd>Home</kbd><kbd>End</kbd></td><td>bar · first/last row</td></tr>
-          <tr><td><kbd>Space</kbd> <kbd>⇧Space</kbd> <kbd>Return</kbd> <kbd>Esc</kbd></td><td>loop · loop from cursor · song · stop</td></tr>
+          <tr><td><kbd>Space</kbd> <kbd>⇧Space</kbd> <kbd>Return</kbd> <kbd>⇧Return</kbd> <kbd>Esc</kbd></td><td>loop · from cursor · song · record · stop</td></tr>
         </table>
       </div>
       <div>

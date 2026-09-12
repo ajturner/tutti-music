@@ -5,9 +5,9 @@ import { laneRemove, laneSet, patTrack } from '../core/song.js';
 import { setNote as coreSetNote, noteAt, noteCovering, notesStartingAt, removeNotesAt, resizeNote, fxAtRow, setFx, removeFx } from '../core/edit.js';
 import { FX_COMMANDS, FX_DEFAULTS } from '../core/render.js';
 import { transposeDiatonic } from '../core/scales.js';
-import { $, KEYMAP, curPat, curTrack, midi, state, synth } from './state.js';
+import { $, KEYMAP, activeKey, curPat, curTrack, midi, state, synth } from './state.js';
 import { currentCell } from './layout.js';
-import { syncPatternUI } from './sync.js';
+import { syncPatternUI, syncSongUI } from './sync.js';
 import { markEdited } from './storage.js';
 
 // Pattern lookups live in the core; re-exported so UI modules keep one import path.
@@ -22,10 +22,29 @@ export function withUndo(fn) {
   markEdited();
   state.dirty = true;
 }
+// Song-level edits (tracks, mixer, key, order, tempo, title) snapshot the whole song.
+export function withSongUndo(fn) {
+  state.undo.push({ song: JSON.stringify(state.song) });
+  if (state.undo.length > 200) state.undo.shift();
+  state.redo.length = 0;
+  fn();
+  markEdited();
+  state.dirty = true;
+}
 export function undo() { swapHistory(state.undo, state.redo); }
 export function redo() { swapHistory(state.redo, state.undo); }
 export function swapHistory(from, to) {
   const h = from.pop(); if (!h) return;
+  if (h.song) {
+    to.push({ song: JSON.stringify(state.song) });
+    const s = JSON.parse(h.song);
+    state.songs[state.songIndex] = s; state.song = s;
+    state.pat = Math.min(state.pat, s.patterns.length - 1);
+    state.cursor.track = Math.min(state.cursor.track, s.tracks.length - 1);
+    state.sel = null; state.selAnchor = null;
+    syncSongUI(); syncPatternUI(); state.typing = null; markEdited(); state.dirty = true;
+    return;
+  }
   to.push({ pat: h.pat, json: JSON.stringify(state.song.patterns[h.pat]) });
   state.song.patterns[h.pat] = JSON.parse(h.json);
   state.pat = h.pat; syncPatternUI(); state.typing = null; state.dirty = true;
@@ -148,7 +167,7 @@ export function nudgeCell(d) {
   switch (cell.kind) {
     case 'note': {
       // Single steps follow the song's key when one is set; octave jumps stay chromatic.
-      const key = state.song.key, move = p => (key && Math.abs(d) === 1) ? transposeDiatonic(key, p, d) : clamp(p + d, 0, 127);
+      const key = activeKey(), move = p => (key && Math.abs(d) === 1) ? transposeDiatonic(key, p, d) : clamp(p + d, 0, 127);
       const ev = noteAt(pat, tr.id, cell.col, row);
       if (!ev) { const p = move(state.lastPitch); enterPitch(p, null, cell.col); audition(tr, p, null); return; }
       withUndo(() => { ev.pitch = move(ev.pitch); });

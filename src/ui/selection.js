@@ -2,7 +2,7 @@
 import { clamp } from '../core/constants.js';
 import { INST } from '../core/instruments.js';
 import { laneRemove, laneSet, laneValueAt, patTrack } from '../core/song.js';
-import { curPat, curTrack, state } from './state.js';
+import { activeKey, curPat, curTrack, state } from './state.js';
 import { currentCell } from './layout.js';
 import { audition, noteAt, noteCovering, notesStartingAt, withUndo } from './edit.js';
 import { notesIn, putNote, resizeNote, setFx, fxAtRow } from '../core/edit.js';
@@ -156,7 +156,7 @@ export function randomizeVelSel(amount = 12) {
 }
 // Random in-key pitches inside the selection's pitch range (a fifth either way when all pitches match).
 export function randomizePitchSel() {
-  const notes = selNotes(selRect(), curPat()), key = state.song.key;
+  const notes = selNotes(selRect(), curPat()), key = activeKey();
   if (!notes.length) { state.message = 'No notes in the selection'; state.dirty = true; return; }
   let lo = Math.min(...notes.map(n => n.ev.pitch)), hi = Math.max(...notes.map(n => n.ev.pitch));
   if (lo === hi) { lo = clamp(lo - 7, 0, 127); hi = clamp(hi + 7, 0, 127); }
@@ -194,7 +194,7 @@ export function transposeSel(d) {
 }
 // Move selected notes by scale degrees in the song's key (semitones when there is no key).
 export function transposeSelDiatonic(d) {
-  const pat = curPat(), notes = selNotes(selRect(), pat), key = state.song.key;
+  const pat = curPat(), notes = selNotes(selRect(), pat), key = activeKey();
   if (!notes.length) { state.message = 'No notes in the selection'; state.dirty = true; return; }
   withUndo(() => notes.forEach(({ ev }) => { ev.pitch = transposeDiatonic(key, ev.pitch, d); }));
   const first = notes[0]; audition(first.tr, first.ev.pitch, first.ev.art);

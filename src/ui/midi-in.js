@@ -1,7 +1,10 @@
 // MIDI step recording and the MIDI port controls.
+import { rowTicks, rowAtTick } from '../core/render.js';
+import { putNote, noteAt, maxLength } from '../core/edit.js';
+import { markEdited } from './storage.js';
 import { INST } from '../core/instruments.js';
 import { laneSet, patTrack } from '../core/song.js';
-import { $, curPat, curTrack, midi, state, synth } from './state.js';
+import { $, curPat, curTrack, midi, sched, state, synth } from './state.js';
 import { currentCell } from './layout.js';
 import { enterPitch, moveRow } from './edit.js';
 import { esc } from './sync.js';
@@ -10,8 +13,35 @@ import { esc } from './sync.js';
 // Notes arriving within a short window are one chord and spread across the track's note columns,
 // growing the columns if needed; when the window closes the cursor advances by step.
 export const midiRec = { timer: 0, n: 0 };
+// Live record: notes land on the row the loop is passing (nearest row), note-off sets the length.
+const live = new Map();   // pitch -> { ev, row, trackId }
+function liveRow() {
+  const pat = curPat(), t = sched.positionTick(); if (t == null) return 0;
+  const tpr = pat.ticksPerRow, rt = rowTicks(pat);
+  let r = rowAtTick(pat, t); if (t - rt[r] > (rt[r + 1] - rt[r]) / 2) r++;
+  return r % pat.rows;
+}
+function liveNoteOn(pitch, vel) {
+  const tr = curTrack(); if (!tr) return;
+  const pat = curPat(), row = liveRow(), tick = row * pat.ticksPerRow;
+  let col = [...Array(tr.columns).keys()].find(c => !noteAt(pat, tr.id, c, row));
+  if (col == null) { if (tr.columns < 4) { tr.columns++; col = tr.columns - 1; } else col = currentCell().col | 0; }
+  const ev = putNote(pat, tr.id, col, tick, { pitch, len: pat.ticksPerRow, vel });
+  live.set(pitch, { ev, row, trackId: tr.id });
+  state.lastPitch = pitch; markEdited(); state.dirty = true;
+}
+function liveNoteOff(pitch) {
+  const l = live.get(pitch); if (!l) return; live.delete(pitch);
+  const pat = curPat(); let end = liveRow(); if (end <= l.row) end += pat.rows;
+  const rows = Math.max(1, end - l.row);
+  l.ev.len = Math.min(rows * pat.ticksPerRow, maxLength(pat, l.trackId, l.ev.col, l.ev.tick));
+  markEdited(); state.dirty = true;
+}
 export function onMidiMessage(e) {
   const [st, d1, d2] = e.data, type = st & 0xF0;
+  const recording = state.record && sched.playing && sched.loop;
+  if (recording && type === 0x90 && d2 > 0) { liveNoteOn(d1, d2); return; }
+  if (recording && (type === 0x80 || (type === 0x90 && d2 === 0))) { liveNoteOff(d1); return; }
   if (type === 0x90 && d2 > 0) recordPitch(d1, d2);
   else if (type === 0xB0 && d1 === 64 && d2 >= 64) moveRow(Math.max(1, state.step));
   else if (type === 0xB0 && d1 === 1) {

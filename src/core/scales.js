@@ -50,3 +50,6 @@ export function snapToScale(key, pitch, dir = 0) {
   if (dir < 0) return clamp(down, 0, 127);
   return clamp(pitch - down <= up - pitch ? down : up, 0, 127);
 }
+
+// The key in force for a pattern: its own override, else the song's key, else none.
+export function effectiveKey(song, pat) { return (pat && pat.key) || (song && song.key) || null; }

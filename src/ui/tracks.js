@@ -5,6 +5,7 @@ import { FAMILIES } from '../core/constants.js';
 import { addTrack, removeTrack, moveTrack, setTrackInstrument } from '../core/song.js';
 import { $, sched, state } from './state.js';
 import { deselect } from './selection.js';
+import { withSongUndo } from './edit.js';
 import { markEdited } from './storage.js';
 
 const clampInt = (v, lo, hi, d) => { const n = parseInt(v, 10); return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : d; };
@@ -40,29 +41,38 @@ export function renderTracks() {
 function onChange(e) {
   const row = e.target.closest('tr'); if (!row) return;
   const tr = state.song.tracks[parseInt(row.dataset.i, 10)], f = e.target.dataset.f; if (!tr || !f) return;
-  switch (f) {
-    case 'name': tr.name = e.target.value.trim() || INST[tr.instrument].name; break;
-    case 'instrument': setTrackInstrument(state.song, tr.id, e.target.value); break;
-    case 'channel': tr.channel = clampInt(e.target.value, 1, 16, tr.channel); break;
-    case 'columns': tr.columns = clampInt(e.target.value, 1, 4, tr.columns); break;
-    case 'volume': tr.volume = clampInt(e.target.value, 0, 127, 100); e.target.title = 'Volume ' + tr.volume; sendControl(tr, 7, tr.volume); break;
-    case 'pan': tr.pan = clampInt(e.target.value, 0, 127, 64); e.target.title = 'Pan ' + tr.pan; sendControl(tr, 10, tr.pan); break;
-    case 'mute': tr.mute = e.target.checked; break;
-    case 'solo': tr.solo = e.target.checked; break;
+  const apply = () => {
+    switch (f) {
+      case 'name': tr.name = e.target.value.trim() || INST[tr.instrument].name; break;
+      case 'instrument': setTrackInstrument(state.song, tr.id, e.target.value); break;
+      case 'channel': tr.channel = clampInt(e.target.value, 1, 16, tr.channel); break;
+      case 'columns': tr.columns = clampInt(e.target.value, 1, 4, tr.columns); break;
+      case 'volume': tr.volume = clampInt(e.target.value, 0, 127, 100); e.target.title = 'Volume ' + tr.volume; sendControl(tr, 7, tr.volume); break;
+      case 'pan': tr.pan = clampInt(e.target.value, 0, 127, 64); e.target.title = 'Pan ' + tr.pan; sendControl(tr, 10, tr.pan); break;
+      case 'mute': tr.mute = e.target.checked; break;
+      case 'solo': tr.solo = e.target.checked; break;
+    }
+  };
+  if (f === 'volume' || f === 'pan') {
+    if (e.type === 'input') { apply(); markEdited(); }
+    state.dirty = true; return;   // keep the slider focused
   }
-  if (f === 'volume' || f === 'pan') { markEdited(); state.dirty = true; return; }   // keep the slider focused
+  withSongUndo(apply);
   afterChange();
 }
 function onClick(e) {
   const b = e.target.closest('button[data-act]'); if (!b) return;
   const row = b.closest('tr'), i = parseInt(row.dataset.i, 10), tr = state.song.tracks[i];
-  if (b.dataset.act === 'up') moveTrack(state.song, i, -1);
-  else if (b.dataset.act === 'down') moveTrack(state.song, i, 1);
-  else if (b.dataset.act === 'remove') { if (state.song.tracks.length <= 1) { state.message = 'A song needs at least one track'; state.dirty = true; return; } removeTrack(state.song, tr.id); }
+  if (b.dataset.act === 'remove' && state.song.tracks.length <= 1) { state.message = 'A song needs at least one track'; state.dirty = true; return; }
+  withSongUndo(() => {
+    if (b.dataset.act === 'up') moveTrack(state.song, i, -1);
+    else if (b.dataset.act === 'down') moveTrack(state.song, i, 1);
+    else if (b.dataset.act === 'remove') removeTrack(state.song, tr.id);
+  });
   afterChange();
 }
 export function addTrackFromPanel() {
-  const tr = addTrack(state.song, $('trackAddInst').value);
+  let tr; withSongUndo(() => { tr = addTrack(state.song, $('trackAddInst').value); });
   state.cursor.track = state.song.tracks.indexOf(tr); state.cursor.cell = 0; state.ensureVisible = true;
   afterChange();
   return tr;
@@ -74,6 +84,9 @@ export function wireTracks() {
   $('trackAdd').onclick = addTrackFromPanel;
   $('tracksBody').addEventListener('change', onChange);
   $('tracksBody').addEventListener('input', e => { if (e.target.type === 'range') onChange(e); });
+  const snap = e => { if (e.target.type === 'range') withSongUndo(() => {}); };   // one undo step per slider interaction
+  $('tracksBody').addEventListener('pointerdown', snap);
+  $('tracksBody').addEventListener('keydown', e => { if (e.target.type === 'range' && !e.repeat) snap(e); });
   $('tracksBody').addEventListener('click', onClick);
   $('tracksDlg').addEventListener('keydown', e => e.stopPropagation());   // typing in the panel must not edit the grid
 }

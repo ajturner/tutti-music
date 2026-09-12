@@ -1,6 +1,7 @@
 // Play pattern, play song, stop.
 import { renderSong, rowTicks } from '../core/render.js';
 import { curPat, sched, state, synth } from './state.js';
+import { withUndo } from './edit.js';
 
 // ---- Transport ----------------------------------------------------------------------------
 export function playPattern(fromCursor) {
@@ -17,7 +18,14 @@ export function playSong() {
   sched.play(state.song, r, { loop: false, startTick: oi >= 0 && r.starts[oi] ? r.starts[oi].tick : 0 });
   state.dirty = true;
 }
-export function stopAll() { sched.stop(); state.queued = null; state.dirty = true; }
+export function stopAll() { sched.stop(); state.queued = null; state.record = false; syncRecordUI(); state.dirty = true; }
+// Real-time record: arm, and loop the pattern if it is not already playing. Stopping disarms.
+export function toggleRecord() {
+  state.record = !state.record;
+  if (state.record) { withUndo(() => {}); if (!sched.playing || !sched.loop) playPattern(false); }
+  syncRecordUI(); state.dirty = true;
+}
+export function syncRecordUI() { const b = document.getElementById('rec'); if (b) b.classList.toggle('on', state.record); }
 // Live mode: while a pattern loops, queue another to take over when the loop ends.
 export function queuePattern(i) {
   if (!sched.playing || !sched.loop) return false;

@@ -1,0 +1,2 @@
+# Design
+`state.record`; `toggleRecord` in transport takes one pattern undo snapshot when arming. In `onMidiMessage`, while recording and the scheduler loops a pattern, note-on computes the nearest row from `positionTick` through the groove's row ticks, picks the first note column free at that row (growing columns up to four), writes a one-row note with the played velocity and remembers it; note-off resizes it to the rows elapsed (wrapping across the loop end), clamped by the column. Other messages keep their step-entry meaning when not recording. No JSON change.

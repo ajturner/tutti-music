@@ -79,6 +79,7 @@
   .outgrp { order: 5; }
   #menuToggle { display: none; }
   .short { display: none; }
+  #rec.on { background: #B23A3A; border-color: #B23A3A; color: #fff; }
   /* Selection toolbar */
   #selbar { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; padding: 4px 8px; border-top: 1px solid var(--line); background: var(--panel); }
   #selbar[hidden] { display: none; }

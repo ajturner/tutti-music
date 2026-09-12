@@ -1,5 +1,6 @@
 // UI state, sink instances, view metrics, DOM handles and small accessors shared by every UI module.
 import { PPQ } from '../core/constants.js';
+import { effectiveKey } from '../core/scales.js';
 import { patMeter } from '../core/song.js';
 import { Scheduler } from '../core/scheduler.js';
 import { SynthSink } from '../core/synth.js';
@@ -40,7 +41,8 @@ export const state = {
   topLock: null,         // first visible row pinned during a drag selection
   clipboard: null,
   queued: null,
-  mixer: false,          // mixer sidebar shown          // pattern index waiting to take over when the current loop ends
+  mixer: false,          // mixer sidebar shown
+  record: false,         // real-time MIDI record while the pattern loops          // pattern index waiting to take over when the current loop ends
 };
 state.song = state.songs[0];
 
@@ -59,6 +61,7 @@ export const canvas = $('grid'), ctx = canvas.getContext('2d');
 
 export const curPat = () => state.song.patterns[state.pat];
 export const curTrack = () => state.cursor.track >= 0 ? state.song.tracks[state.cursor.track] : null;
+export const activeKey = () => effectiveKey(state.song, curPat());
 export const rowsPerBeat = () => { const [, unit] = patMeter(curPat()); return Math.max(1, Math.round(PPQ * 4 / unit / curPat().ticksPerRow)); };
 export const rowsPerBar = () => patMeter(curPat())[0] * rowsPerBeat();
 // In compound meters (6/8, 9/8, 12/8) the felt beat is every three written beats.

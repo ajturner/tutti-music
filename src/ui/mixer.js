@@ -4,6 +4,8 @@ import { INST } from '../core/instruments.js';
 import { $, state } from './state.js';
 import { sendControl, openTracks } from './tracks.js';
 import { markEdited } from './storage.js';
+import { withSongUndo } from './edit.js';
+
 
 const KEY = 'tutti.mixer';
 let sig = '';
@@ -56,18 +58,23 @@ export function wireMixer() {
     const b = e.target.closest('button[data-act]'); if (!b) return;
     const i = parseInt(b.closest('.strip').dataset.i, 10), t = state.song.tracks[i];
     if (b.dataset.act === 'go') { state.cursor.track = i; state.cursor.cell = 0; state.ensureVisible = true; $('grid').focus(); }
-    else if (b.dataset.act === 'mute') t.mute = !t.mute;
-    else if (b.dataset.act === 'solo') t.solo = !t.solo;
+    else if (b.dataset.act === 'mute') withSongUndo(() => { t.mute = !t.mute; });
+    else if (b.dataset.act === 'solo') withSongUndo(() => { t.solo = !t.solo; });
     state.dirty = true;
   });
   box.addEventListener('input', e => {
     const f = e.target.dataset.f; if (!f) return;
     const i = parseInt(e.target.closest('.strip').dataset.i, 10), t = state.song.tracks[i], v = parseInt(e.target.value, 10);
-    if (f === 'volume') { t.volume = v; sendControl(t, 7, v); } else { t.pan = v; sendControl(t, 10, v); }
+    const apply = () => { if (f === 'volume') { t.volume = v; sendControl(t, 7, v); } else { t.pan = v; sendControl(t, 10, v); } };
+    apply(); markEdited();
     e.target.nextElementSibling.textContent = f === 'volume' ? v : panText(v);
-    markEdited(); sig = ''; state.dirty = true;
+    sig = ''; state.dirty = true;
   });
   box.addEventListener('keydown', e => { if (e.target.type === 'range') e.stopPropagation(); });
+  // A slider drag is one undo step: snapshot when the interaction starts, not on every input event.
+  const snap = e => { if (e.target.type === 'range') withSongUndo(() => {}); };
+  box.addEventListener('pointerdown', snap);
+  box.addEventListener('keydown', e => { if (e.target.type === 'range' && !e.repeat) snap(e); });
   $('mixerToggle').onchange = e => setMixer(e.target.checked);
   $('mixerClose').onclick = () => setMixer(false);
   $('mixerTracks').onclick = openTracks;

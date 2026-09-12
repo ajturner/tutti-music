@@ -71,37 +71,7 @@
           "type": "null"
         },
         {
-          "type": "object",
-          "required": [
-            "root",
-            "scale"
-          ],
-          "additionalProperties": false,
-          "properties": {
-            "root": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 11,
-              "description": "Pitch class of the tonic, 0 = C."
-            },
-            "scale": {
-              "type": "string",
-              "enum": [
-                "major",
-                "natural-minor",
-                "harmonic-minor",
-                "melodic-minor",
-                "dorian",
-                "phrygian",
-                "lydian",
-                "mixolydian",
-                "pentatonic-major",
-                "pentatonic-minor",
-                "whole-tone",
-                "chromatic"
-              ]
-            }
-          }
+          "$ref": "#/$defs/key"
         }
       ],
       "description": "Key and scale used for scale highlighting and diatonic transposition. null or absent means no key (chromatic)."
@@ -302,6 +272,17 @@
             "exclusiveMinimum": 0
           },
           "description": "Row-length multipliers applied cyclically and normalised to keep the pattern length; [1.33, 0.67] swings pairs of rows. Absent or all 1 means straight."
+        },
+        "key": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/key"
+            }
+          ],
+          "description": "Key override for this pattern; null or absent inherits the song key."
         }
       }
     },
@@ -393,6 +374,39 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 255
+        }
+      }
+    },
+    "key": {
+      "type": "object",
+      "required": [
+        "root",
+        "scale"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "root": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 11,
+          "description": "Pitch class of the tonic, 0 = C."
+        },
+        "scale": {
+          "type": "string",
+          "enum": [
+            "major",
+            "natural-minor",
+            "harmonic-minor",
+            "melodic-minor",
+            "dorian",
+            "phrygian",
+            "lydian",
+            "mixolydian",
+            "pentatonic-major",
+            "pentatonic-minor",
+            "whole-tone",
+            "chromatic"
+          ]
         }
       }
     }
