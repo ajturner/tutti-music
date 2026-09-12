@@ -14,7 +14,7 @@ A browser-based tracker for composing orchestral music, with MIDI export. Plain 
 - **FX column:** one command per row per track: CHA chance, RET retrigger, DEL delay, ARP arpeggio, TSP transpose.
 - **Groove:** per-pattern swing presets or a custom cycle of row-length multipliers.
 - **Live:** solo tracks with shift-click or long press; pick another pattern while one loops to queue it.
-- **Autosave:** songs persist in the browser; Delete resets an example or removes your song.
+- **Autosave:** songs persist in the browser and the URL names the open song and pattern, so a refresh or bookmark reopens it. Delete resets an example or removes your song.
 - **MIDI in:** step-record from a keyboard into the cursor cell, with chords spread across note columns. Chromium browsers only.
 
 ## Run locally

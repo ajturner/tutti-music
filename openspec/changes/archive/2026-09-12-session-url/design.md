@@ -1,0 +1,2 @@
+# Design
+`src/ui/session.js`: `updateLocation` uses `history.replaceState` so navigation history is not spammed, and records the uid in localStorage key `tutti.last`. `restoreLocation` resolves the hash, then the last uid, to a song index and a clamped pattern. `syncPatternUI` calls `updateLocation`, which covers song selection, pattern changes, added patterns, undo across patterns and follow-mode switches. `main.js` applies `restoreLocation` after `restoreSongs` and listens for `hashchange`. No song JSON change.

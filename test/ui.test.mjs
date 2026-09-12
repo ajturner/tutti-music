@@ -196,6 +196,24 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   const reset = await page.evaluate(() => ({ same: JSON.stringify(state.songs[0].patterns[0].tracks.fl.events) === JSON.stringify(EXAMPLES[0].build().patterns[0].tracks.fl.events), stored: JSON.parse(localStorage.getItem('tutti.songs.v1') || '[]').length }));
   check('autosave: delete resets the example and clears storage', reset.same && reset.stored === 0, JSON.stringify(reset));
   await page.evaluate(() => { for (const k of ['lastDraw', 'ROW_H']) Object.defineProperty(window, k, { get: () => tutti.view[k], configurable: true }); });
+  // --- session URL: new song, edit, refresh lands on the same song and pattern ---
+  await page.click('#newSong'); await page.waitForTimeout(50);
+  const newUid = await page.evaluate(() => state.song.uid);
+  check('session: URL names the new song', (await page.evaluate(() => location.hash)) === '#song=' + encodeURIComponent(newUid));
+  await page.evaluate(() => { state.cursor.track = 0; state.cursor.cell = 0; state.cursor.row = 3; });
+  await page.keyboard.press('x'); await page.waitForTimeout(50);
+  await page.click('#addPattern'); await page.waitForTimeout(600);
+  check('session: URL carries the pattern', (await page.evaluate(() => location.hash)).endsWith('&pat=1'));
+  await page.reload(); await page.waitForTimeout(400);
+  await page.evaluate(() => { for (const k of Object.keys(tutti)) if (!(k in window)) Object.defineProperty(window, k, { get: () => tutti[k], configurable: true }); for (const k of ['lastDraw', 'ROW_H']) Object.defineProperty(window, k, { get: () => tutti.view[k], configurable: true }); });
+  const reopened = await page.evaluate(() => ({ uid: state.song.uid, pat: state.pat, note: !!noteAt(state.song.patterns[0], 'fl', 0, 3), title: state.song.title }));
+  check('session: refresh reopens the new song on its pattern with the edit', reopened.uid === newUid && reopened.pat === 1 && reopened.note, JSON.stringify(reopened));
+  await page.goto(URL); await page.waitForTimeout(400);
+  await page.evaluate(() => { for (const k of Object.keys(tutti)) if (!(k in window)) Object.defineProperty(window, k, { get: () => tutti[k], configurable: true }); for (const k of ['lastDraw', 'ROW_H']) Object.defineProperty(window, k, { get: () => tutti.view[k], configurable: true }); });
+  check('session: bare URL reopens the last song', (await page.evaluate(() => state.song.uid)) === newUid);
+  await page.evaluate(() => { location.hash = '#song=example:sketch-in-c'; }); await page.waitForTimeout(100);
+  check('session: hash change switches song', (await page.evaluate(() => state.song.uid)) === 'example:sketch-in-c');
+  await page.evaluate(() => { localStorage.clear(); });
   // gamepad: mock, press down then A tap
   await page.evaluate(() => {
     window.__gp = { id: 'Mock Pad (STANDARD GAMEPAD)', connected: true, mapping: 'standard', axes: [0, 0], buttons: Array.from({ length: 17 }, () => ({ pressed: false, value: 0 })) };

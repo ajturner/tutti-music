@@ -29,16 +29,28 @@ import { syncSongUI, syncPatternUI } from './ui/sync.js';
 import { setPad } from './ui/pad.js';
 import * as ui_storage from './ui/storage.js';
 import { restoreSongs } from './ui/storage.js';
+import * as ui_session from './ui/session.js';
+import { restoreLocation } from './ui/session.js';
+import { state } from './ui/state.js';
+import { selectSong } from './ui/toolbar.js';
 import { resize, frame } from './ui/draw.js';
 
 document.querySelectorAll('select, input').forEach(el => el.addEventListener('change', () => el.blur()));
 document.querySelectorAll('button').forEach(b => b.addEventListener('click', () => b.blur()));
 restoreSongs();
+const loc = restoreLocation();
+if (loc) { state.songIndex = loc.index; state.song = state.songs[loc.index]; state.pat = loc.pat; }
 syncSongUI();
 syncPatternUI();
+// Back/forward or a hand-edited hash: open that song and pattern.
+window.addEventListener('hashchange', () => {
+  const target = restoreLocation(); if (!target) return;
+  if (target.index !== state.songIndex) selectSong(target.index);
+  if (target.pat !== state.pat) { state.pat = target.pat; syncPatternUI(); state.dirty = true; }
+});
 setPad(coarsePointer());
 resize();
 canvas.focus();
 requestAnimationFrame(frame);
 
-window.tutti = Object.assign({}, core_constants, core_instruments, core_song, core_render, core_scheduler, core_synth, core_midi, core_midifile, core_examples, core_edit, core_scales, ui_state, ui_layout, ui_sync, ui_edit, ui_selection, ui_transport, ui_keyboard, ui_pointer, ui_draw, ui_gamepad, ui_pad, ui_midi_in, ui_toolbar, ui_storage);
+window.tutti = Object.assign({}, core_constants, core_instruments, core_song, core_render, core_scheduler, core_synth, core_midi, core_midifile, core_examples, core_edit, core_scales, ui_state, ui_layout, ui_sync, ui_edit, ui_selection, ui_transport, ui_keyboard, ui_pointer, ui_draw, ui_gamepad, ui_pad, ui_midi_in, ui_toolbar, ui_storage, ui_session);
