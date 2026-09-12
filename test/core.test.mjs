@@ -20,6 +20,17 @@ const check = (name, ok, extra = '') => { console.log((ok ? 'PASS ' : 'FAIL ') +
 check('noteName: 60 is C-4', noteName(60) === 'C-4');
 check('PPQ is 960', PPQ === 960);
 check('version matches package.json', VERSION === JSON.parse(await readFile(new URL('../package.json', import.meta.url))).version && /^\d+\.\d+\.\d+$/.test(VERSION));
+{
+  const sw = await readFile(new URL('../sw.js', import.meta.url), 'utf8');
+  check('service worker version matches', sw.includes("const VERSION = '" + VERSION + "'"));
+  const listed = [...sw.matchAll(/'(src\/[^']+\.js)'/g)].map(m => m[1]);
+  const { readdir } = await import('node:fs/promises');
+  const all = [];
+  for (const d of ['core', 'ui']) for (const f of await readdir(new URL('../src/' + d, import.meta.url))) all.push('src/' + d + '/' + f);
+  all.push('src/main.js', 'src/version.js');
+  const missing = all.filter(f => !listed.includes(f));
+  check('service worker caches every module', missing.length === 0, missing.join(','));
+}
 check('instruments: keyswitches start at C1 in articulation order', INST.flute.keyswitches.sus === 24 && INST.flute.keyswitches.stc === 26);
 check('instruments: synths have no keyswitches', Object.keys(INST['synth-bass'].keyswitches).length === 0);
 

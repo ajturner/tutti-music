@@ -20,6 +20,7 @@ A browser-based tracker for composing orchestral music, with MIDI export. Plain 
 - **Shaping and variation:** EXP fx command for per-note swell, sfz, fade in and out; Fill, Rnd vel, Rnd pitch and Humanize on selections.
 - **Pattern keys, live record, full undo:** a pattern can override the song key; ⇧Return records played MIDI onto the passing row; undo covers tracks, mixer, key, order, tempo and title.
 - **Sampled orchestra:** bundled VSCO 2 (CC0) multisamples with articulations and dynamic layers, synth fallback; regenerate with `npm run build:samples`.
+- **Installable and offline:** web manifest, icons and a service worker; add to home screen, and previously played samples work without a network.
 - **Autosave:** songs persist in the browser and the URL names the open song and pattern, so a refresh or bookmark reopens it. Delete resets an example or removes your song.
 - **MIDI in:** step-record from a keyboard into the cursor cell, with chords spread across note columns. Chromium browsers only.
 

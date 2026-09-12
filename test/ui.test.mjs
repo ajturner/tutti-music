@@ -10,7 +10,7 @@ import path from 'node:path';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const server = createServer(async (req, res) => {
   const file = path.join(root, req.url === '/' ? 'index.html' : decodeURIComponent(req.url.split('?')[0]));
-  const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.m4a': 'audio/mp4' };
+  const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.m4a': 'audio/mp4', '.webmanifest': 'application/manifest+json', '.png': 'image/png' };
   try { res.setHeader('Content-Type', types[path.extname(file)] || 'application/octet-stream'); res.end(await readFile(file)); }
   catch { res.statusCode = 404; res.end(); }
 });
@@ -379,6 +379,21 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   const scope = await page.evaluate(() => { const c = document.getElementById('scopeZone'); const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let lit = 0; for (let i = 0; i < d.length; i += 4) if (d[i] + d[i + 1] + d[i + 2] > 200) lit++; return { w: c.width, lit }; });
   check('sounds: zone waveform is drawn', scope.w > 100 && scope.lit > 200, JSON.stringify(scope));
   await page.click('#soundsClose'); await page.waitForTimeout(30);
+  // --- installable app: manifest, icons, service worker, offline ---
+  const man = await page.evaluate(async () => { const r = await fetch('manifest.webmanifest'); const m = await r.json(); const icons = await Promise.all(m.icons.map(i => fetch(i.src).then(x => x.ok))); return { ok: r.ok, name: m.short_name, display: m.display, icons: icons.every(Boolean), link: !!document.querySelector('link[rel=manifest]'), touch: !!document.querySelector('link[rel=apple-touch-icon]') }; });
+  check('pwa: manifest and icons', man.ok && man.name === 'Tutti' && man.display === 'standalone' && man.icons && man.link && man.touch, JSON.stringify(man));
+  const swReady = await page.evaluate(async () => { const reg = await navigator.serviceWorker.ready; await new Promise(r => setTimeout(r, 300)); return { scope: reg.scope, active: !!reg.active, cached: (await caches.keys()).some(k => k.startsWith('tutti-shell-')) }; });
+  check('pwa: service worker active with the shell cached', swReady.active && swReady.cached, JSON.stringify(swReady));
+  await page.evaluate(() => tutti.sampler.load('flute'));
+  await page.reload(); await page.waitForTimeout(400);
+  const controlled = await page.evaluate(() => !!navigator.serviceWorker.controller);
+  check('pwa: page is controlled after reload', controlled);
+  await ctx.setOffline(true);
+  await page.reload(); await page.waitForTimeout(600);
+  const offline = await page.evaluate(async () => ({ app: typeof tutti === 'object' && !!tutti.state.song, sample: (await fetch('samples/flute/map.json')).ok }));
+  await ctx.setOffline(false);
+  check('pwa: app and used samples load offline', offline.app && offline.sample, JSON.stringify(offline));
+  await page.evaluate(() => { for (const k of Object.keys(tutti)) if (!(k in window)) Object.defineProperty(window, k, { get: () => tutti[k], configurable: true }); for (const k of ['lastDraw', 'ROW_H']) Object.defineProperty(window, k, { get: () => tutti.view[k], configurable: true }); });
   // gamepad: mock, press down then A tap
   await page.evaluate(() => {
     window.__gp = { id: 'Mock Pad (STANDARD GAMEPAD)', connected: true, mapping: 'standard', axes: [0, 0], buttons: Array.from({ length: 17 }, () => ({ pressed: false, value: 0 })) };

@@ -1,0 +1,2 @@
+# Design
+`manifest.webmanifest` (standalone, scoped to the site path), icons drawn by a script into `icons/`, Apple meta tags in `index.html`. `sw.js` names its shell cache after the app version and lists every module; a core test fails if a module is missing from the list or the version differs. Shell requests are network first with cache fallback; sample requests are cache first in a separate cache that survives upgrades. Registration is skipped with `?nosw` for debugging. No JSON change.

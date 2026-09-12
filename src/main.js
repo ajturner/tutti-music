@@ -69,4 +69,8 @@ resize();
 canvas.focus();
 requestAnimationFrame(frame);
 
+// Installable, offline-capable: register the service worker (skipped on file: and in tests that opt out).
+if ('serviceWorker' in navigator && location.protocol.startsWith('http') && !location.search.includes('nosw')) {
+  navigator.serviceWorker.register('sw.js').catch(() => { /* offline support is optional */ });
+}
 window.tutti = Object.assign({}, core_constants, core_instruments, core_song, core_render, core_scheduler, core_synth, core_midi, core_midifile, core_examples, core_edit, core_scales, core_sampler, ui_state, ui_layout, ui_sync, ui_edit, ui_selection, ui_transport, ui_keyboard, ui_pointer, ui_draw, ui_gamepad, ui_pad, ui_midi_in, ui_toolbar, ui_storage, ui_session, ui_tracks, ui_arranger, ui_mixer, ui_sounds, ui_views, { VERSION });
