@@ -100,7 +100,7 @@
   },
   {
    "id": "guitar",
-   "name": "Jazz guitar",
+   "name": "Guitar",
    "family": "plucked",
    "range": [
     40,
@@ -112,12 +112,32 @@
    ],
    "patch": {
     "ks": {
-     "brightness": 0.45,
-     "decay": 1.6,
-     "pick": 0.6
+     "brightness": 0.4,
+     "decay": 2.2,
+     "pick": 0.5,
+     "pos": 0.22,
+     "detune": 4,
+     "resonators": [
+      [
+       105,
+       6,
+       0.9
+      ],
+      [
+       215,
+       5,
+       0.5
+      ],
+      [
+       420,
+       4,
+       0.25
+      ]
+     ]
     },
     "level": 0.3
-   }
+   },
+   "samples": "./guitar/"
   },
   {
    "id": "drum-kit",

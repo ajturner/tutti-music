@@ -27,13 +27,13 @@ export const INSTRUMENTS = [
   inst('basses',    'Basses',     'strings',    [28, 60],  ['sus','leg','stc','piz','trm','mrc'], { speakDelayMs: 36, program: 48 }),
   // Synths: no keyswitches; route these channels to whatever you like in Bitwig (the Microfreak, a Massive patch).
   // Voice: a synthesized choir ("ah") through formant filters; there is no public-domain choir in the sample libraries.
-  inst('voice',      'Voice',      'voice',      [43, 84], ['sus','leg'],       { keyswitches: {}, program: 52, patch: { waves: [['sawtooth', -6, 0.35], ['sawtooth', 6, 0.35], ['triangle', 0, 0.3]], a: 0.35, d: 0.4, s: 0.9, r: 0.5, level: 0.3, lfo: 5.2, formants: [[660, 8, 1], [1120, 10, 0.5], [2750, 12, 0.25]] } }),
+  inst('voice',      'Voice',      'voice',      [43, 84], ['sus','leg'],       { keyswitches: {}, program: 52, samples: 'orchestra/voice/', patch: { waves: [['sawtooth', 0, 0.55], ['triangle', 0, 0.3]], unison: 4, spread: 14, a: 0.45, d: 0.5, s: 0.9, r: 0.6, level: 0.26, vibrato: { rate: 5.3, cents: 9, onset: 0.5 }, breath: 0.05, formants: [[700, 6, 1], [1150, 7, 0.55], [2700, 9, 0.28], [3400, 10, 0.12]], vowels: { leg: [[400, 6, 1], [800, 8, 0.45], [2600, 10, 0.15]] } } }),
   inst('synth-bass', 'Synth bass', 'electronic', [24, 60], ['sus','stc','leg'], { keyswitches: {}, program: 38 }),
   inst('synth-arp',  'Synth arp',  'electronic', [48, 96], ['sus','stc','leg'], { keyswitches: {}, program: 81 }),
 ];
 export const INST = Object.fromEntries(INSTRUMENTS.map(i => [i.id, i]));
 // The built-in orchestra is a bank like any other: its samples live in banks/orchestra/<id>/ (violins II share Violins I).
-for (const i of INSTRUMENTS) { i.bank = 'orchestra'; if (i.family !== 'electronic' && !i.patch) i.samples = 'orchestra/' + (i.id === 'violins-2' ? 'violins-1' : i.id) + '/'; }
+for (const i of INSTRUMENTS) { i.bank = 'orchestra'; if (i.family !== 'electronic' && !i.patch && !i.samples) i.samples = 'orchestra/' + (i.id === 'violins-2' ? 'violins-1' : i.id) + '/'; }
 
 // ---- Banks: instruments added at run time --------------------------------------------------
 // A bank definition lists instruments in the same shape as the table above plus optional fields:
@@ -54,7 +54,7 @@ export function registerInstrument(def, bankId) {
   return ins;
 }
 export function unregisterInstrument(id) {
-  const at = INSTRUMENTS.findIndex(i => i.id === id && i.bank !== 'orchestra');
+  const at = INSTRUMENTS.findIndex(i => i.id === id);
   if (at < 0) return false;
   INSTRUMENTS.splice(at, 1); delete INST[id]; return true;
 }

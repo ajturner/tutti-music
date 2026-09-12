@@ -12,13 +12,13 @@ import { execFileSync } from 'node:child_process';
 let _tok;
 function ghToken() { if (_tok === undefined) { try { _tok = execFileSync('gh', ['auth', 'token']).toString().trim(); } catch { _tok = ''; } } return _tok; }   // authenticated API calls: 5000/h instead of 60/h
 
-export const REPOS = { VSCO: 'sgossner/VSCO-2-CE', VCSL: 'sgossner/VCSL' };
+export const REPOS = { VSCO: 'sgossner/VSCO-2-CE', VCSL: 'sgossner/VCSL', SSO: 'peastman/sso' };
 const REPO = REPOS.VSCO, RAW = 'https://raw.githubusercontent.com/' + REPO + '/master/';
 const OUT = new URL('../banks/orchestra/', import.meta.url).pathname;
 const SECONDS = { sus: 6, trm: 6, rll: 6, mut: 6, stc: 3, piz: 4 };
 export const NOTE_NUM = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
 // VSCO names octaves one lower than scientific pitch (its C3 is MIDI 60).
-export const midiOf = s => { const m = /^([A-G])(#?)(-?\d)$/.exec(s); return m ? NOTE_NUM[m[1]] + (m[2] ? 1 : 0) + (parseInt(m[3], 10) + 2) * 12 : null; };
+export const midiOf = s => { const m = /^([A-Ga-g])(#?)(-?\d)$/.exec(s); if (m) m[1] = m[1].toUpperCase(); return m ? NOTE_NUM[m[1]] + (m[2] ? 1 : 0) + (parseInt(m[3], 10) + 2) * 12 : null; };
 
 // instrument -> articulation -> source folder. Missing articulations fall back in the sampler.
 const SOURCES = {
@@ -126,7 +126,7 @@ export async function build(id) {
   await writeFile(path.join(dir, 'map.json'), JSON.stringify({ instrument: id, source: 'VSCO 2 Community Edition (CC0) by Versilian Studios, converted', license: 'CC0-1.0', zones }, null, 1) + '\n');
   console.log(id + ': ' + n + ' samples');
 }
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
 const wanted = process.argv.slice(2).length ? process.argv.slice(2) : Object.keys(SOURCES);
 for (const id of wanted) { try { await build(id); } catch (e) { console.error('FAILED', id, e.message); } }
 // The orchestra's bank.json comes straight from the instrument table; violins-2 shares violins-1's folder.
@@ -135,10 +135,10 @@ const defs = INSTRUMENTS.filter(i => i.bank === 'orchestra').map(i => {
   const d = { id: i.id, name: i.name, family: i.family, range: i.range, articulations: i.articulations, program: i.program, keyswitches: i.keyswitches };
   if (i.speakDelayMs) d.speakDelayMs = i.speakDelayMs;
   if (i.patch) d.patch = i.patch;
-  else if (i.family !== 'electronic') d.samples = './' + (i.id === 'violins-2' ? 'violins-1' : i.id) + '/';
+  if (i.samples) d.samples = './' + i.samples.replace(/^orchestra\//, '');
   return d;
 });
 await writeFile(path.join(OUT, 'bank.json'), JSON.stringify({ $schema: 'https://ajturner.github.io/tutti-music/schema/tutti-bank.schema.json', id: 'orchestra', name: 'Symphony orchestra',
-  description: 'Woodwinds, brass, timpani, harp, strings and a choir, plus two synths. Built in: always loaded.',
-  license: 'CC0-1.0', source: 'VSCO 2 Community Edition by Versilian Studios', builtin: true, instruments: defs }, null, 1) + '\n');
+  description: 'Woodwinds, brass, timpani, harp, strings and a choir, plus two synths. Loaded by default.',
+  license: 'CC0-1.0', source: 'VSCO 2 Community Edition and VCSL by Versilian Studios', default: true, instruments: defs }, null, 1) + '\n');
 }

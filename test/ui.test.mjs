@@ -398,7 +398,7 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   await page.click('#soundsBtn'); await page.waitForTimeout(600);
   const bankBtns = await page.$$eval('#bankList .bank', b => b.map(x => x.dataset.bank));
   check('banks: catalogue lists the bundled banks', ['orchestra', 'jazz', 'folk', 'electronica'].every(id => bankBtns.includes(id)), bankBtns.join(','));
-  check('banks: orchestra is built in and on', await page.$eval('#bankList [data-bank="orchestra"]', b => b.classList.contains('on') && b.classList.contains('builtin')));
+  check('banks: orchestra is on and styled like any bank', await page.$eval('#bankList [data-bank="orchestra"]', b => b.classList.contains('on') && !b.classList.contains('builtin')));
   await page.click('#bankList [data-bank="orchestra"]'); await page.waitForTimeout(80);
   const hid = await page.evaluate(() => ({ hidden: tutti.hiddenBanks.has('orchestra'), rows: [...document.querySelectorAll('#soundsBody tr')].map(r => r.dataset.id), flute: !!INST.flute, stored: JSON.parse(localStorage.getItem('tutti.hiddenBanks.v1') || '[]') }));
   check('banks: orchestra can be hidden, stays registered, persists', hid.hidden && !hid.rows.includes('flute') && hid.flute && hid.stored.includes('orchestra'), JSON.stringify({ hidden: hid.hidden, n: hid.rows.length, stored: hid.stored }));
@@ -429,6 +429,18 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   await page.evaluate(() => { for (const k of Object.keys(tutti)) if (!(k in window)) Object.defineProperty(window, k, { get: () => tutti[k], configurable: true }); for (const k of ['lastDraw', 'ROW_H']) Object.defineProperty(window, k, { get: () => tutti.view[k], configurable: true }); });
   const bankBack = await page.evaluate(() => ({ loaded: tutti.banks.has('jazz'), inst: !!INST['drum-kit'] && INST['drum-kit'].bank === 'jazz', track: state.song.tracks.some(t => t.instrument === 'drum-kit') }));
   check('banks: a song that uses a bank loads it on reopen', bankBack.loaded && bankBack.inst && bankBack.track, JSON.stringify(bankBack));
+  const unl = await page.evaluate(async () => {
+    const before = tutti.INSTRUMENTS.length;
+    // a song that uses only a jazz instrument: the orchestra is then not in use by the open song
+    const s = tutti.newSong(); s.tracks = [{ id: 'k', name: 'Kit', instrument: 'drum-kit', channel: 1, columns: 1, mute: false }]; s.banks = ['jazz']; s.title = 'Kit only';
+    tutti.addSong(s); await new Promise(r => setTimeout(r, 50));
+    const canUnload = tutti.unloadBank('orchestra', iid => state.songs.some(x => x.tracks.some(t => t.instrument === iid)));
+    const after = tutti.INSTRUMENTS.length, fluteKept = !!INST.flute, voiceGone = !INST.voice;   // flute is used by other songs in the list, voice by none
+    await tutti.loadBank('orchestra');
+    return { before, after, canUnload, fluteKept, voiceGone, reloaded: !!INST.voice && tutti.banks.has('orchestra') };
+  });
+  check('banks: the orchestra unloads like any bank and reloads from its file', unl.canUnload && unl.after < unl.before && unl.fluteKept && unl.voiceGone && unl.reloaded, JSON.stringify(unl));
+  await page.evaluate(() => { const i = state.songs.findIndex(s => s.title === 'Kit only'); if (i >= 0) { tutti.selectSong(0); state.songs.splice(i, 1); tutti.persisted.delete(state.songs[i] && state.songs[i].uid); tutti.saveNow(); } });
   const synthNew = await page.evaluate(async () => {
     await tutti.loadBank('folk'); await tutti.loadBank('jazz'); const s = tutti.synth; s.ensure(); const out = {};
     for (const id of ['voice', 'banjo', 'guitar']) { const before = s.voices.size; s.noteOn('t-' + id, INST[id].family, 60, 100, null, s.ctx.currentTime, id); out[id] = s.voices.size - before; }

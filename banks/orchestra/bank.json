@@ -2,10 +2,9 @@
  "$schema": "https://ajturner.github.io/tutti-music/schema/tutti-bank.schema.json",
  "id": "orchestra",
  "name": "Symphony orchestra",
- "description": "Woodwinds, brass, timpani, harp, strings and a choir, plus two synths. Built in: always loaded.",
+ "description": "Woodwinds, brass, timpani, harp, strings and a choir, plus two synths. Loaded by default.",
  "license": "CC0-1.0",
  "source": "VSCO 2 Community Edition by Versilian Studios",
- "builtin": true,
  "instruments": [
   {
    "id": "flute",
@@ -462,5 +461,6 @@
    "program": 81,
    "keyswitches": {}
   }
- ]
+ ],
+ "default": true
 }

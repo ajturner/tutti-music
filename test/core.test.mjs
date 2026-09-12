@@ -249,8 +249,8 @@ check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[1
   }
   check('samples: every bundled map is complete', maps >= 12 && files > 200 && bad.length === 0, maps + ' maps, ' + files + ' files' + (bad.length ? ' bad: ' + bad.slice(0, 3).join(', ') : ''));
   const ob = JSON.parse(await readFile(new URL('bank.json', dir)));
-  check('orchestra: harp, tuba and voice are in the table', INST.harp && INST.harp.samples === 'orchestra/harp/' && INST.tuba && INST.tuba.samples === 'orchestra/tuba/' && INST.voice && INST.voice.patch && INST.voice.patch.formants.length === 3 && !INST.voice.samples);
-  check('orchestra: bank.json matches the instrument table', ob.builtin === true && ob.instruments.length === INSTRUMENTS.filter(i => i.bank === 'orchestra').length && ob.instruments.every(d => INST[d.id] && (!d.samples || INST[d.id].samples === 'orchestra/' + d.samples.replace(/^\.\//, ''))));
+  check('orchestra: harp, tuba and voice are in the table', INST.harp && INST.harp.samples === 'orchestra/harp/' && INST.tuba && INST.tuba.samples === 'orchestra/tuba/' && INST.voice && INST.voice.patch && INST.voice.patch.formants.length === 4 && INST.voice.samples === 'orchestra/voice/');
+  check('orchestra: bank.json matches the instrument table', ob.default === true && !ob.builtin && ob.instruments.length === INSTRUMENTS.filter(i => i.bank === 'orchestra').length && ob.instruments.every(d => INST[d.id] && (!d.samples || INST[d.id].samples === 'orchestra/' + d.samples.replace(/^\.\//, ''))));
   const eb = JSON.parse(await readFile(new URL('../banks/electronica/bank.json', import.meta.url)));
   const dm = eb.instruments.find(i => i.id === 'drum-machine');
   check('drum machine: kit map is the full GM set', Object.keys(dm.kit).length === Object.keys(GM_DRUMS).length && Object.entries(GM_DRUMS).every(([n, name]) => dm.kit[n] === name));
@@ -268,7 +268,7 @@ check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[1
   const t = addTrack(s, 'zither');
   check('banks: adding a bank instrument records the bank on the song', s.banks.includes('test-bank') && t.instrument === 'zither');
   addTrack(s, 'flute');
-  check('banks: orchestral instruments add no bank', s.banks.length === 1);
+  check('banks: new songs record the orchestra like any bank', s.banks.includes('orchestra') && s.banks.length === 2);
   check('banks: unload keeps instruments in use', unloadBank('test-bank', id => id === 'zither') && !!INST.zither && !INST.buzz && !banks.has('test-bank'));
   const s2 = newSong(); s2.tracks.push({ id: 'x', name: 'X', instrument: 'nope', channel: 15, columns: 1, mute: false }); s2.banks = ['no-such-bank'];
   const missing = await ensureSongBanks(s2);

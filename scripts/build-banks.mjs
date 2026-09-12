@@ -14,7 +14,7 @@ const DYN = { ppp: 0, pp: 1, p: 2, mp: 3, mf: 4, f: 5, ff: 6, fff: 7, soft: 1, m
 // note, layer (higher = louder), round robin, from the many naming schemes in these libraries
 function parse(name) {
   const base = name.replace(/\.wav$/i, '');
-  const n = /(?:^|_)([A-G]#?-?\d)(?=_|$)/.exec(base);
+  const n = /(?:^|_)([A-G]#?-?\d)(?=_|$)/.exec(base) || /-([a-g]#?\d)$/.exec(base);
   let layer = 1, m;
   if ((m = /_(?:vl|v|dyn)(\d+)(?=_|$)/i.exec(base))) layer = parseInt(m[1], 10);
   else if ((m = /_(ppp|pp|p|mp|mf|f|ff|fff|soft|med|medium|loud|quiet)(?=_|$)/i.exec(base))) layer = DYN[m[1].toLowerCase()];
@@ -33,6 +33,8 @@ const BANKS = {
     instruments: {
       'harp': { name: 'Harp', family: 'plucked', range: [24, 103], program: 46, arts: { sus: src('VCSL', 'Chordophones/Composite Chordophones/Concert Harp') }, seconds: 5 },
       'tuba': { name: 'Tuba', family: 'brass', range: [28, 58], program: 58, arts: { sus: src('VSCO', 'Brass/Tuba/sus'), stc: src('VSCO', 'Brass/Tuba/stac') } },
+      // Sonatina Symphonic Orchestra chorus (CC Sampling Plus 1.0, Mattias Westlund): male and female 'aah' in one instrument
+      'voice': { name: 'Voice', family: 'voice', range: [43, 84], program: 52, arts: { sus: src('SSO', 'Sonatina Symphonic Orchestra/Samples/Chorus') }, seconds: 6, license: 'CC-Sampling-Plus-1.0', source: 'Sonatina Symphonic Orchestra by Mattias Westlund' },
     },
   },
   jazz: {
@@ -45,7 +47,8 @@ const BANKS = {
       'upright-bass': { name: 'Upright bass', family: 'strings', range: [28, 60], program: 32, artsOrder: ['piz', 'sus'], arts: { piz: src('VSCO', 'Strings/Solo Contrabass/Pizz'), sus: src('VSCO', 'Strings/Solo Contrabass/SusVib') } },
       'alto-sax':    { name: 'Alto sax', family: 'woodwind', range: [49, 81], program: 65, shareSamples: 'tenor-sax', arts: {} },
       'bass-sax':    { name: 'Bass sax', family: 'woodwind', range: [32, 64], program: 67, shareSamples: 'tenor-sax', arts: {} },
-      'guitar':      { name: 'Jazz guitar', family: 'plucked', range: [40, 88], program: 26, patch: { ks: { brightness: 0.45, decay: 1.6, pick: 0.6 }, level: 0.3 } },
+      // Guitar samples come from FreePats' Spanish Classical Guitar (CC0) via scripts/build-guitar.mjs; the plucked-string patch is the fallback.
+      'guitar':      { name: 'Guitar', family: 'plucked', range: [40, 88], program: 24, samplesFrom: 'build-guitar', patch: { ks: { brightness: 0.4, decay: 2.2, pick: 0.5, pos: 0.22, detune: 4, resonators: [[105, 6, 0.9], [215, 5, 0.5], [420, 4, 0.25]] }, level: 0.3 } },
       'drum-kit':    { name: 'Drum kit', family: 'drums', range: [35, 52], program: 0, kit: {
         36: ['kick', src('VCSL', 'Membranophones/Struck Membranophones/Bass Drum 1'), /BDrumNew_hit/],
         38: ['snare', src('VCSL', 'Membranophones/Struck Membranophones/Snare Drum, Modern 1'), /Snare2_HitSN/],
@@ -69,7 +72,7 @@ const BANKS = {
       'recorder':  { name: 'Recorder', family: 'woodwind', range: [72, 98], program: 74, arts: { sus: src('VCSL', 'Aerophones/Edge-blown Aerophones/Baroque Soprano Recorder/Sustain'), stc: src('VCSL', 'Aerophones/Edge-blown Aerophones/Baroque Soprano Recorder/Staccato') } },
       'harmonica': { name: 'Harmonica', family: 'woodwind', range: [60, 96], program: 22, arts: { sus: src('VCSL', 'Aerophones/Free Aerophones/Harmonica-Hohner-Special20-C/Sustains/Normal'), leg: src('VCSL', 'Aerophones/Free Aerophones/Harmonica-Hohner-Special20-C/Sustains/Vib') } },
       'irish-flute': { name: 'Irish flute', family: 'woodwind', range: [62, 93], program: 73, arts: { sus: src('VCSL', 'Aerophones/Edge-blown Aerophones/Baroque Alto Recorder/Sustain'), leg: src('VCSL', 'Aerophones/Edge-blown Aerophones/Baroque Alto Recorder/SusVib'), stc: src('VCSL', 'Aerophones/Edge-blown Aerophones/Baroque Alto Recorder/Staccato') } },
-      'banjo':       { name: 'Banjo', family: 'plucked', range: [50, 91], program: 105, patch: { ks: { brightness: 0.85, decay: 0.9, pick: 0.9 }, level: 0.34 } },
+      'banjo':       { name: 'Banjo', family: 'plucked', range: [50, 91], program: 105, patch: { ks: { brightness: 0.92, decay: 0.7, pick: 0.95, pos: 0.15, resonators: [[380, 3, 1.2], [760, 4, 0.7], [1400, 3, 0.35]] }, level: 0.34 } },
       'washboard':   { name: 'Washboard', family: 'drums', range: [36, 50], program: 0, kit: {
         36: ['thimble tap', src('VSCO', 'Percussion'), /^Claves1_Hit_/],
         38: ['scrape', src('VSCO', 'Percussion'), /^Guiro-Hit_/],
@@ -154,6 +157,7 @@ async function buildBank(id) {
   for (const [iid, d] of Object.entries(bank.instruments)) {
     const def = { id: iid, name: d.name, family: d.family, range: d.range, program: d.program || 0, articulations: d.artsOrder || Object.keys(d.arts || {}).length ? (d.artsOrder || Object.keys(d.arts)) : (d.shareSamples ? bank.instruments[d.shareSamples].artsOrder || Object.keys(bank.instruments[d.shareSamples].arts) : ['sus']) };
     if (d.shareSamples) { def.samples = './' + d.shareSamples + '/'; defs.push(def); continue; }
+    if (d.samplesFrom) def.samples = './' + iid + '/';   // built by another script; keep the folder reference
     if (d.patch) def.patch = d.patch;
     if (d.synthKit) { def.kit = d.synthKit; def.synthKit = true; }
     if ((d.arts && Object.keys(d.arts).length) || d.kit) {
@@ -172,7 +176,7 @@ async function buildBank(id) {
         }
       }
       zones.sort((a, b) => a.art.localeCompare(b.art) || a.note - b.note || a.layer - b.layer);
-      await writeFile(path.join(idir, 'map.json'), JSON.stringify({ instrument: iid, source: 'VSCO 2 CE / VCSL (CC0) by Versilian Studios, converted', license: 'CC0-1.0', zones }, null, 1) + '\n');
+      await writeFile(path.join(idir, 'map.json'), JSON.stringify({ instrument: iid, source: d.source || 'VSCO 2 CE / VCSL (CC0) by Versilian Studios, converted', license: d.license || 'CC0-1.0', zones }, null, 1) + '\n');
       def.samples = './' + iid + '/';
     }
     defs.push(def);
@@ -183,4 +187,4 @@ async function buildBank(id) {
 }
 const wanted = process.argv.slice(2).length ? process.argv.slice(2) : Object.keys(BANKS);
 for (const id of wanted) { try { await buildBank(id); } catch (e) { console.error('FAILED', id, e.stack || e.message); } }
-await writeFile(path.join(OUT, 'index.json'), JSON.stringify({ banks: [{ id: 'orchestra', name: 'Symphony orchestra', description: 'Woodwinds, brass, timpani, harp, strings and a choir, plus two synths. Built in.', url: 'orchestra/bank.json', builtin: true }, ...Object.entries(BANKS).filter(([, b]) => !b.extra).map(([id, b]) => ({ id, name: b.name, description: b.description, url: id + '/bank.json' }))] }, null, 1) + '\n');
+await writeFile(path.join(OUT, 'index.json'), JSON.stringify({ banks: [{ id: 'orchestra', name: 'Symphony orchestra', description: 'Woodwinds, brass, timpani, harp, strings and a choir, plus two synths. Loaded by default.', url: 'orchestra/bank.json', default: true }, ...Object.entries(BANKS).filter(([, b]) => !b.extra).map(([id, b]) => ({ id, name: b.name, description: b.description, url: id + '/bank.json' }))] }, null, 1) + '\n');

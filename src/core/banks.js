@@ -6,7 +6,9 @@ import { INST, INSTRUMENTS, registerInstrument, unregisterInstrument, placeholde
 export const hiddenBanks = new Set();   // banks kept loaded (songs may use them) but left out of pickers and the Sounds table
 export const isHidden = instrumentId => { const b = INST[instrumentId] && INST[instrumentId].bank; return !!b && hiddenBanks.has(b); };
 export const banks = new Map();          // id -> { id, name, description, url, instruments: [ids], includes: [ids], builtin }
-banks.set('orchestra', { id: 'orchestra', name: 'Symphony orchestra', description: 'Woodwinds, brass, timpani and strings from VSCO 2 CE, plus two synths. Built in.', license: 'CC0-1.0', url: '', instruments: INSTRUMENTS.map(i => i.id), includes: [], builtin: true });
+// The orchestra is registered from the instrument table so songs open instantly; it is the default bank, not a special one.
+export const DEFAULT_BANK = 'orchestra';
+banks.set('orchestra', { id: 'orchestra', name: 'Symphony orchestra', description: 'Woodwinds, brass, timpani, harp, strings and a choir from VSCO 2 CE and VCSL, plus two synths. Loaded by default.', license: 'CC0-1.0', url: '', instruments: INSTRUMENTS.map(i => i.id), includes: [] });
 let catalog = null, catalogUrl = null;
 
 export function setCatalogUrl(url) { catalogUrl = url; catalog = null; }
@@ -38,7 +40,7 @@ export async function loadBank(idOrUrl) {
   return installBank(await r.json(), url);
 }
 export function unloadBank(id, inUse = () => false) {
-  const b = banks.get(id); if (!b || b.builtin) return false;
+  const b = banks.get(id); if (!b) return false;
   for (const iid of b.instruments) if (!inUse(iid)) unregisterInstrument(iid);
   banks.delete(id); return true;
 }

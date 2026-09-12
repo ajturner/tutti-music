@@ -1,0 +1,301 @@
+{
+ "instrument": "voice",
+ "source": "Sonatina Symphonic Orchestra by Mattias Westlund",
+ "license": "CC-Sampling-Plus-1.0",
+ "zones": [
+  {
+   "art": "sus",
+   "note": 43,
+   "layer": 1,
+   "file": "sus_n55_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-male-g2.wav"
+  },
+  {
+   "art": "sus",
+   "note": 44,
+   "layer": 1,
+   "file": "sus_n56_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-male-g#2.wav"
+  },
+  {
+   "art": "sus",
+   "note": 45,
+   "layer": 1,
+   "file": "sus_n57_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-male-a2.wav"
+  },
+  {
+   "art": "sus",
+   "note": 46,
+   "layer": 1,
+   "file": "sus_n58_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-male-a#2.wav"
+  },
+  {
+   "art": "sus",
+   "note": 47,
+   "layer": 1,
+   "file": "sus_n59_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-male-b2.wav"
+  },
+  {
+   "art": "sus",
+   "note": 48,
+   "layer": 1,
+   "file": "sus_n60_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-male-c3.wav"
+  },
+  {
+   "art": "sus",
+   "note": 49,
+   "layer": 1,
+   "file": "sus_n61_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-male-c#3.wav"
+  },
+  {
+   "art": "sus",
+   "note": 50,
+   "layer": 1,
+   "file": "sus_n62_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-male-d3.wav"
+  },
+  {
+   "art": "sus",
+   "note": 51,
+   "layer": 1,
+   "file": "sus_n63_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-male-d#3.wav"
+  },
+  {
+   "art": "sus",
+   "note": 52,
+   "layer": 1,
+   "file": "sus_n64_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-male-e3.wav"
+  },
+  {
+   "art": "sus",
+   "note": 53,
+   "layer": 1,
+   "file": "sus_n65_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-male-f3.wav"
+  },
+  {
+   "art": "sus",
+   "note": 54,
+   "layer": 1,
+   "file": "sus_n66_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-male-f#3.wav"
+  },
+  {
+   "art": "sus",
+   "note": 55,
+   "layer": 1,
+   "file": "sus_n67_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-male-g3.wav"
+  },
+  {
+   "art": "sus",
+   "note": 56,
+   "layer": 1,
+   "file": "sus_n68_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-male-g#3.wav"
+  },
+  {
+   "art": "sus",
+   "note": 57,
+   "layer": 1,
+   "file": "sus_n69_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-male-a3.wav"
+  },
+  {
+   "art": "sus",
+   "note": 58,
+   "layer": 1,
+   "file": "sus_n70_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-male-a#3.wav"
+  },
+  {
+   "art": "sus",
+   "note": 59,
+   "layer": 1,
+   "file": "sus_n71_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-male-b3.wav"
+  },
+  {
+   "art": "sus",
+   "note": 60,
+   "layer": 1,
+   "file": "sus_n72_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-male-c4.wav"
+  },
+  {
+   "art": "sus",
+   "note": 61,
+   "layer": 1,
+   "file": "sus_n73_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-male-c#4.wav"
+  },
+  {
+   "art": "sus",
+   "note": 62,
+   "layer": 1,
+   "file": "sus_n74_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-male-d4.wav"
+  },
+  {
+   "art": "sus",
+   "note": 63,
+   "layer": 1,
+   "file": "sus_n75_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-male-d#4.wav"
+  },
+  {
+   "art": "sus",
+   "note": 64,
+   "layer": 1,
+   "file": "sus_n76_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-male-e4.wav"
+  },
+  {
+   "art": "sus",
+   "note": 65,
+   "layer": 1,
+   "file": "sus_n77_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-male-f4.wav"
+  },
+  {
+   "art": "sus",
+   "note": 66,
+   "layer": 1,
+   "file": "sus_n78_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-male-f#4.wav"
+  },
+  {
+   "art": "sus",
+   "note": 67,
+   "layer": 1,
+   "file": "sus_n79_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-female-g4.wav"
+  },
+  {
+   "art": "sus",
+   "note": 68,
+   "layer": 1,
+   "file": "sus_n80_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-female-g#4.wav"
+  },
+  {
+   "art": "sus",
+   "note": 69,
+   "layer": 1,
+   "file": "sus_n81_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-female-a4.wav"
+  },
+  {
+   "art": "sus",
+   "note": 70,
+   "layer": 1,
+   "file": "sus_n82_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-female-a#4.wav"
+  },
+  {
+   "art": "sus",
+   "note": 71,
+   "layer": 1,
+   "file": "sus_n83_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-female-b4.wav"
+  },
+  {
+   "art": "sus",
+   "note": 72,
+   "layer": 1,
+   "file": "sus_n84_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-female-c5.wav"
+  },
+  {
+   "art": "sus",
+   "note": 73,
+   "layer": 1,
+   "file": "sus_n85_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-female-c#5.wav"
+  },
+  {
+   "art": "sus",
+   "note": 74,
+   "layer": 1,
+   "file": "sus_n86_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-female-d5.wav"
+  },
+  {
+   "art": "sus",
+   "note": 75,
+   "layer": 1,
+   "file": "sus_n87_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-female-d#5.wav"
+  },
+  {
+   "art": "sus",
+   "note": 76,
+   "layer": 1,
+   "file": "sus_n88_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-female-e5.wav"
+  },
+  {
+   "art": "sus",
+   "note": 77,
+   "layer": 1,
+   "file": "sus_n89_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-female-f5.wav"
+  },
+  {
+   "art": "sus",
+   "note": 78,
+   "layer": 1,
+   "file": "sus_n90_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-female-f#5.wav"
+  },
+  {
+   "art": "sus",
+   "note": 79,
+   "layer": 1,
+   "file": "sus_n91_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-female-g5.wav"
+  },
+  {
+   "art": "sus",
+   "note": 80,
+   "layer": 1,
+   "file": "sus_n92_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-female-g#5.wav"
+  },
+  {
+   "art": "sus",
+   "note": 81,
+   "layer": 1,
+   "file": "sus_n93_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-female-a5.wav"
+  },
+  {
+   "art": "sus",
+   "note": 82,
+   "layer": 1,
+   "file": "sus_n94_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-female-a#5.wav"
+  },
+  {
+   "art": "sus",
+   "note": 83,
+   "layer": 1,
+   "file": "sus_n95_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-female-b5.wav"
+  },
+  {
+   "art": "sus",
+   "note": 84,
+   "layer": 1,
+   "file": "sus_n96_0.m4a",
+   "source": "SSO:Sonatina Symphonic Orchestra/Samples/Chorus/chorus-female-c6.wav"
+  }
+ ]
+}

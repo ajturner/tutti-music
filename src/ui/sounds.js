@@ -4,10 +4,10 @@
 import { INSTRUMENTS, INST } from '../core/instruments.js';
 import { FAMILIES, ART } from '../core/constants.js';
 import { $, sampler, synth, state, preloadSamples } from './state.js';
-import { banks, hiddenBanks, loadCatalog, loadBank, unloadBank } from '../core/banks.js';
+import { banks, hiddenBanks, loadCatalog, loadBank, unloadBank, DEFAULT_BANK } from '../core/banks.js';
 import { renderTracks } from './tracks.js';
 
-const KEY = 'tutti.sounds.v1', BANKS_KEY = 'tutti.banks.v1', HIDDEN_KEY = 'tutti.hiddenBanks.v1';
+const KEY = 'tutti.sounds.v1', BANKS_KEY = 'tutti.banks.v1', HIDDEN_KEY = 'tutti.hiddenBanks.v1', UNLOADED_KEY = 'tutti.unloadedBanks.v1';
 let catalog = [];
 let raf = 0, zoneDirty = true;
 const fmtSigned = (v, unit = '') => (v > 0 ? '+' : '') + v + unit;
@@ -52,11 +52,13 @@ export function renderSounds() {
 
 // ---- banks ----------------------------------------------------------------------------------
 function loadedBankIds() { return [...banks.keys()]; }
-function saveBanks() { try { localStorage.setItem(BANKS_KEY, JSON.stringify(loadedBankIds().filter(id => !state.song.banks.includes(id)))); localStorage.setItem(HIDDEN_KEY, JSON.stringify([...hiddenBanks])); } catch { /* no storage */ } }
+function saveBanks() { try { localStorage.setItem(BANKS_KEY, JSON.stringify(loadedBankIds().filter(id => !state.song.banks.includes(id)))); localStorage.setItem(HIDDEN_KEY, JSON.stringify([...hiddenBanks])); localStorage.setItem(UNLOADED_KEY, JSON.stringify(banks.has(DEFAULT_BANK) ? [] : [DEFAULT_BANK])); } catch { /* no storage */ } }
 export function restoreHiddenBanks() { try { for (const id of JSON.parse(localStorage.getItem(HIDDEN_KEY) || '[]')) hiddenBanks.add(id); } catch { /* ignore */ } }
 export async function restoreBanks() {
-  let ids = []; try { ids = JSON.parse(localStorage.getItem(BANKS_KEY) || '[]'); } catch { ids = []; }
+  let ids = [], unloaded = []; try { ids = JSON.parse(localStorage.getItem(BANKS_KEY) || '[]'); unloaded = JSON.parse(localStorage.getItem(UNLOADED_KEY) || '[]'); } catch { ids = []; }
   for (const id of ids) { try { await loadBank(id); } catch { /* gone */ } }
+  // the default bank comes back on every start; drop it again if the user had unloaded it and no song needs it
+  for (const id of unloaded) if (!state.songs.some(s => (s.banks || []).includes(id))) unloadBank(id, iid => state.songs.some(s => s.tracks.some(t => t.instrument === iid)));
   renderTracks();
 }
 export function renderBanks() {
@@ -65,17 +67,17 @@ export function renderBanks() {
   for (const b of banks.values()) if (!known.has(b.id)) known.set(b.id, { id: b.id, name: b.name, description: b.description, url: b.url });
   el.innerHTML = [...known.values()].map(b => {
     const on = banks.has(b.id), used = state.song.banks.includes(b.id), n = on ? banks.get(b.id).instruments.length : '';
-    const builtin = on && banks.get(b.id).builtin, hidden = hiddenBanks.has(b.id);
-    const tip = (b.description || '').replace(/"/g, '&quot;') + (used ? ' (used by this song)' : '') + (builtin ? '. Built in: click to hide or show its instruments' : on ? '. Click to unload' : '. Click to load');
-    return `<button class="bank${on && !hidden ? ' on' : ''}${builtin ? ' builtin' : ''}${hidden ? ' hidden' : ''}" data-bank="${b.id}" title="${tip}">${b.name}${n !== '' ? '<i>' + n + '</i>' : ''}${hidden ? ' –' : on ? ' ✓' : ''}</button>`;
+    const hidden = hiddenBanks.has(b.id);
+    const tip = (b.description || '').replace(/"/g, '&quot;') + (used ? ' (used by this song: click to hide or show)' : on ? '. Click to unload' : '. Click to load');
+    return `<button class="bank${on && !hidden ? ' on' : ''}${hidden ? ' hidden' : ''}" data-bank="${b.id}" title="${tip}">${b.name}${n !== '' ? '<i>' + n + '</i>' : ''}${hidden ? ' –' : on ? ' ✓' : ''}</button>`;
   }).join('');
 }
 async function toggleBank(id) {
   const btn = $('bankList').querySelector(`[data-bank="${id}"]`); if (btn) btn.classList.add('busy');
   try {
     if (banks.has(id)) {
-      // built in, or in use by a song: hide/show instead of unloading (tracks keep playing)
-      if (banks.get(id).builtin || state.song.banks.includes(id)) { if (hiddenBanks.has(id)) hiddenBanks.delete(id); else hiddenBanks.add(id); saveBanks(); renderBanks(); renderSounds(); renderTracks(); return; }
+      // in use by the open song: hide/show instead of unloading (tracks keep playing)
+      if (state.song.banks.includes(id)) { if (hiddenBanks.has(id)) hiddenBanks.delete(id); else hiddenBanks.add(id); saveBanks(); renderBanks(); renderSounds(); renderTracks(); return; }
       unloadBank(id, iid => state.songs.some(s => s.tracks.some(t => t.instrument === iid)));
     } else { await loadBank(id); await sampler.preload(banks.get(id).instruments); }
   } catch (e) { state.message = 'Bank: ' + e.message; state.dirty = true; }

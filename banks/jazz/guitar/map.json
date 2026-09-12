@@ -1,0 +1,343 @@
+{
+ "instrument": "guitar",
+ "source": "FreePats Spanish Classical Guitar (CC0), converted",
+ "license": "CC0-1.0",
+ "zones": [
+  {
+   "art": "sus",
+   "note": 31,
+   "layer": 1,
+   "file": "sus_n31_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/G1.flac"
+  },
+  {
+   "art": "sus",
+   "note": 32,
+   "layer": 1,
+   "file": "sus_n32_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/G#1.flac"
+  },
+  {
+   "art": "sus",
+   "note": 33,
+   "layer": 1,
+   "file": "sus_n33_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/A1.flac"
+  },
+  {
+   "art": "sus",
+   "note": 34,
+   "layer": 1,
+   "file": "sus_n34_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/A#1.flac"
+  },
+  {
+   "art": "sus",
+   "note": 35,
+   "layer": 1,
+   "file": "sus_n35_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/B1.flac"
+  },
+  {
+   "art": "sus",
+   "note": 36,
+   "layer": 1,
+   "file": "sus_n36_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/C2.flac"
+  },
+  {
+   "art": "sus",
+   "note": 37,
+   "layer": 1,
+   "file": "sus_n37_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/C#2.flac"
+  },
+  {
+   "art": "sus",
+   "note": 38,
+   "layer": 1,
+   "file": "sus_n38_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/D2.flac"
+  },
+  {
+   "art": "sus",
+   "note": 39,
+   "layer": 1,
+   "file": "sus_n39_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/D#2.flac"
+  },
+  {
+   "art": "sus",
+   "note": 40,
+   "layer": 1,
+   "file": "sus_n40_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/E2.flac"
+  },
+  {
+   "art": "sus",
+   "note": 41,
+   "layer": 1,
+   "file": "sus_n41_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/F2.flac"
+  },
+  {
+   "art": "sus",
+   "note": 43,
+   "layer": 1,
+   "file": "sus_n43_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/G2.flac"
+  },
+  {
+   "art": "sus",
+   "note": 45,
+   "layer": 1,
+   "file": "sus_n45_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/A2.flac"
+  },
+  {
+   "art": "sus",
+   "note": 47,
+   "layer": 1,
+   "file": "sus_n47_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/B2.flac"
+  },
+  {
+   "art": "sus",
+   "note": 48,
+   "layer": 1,
+   "file": "sus_n48_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/C3.flac"
+  },
+  {
+   "art": "sus",
+   "note": 50,
+   "layer": 1,
+   "file": "sus_n50_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/D3.flac"
+  },
+  {
+   "art": "sus",
+   "note": 52,
+   "layer": 1,
+   "file": "sus_n52_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/E3.flac"
+  },
+  {
+   "art": "sus",
+   "note": 53,
+   "layer": 1,
+   "file": "sus_n53_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/F3.flac"
+  },
+  {
+   "art": "sus",
+   "note": 54,
+   "layer": 1,
+   "file": "sus_n54_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/F#3.flac"
+  },
+  {
+   "art": "sus",
+   "note": 55,
+   "layer": 1,
+   "file": "sus_n55_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/G3.flac"
+  },
+  {
+   "art": "sus",
+   "note": 56,
+   "layer": 1,
+   "file": "sus_n56_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/G#3.flac"
+  },
+  {
+   "art": "sus",
+   "note": 57,
+   "layer": 1,
+   "file": "sus_n57_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/A3.flac"
+  },
+  {
+   "art": "sus",
+   "note": 58,
+   "layer": 1,
+   "file": "sus_n58_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/A#3.flac"
+  },
+  {
+   "art": "sus",
+   "note": 59,
+   "layer": 1,
+   "file": "sus_n59_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/B3.flac"
+  },
+  {
+   "art": "sus",
+   "note": 60,
+   "layer": 1,
+   "file": "sus_n60_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/C4.flac"
+  },
+  {
+   "art": "sus",
+   "note": 61,
+   "layer": 1,
+   "file": "sus_n61_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/C#4.flac"
+  },
+  {
+   "art": "sus",
+   "note": 62,
+   "layer": 1,
+   "file": "sus_n62_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/D4.flac"
+  },
+  {
+   "art": "sus",
+   "note": 63,
+   "layer": 1,
+   "file": "sus_n63_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/D#4.flac"
+  },
+  {
+   "art": "sus",
+   "note": 64,
+   "layer": 1,
+   "file": "sus_n64_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/E4.flac"
+  },
+  {
+   "art": "sus",
+   "note": 65,
+   "layer": 1,
+   "file": "sus_n65_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/F4.flac"
+  },
+  {
+   "art": "sus",
+   "note": 66,
+   "layer": 1,
+   "file": "sus_n66_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/F#4.flac"
+  },
+  {
+   "art": "sus",
+   "note": 67,
+   "layer": 1,
+   "file": "sus_n67_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/G4.flac"
+  },
+  {
+   "art": "sus",
+   "note": 69,
+   "layer": 1,
+   "file": "sus_n69_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/A4.flac"
+  },
+  {
+   "art": "sus",
+   "note": 70,
+   "layer": 1,
+   "file": "sus_n70_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/A#4.flac"
+  },
+  {
+   "art": "sus",
+   "note": 71,
+   "layer": 1,
+   "file": "sus_n71_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/B4.flac"
+  },
+  {
+   "art": "sus",
+   "note": 72,
+   "layer": 1,
+   "file": "sus_n72_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/C5.flac"
+  },
+  {
+   "art": "sus",
+   "note": 73,
+   "layer": 1,
+   "file": "sus_n73_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/C#5.flac"
+  },
+  {
+   "art": "sus",
+   "note": 74,
+   "layer": 1,
+   "file": "sus_n74_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/D5.flac"
+  },
+  {
+   "art": "sus",
+   "note": 75,
+   "layer": 1,
+   "file": "sus_n75_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/D#5.flac"
+  },
+  {
+   "art": "sus",
+   "note": 76,
+   "layer": 1,
+   "file": "sus_n76_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/E5.flac"
+  },
+  {
+   "art": "sus",
+   "note": 77,
+   "layer": 1,
+   "file": "sus_n77_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/F5.flac"
+  },
+  {
+   "art": "sus",
+   "note": 78,
+   "layer": 1,
+   "file": "sus_n78_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/F#5.flac"
+  },
+  {
+   "art": "sus",
+   "note": 79,
+   "layer": 1,
+   "file": "sus_n79_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/G5.flac"
+  },
+  {
+   "art": "sus",
+   "note": 80,
+   "layer": 1,
+   "file": "sus_n80_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/G#5.flac"
+  },
+  {
+   "art": "sus",
+   "note": 81,
+   "layer": 1,
+   "file": "sus_n81_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/A5.flac"
+  },
+  {
+   "art": "sus",
+   "note": 82,
+   "layer": 1,
+   "file": "sus_n82_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/A#5.flac"
+  },
+  {
+   "art": "sus",
+   "note": 83,
+   "layer": 1,
+   "file": "sus_n83_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/B5.flac"
+  },
+  {
+   "art": "sus",
+   "note": 84,
+   "layer": 1,
+   "file": "sus_n84_0.m4a",
+   "source": "FreePats SpanishClassicalGuitar-20190618/samples/C6.flac"
+  }
+ ]
+}

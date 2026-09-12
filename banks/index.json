@@ -3,9 +3,9 @@
   {
    "id": "orchestra",
    "name": "Symphony orchestra",
-   "description": "Woodwinds, brass, timpani, harp, strings and a choir, plus two synths. Built in.",
+   "description": "Woodwinds, brass, timpani, harp, strings and a choir, plus two synths. Loaded by default.",
    "url": "orchestra/bank.json",
-   "builtin": true
+   "default": true
   },
   {
    "id": "jazz",
