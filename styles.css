@@ -11,10 +11,14 @@
   html { height: 100%; }
   body { height: 100vh; height: 100dvh; margin: 0; background: var(--bg); color: var(--text); font: 13px/1.4 var(--mono); }
   body { display: flex; flex-direction: column; }
-  header { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; padding: 8px 14px; border-bottom: 1px solid var(--line); background: var(--panel); }
+  header { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: flex-end; padding: 6px 14px 8px; border-bottom: 1px solid var(--line); background: var(--panel); }
   h1 { font: italic 500 19px/1 "Iowan Old Style", "Palatino Linotype", Georgia, serif; margin: 0 6px 0 0; color: var(--accent); }
   h1 small { font: 12px/1 var(--mono); color: var(--dim); font-style: normal; margin-left: 8px; }
-  .group { display: flex; gap: 6px; align-items: center; }
+  .group { display: flex; gap: 6px; align-items: center; position: relative; padding-top: 13px; }
+  .group::before { content: attr(data-label); position: absolute; top: 0; left: 0; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--dim); }
+  .group:not([data-label]) { padding-top: 13px; }
+  .group .sep { width: 1px; height: 18px; background: var(--line); margin: 0 4px; }
+  h1 { padding-bottom: 4px; }
   .group > label { color: var(--dim); }
   button, select, input { font: inherit; color: var(--text); background: var(--field); border: 1px solid var(--line); border-radius: 3px; padding: 3px 8px; }
   input[type=number] { width: 4.5em; }
@@ -24,7 +28,22 @@
   button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
   button.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 600; }
   .spacer { flex: 1; }
-  main { flex: 1; min-height: 0; position: relative; }
+  #workspace { flex: 1; min-height: 0; display: flex; position: relative; }
+  main { flex: 1; min-width: 0; min-height: 0; position: relative; }
+  /* Mixer sidebar */
+  #mixer { width: 250px; flex: none; border-left: 1px solid var(--line); background: var(--panel); overflow-y: auto; display: flex; flex-direction: column; }
+  #mixer[hidden] { display: none; }
+  .mixHead { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--panel); }
+  .mixHead button { padding: 1px 6px; }
+  .strip { display: grid; grid-template-columns: 1fr auto auto; gap: 2px 6px; align-items: center; padding: 5px 8px; border-bottom: 1px solid var(--line); }
+  .strip.cur { background: var(--field); }
+  .strip .name { text-align: left; padding: 1px 6px; border-color: transparent; background: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .strip .name.silent { color: var(--num); }
+  .strip .tog { padding: 0 6px; min-height: 0; line-height: 1.5; color: var(--dim); }
+  .strip .tog.on { color: var(--bg); background: var(--accent); border-color: var(--accent); }
+  .strip .sl { grid-column: 1 / 4; display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--dim); }
+  .strip .sl input { flex: 1; min-width: 0; margin: 0; }
+  .strip .sl span { width: 2.2em; text-align: right; color: var(--text); }
   canvas { display: block; width: 100%; height: 100%; outline: none; touch-action: none; }
   footer { border-top: 1px solid var(--line); background: var(--panel); padding: 6px 14px; font-size: 12px; }
   #notes { color: var(--dim); font-style: italic; margin-bottom: 3px; }
@@ -44,9 +63,18 @@
   #help .alt { opacity: .7; }
   /* Header: the transport stays in the first row; everything else lives in #more, which is inline on
      wide screens and folds behind the ☰ button on narrow ones. */
-  h1 { order: -2; }
+  h1 { order: -3; }
   #more { display: contents; }
-  .songgrp { order: -1; }
+  .songgrp { order: -2; }
+  .primary { order: -1; }
+  .patsel { order: 0; margin-right: -12px; }
+  .patset { order: 0; }
+  .patset::before { display: none; }
+  .arrgrp { order: 1; }
+  .keygrp { order: 2; }
+  .entrygrp { order: 3; }
+  .spacer { order: 4; }
+  .outgrp { order: 5; }
   #menuToggle { display: none; }
   .short { display: none; }
   /* Selection toolbar */
@@ -77,13 +105,20 @@
     header { gap: 6px 8px; padding: 6px 8px; }
     h1 small, .full, .spacer { display: none; }
     .short { display: inline; }
-    label[for=pattern] { display: none; }
     header > .group { gap: 4px; }
     #more .group { flex-wrap: wrap; }
     #title { flex: 1 1 8em; min-width: 0; }
     #notes { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     #menuToggle { display: inline-block; margin-left: auto; }
-    #more { display: none; flex-basis: 100%; flex-wrap: wrap; gap: 6px 14px; padding-top: 6px; border-top: 1px solid var(--line); }
+    #more { display: none; flex-basis: 100%; flex-wrap: wrap; gap: 8px 14px; padding-top: 6px; border-top: 1px solid var(--line); max-height: 55vh; overflow-y: auto; }
+    #more .group { flex-basis: 100%; }
+    .primary { padding-top: 0; }
+    .primary::before { display: none; }
+    .patsel { margin-right: 0; }
+    .patset { padding-top: 13px; }
+    .patset::before { display: block; }
+    .primary label[title] { display: none; }
+    #mixer { position: absolute; right: 0; top: 0; bottom: 0; width: min(82vw, 320px); z-index: 5; box-shadow: -6px 0 18px rgba(0,0,0,.5); }
     header.open #more { display: flex; }
     footer { padding: 4px 8px calc(4px + env(safe-area-inset-bottom)); }
     body.padon footer { padding-bottom: 4px; }

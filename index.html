@@ -10,29 +10,29 @@
 <body>
 <header>
   <h1>Tutti<small>symphonic tracker</small></h1>
-  <div class="group">
+  <div class="group primary" data-label="transport">
     <button id="playPat" class="primary" title="Space"><span class="full">Play pattern</span><span class="short">Play</span></button>
     <button id="playSong" title="Enter"><span class="full">Play song</span><span class="short">Song</span></button>
     <button id="stop" title="Esc">Stop</button>
+    <label for="bpm">bpm</label><input id="bpm" type="number" min="20" max="300" value="100" title="Tempo">
+    <label title="Scroll the grid with playback"><input id="follow" type="checkbox" checked> follow</label>
   </div>
-  <div class="group"><label for="pattern">pattern</label><select id="pattern" title="Pattern"></select></div>
+  <div class="group primary patsel" data-label="pattern"><select id="pattern" title="Pattern"></select></div>
   <button id="menuToggle" aria-expanded="false" aria-controls="more" title="More controls">☰</button>
   <div id="more">
-    <div class="group songgrp">
-      <label for="song">song</label><select id="song"></select>
+    <div class="group songgrp" data-label="song">
+      <select id="song"></select>
       <button id="newSong" title="Start an empty song">New</button>
       <input id="title" type="text" placeholder="title" title="Song title">
       <button id="deleteSong" title="Remove this song from the list and from browser storage">Delete</button>
-      <button id="tracksBtn" title="Tracks and mixer">Tracks…</button>
+      <span class="sep"></span>
+      <button id="save" title="Download the song as JSON">Save</button>
+      <button id="load" title="Load a JSON song">Load</button>
+      <button id="exportMidi" title="Download a Standard MIDI File">Export .mid</button>
+      <input id="file" type="file" accept=".json,application/json" hidden>
     </div>
-    <div class="group">
-      <label for="keyRoot">key</label>
-      <select id="keyRoot" title="Tonic"><option value="">none</option></select>
-      <select id="keyScale" title="Scale"></select>
-    </div>
-    <div class="group"><label for="bpm">bpm</label><input id="bpm" type="number" min="20" max="300" value="100" title="Tempo"></div>
-    <div class="group">
-      <button id="addPattern" title="Add a pattern">+ pattern</button>
+    <div class="group patset" data-label="pattern">
+      <button id="addPattern" title="Add a pattern">+</button>
       <label for="rows">rows</label><input id="rows" type="number" min="1" max="512" value="64">
       <label for="tpr">row</label>
       <select id="tpr">
@@ -44,34 +44,41 @@
       </select>
       <label for="meterNum">meter</label><input id="meterNum" type="number" min="1" max="16" value="4" style="width:3em" title="Beats per bar">
       <select id="meterDen" title="Beat unit"><option value="2">/2</option><option value="4" selected>/4</option><option value="8">/8</option></select>
-      <label for="order">order</label><input id="order" type="text" value="0" title="Pattern indices played in sequence">
-      <span id="arranger" title="Song order"></span>
       <label for="groove">groove</label>
       <select id="groove" title="Row-length multipliers applied cyclically to this pattern"></select>
       <input id="grooveList" type="text" placeholder="1.33 0.67" title="Custom groove: row-length multipliers, cycled" style="width:7em">
     </div>
-    <div class="group">
+    <div class="group arrgrp" data-label="arrangement">
+      <span id="arranger" title="Song order"></span>
+      <input id="order" type="text" value="0" title="Pattern indices played in sequence, as text">
+    </div>
+    <div class="group keygrp" data-label="key">
+      <select id="keyRoot" title="Tonic"><option value="">none</option></select>
+      <select id="keyScale" title="Scale"></select>
+    </div>
+    <div class="group entrygrp" data-label="entry">
       <label for="octave">octave</label><input id="octave" type="number" min="0" max="8" value="4">
       <label for="step">step</label><input id="step" type="number" min="0" max="64" value="4">
-      <label><input id="follow" type="checkbox" checked> follow</label>
+      <label title="On-screen entry pad under the grid"><input id="padToggle" type="checkbox"> pad</label>
     </div>
     <div class="spacer"></div>
-    <div class="group">
-      <label><input id="preview" type="checkbox" checked> audio preview</label>
-      <label title="On-screen entry pad under the grid"><input id="padToggle" type="checkbox"> pad</label>
+    <div class="group outgrp" data-label="output">
+      <label><input id="preview" type="checkbox" checked> preview</label>
       <button id="midiEnable">Enable MIDI</button>
       <select id="midiOut" hidden title="MIDI output"><option value="">MIDI out: off</option></select>
       <select id="midiIn" hidden title="MIDI input for step recording"><option value="">MIDI in: off</option></select>
-    </div>
-    <div class="group">
-      <button id="exportMidi">Export .mid</button>
-      <button id="save">Save .json</button>
-      <button id="load">Load .json</button>
-      <input id="file" type="file" accept=".json,application/json" hidden>
+      <label title="Show the mixer beside the grid"><input id="mixerToggle" type="checkbox"> mixer</label>
+      <button id="tracksBtn" title="Tracks: add, remove, reorder, instruments">Tracks…</button>
     </div>
   </div>
 </header>
-<main><canvas id="grid" tabindex="0" aria-label="Pattern grid"></canvas></main>
+<div id="workspace">
+  <main><canvas id="grid" tabindex="0" aria-label="Pattern grid"></canvas></main>
+  <aside id="mixer" hidden aria-label="Mixer">
+    <div class="mixHead"><b>Mixer</b><span class="spacer"></span><button id="mixerTracks" title="Tracks: add, remove, reorder, instruments">Tracks…</button><button id="mixerClose" title="Hide the mixer">✕</button></div>
+    <div id="mixerStrips"></div>
+  </aside>
+</div>
 <dialog id="tracksDlg" aria-label="Tracks and mixer">
   <div class="dlgHead"><b>Tracks and mixer</b><span class="spacer"></span><button id="tracksClose" title="Close">✕</button></div>
   <table id="tracksTable">
@@ -143,7 +150,7 @@
         <p><em>Groove</em> per pattern stretches and shrinks rows in a cycle for swing; custom takes a list of multipliers. <em>Solo</em> a track with ⇧-click or a long-press on its name. While a pattern loops, choosing another pattern queues it for the end of the loop (the status shows <em>next</em>).</p>
         <p>Songs autosave in this browser, and the address bar names the open song and pattern, so a refresh or a bookmark brings you back to it. Built-in examples reset when deleted; your own songs are removed.</p>
         <h3>Tracks, arranger, shaping</h3>
-        <p><em>Tracks…</em> opens the tracks and mixer panel: add any instrument as a new track, rename, change instrument, channel or columns, reorder, remove, and set volume (CC7) and pan (CC10) with mute and solo. The <em>order</em> chips are the arranger: click to open a pattern, drag to reorder, × to remove, + to append the current pattern.</p>
+        <p>The <em>mixer</em> sidebar (output group) shows every track with mute, solo, volume (CC7) and pan (CC10) while you edit; tap a name to jump to that track. <em>Tracks…</em> opens the tracks panel: add any instrument as a new track, rename, change instrument, channel or columns, reorder, remove. The <em>order</em> chips are the arranger: click to open a pattern, drag to reorder, × to remove, + to append the current pattern.</p>
         <p>The fx command <b>EXP</b> shapes expression inside each note on its row: first hex digit 1 swell, 2 sfz, 3 fade in, 4 fade out; second digit the depth. The selection toolbar also has <em>Fill</em> (repeat the first row every step rows), <em>Rnd vel</em>, <em>Rnd pitch</em> (in key, within the selection's range) and <em>Humanize</em> (random small DEL on rows with notes).</p>
         <h3>Transport</h3>
         <table class="keys">

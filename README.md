@@ -14,6 +14,7 @@ A browser-based tracker for composing orchestral music, with MIDI export. Plain 
 - **FX column:** one command per row per track: CHA chance, RET retrigger, DEL delay, ARP arpeggio, TSP transpose.
 - **Groove:** per-pattern swing presets or a custom cycle of row-length multipliers.
 - **Live:** solo tracks with shift-click or long press; pick another pattern while one loops to queue it.
+- **Mixer sidebar:** volume, pan, mute and solo per track beside the grid while editing; a captioned header groups transport, pattern, song, arrangement, key, entry and output.
 - **Tracks and mixer:** add any instrument as a track, rename, reorder, remove, set channel and columns, volume and pan (CC7 and CC10), mute and solo.
 - **Arranger:** the song order as chips: click to open, drag to reorder, × to remove, + to append.
 - **Shaping and variation:** EXP fx command for per-note swell, sfz, fade in and out; Fill, Rnd vel, Rnd pitch and Humanize on selections.

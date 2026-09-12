@@ -11,6 +11,7 @@ import { keyName } from '../core/scales.js';
 import { inSel } from './selection.js';
 import { gamepad, pollGamepad } from './gamepad.js';
 import { syncPad, syncSelBar } from './pad.js';
+import { syncMixer } from './mixer.js';
 import { esc, syncPatternUI } from './sync.js';
 
 // ---- Drawing ---------------------------------------------------------------------------------
@@ -171,7 +172,7 @@ export function draw() {
   ctx.fillText('bpm', L.gutter.tempoX, view.ROW_H + 8 + view.ROW_H / 2);
 
   view.lastDraw = { L, top, headerH };
-  syncPad(); syncSelBar();
+  syncPad(); syncSelBar(); syncMixer();
   updateStatus(playRow);
 }
 

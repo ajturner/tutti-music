@@ -261,6 +261,28 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   check('arranger: × removes an entry', (await page.evaluate(() => state.song.order.join(' '))) === '0 1 1');
   await page.evaluate(() => { state.song.order = [0]; state.pat = 0; tutti.syncPatternUI(); });
   check('version: footer shows semver', /^v\d+\.\d+\.\d+$/.test(await page.textContent('#version')));
+  // --- header groups and mixer sidebar ---
+  const labels = await page.$$eval('header .group[data-label]', g => g.map(x => x.dataset.label));
+  check('header: labelled groups', ['transport', 'pattern', 'song', 'arrangement', 'key', 'entry', 'output'].every(l => labels.includes(l)), labels.join(','));
+  check('mixer: shown by default on a wide screen', await page.isVisible('#mixer') && await page.evaluate(() => state.mixer));
+  await page.waitForTimeout(60);
+  check('mixer: one strip per track', (await page.$$eval('#mixerStrips .strip', s => s.length)) === (await page.evaluate(() => state.song.tracks.length)));
+  await page.click('#mixerStrips .strip:nth-child(3) .name'); await page.waitForTimeout(40);
+  check('mixer: name jumps the cursor to the track', (await page.evaluate(() => state.cursor.track)) === 2);
+  await page.click('#mixerStrips .strip:nth-child(3) [data-act="mute"]'); await page.waitForTimeout(40);
+  check('mixer: M mutes and shows on', await page.evaluate(() => state.song.tracks[2].mute === true) && (await page.$eval('#mixerStrips .strip:nth-child(3) [data-act="mute"]', b => b.classList.contains('on'))));
+  await page.click('#mixerStrips .strip:nth-child(3) [data-act="mute"]');
+  await page.$eval('#mixerStrips .strip:nth-child(3) [data-f="volume"]', el => { el.value = '77'; el.dispatchEvent(new Event('input', { bubbles: true })); });
+  await page.waitForTimeout(40);
+  check('mixer: slider sets volume live', (await page.evaluate(() => state.song.tracks[2].volume)) === 77 && (await page.textContent('#mixerStrips .strip:nth-child(3) [data-f="volume"] + span')) === '77');
+  const gridW = await page.evaluate(() => document.getElementById('grid').clientWidth);
+  await page.click('#mixerClose'); await page.waitForTimeout(60);
+  check('mixer: close hides it and the grid widens', !(await page.isVisible('#mixer')) && (await page.evaluate(() => document.getElementById('grid').clientWidth)) > gridW);
+  await page.check('#mixerToggle'); await page.waitForTimeout(40);
+  check('mixer: toggle shows it again', await page.isVisible('#mixer'));
+  await page.reload(); await page.waitForTimeout(400);
+  await page.evaluate(() => { for (const k of Object.keys(tutti)) if (!(k in window)) Object.defineProperty(window, k, { get: () => tutti[k], configurable: true }); for (const k of ['lastDraw', 'ROW_H']) Object.defineProperty(window, k, { get: () => tutti.view[k], configurable: true }); });
+  check('mixer: choice persists across reload', await page.isVisible('#mixer'));
   // gamepad: mock, press down then A tap
   await page.evaluate(() => {
     window.__gp = { id: 'Mock Pad (STANDARD GAMEPAD)', connected: true, mapping: 'standard', axes: [0, 0], buttons: Array.from({ length: 17 }, () => ({ pressed: false, value: 0 })) };
@@ -331,6 +353,14 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   await page.tap('#padNav button:nth-child(4)'); await page.waitForTimeout(80);
   const hex = await page.$$eval('#padKeys button', bs => bs.map(b => b.textContent).join(''));
   check('phone: pad shows hex for velocity', hex === '0123456789ABCDEF', hex);
+  check('phone: mixer hidden by default', !(await page.isVisible('#mixer')));
+  await page.tap('#menuToggle'); await page.waitForTimeout(60);
+  const menuLabels = await page.$$eval('#more .group[data-label]', g => g.filter(x => getComputedStyle(x, '::before').content !== 'none').length);
+  check('phone: menu groups keep their labels', menuLabels >= 5, 'n=' + menuLabels);
+  await page.tap('#mixerToggle'); await page.waitForTimeout(60);
+  check('phone: mixer overlays the grid', await page.isVisible('#mixer') && (await page.evaluate(() => getComputedStyle(document.getElementById('mixer')).position)) === 'absolute');
+  await page.tap('#mixerClose'); await page.waitForTimeout(60);
+  check('phone: toggling the mixer closed the menu', !(await page.isVisible('#song')));
   await page.tap('#padNav button:text-is("sel")'); await page.waitForTimeout(80);
   check('phone: sel mode shows toolbar', (await page.evaluate(() => state.selectMode)) && await page.isVisible('#selbar'));
   const selDrag = await page.evaluate(async () => {
