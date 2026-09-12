@@ -72,6 +72,7 @@
       <select id="midiIn" hidden title="MIDI input for step recording"><option value="">MIDI in: off</option></select>
       <label title="Show the mixer beside the grid"><input id="mixerToggle" type="checkbox"> mixer</label>
       <button id="tracksBtn" title="Tracks: add, remove, reorder, instruments">Tracks…</button>
+      <button id="soundsBtn" title="Sounds: samples, articulations, tuning, scopes">Sounds…</button>
     </div>
   </div>
 </header>
@@ -89,6 +90,17 @@
     <tbody id="tracksBody"></tbody>
   </table>
   <div class="dlgFoot"><select id="trackAddInst" title="Instrument for the new track"></select><button id="trackAdd">Add track</button></div>
+</dialog>
+<dialog id="soundsDlg" class="m8" aria-label="Sounds">
+  <div class="dlgHead"><b>SOUNDS</b><span class="dim mono">bundled orchestra · VSCO 2 CE · settings stay in this browser</span><span class="spacer"></span><button id="soundsResetAll" title="All instruments back to defaults">reset all</button><button id="soundsClose" title="Close">✕</button></div>
+  <div class="scopes">
+    <div class="scope"><div class="scopeLabel">out</div><canvas id="scopeOut"></canvas></div>
+    <div class="scope"><div class="scopeLabel" id="scopeZoneLabel">zone: play a note</div><canvas id="scopeZone"></canvas></div>
+  </div>
+  <table id="soundsTable">
+    <thead><tr><th>instrument</th><th>src</th><th>articulations</th><th></th><th>tune</th><th>cents</th><th>trim dB</th><th>rel ×</th><th></th></tr></thead>
+    <tbody id="soundsBody"></tbody>
+  </table>
 </dialog>
 <dialog id="chainDlg" aria-label="Repeats and chains">
   <div class="dlgHead"><b id="chainTitle">Entry</b><span class="spacer"></span><button id="chainCancel" title="Close">✕</button></div>

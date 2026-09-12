@@ -363,6 +363,21 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   await page.selectOption('#sound', 'synth'); await page.waitForTimeout(30);
   check('samples: switching to synth persists', (await page.evaluate(() => state.sound + '/' + localStorage.getItem('tutti.sound'))) === 'synth/synth');
   await page.selectOption('#sound', 'samples');
+  // --- sounds panel ---
+  await page.click('#soundsBtn'); await page.waitForTimeout(700);
+  const sounds = await page.evaluate(() => ({ rows: document.querySelectorAll('#soundsBody tr').length, v1: document.querySelector('#soundsBody tr[data-id="violins-1"] .status').textContent, arp: document.querySelector('#soundsBody tr[data-id="synth-arp"] .status').textContent, real: [...document.querySelectorAll('#soundsBody tr[data-id="violins-1"] .art.real')].map(b => b.dataset.art), fb: document.querySelector('#soundsBody tr[data-id="violins-1"] .art[data-art="leg"]').textContent }));
+  check('sounds: one row per instrument with source and coverage', sounds.rows === 15 && sounds.v1.startsWith('SMP') && sounds.arp.startsWith('SYN') && sounds.real.join(' ') === 'sus stc piz trm' && sounds.fb === 'leg→sus', JSON.stringify(sounds));
+  await page.fill('#soundsBody tr[data-id="timpani"] input[data-f="tune"]', '2'); await page.dispatchEvent('#soundsBody tr[data-id="timpani"] input[data-f="tune"]', 'change'); await page.waitForTimeout(30);
+  const tuned = await page.evaluate(() => ({ s: tutti.sampler.setting('timpani'), stored: JSON.parse(localStorage.getItem('tutti.sounds.v1') || '{}').timpani, reset: document.querySelector('#soundsBody tr[data-id="timpani"] [data-act="reset"]').disabled }));
+  check('sounds: tune is applied and persisted', tuned.s.tune === 2 && tuned.stored && tuned.stored.tune === 2 && tuned.reset === false, JSON.stringify(tuned));
+  await page.click('#soundsBody tr[data-id="timpani"] [data-act="reset"]'); await page.waitForTimeout(30);
+  check('sounds: reset clears the setting', await page.evaluate(() => tutti.sampler.setting('timpani').tune === 0 && !JSON.parse(localStorage.getItem('tutti.sounds.v1') || '{}').timpani));
+  await page.click('#soundsBody tr[data-id="cellos"] .play'); await page.waitForTimeout(150);
+  const lz = await page.evaluate(() => tutti.sampler.lastZone && { inst: tutti.sampler.lastZone.instrument, art: tutti.sampler.lastZone.art, label: document.getElementById('scopeZoneLabel').textContent });
+  check('sounds: audition sets the zone scope', lz && lz.inst === 'cellos' && lz.label.includes('Cellos'), JSON.stringify(lz));
+  const scope = await page.evaluate(() => { const c = document.getElementById('scopeZone'); const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let lit = 0; for (let i = 0; i < d.length; i += 4) if (d[i] + d[i + 1] + d[i + 2] > 200) lit++; return { w: c.width, lit }; });
+  check('sounds: zone waveform is drawn', scope.w > 100 && scope.lit > 200, JSON.stringify(scope));
+  await page.click('#soundsClose'); await page.waitForTimeout(30);
   // gamepad: mock, press down then A tap
   await page.evaluate(() => {
     window.__gp = { id: 'Mock Pad (STANDARD GAMEPAD)', connected: true, mapping: 'standard', axes: [0, 0], buttons: Array.from({ length: 17 }, () => ({ pressed: false, value: 0 })) };

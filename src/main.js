@@ -36,6 +36,8 @@ import * as ui_tracks from './ui/tracks.js';
 import * as ui_arranger from './ui/arranger.js';
 import * as ui_mixer from './ui/mixer.js';
 import { wireMixer, setMixer, mixerDefault } from './ui/mixer.js';
+import * as ui_sounds from './ui/sounds.js';
+import { wireSounds } from './ui/sounds.js';
 import { restoreLocation } from './ui/session.js';
 import { state, preloadSamples } from './ui/state.js';
 import { selectSong } from './ui/toolbar.js';
@@ -57,10 +59,11 @@ window.addEventListener('hashchange', () => {
 });
 setPad(coarsePointer());
 wireMixer();
+wireSounds();
 setMixer(mixerDefault());
 preloadSamples();
 resize();
 canvas.focus();
 requestAnimationFrame(frame);
 
-window.tutti = Object.assign({}, core_constants, core_instruments, core_song, core_render, core_scheduler, core_synth, core_midi, core_midifile, core_examples, core_edit, core_scales, core_sampler, ui_state, ui_layout, ui_sync, ui_edit, ui_selection, ui_transport, ui_keyboard, ui_pointer, ui_draw, ui_gamepad, ui_pad, ui_midi_in, ui_toolbar, ui_storage, ui_session, ui_tracks, ui_arranger, ui_mixer, { VERSION });
+window.tutti = Object.assign({}, core_constants, core_instruments, core_song, core_render, core_scheduler, core_synth, core_midi, core_midifile, core_examples, core_edit, core_scales, core_sampler, ui_state, ui_layout, ui_sync, ui_edit, ui_selection, ui_transport, ui_keyboard, ui_pointer, ui_draw, ui_gamepad, ui_pad, ui_midi_in, ui_toolbar, ui_storage, ui_session, ui_tracks, ui_arranger, ui_mixer, ui_sounds, { VERSION });

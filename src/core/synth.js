@@ -33,6 +33,7 @@ export class SynthSink {
       const out = ctx.createGain(); out.gain.value = 0.5;
       comp.connect(out).connect(ctx.destination);
       this.master = comp;
+      this.analyser = ctx.createAnalyser(); this.analyser.fftSize = 1024; this.analyser.smoothingTimeConstant = 0; out.connect(this.analyser);
       const len = Math.floor(ctx.sampleRate * 0.3), buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
       for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
       this.noise = buf;

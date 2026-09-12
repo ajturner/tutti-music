@@ -5,34 +5,6 @@
  "zones": [
   {
    "art": "rll",
-   "note": 42,
-   "layer": 0,
-   "file": "rll_d1_0.m4a",
-   "source": "Percussion/Timpani/Rolls/Timpani1_Roll_v3_rr1_Sum.wav"
-  },
-  {
-   "art": "rll",
-   "note": 42,
-   "layer": 1,
-   "file": "rll_d1_1.m4a",
-   "source": "Percussion/Timpani/Rolls/Timpani1_Roll_v5_rr1_Sum.wav"
-  },
-  {
-   "art": "rll",
-   "note": 53,
-   "layer": 0,
-   "file": "rll_d5_0.m4a",
-   "source": "Percussion/Timpani/Rolls/Timpani5_Roll_v3_rr1_Sum.wav"
-  },
-  {
-   "art": "rll",
-   "note": 49,
-   "layer": 1,
-   "file": "rll_d4_1.m4a",
-   "source": "Percussion/Timpani/Rolls/Timpani4_Roll_v5_rr1_Sum.wav"
-  },
-  {
-   "art": "rll",
    "note": 35,
    "layer": 0,
    "file": "rll_d2_0.m4a",
@@ -44,6 +16,20 @@
    "layer": 1,
    "file": "rll_d2_1.m4a",
    "source": "Percussion/Timpani/Rolls/Timpani2_Roll_v5_rr1_Sum.wav"
+  },
+  {
+   "art": "rll",
+   "note": 42,
+   "layer": 0,
+   "file": "rll_d1_0.m4a",
+   "source": "Percussion/Timpani/Rolls/Timpani1_Roll_v3_rr1_Sum.wav"
+  },
+  {
+   "art": "rll",
+   "note": 42,
+   "layer": 1,
+   "file": "rll_d1_1.m4a",
+   "source": "Percussion/Timpani/Rolls/Timpani1_Roll_v5_rr1_Sum.wav"
   },
   {
    "art": "rll",
@@ -68,6 +54,20 @@
   },
   {
    "art": "rll",
+   "note": 49,
+   "layer": 1,
+   "file": "rll_d4_1.m4a",
+   "source": "Percussion/Timpani/Rolls/Timpani4_Roll_v5_rr1_Sum.wav"
+  },
+  {
+   "art": "rll",
+   "note": 53,
+   "layer": 0,
+   "file": "rll_d5_0.m4a",
+   "source": "Percussion/Timpani/Rolls/Timpani5_Roll_v3_rr1_Sum.wav"
+  },
+  {
+   "art": "rll",
    "note": 53,
    "layer": 1,
    "file": "rll_d5_1.m4a",
@@ -75,10 +75,10 @@
   },
   {
    "art": "sus",
-   "note": 42,
-   "layer": 1,
-   "file": "sus_d1_1.m4a",
-   "source": "Percussion/Timpani/Timpani1_Hit_v3_rr1_Sum.wav"
+   "note": 35,
+   "layer": 0,
+   "file": "sus_d2_0.m4a",
+   "source": "Percussion/Timpani/Timpani2_Hit_v1_rr1_Sum.wav"
   },
   {
    "art": "sus",
@@ -89,10 +89,17 @@
   },
   {
    "art": "sus",
-   "note": 35,
+   "note": 42,
    "layer": 0,
-   "file": "sus_d2_0.m4a",
-   "source": "Percussion/Timpani/Timpani2_Hit_v1_rr1_Sum.wav"
+   "file": "sus_d1_0.m4a",
+   "source": "Percussion/Timpani/Timpani1_Hit_v1_rr1_Sum.wav"
+  },
+  {
+   "art": "sus",
+   "note": 42,
+   "layer": 1,
+   "file": "sus_d1_1.m4a",
+   "source": "Percussion/Timpani/Timpani1_Hit_v3_rr1_Sum.wav"
   },
   {
    "art": "sus",
@@ -124,10 +131,10 @@
   },
   {
    "art": "sus",
-   "note": 42,
+   "note": 53,
    "layer": 0,
-   "file": "sus_d1_0.m4a",
-   "source": "Percussion/Timpani/Timpani1_Hit_v1_rr1_Sum.wav"
+   "file": "sus_d5_0.m4a",
+   "source": "Percussion/Timpani/Timpani5_Hit_v1_rr1_Sum.wav"
   },
   {
    "art": "sus",
@@ -135,14 +142,6 @@
    "layer": 1,
    "file": "sus_d5_1.m4a",
    "source": "Percussion/Timpani/Timpani5_Hit_v4_rr1_Sum.wav"
-  },
-  {
-   "art": "sus",
-   "note": 53,
-   "layer": 0,
-   "file": "sus_d5_0.m4a",
-   "source": "Percussion/Timpani/Timpani5_Hit_v1_rr1_Sum.wav"
   }
- ],
- "note_source": "Drum pitches estimated from the roll samples by normalised autocorrelation (F#2, B1, C3, C#3, F3)."
+ ]
 }

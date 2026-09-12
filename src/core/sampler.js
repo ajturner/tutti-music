@@ -33,6 +33,9 @@ export class SamplerSink {
     this.loading = new Map();                         // instrument id -> Promise
     this.buses = new Map(); this.voices = new Map();  // track -> bus; track:pitch -> [voice]
     this.enabled = true; this.onProgress = null; this.alias = null;
+    this.settings = {};                               // instrument id -> { tune, cents, trim, release }
+    this.lastZone = null;                             // { instrument, zone, buffer, pitch } of the last voice, for the scope
+    this.onZone = null;
   }
   get ctx() { return this.synth.ctx; }
   ensure() { return this.synth.ensure(); }
@@ -74,6 +77,34 @@ export class SamplerSink {
     try { return await p; } catch (e) { this.buffers.delete(url); throw e; }
   }
   preload(instrumentIds) { return Promise.all([...new Set(instrumentIds)].map(id => this.load(id))); }
+  // ---- per-instrument settings (tuning, level trim, release scale) ------------------------
+  setting(instrumentId) { return Object.assign({ tune: 0, cents: 0, trim: 0, release: 1 }, this.settings[instrumentId] || {}); }
+  setSetting(instrumentId, patch) {
+    const cur = this.setting(instrumentId), next = Object.assign(cur, patch);
+    next.tune = Math.max(-24, Math.min(24, Math.round(next.tune || 0))); next.cents = Math.max(-100, Math.min(100, Math.round(next.cents || 0)));
+    next.trim = Math.max(-24, Math.min(24, +next.trim || 0)); next.release = Math.max(0.25, Math.min(4, +next.release || 1));
+    if (!next.tune && !next.cents && !next.trim && next.release === 1) delete this.settings[instrumentId]; else this.settings[instrumentId] = next;
+    return this.setting(instrumentId);
+  }
+  // Which articulations an instrument has real samples for, and where the others fall back to.
+  coverage(instrumentId) {
+    const ins = INST[instrumentId], map = this.maps.get(instrumentId);
+    if (!ins) return null;
+    const sampled = map && map.zones ? [...new Set(map.zones.map(z => z.art))] : [];
+    const fallback = {};
+    for (const a of ins.articulations) if (!sampled.includes(a)) { const chain = [...(ART_FALLBACK[a] || []), 'sus']; fallback[a] = chain.find(c => sampled.includes(c)) || null; }
+    return { sampled, fallback, zones: map && map.zones ? map.zones.length : 0, state: map && map.zones ? 'samples' : this.loading.has(instrumentId) ? 'loading' : map === null ? 'synth' : 'unloaded' };
+  }
+  // Short phrase through one instrument, for the Sounds panel.
+  phrase(instrumentId, pitches, art, gap = 0.4) {
+    this.ensure(); const t0 = this.ctx.currentTime + 0.02, ins = INST[instrumentId];
+    const a = art || (ins ? ins.articulations[0] : 'sus');
+    pitches.forEach((p, i) => {
+      const t = t0 + i * gap, end = t + (i === pitches.length - 1 ? gap * 2.2 : gap * 0.95);
+      if (this.has(instrumentId)) { this.noteOn('sounds', instrumentId, p, 100, a, t); this.noteOff('sounds', p, end); }
+      else this.synth.audition(ins ? ins.family : 'strings', p, a);
+    });
+  }
   // ---- playing ------------------------------------------------------------------------------
   bus(track) {
     let b = this.buses.get(track);
@@ -101,17 +132,18 @@ export class SamplerSink {
   noteOn(track, inst, pitch, vel, art, t) {
     const ctx = this.ctx, b = this.bus(track), key = track + ':' + pitch, map = this.maps.get(inst);
     if (this.voices.has(key)) this.release(this.voices.get(key), t, 0.05);
-    const ins = INST[inst], useArt = art || (ins ? ins.articulations[0] : 'sus');
+    const ins = INST[inst], useArt = art || (ins ? ins.articulations[0] : 'sus'), st = this.setting(inst);
     const picks = pickZones(map, useArt, pitch, b.dyn, vel);
     if (!picks.length) return;
-    const list = [];
+    const list = [], trim = Math.pow(10, st.trim / 20), detune = st.tune + st.cents / 100;
     for (const p of picks) {
       const buf = this.buffers.get(this.base + map.folder + '/' + p.zone.file); if (!buf || buf.then) continue;
-      const src = ctx.createBufferSource(); src.buffer = buf; src.playbackRate.value = Math.pow(2, (pitch - p.zone.note) / 12);
-      const g = ctx.createGain(); const level = p.gain * (SHORT.has(p.art) ? 0.6 + 0.4 * vel / 127 : 1) * (useArt === 'mrc' ? 1.25 : 1);
+      const src = ctx.createBufferSource(); src.buffer = buf; src.playbackRate.value = Math.pow(2, (pitch - p.zone.note + detune) / 12);
+      const g = ctx.createGain(); const level = trim * p.gain * (SHORT.has(p.art) ? 0.6 + 0.4 * vel / 127 : 1) * (useArt === 'mrc' ? 1.25 : 1);
       g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(level, t + (useArt === 'leg' ? 0.06 : 0.004));
       src.connect(g).connect(b.gain); src.start(t);
-      list.push({ src, g, release: RELEASE[p.art] || 0.25 });
+      list.push({ src, g, release: (RELEASE[p.art] || 0.25) * st.release });
+      if (p.gain >= 0.5 || picks.length === 1) { this.lastZone = { instrument: inst, zone: p.zone, buffer: buf, pitch, art: useArt }; if (this.onZone) this.onZone(this.lastZone); }
     }
     this.voices.set(key, list);
   }
