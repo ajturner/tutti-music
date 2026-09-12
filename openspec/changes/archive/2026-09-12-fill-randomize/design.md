@@ -1,0 +1,2 @@
+# Design
+`captureRect` and `pasteInto` are split out of copy and paste so Fill can stamp the first selected row every `step` rows inside one undo step. Randomisation reads `state.random` when set (tests inject it) else `Math.random`. Rnd pitch draws from in-key pitches between the selection's lowest and highest note, widened a fifth each way when they match. Humanize writes DEL 00-20 on rows where notes start unless a different command already sits there. No JSON change.

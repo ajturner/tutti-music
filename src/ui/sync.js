@@ -1,6 +1,7 @@
 // Keep the song and pattern controls in the header in step with the state.
 import { KEY_ROOTS, SCALE_NAMES } from '../core/scales.js';
 import { updateLocation } from './session.js';
+import { syncArranger } from './arranger.js';
 import { clamp } from '../core/constants.js';
 import { patMeter } from '../core/song.js';
 import { $, curPat, state } from './state.js';
@@ -57,5 +58,6 @@ export function syncPatternUI() {
   $('bpm').value = state.song.bpm;
   state.cursor.row = clamp(state.cursor.row, 0, curPat().rows - 1);
   syncGrooveUI();
+  syncArranger();
   updateLocation();
 }

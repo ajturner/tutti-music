@@ -1,5 +1,7 @@
 // Header controls: songs, patterns, meter, order, files, menu.
 import { markEdited, deleteCurrentSong } from './storage.js';
+import { arranger, syncArranger, wireArranger } from './arranger.js';
+import { wireTracks } from './tracks.js';
 import { queuePattern } from './transport.js';
 import { GROOVES, syncKeyUI, syncGrooveUI } from './sync.js';
 import { padSigReset } from './pad.js';
@@ -28,11 +30,16 @@ $('playPat').onclick = () => playPattern(false);
 $('playSong').onclick = () => playSong();
 $('stop').onclick = () => stopAll();
 $('bpm').onchange = e => { state.song.bpm = clamp(parseInt(e.target.value, 10) || 100, 20, 300); markEdited(); state.dirty = true; };
-$('pattern').onchange = e => {
-  const i = parseInt(e.target.value, 10);
-  if (queuePattern(i)) { e.target.value = state.pat; return; }   // live: takes over when the loop ends
+export function choosePattern(i) {
+  if (!state.song.patterns[i]) return;
+  if (queuePattern(i)) { $('pattern').value = state.pat; syncArranger(); return; }   // live: takes over when the loop ends
   state.pat = i; syncPatternUI(); state.dirty = true;
-};
+}
+$('pattern').onchange = e => choosePattern(parseInt(e.target.value, 10));
+arranger.onPick = choosePattern;
+arranger.onChange = () => { $('order').value = state.song.order.join(' '); };
+wireArranger();
+wireTracks();
 $('keyRoot').onchange = $('keyScale').onchange = () => {
   const r = $('keyRoot').value;
   state.song.key = r === '' ? null : { root: parseInt(r, 10), scale: $('keyScale').value };

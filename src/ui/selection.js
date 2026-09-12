@@ -5,8 +5,8 @@ import { laneRemove, laneSet, laneValueAt, patTrack } from '../core/song.js';
 import { curPat, curTrack, state } from './state.js';
 import { currentCell } from './layout.js';
 import { audition, noteAt, noteCovering, notesStartingAt, withUndo } from './edit.js';
-import { notesIn, putNote, resizeNote, setFx } from '../core/edit.js';
-import { transposeDiatonic } from '../core/scales.js';
+import { notesIn, putNote, resizeNote, setFx, fxAtRow } from '../core/edit.js';
+import { transposeDiatonic, inScale } from '../core/scales.js';
 
 // ---- Selection ----------------------------------------------------------------------------
 // Cells are numbered globally left to right: 0 is the tempo column, then every track's cells in
@@ -74,8 +74,8 @@ export function selNotes(rect, pat) {
   }
   return out;
 }
-export function copySel() {
-  const rect = selRect(), pat = curPat(), tpr = pat.ticksPerRow, t0 = rect.r0 * tpr, t1 = (rect.r1 + 1) * tpr;
+export function captureRect(rect) {
+  const pat = curPat(), tpr = pat.ticksPerRow, t0 = rect.r0 * tpr, t1 = (rect.r1 + 1) * tpr;
   const cells = selCells(rect).map(c => {
     const out = { kind: c.kind, items: [] };
     if (c.kind === 'tempo') out.items = pat.tempo.filter(p => p.tick >= t0 && p.tick < t1).map(p => ({ tick: p.tick - t0, value: p.value, interp: p.interp }));
@@ -89,10 +89,14 @@ export function copySel() {
     }
     return out;
   });
-  state.clipboard = { rows: rect.r1 - rect.r0 + 1, tpr, cells };
-  state.message = 'Copied ' + state.clipboard.rows + ' rows × ' + cells.length + ' cells';
+  return { rows: rect.r1 - rect.r0 + 1, tpr, cells };
+}
+export function copySel() {
+  state.clipboard = captureRect(selRect());
+  state.message = 'Copied ' + state.clipboard.rows + ' rows × ' + state.clipboard.cells.length + ' cells';
   state.dirty = true;
 }
+
 export function clearSel() {
   const rect = selRect(), pat = curPat(), tpr = pat.ticksPerRow, t0 = rect.r0 * tpr, t1 = (rect.r1 + 1) * tpr;
   withUndo(() => {
@@ -110,26 +114,70 @@ export function clearSel() {
 export function cutSel() { copySel(); clearSel(); }
 // Paste with the clipboard's top-left cell at the given row and global cell index. Cells line up by
 // kind: a note block lands on note columns, a dynamics run on a dynamics column; mismatches are skipped.
-export function pasteAt(row, g, clip) {
-  clip = clip || state.clipboard; if (!clip) { state.message = 'Nothing to paste'; state.dirty = true; return null; }
+function pasteInto(row, g, clip) {
   const pat = curPat(), tpr = pat.ticksPerRow, cells = allCells(), scale = tpr / clip.tpr, endTick = pat.rows * tpr;
   const t0 = row * tpr;
-  withUndo(() => {
-    clip.cells.forEach((cc, i) => {
-      const c = cells[g + i]; if (!c || c.kind !== cc.kind) return;
-      const tr = c.track >= 0 ? state.song.tracks[c.track] : null;
-      for (const it of cc.items) {
-        const tick = t0 + Math.round(it.tick * scale); if (tick >= endTick) continue;
-        if (cc.kind === 'tempo') laneSet(pat.tempo, tick, it.value, it.interp);
-        else if (cc.kind === 'dyn') laneSet(patTrack(pat, tr.id).dyn, tick, it.value, it.interp);
-        else if (cc.kind === 'fx') setFx(pat, tr.id, tick, it.cmd, it.value);
-        else if (cc.kind === 'note') putNote(pat, tr.id, c.col, tick, { pitch: it.pitch, len: Math.round(it.len * scale), vel: it.vel, art: it.art });
-        else if (cc.kind === 'vel') { const ev = noteAt(pat, tr.id, c.col, Math.floor(tick / tpr)); if (ev) ev.vel = it.vel; }
-        else if (cc.kind === 'art') notesStartingAt(pat, tr.id, Math.floor(tick / tpr)).forEach(e => { if (INST[tr.instrument].articulations.includes(it.art)) e.art = it.art; });
-      }
-    });
+  clip.cells.forEach((cc, i) => {
+    const c = cells[g + i]; if (!c || c.kind !== cc.kind) return;
+    const tr = c.track >= 0 ? state.song.tracks[c.track] : null;
+    for (const it of cc.items) {
+      const tick = t0 + Math.round(it.tick * scale); if (tick >= endTick) continue;
+      if (cc.kind === 'tempo') laneSet(pat.tempo, tick, it.value, it.interp);
+      else if (cc.kind === 'dyn') laneSet(patTrack(pat, tr.id).dyn, tick, it.value, it.interp);
+      else if (cc.kind === 'fx') setFx(pat, tr.id, tick, it.cmd, it.value);
+      else if (cc.kind === 'note') putNote(pat, tr.id, c.col, tick, { pitch: it.pitch, len: Math.round(it.len * scale), vel: it.vel, art: it.art });
+      else if (cc.kind === 'vel') { const ev = noteAt(pat, tr.id, c.col, Math.floor(tick / tpr)); if (ev) ev.vel = it.vel; }
+      else if (cc.kind === 'art') notesStartingAt(pat, tr.id, Math.floor(tick / tpr)).forEach(e => { if (INST[tr.instrument].articulations.includes(it.art)) e.art = it.art; });
+    }
   });
   return { r0: row, r1: Math.min(pat.rows - 1, row + clip.rows - 1), g0: g, g1: Math.min(cells.length - 1, g + clip.cells.length - 1) };
+}
+// Paste with the clipboard's top-left cell at the given row and global cell index. Cells line up by
+// kind: a note block lands on note columns, a dynamics run on a dynamics column; mismatches are skipped.
+export function pasteAt(row, g, clip) {
+  clip = clip || state.clipboard; if (!clip) { state.message = 'Nothing to paste'; state.dirty = true; return null; }
+  let placed = null;
+  withUndo(() => { placed = pasteInto(row, g, clip); });
+  return placed;
+}
+// Stamp the first selected row every `step` rows (at least one) down the selection.
+export function fillSel() {
+  const rect = selRect();
+  if (rect.r1 - rect.r0 < 1) { state.message = 'Select the rows to fill'; state.dirty = true; return; }
+  const clip = captureRect({ r0: rect.r0, r1: rect.r0, g0: rect.g0, g1: rect.g1 }), every = Math.max(1, state.step);
+  withUndo(() => { for (let r = rect.r0 + every; r <= rect.r1; r += every) pasteInto(r, rect.g0, clip); });
+}
+const rnd = () => (state.random || Math.random)();
+// Velocity ± amount, uniformly.
+export function randomizeVelSel(amount = 12) {
+  const notes = selNotes(selRect(), curPat());
+  if (!notes.length) { state.message = 'No notes in the selection'; state.dirty = true; return; }
+  withUndo(() => notes.forEach(({ ev }) => { ev.vel = clamp(ev.vel + Math.round((rnd() * 2 - 1) * amount), 1, 127); }));
+}
+// Random in-key pitches inside the selection's pitch range (a fifth either way when all pitches match).
+export function randomizePitchSel() {
+  const notes = selNotes(selRect(), curPat()), key = state.song.key;
+  if (!notes.length) { state.message = 'No notes in the selection'; state.dirty = true; return; }
+  let lo = Math.min(...notes.map(n => n.ev.pitch)), hi = Math.max(...notes.map(n => n.ev.pitch));
+  if (lo === hi) { lo = clamp(lo - 7, 0, 127); hi = clamp(hi + 7, 0, 127); }
+  const pool = []; for (let p = lo; p <= hi; p++) if (inScale(key, p)) pool.push(p);
+  withUndo(() => notes.forEach(({ ev }) => { ev.pitch = pool[Math.floor(rnd() * pool.length)]; }));
+}
+// Humanise timing: rows with notes get a random DEL of up to `max`/256 of a row, unless another command sits there.
+export function humanizeSel(max = 0x20) {
+  const rect = selRect(), pat = curPat(), tpr = pat.ticksPerRow;
+  const tracks = new Set(selCells(rect).map(c => c.track).filter(t => t >= 0));
+  if (!tracks.size) return;
+  withUndo(() => {
+    for (const ti of tracks) {
+      const tr = state.song.tracks[ti];
+      for (let r = rect.r0; r <= rect.r1; r++) {
+        if (!notesStartingAt(pat, tr.id, r).length) continue;
+        const f = fxAtRow(pat, tr.id, r); if (f && f.cmd !== 'DEL') continue;
+        setFx(pat, tr.id, r * tpr, 'DEL', Math.floor(rnd() * (max + 1)));
+      }
+    }
+  });
 }
 export function pasteSel() { pasteAt(state.cursor.row, cursorIndex()); }
 export function duplicateSel() {
@@ -201,6 +249,10 @@ export function batchOp(op) {
     case 'vel': velocitySel(n); break;
     case 'len': lengthSel(n); break;
     case 'interp': interpolateSel(); break;
+    case 'fill': fillSel(); break;
+    case 'rndvel': randomizeVelSel(); break;
+    case 'rndpitch': randomizePitchSel(); break;
+    case 'humanize': humanizeSel(); break;
     case 'deselect': deselect(); break;
   }
   state.dirty = true;

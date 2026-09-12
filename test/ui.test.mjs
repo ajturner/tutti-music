@@ -214,13 +214,60 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   await page.evaluate(() => { location.hash = '#song=example:sketch-in-c'; }); await page.waitForTimeout(100);
   check('session: hash change switches song', (await page.evaluate(() => state.song.uid)) === 'example:sketch-in-c');
   await page.evaluate(() => { localStorage.clear(); });
+  // --- fill, randomize, humanize ---
+  await page.evaluate(() => { deselect(); const t = curTrack(); const pat = curPat(); pat.tracks[t.id].events = []; pat.tracks[t.id].fx = []; state.step = 4; state.cursor.track = 0; state.cursor.cell = 0; state.cursor.row = 0; enterPitch(60, 90, 0); state.cursor.row = 0; state.selAnchor = { row: 0, g: cursorIndex() }; state.cursor.row = 15; selUpdate(); });
+  await page.locator('#selbar button[data-op="fill"]').dispatchEvent('pointerdown'); await page.waitForTimeout(30);
+  const filled = await page.evaluate(() => [0, 4, 8, 12].map(r => (noteAt(curPat(), curTrack().id, 0, r) || {}).pitch));
+  check('fill: stamps the first row every step rows', JSON.stringify(filled) === '[60,60,60,60]', JSON.stringify(filled));
+  await page.evaluate(() => { state.random = () => 0.99; });
+  await page.locator('#selbar button[data-op="rndvel"]').dispatchEvent('pointerdown'); await page.waitForTimeout(30);
+  const vels = await page.evaluate(() => [0, 4].map(r => noteAt(curPat(), curTrack().id, 0, r).vel));
+  check('rnd vel: velocities move within the range', vels.every(v => v === 102), JSON.stringify(vels));
+  await page.selectOption('#keyRoot', '0'); await page.selectOption('#keyScale', 'major');
+  await page.evaluate(() => { state.random = () => 0.5; });
+  await page.locator('#selbar button[data-op="rndpitch"]').dispatchEvent('pointerdown'); await page.waitForTimeout(30);
+  const pitches = await page.evaluate(() => [0, 4].map(r => noteAt(curPat(), curTrack().id, 0, r).pitch));
+  check('rnd pitch: in-key pitches within a fifth of a unison selection', pitches.every(p => p >= 53 && p <= 67 && [0, 2, 4, 5, 7, 9, 11].includes(p % 12)), JSON.stringify(pitches));
+  await page.evaluate(() => { state.random = () => 0.25; });
+  await page.locator('#selbar button[data-op="humanize"]').dispatchEvent('pointerdown'); await page.waitForTimeout(30);
+  const hum = await page.evaluate(() => [0, 4, 1].map(r => fxAtRow(curPat(), curTrack().id, r)));
+  check('humanize: DEL on rows with notes only', hum[0] && hum[0].cmd === 'DEL' && hum[0].value === 8 && hum[1] && hum[1].cmd === 'DEL' && hum[2] === null, JSON.stringify(hum));
+  await page.evaluate(() => { state.random = null; deselect(); });
+  // --- tracks and mixer panel ---
+  await page.click('#tracksBtn'); await page.waitForTimeout(50);
+  check('tracks: panel opens with one row per track', (await page.$$eval('#tracksBody tr', r => r.length)) === (await page.evaluate(() => state.song.tracks.length)));
+  const nTracks = await page.evaluate(() => state.song.tracks.length);
+  await page.selectOption('#trackAddInst', 'synth-arp'); await page.click('#trackAdd'); await page.waitForTimeout(50);
+  const added = await page.evaluate(() => ({ n: state.song.tracks.length, last: state.song.tracks[state.song.tracks.length - 1], cursor: state.cursor.track, cells: allCells().length }));
+  check('tracks: add appends a track and moves the cursor there', added.n === nTracks + 1 && added.last.instrument === 'synth-arp' && added.cursor === nTracks, JSON.stringify(added.last));
+  await page.fill('#tracksBody tr:last-child input[data-f="name"]', 'Lead'); await page.dispatchEvent('#tracksBody tr:last-child input[data-f="name"]', 'change'); await page.waitForTimeout(30);
+  check('tracks: rename', (await page.evaluate(() => state.song.tracks[state.song.tracks.length - 1].name)) === 'Lead');
+  await page.$eval('#tracksBody tr:last-child input[data-f="volume"]', el => { el.value = '64'; el.dispatchEvent(new Event('input', { bubbles: true })); });
+  await page.waitForTimeout(30);
+  check('tracks: volume slider sets the track volume', (await page.evaluate(() => state.song.tracks[state.song.tracks.length - 1].volume)) === 64);
+  await page.click('#tracksBody tr:last-child button[data-act="up"]'); await page.waitForTimeout(30);
+  check('tracks: move up', (await page.evaluate(() => state.song.tracks[state.song.tracks.length - 2].name)) === 'Lead');
+  await page.click('#tracksBody tr:nth-last-child(2) button[data-act="remove"]'); await page.waitForTimeout(30);
+  check('tracks: remove', (await page.evaluate(() => state.song.tracks.length)) === nTracks && !(await page.evaluate(() => state.song.tracks.some(t => t.name === 'Lead'))));
+  await page.click('#tracksClose'); await page.waitForTimeout(30);
+  // --- arranger ---
+  await page.evaluate(() => { if (state.song.patterns.length < 2) document.getElementById('addPattern').click(); state.pat = 0; state.song.order = [0, 1, 0]; tutti.syncPatternUI(); });
+  check('arranger: one chip per order entry', (await page.$$eval('#arranger .chip', c => c.length)) === 3);
+  await page.click('#arranger .chip:nth-child(2)'); await page.waitForTimeout(30);
+  check('arranger: click opens the pattern', (await page.evaluate(() => state.pat)) === 1);
+  await page.click('#arranger #arrAdd'); await page.waitForTimeout(30);
+  check('arranger: + appends the current pattern', (await page.evaluate(() => state.song.order.join(' '))) === '0 1 0 1' && (await page.inputValue('#order')) === '0 1 0 1');
+  await page.click('#arranger .chip:nth-child(3) button'); await page.waitForTimeout(30);
+  check('arranger: × removes an entry', (await page.evaluate(() => state.song.order.join(' '))) === '0 1 1');
+  await page.evaluate(() => { state.song.order = [0]; state.pat = 0; tutti.syncPatternUI(); });
+  check('version: footer shows semver', /^v\d+\.\d+\.\d+$/.test(await page.textContent('#version')));
   // gamepad: mock, press down then A tap
   await page.evaluate(() => {
     window.__gp = { id: 'Mock Pad (STANDARD GAMEPAD)', connected: true, mapping: 'standard', axes: [0, 0], buttons: Array.from({ length: 17 }, () => ({ pressed: false, value: 0 })) };
     navigator.getGamepads = () => [window.__gp];
   });
   const press = async (i, ms = 40) => { await page.evaluate(i => { __gp.buttons[i] = { pressed: true, value: 1 }; }, i); await page.waitForTimeout(ms); await page.evaluate(i => { __gp.buttons[i] = { pressed: false, value: 0 }; }, i); await page.waitForTimeout(40); };
-  await page.evaluate(() => { deselect(); state.cursor.track = 0; state.cursor.cell = 0; state.cursor.row = 20; state.lastPitch = 62; curPat().tracks[curTrack().id].events = []; state.dirty = true; });
+  await page.evaluate(() => { deselect(); state.song.key = null; tutti.syncKeyUI(); state.cursor.track = 0; state.cursor.cell = 0; state.cursor.row = 20; state.lastPitch = 62; curPat().tracks[curTrack().id].events = []; state.dirty = true; });
   await press(13); // d-pad down
   c = await cur(page);
   check('gamepad: down moved a row', c.row === 21, 'row=' + c.row);

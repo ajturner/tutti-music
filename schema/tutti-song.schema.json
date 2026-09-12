@@ -348,6 +348,20 @@
           "type": "boolean",
           "default": false,
           "description": "When any track is soloed, only soloed tracks play. Transient performance state; saved for convenience."
+        },
+        "volume": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 127,
+          "default": 100,
+          "description": "Mixer volume, sent as CC7 at the start."
+        },
+        "pan": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 127,
+          "default": 64,
+          "description": "Mixer pan, sent as CC10 at the start; 64 is centre."
         }
       }
     },
@@ -370,9 +384,10 @@
             "RET",
             "DEL",
             "ARP",
-            "TSP"
+            "TSP",
+            "EXP"
           ],
-          "description": "CHA chance (value/255), RET retrigger count, DEL delay by value/256 row, ARP arpeggio (two nibbles of semitones), TSP transpose (signed byte, persists until the next TSP)."
+          "description": "CHA chance (value/255), RET retrigger count, DEL delay by value/256 row, ARP arpeggio (two nibbles of semitones), TSP transpose (signed byte, persists until the next TSP). EXP expression shape: high nibble 1 swell, 2 sfz, 3 fade in, 4 fade out; low nibble depth."
         },
         "value": {
           "type": "integer",

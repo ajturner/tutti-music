@@ -1,5 +1,5 @@
 // Song data model: patterns, tracks, events, lanes, file-format identity and normalisation of loaded files.
-import { DEFAULT_TRACKS } from './instruments.js';
+import { DEFAULT_TRACKS, INST } from './instruments.js';
 
 // ---- Song model ------------------------------------------------------------
 // song    { title, bpm, order:[patternIndex...], patterns:[...], tracks:[...] }
@@ -60,4 +60,40 @@ export function laneSet(points, tick, value, interp) {
 export function laneRemove(points, tick) {
   const i = points.findIndex(x => x.tick === tick);
   if (i >= 0) points.splice(i, 1);
+}
+
+// ---- Track operations ---------------------------------------------------------------------------
+// Tracks are song-level: patterns key their data by track id, so removing a track drops that data.
+export function freeChannel(song) {
+  const used = new Set(song.tracks.map(t => t.channel));
+  for (let c = 1; c <= 16; c++) if (c !== 10 && !used.has(c)) return c;
+  for (let c = 1; c <= 16; c++) if (!used.has(c)) return c;
+  return 1;
+}
+export function addTrack(song, instrumentId, opts = {}) {
+  const ins = INST[instrumentId]; if (!ins) throw new Error('unknown instrument ' + instrumentId);
+  let id = instrumentId, n = 2;
+  while (song.tracks.some(t => t.id === id)) id = instrumentId + '-' + n++;
+  const tr = { id, name: opts.name || ins.name, instrument: instrumentId, channel: opts.channel || freeChannel(song), columns: 1, mute: false, volume: 100, pan: 64 };
+  const at = opts.index == null ? song.tracks.length : opts.index;
+  song.tracks.splice(at, 0, tr);
+  return tr;
+}
+export function removeTrack(song, id) {
+  const i = song.tracks.findIndex(t => t.id === id); if (i < 0) return false;
+  song.tracks.splice(i, 1);
+  for (const p of song.patterns) delete p.tracks[id];
+  return true;
+}
+export function moveTrack(song, index, d) {
+  const j = index + d; if (index < 0 || index >= song.tracks.length || j < 0 || j >= song.tracks.length) return false;
+  const [t] = song.tracks.splice(index, 1); song.tracks.splice(j, 0, t);
+  return true;
+}
+// Change a track's instrument; articulations the new instrument lacks fall back to its default.
+export function setTrackInstrument(song, id, instrumentId) {
+  const ins = INST[instrumentId], tr = song.tracks.find(t => t.id === id); if (!ins || !tr) return false;
+  tr.instrument = instrumentId;
+  for (const p of song.patterns) { const pt = p.tracks[id]; if (pt) for (const e of pt.events) if (e.art && !ins.articulations.includes(e.art)) e.art = null; }
+  return true;
 }

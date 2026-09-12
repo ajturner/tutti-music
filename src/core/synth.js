@@ -46,16 +46,18 @@ export class SynthSink {
       const ctx = this.ctx;
       const filter = ctx.createBiquadFilter(); filter.type = 'lowpass'; filter.Q.value = 0.7;
       const gain = ctx.createGain();
-      filter.connect(gain).connect(this.master);
-      b = { filter, gain, dyn: 100, expr: 127 };
+      const pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+      if (pan) filter.connect(gain).connect(pan).connect(this.master); else filter.connect(gain).connect(this.master);
+      b = { filter, gain, pan, dyn: 100, expr: 127, vol: 100, panv: 64 };
       this.buses.set(track, b);
       this.applyBus(b, ctx.currentTime);
     }
     return b;
   }
   applyBus(b, t) {
-    const d = b.dyn / 127, e = b.expr / 127;
-    b.gain.gain.setTargetAtTime(0.6 * e * (0.12 + 0.88 * Math.pow(d, 1.6)), t, 0.02);
+    const d = b.dyn / 127, e = b.expr / 127, v = b.vol / 100;
+    b.gain.gain.setTargetAtTime(0.6 * v * e * (0.12 + 0.88 * Math.pow(d, 1.6)), t, 0.02);
+    if (b.pan) b.pan.pan.setTargetAtTime((b.panv - 64) / 63, t, 0.02);
     b.filter.frequency.setTargetAtTime(350 * Math.pow(18, d), t, 0.03);     // 350 Hz at pp, ~6.3 kHz at ff
   }
   when(atMs) {
@@ -73,7 +75,7 @@ export class SynthSink {
   }
   control(track, cc, value, t) {
     const b = this.bus(track);
-    if (cc === 1) b.dyn = value; else if (cc === 11) b.expr = value; else return;
+    if (cc === 1) b.dyn = value; else if (cc === 11) b.expr = value; else if (cc === 7) b.vol = value; else if (cc === 10) b.panv = value; else return;
     this.applyBus(b, t);
   }
   noteOn(track, family, pitch, vel, art, t) {

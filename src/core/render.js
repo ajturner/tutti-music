@@ -70,11 +70,26 @@ export function rowAtTick(pat, tick) {
 //   DEL  delay the notes on this row by value/256 of a row (humanise, play behind the beat)
 //   ARP  arpeggio: cycle pitch, +high nibble, +low nibble semitones every row for the note's length
 //   TSP  transpose this track by a signed byte of semitones from this row until the next TSP
-export const FX_COMMANDS = ['CHA', 'RET', 'DEL', 'ARP', 'TSP'];
-export const FX_DEFAULTS = { CHA: 0x80, RET: 0x02, DEL: 0x20, ARP: 0x47, TSP: 0x0C };
+//   EXP  expression shape on the notes of this row: high nibble picks the shape (1 swell, 2 sfz, 3 fade in,
+//        4 fade out), low nibble the depth 0-F; rendered as expression-controller ramps inside the note
+export const FX_COMMANDS = ['CHA', 'RET', 'DEL', 'ARP', 'TSP', 'EXP'];
+export const FX_DEFAULTS = { CHA: 0x80, RET: 0x02, DEL: 0x20, ARP: 0x47, TSP: 0x0C, EXP: 0x1C };
+export const EXP_SHAPES = { 1: 'swell', 2: 'sfz', 3: 'in', 4: 'out' };
+// Expression multiplier (0-1) at fraction f of a note for shape s with depth d (0-1).
+export function expShape(s, d, f) {
+  f = Math.max(0, Math.min(1, f));
+  switch (s) {
+    case 1: { const peak = 0.6; const x = f < peak ? f / peak : 1 - (f - peak) / (1 - peak); return 1 - d * (1 - Math.sin(x * Math.PI / 2)); }   // swell: rise to a peak, then fall
+    case 2: return f < 0.12 ? 1 : 1 - d * 0.6;                                     // sfz: accent, then drop
+    case 3: return 1 - d * (1 - f);                                                // fade in
+    case 4: return 1 - d * f;                                                      // fade out
+    default: return 1;
+  }
+}
 export const FX_HELP = {
   CHA: 'chance the row plays, 00 never to FF always', RET: 'retrigger count across the note', DEL: 'delay by value/256 of a row',
   ARP: 'arpeggio, two semitone offsets per nibble', TSP: 'transpose track from here, signed semitones',
+  EXP: 'expression shape: 1 swell 2 sfz 3 fade in 4 fade out, then depth 0-F',
 };
 const signedByte = v => (v & 0xFF) > 127 ? (v & 0xFF) - 256 : (v & 0xFF);
 export function fxAt(fx, tick) { return fx.find(f => f.tick === tick) || null; }
@@ -108,9 +123,13 @@ export function renderSong(song, opts = {}) {
     starts.push({ pattern: pi, tick: offset, rows: pat.rows, ticksPerRow: tpr, groove: !!grooveOf(pat) });
     renderLane(pat.tempo, len, offset, (t, v) => tempo.push({ tick: offset + map(t - offset), bpm: v }), fmtBpm);
     for (const tr of song.tracks) {
+      const ins = INST[tr.instrument];
+      if (offset === 0) {   // mixer state once at the start: CC7 volume, CC10 pan
+        events.push({ tick: 0, type: 'cc', track: tr.id, cc: 7, value: fmtCC(tr.volume == null ? 100 : tr.volume) });
+        events.push({ tick: 0, type: 'cc', track: tr.id, cc: 10, value: fmtCC(tr.pan == null ? 64 : tr.pan) });
+      }
       const pt = pat.tracks[tr.id];
       if (!pt) continue;
-      const ins = INST[tr.instrument];
       const evs = pt.events.slice().sort((a, b) => a.tick - b.tick || a.col - b.col);
       const fx = (pt.fx || []).slice().sort((a, b) => a.tick - b.tick);
       const tsp = fx.filter(f => f.cmd === 'TSP');
@@ -128,9 +147,19 @@ export function renderSong(song, opts = {}) {
           events.push({ tick: offset + Math.max(0, map(parts[0].tick) - KS_LEAD_TICKS), type: 'ks', track: tr.id, pitch: ks });
           lastArt = art;
         }
+        const exp = fx.find(f => f.tick === e.tick && f.cmd === 'EXP');
         for (const p of parts) {
           if (p.tick >= len) continue;
           const t0 = offset + map(p.tick), t1 = offset + map(Math.min(p.end, len));
+          if (exp && EXP_SHAPES[(exp.value >> 4) & 15]) {
+            // Expression curve inside the note, scaling whatever the expression lane says; restored at the end.
+            const shape = (exp.value >> 4) & 15, depth = (exp.value & 15) / 15;
+            for (let t = p.tick; t < Math.min(p.end, len); t += CC_SAMPLE_TICKS) {
+              const base = laneValueAt(pt.expr, t, 127), f = (t - p.tick) / (p.end - p.tick);
+              events.push({ tick: offset + map(t), type: 'cc', track: tr.id, cc: ins.exprCC, value: fmtCC(base * expShape(shape, depth, f)), shaped: true });
+            }
+            events.push({ tick: t1, type: 'cc', track: tr.id, cc: ins.exprCC, value: fmtCC(laneValueAt(pt.expr, Math.min(p.end, len), 127)), shaped: true });
+          }
           if (open[p.pitch] && open[p.pitch].tick > t0) open[p.pitch].tick = t0;
           const off = { tick: t1, type: 'off', track: tr.id, pitch: p.pitch };
           events.push({ tick: t0, type: 'on', track: tr.id, pitch: p.pitch, vel: p.vel, art });

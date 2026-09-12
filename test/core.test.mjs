@@ -2,7 +2,8 @@
 import { PPQ, noteName, clamp } from '../src/core/constants.js';
 import { INSTRUMENTS, INST } from '../src/core/instruments.js';
 import { newSong, newPattern, patTrack, laneSet, laneValueAt, normalizeSong, SONG_FORMAT } from '../src/core/song.js';
-import { renderSong, TimeMap, TYPE_ORDER, rowTicks, tickMapper, rowAtTick, applyFx } from '../src/core/render.js';
+import { renderSong, TimeMap, TYPE_ORDER, rowTicks, tickMapper, rowAtTick, applyFx, expShape } from '../src/core/render.js';
+import { addTrack, removeTrack, moveTrack, setTrackInstrument, freeChannel } from '../src/core/song.js';
 import { inScale, transposeDiatonic, snapToScale, degreeOf } from '../src/core/scales.js';
 import { Scheduler } from '../src/core/scheduler.js';
 import { midiFileBytes } from '../src/core/midifile.js';
@@ -131,6 +132,38 @@ check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[1
   p.tracks.tp.fx = [{ tick: 4 * tpr, cmd: 'TSP', value: 0xF9 }, { tick: 12 * tpr, cmd: 'TSP', value: 0 }, { tick: 8 * tpr, cmd: 'CHA', value: 0 }];
   const ons = renderSong(s, { random: () => 0.5 }).events.filter(e => e.track === 'tp' && e.type === 'on');
   check('fx: TSP persists until the next TSP, CHA 00 drops a row', ons.map(e => e.pitch).join(',') === '72,65,72' , ons.map(e => e.pitch).join(','));
+}
+
+// Expression shapes and mixer controllers
+{
+  check('exp: swell peaks at 60% and dips at the ends', expShape(1, 1, 0.6) === 1 && expShape(1, 1, 0) === 0 && expShape(1, 1, 1) < 0.01);
+  check('exp: sfz accents then drops', expShape(2, 1, 0.05) === 1 && expShape(2, 1, 0.5) < 0.5);
+  check('exp: fade in and out', expShape(3, 1, 0) === 0 && expShape(3, 1, 1) === 1 && expShape(4, 1, 0) === 1 && expShape(4, 1, 1) === 0);
+  const s = newSong(), p = s.patterns[0], tpr = p.ticksPerRow;
+  line(p, 'vc', 0, 0, 16, 'C3');
+  p.tracks.vc.fx = [{ tick: 0, cmd: 'EXP', value: 0x1F }];
+  const r = renderSong(s);
+  const cc11 = r.events.filter(e => e.track === 'vc' && e.type === 'cc' && e.cc === 11).map(e => e.value);
+  check('exp: EXP renders an expression curve inside the note', cc11.length > 10 && cc11[0] < 40 && Math.max(...cc11) === 127 && cc11[cc11.length - 1] === 127, cc11.slice(0, 5).join(',') + ' ... n=' + cc11.length);
+  s.tracks.find(t => t.id === 'vc').volume = 90; s.tracks.find(t => t.id === 'vc').pan = 30;
+  const r2 = renderSong(s);
+  const mix = r2.events.filter(e => e.track === 'vc' && e.type === 'cc' && e.tick === 0 && (e.cc === 7 || e.cc === 10)).map(e => e.cc + '=' + e.value).sort().join(' ');
+  check('mixer: volume and pan controllers at the start', mix === '10=30 7=90', mix);
+}
+
+// Track operations
+{
+  const s = newSong(), n = s.tracks.length;
+  check('tracks: free channel skips used ones and 10', freeChannel(s) === 15);
+  const t = addTrack(s, 'flute');
+  check('tracks: add gives a unique id and free channel', t.id === 'flute' && addTrack(s, 'flute').id === 'flute-2' && t.channel === 15 && s.tracks.length === n + 2);
+  removeTrack(s, 'flute-2');
+  line(s.patterns[0], t.id, 0, 0, 4, 'C5@stc');
+  check('tracks: set instrument drops unsupported articulations', setTrackInstrument(s, t.id, 'timpani') && s.patterns[0].tracks[t.id].events[0].art === 'stc' && setTrackInstrument(s, t.id, 'synth-bass') && s.patterns[0].tracks[t.id].events[0].art === 'stc');
+  setTrackInstrument(s, t.id, 'violins-1'); s.patterns[0].tracks[t.id].events[0].art = 'piz'; setTrackInstrument(s, t.id, 'flute');
+  check('tracks: piz falls back on flute', s.patterns[0].tracks[t.id].events[0].art === null);
+  check('tracks: move', moveTrack(s, n, -1) && s.tracks[n - 1].id === t.id && !moveTrack(s, 0, -1));
+  check('tracks: remove drops pattern data', removeTrack(s, t.id) && !s.tracks.some(x => x.id === t.id) && !s.patterns[0].tracks[t.id]);
 }
 
 // Scheduler: solo gating and live queue

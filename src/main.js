@@ -31,6 +31,8 @@ import * as ui_storage from './ui/storage.js';
 import { restoreSongs } from './ui/storage.js';
 import { VERSION } from './version.js';
 import * as ui_session from './ui/session.js';
+import * as ui_tracks from './ui/tracks.js';
+import * as ui_arranger from './ui/arranger.js';
 import { restoreLocation } from './ui/session.js';
 import { state } from './ui/state.js';
 import { selectSong } from './ui/toolbar.js';
@@ -55,4 +57,4 @@ resize();
 canvas.focus();
 requestAnimationFrame(frame);
 
-window.tutti = Object.assign({}, core_constants, core_instruments, core_song, core_render, core_scheduler, core_synth, core_midi, core_midifile, core_examples, core_edit, core_scales, ui_state, ui_layout, ui_sync, ui_edit, ui_selection, ui_transport, ui_keyboard, ui_pointer, ui_draw, ui_gamepad, ui_pad, ui_midi_in, ui_toolbar, ui_storage, ui_session, { VERSION });
+window.tutti = Object.assign({}, core_constants, core_instruments, core_song, core_render, core_scheduler, core_synth, core_midi, core_midifile, core_examples, core_edit, core_scales, ui_state, ui_layout, ui_sync, ui_edit, ui_selection, ui_transport, ui_keyboard, ui_pointer, ui_draw, ui_gamepad, ui_pad, ui_midi_in, ui_toolbar, ui_storage, ui_session, ui_tracks, ui_arranger, { VERSION });

@@ -95,3 +95,20 @@
     #help { grid-template-columns: 1fr; }
   }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* Arranger chips */
+#arranger { display: inline-flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+#arranger .chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 4px 2px 7px; border: 1px solid var(--line); border-radius: 3px; background: var(--field); cursor: grab; user-select: none; }
+#arranger .chip.cur { border-color: var(--accent); color: var(--accent); }
+#arranger .chip.next { border-style: dashed; border-color: var(--accent); }
+#arranger .chip button, #arranger #arrAdd { padding: 0 5px; min-height: 0; line-height: 1.4; }
+/* Tracks and mixer dialog */
+dialog { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; max-width: min(96vw, 900px); max-height: 90vh; overflow: auto; font: inherit; }
+dialog::backdrop { background: rgba(0, 0, 0, .55); }
+.dlgHead, .dlgFoot { display: flex; gap: 8px; align-items: center; margin: 2px 0 8px; }
+.dlgFoot { margin: 8px 0 0; }
+#tracksTable { border-collapse: collapse; }
+#tracksTable th { color: var(--dim); font-weight: normal; text-align: left; padding: 2px 6px; }
+#tracksTable td { padding: 2px 6px; white-space: nowrap; }
+#tracksTable input[type=range] { width: 80px; vertical-align: middle; }
+#tracksTable td:first-child button { padding: 2px 5px; }

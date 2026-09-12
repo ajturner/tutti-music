@@ -23,6 +23,7 @@
       <button id="newSong" title="Start an empty song">New</button>
       <input id="title" type="text" placeholder="title" title="Song title">
       <button id="deleteSong" title="Remove this song from the list and from browser storage">Delete</button>
+      <button id="tracksBtn" title="Tracks and mixer">Tracks…</button>
     </div>
     <div class="group">
       <label for="keyRoot">key</label>
@@ -44,6 +45,7 @@
       <label for="meterNum">meter</label><input id="meterNum" type="number" min="1" max="16" value="4" style="width:3em" title="Beats per bar">
       <select id="meterDen" title="Beat unit"><option value="2">/2</option><option value="4" selected>/4</option><option value="8">/8</option></select>
       <label for="order">order</label><input id="order" type="text" value="0" title="Pattern indices played in sequence">
+      <span id="arranger" title="Song order"></span>
       <label for="groove">groove</label>
       <select id="groove" title="Row-length multipliers applied cyclically to this pattern"></select>
       <input id="grooveList" type="text" placeholder="1.33 0.67" title="Custom groove: row-length multipliers, cycled" style="width:7em">
@@ -70,6 +72,14 @@
   </div>
 </header>
 <main><canvas id="grid" tabindex="0" aria-label="Pattern grid"></canvas></main>
+<dialog id="tracksDlg" aria-label="Tracks and mixer">
+  <div class="dlgHead"><b>Tracks and mixer</b><span class="spacer"></span><button id="tracksClose" title="Close">✕</button></div>
+  <table id="tracksTable">
+    <thead><tr><th></th><th>name</th><th>instrument</th><th>ch</th><th>cols</th><th>volume</th><th>pan</th><th></th><th></th></tr></thead>
+    <tbody id="tracksBody"></tbody>
+  </table>
+  <div class="dlgFoot"><select id="trackAddInst" title="Instrument for the new track"></select><button id="trackAdd">Add track</button></div>
+</dialog>
 <div id="selbar" hidden aria-label="Selection">
   <span id="selInfo"></span>
   <button data-op="copy" title="Copy (⌘C)">Copy</button>
@@ -90,6 +100,10 @@
   <button data-op="len:1" title="Longer notes (])">len +</button>
   <select id="selArt" title="Set articulation on every note in the selection"><option value="">art…</option></select>
   <button data-op="interp" title="Ramp velocity, dynamics or tempo linearly from the first row to the last">Interpolate</button>
+  <button data-op="fill" title="Repeat the first selected row every step rows down the selection">Fill</button>
+  <button data-op="rndvel" title="Randomise velocities by ±12">Rnd vel</button>
+  <button data-op="rndpitch" title="Random in-key pitches within the selection's range">Rnd pitch</button>
+  <button data-op="humanize" title="Random small DEL on rows with notes">Humanize</button>
   <span class="sep"></span>
   <button data-op="deselect" title="Deselect (Esc)">✕</button>
 </div>
@@ -128,6 +142,9 @@
         <p>Each track's <em>fx</em> column takes one command per row: press <kbd>C</kbd> <kbd>R</kbd> <kbd>D</kbd> <kbd>A</kbd> <kbd>T</kbd> to pick it, then two hex digits. <b>CHA</b> chance the row plays (FF always). <b>RET</b> retrigger the note n times. <b>DEL</b> delay the row by xx/256 of a row. <b>ARP</b> arpeggiate: root, +high nibble, +low nibble semitones per row. <b>TSP</b> transpose the track by a signed byte from here until the next TSP.</p>
         <p><em>Groove</em> per pattern stretches and shrinks rows in a cycle for swing; custom takes a list of multipliers. <em>Solo</em> a track with ⇧-click or a long-press on its name. While a pattern loops, choosing another pattern queues it for the end of the loop (the status shows <em>next</em>).</p>
         <p>Songs autosave in this browser, and the address bar names the open song and pattern, so a refresh or a bookmark brings you back to it. Built-in examples reset when deleted; your own songs are removed.</p>
+        <h3>Tracks, arranger, shaping</h3>
+        <p><em>Tracks…</em> opens the tracks and mixer panel: add any instrument as a new track, rename, change instrument, channel or columns, reorder, remove, and set volume (CC7) and pan (CC10) with mute and solo. The <em>order</em> chips are the arranger: click to open a pattern, drag to reorder, × to remove, + to append the current pattern.</p>
+        <p>The fx command <b>EXP</b> shapes expression inside each note on its row: first hex digit 1 swell, 2 sfz, 3 fade in, 4 fade out; second digit the depth. The selection toolbar also has <em>Fill</em> (repeat the first row every step rows), <em>Rnd vel</em>, <em>Rnd pitch</em> (in key, within the selection's range) and <em>Humanize</em> (random small DEL on rows with notes).</p>
         <h3>Transport</h3>
         <table class="keys">
           <tr><td><kbd>Space</kbd></td><td>loop the pattern / stop</td></tr>
