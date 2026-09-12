@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tutti guide</title>
+<link rel="icon" href="data:,">
+<style>
+  :root { --bg: #151A2E; --panel: #1B2140; --field: #0F1327; --line: #2A3258; --text: #D7DBEA; --dim: #8A93B5; --accent: #F2E8C6; --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace; }
+  html { background: var(--bg); color: var(--text); font: 15px/1.55 -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
+  body { margin: 0; display: grid; grid-template-columns: 220px minmax(0, 760px); gap: 40px; padding: 28px 32px 60px; }
+  nav { position: sticky; top: 24px; align-self: start; font-size: 13px; }
+  nav h1 { font: italic 500 26px/1 "Iowan Old Style", "Palatino Linotype", Georgia, serif; color: var(--accent); margin: 0 0 4px; }
+  nav .sub { color: var(--dim); margin-bottom: 14px; font-family: var(--mono); font-size: 12px; }
+  nav ol { list-style: none; padding: 0; margin: 0; }
+  nav li { margin: 3px 0; }
+  nav a { color: var(--text); text-decoration: none; }
+  nav a:hover { color: var(--accent); }
+  nav .back { display: inline-block; margin-top: 16px; color: var(--dim); }
+  main h2 { font-size: 20px; margin: 40px 0 8px; padding-top: 8px; border-top: 1px solid var(--line); color: var(--accent); }
+  main h2:first-child { margin-top: 0; border-top: 0; }
+  main h3 { font-size: 15px; margin: 22px 0 6px; color: var(--text); }
+  p { margin: 8px 0; }
+  p.lead { font-size: 17px; color: var(--text); }
+  kbd { font: 12px var(--mono); color: var(--text); background: var(--field); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 1px 6px; white-space: nowrap; }
+  code, .mono { font-family: var(--mono); font-size: 13px; color: var(--accent); }
+  table { border-collapse: collapse; width: 100%; margin: 8px 0 14px; font-size: 14px; }
+  th, td { text-align: left; vertical-align: top; padding: 5px 8px; border-bottom: 1px solid var(--line); }
+  th { color: var(--dim); font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; }
+  td:first-child { white-space: nowrap; width: 34%; }
+  .note { border-left: 3px solid var(--accent); padding: 6px 12px; margin: 12px 0; background: var(--panel); border-radius: 0 4px 4px 0; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 0 28px; }
+  ul { padding-left: 20px; } li { margin: 3px 0; }
+  a { color: var(--accent); }
+  @media (max-width: 860px) { body { grid-template-columns: 1fr; gap: 16px; padding: 18px; } nav { position: static; } .two { grid-template-columns: 1fr; } td:first-child { width: auto; } }
+</style>
+</head>
+<body>
+<nav>
+  <h1>Tutti</h1>
+  <div class="sub">symphonic tracker · guide</div>
+  <ol>
+    <li><a href="#start">Getting started</a></li>
+    <li><a href="#grid">The grid</a></li>
+    <li><a href="#keys">Keyboard</a></li>
+    <li><a href="#selection">Selection and batch edits</a></li>
+    <li><a href="#key">Key and scale</a></li>
+    <li><a href="#fx">FX column</a></li>
+    <li><a href="#groove">Groove</a></li>
+    <li><a href="#arrange">Patterns, arrangement, live</a></li>
+    <li><a href="#mixer">Mixer and tracks</a></li>
+    <li><a href="#touch">Touch and the pad</a></li>
+    <li><a href="#controller">Game controller</a></li>
+    <li><a href="#midi">MIDI out, MIDI in, export</a></li>
+    <li><a href="#files">Songs, autosave, files</a></li>
+    <li><a href="#theory">Writing a first phrase</a></li>
+  </ol>
+  <a class="back" href="./">← back to the app</a>
+</nav>
+<main>
+
+<h2 id="start">Getting started</h2>
+<p class="lead">Tutti is a tracker for orchestral sketches. Time runs down the screen in rows; each track is an instrument with its own cells for notes, velocity, articulation, dynamics and effects. Notes go out as MIDI to a DAW or sample library, or play through a built-in sketch synth.</p>
+<ol>
+  <li>Pick a built-in song from the <b>song</b> list and press <kbd>Space</kbd> to loop the pattern. <kbd>Esc</kbd> stops.</li>
+  <li>Click a note cell, set <b>octave</b> and <b>step</b>, and type notes on the piano-style keys (<kbd>Z</kbd> is C, <kbd>S</kbd> is C♯, <kbd>X</kbd> is D…).</li>
+  <li>Press <b>New</b> for an empty song. It autosaves in this browser and the address bar remembers which song and pattern you had open.</li>
+</ol>
+<p>The app runs in Chromium browsers (Chrome, Edge, Arc) for MIDI; the grid, pad and controller work in any modern browser, including Safari on iPhone and iPad.</p>
+
+<h2 id="grid">The grid</h2>
+<p>A pattern is 64 rows by default, one sixteenth note per row, so four rows make a beat and sixteen a bar. Beats are shaded, bars are ruled, and <b>rows</b>, <b>row</b> size and <b>meter</b> are set per pattern in the pattern group. Changing the row size rescales the grid, not the music.</p>
+<table>
+  <tr><th>cell</th><th>shows</th><th>entry</th></tr>
+  <tr><td>note</td><td>note name where a note starts, a line while it sustains</td><td>piano keys</td></tr>
+  <tr><td>vel</td><td>velocity, two hex digits</td><td>hex digits</td></tr>
+  <tr><td>art</td><td>articulation of the notes on that row</td><td>digits <kbd>1</kbd>–<kbd>9</kbd></td></tr>
+  <tr><td>dyn</td><td>dynamics lane (CC1), hex, with a bar</td><td>hex digits, <kbd>L</kbd> ramp, <kbd>S</kbd> hold</td></tr>
+  <tr><td>fx</td><td>one command per row</td><td>a letter, then hex</td></tr>
+  <tr><td>bpm (gutter)</td><td>tempo lane, decimal</td><td>digits, <kbd>L</kbd> ramp, <kbd>S</kbd> hold</td></tr>
+</table>
+<p>A track can have up to four note columns for divisi. Notes in one column never overlap: a new note cuts the one sounding, and a note cannot grow past the next. Click a track name to mute it; ⇧-click or long-press to solo. The status line under the grid always describes the cell under the cursor.</p>
+
+<h2 id="keys">Keyboard</h2>
+<div class="two">
+<div>
+<h3>Moving</h3>
+<table>
+  <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>row</td></tr>
+  <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>cell, wrapping across tracks</td></tr>
+  <tr><td><kbd>Tab</kbd> <kbd>⇧Tab</kbd></td><td>track</td></tr>
+  <tr><td><kbd>PgUp</kbd> <kbd>PgDn</kbd> or <kbd>⌘⇧↑</kbd> <kbd>⌘⇧↓</kbd></td><td>bar</td></tr>
+  <tr><td><kbd>Home</kbd> <kbd>End</kbd> or <kbd>⌘↑</kbd> <kbd>⌘↓</kbd></td><td>first / last row</td></tr>
+</table>
+<h3>Transport</h3>
+<table>
+  <tr><td><kbd>Space</kbd></td><td>loop the pattern, or stop</td></tr>
+  <tr><td><kbd>⇧Space</kbd></td><td>loop from the cursor row</td></tr>
+  <tr><td><kbd>Return</kbd></td><td>play the song order</td></tr>
+  <tr><td><kbd>Esc</kbd></td><td>stop (or deselect)</td></tr>
+</table>
+</div>
+<div>
+<h3>Entering</h3>
+<table>
+  <tr><td><kbd>Z</kbd>–<kbd>/</kbd></td><td>notes from C of the octave (piano layout)</td></tr>
+  <tr><td><kbd>Q</kbd>–<kbd>P</kbd></td><td>notes an octave up</td></tr>
+  <tr><td><kbd>-</kbd> <kbd>=</kbd></td><td>octave down / up</td></tr>
+  <tr><td><kbd>⇧-</kbd> <kbd>⇧=</kbd></td><td>step down / up</td></tr>
+  <tr><td><kbd>[</kbd> <kbd>]</kbd></td><td>note shorter / longer</td></tr>
+  <tr><td><kbd>⇧[</kbd> <kbd>⇧]</kbd></td><td>fewer / more note columns</td></tr>
+  <tr><td><kbd>1</kbd>–<kbd>9</kbd></td><td>articulation (art cell)</td></tr>
+  <tr><td><kbd>0</kbd>–<kbd>F</kbd></td><td>velocity, dynamics, fx value</td></tr>
+  <tr><td><kbd>L</kbd> <kbd>S</kbd></td><td>ramp / hold a lane point</td></tr>
+  <tr><td><kbd>Delete</kbd></td><td>clear the cell</td></tr>
+  <tr><td><kbd>⌘Z</kbd> <kbd>⌘⇧Z</kbd></td><td>undo / redo</td></tr>
+</table>
+</div>
+</div>
+<div class="note">A new note lasts <b>step</b> rows and the cursor advances by step. On Windows and Linux use <kbd>Ctrl</kbd> wherever <kbd>⌘</kbd> is shown. Control and Option are never modifiers, because macOS reserves them.</div>
+
+<h2 id="selection">Selection and batch edits</h2>
+<table>
+  <tr><td><kbd>⇧↑</kbd> <kbd>⇧↓</kbd> <kbd>⇧←</kbd> <kbd>⇧→</kbd></td><td>extend the selection from the cursor; or drag with the mouse, ⇧-click to extend</td></tr>
+  <tr><td><kbd>⌘A</kbd></td><td>select the track; again, the whole pattern</td></tr>
+  <tr><td><kbd>⌘C</kbd> <kbd>⌘X</kbd> <kbd>⌘V</kbd></td><td>copy, cut, paste at the cursor</td></tr>
+  <tr><td><kbd>⌘D</kbd></td><td>duplicate right below the selection</td></tr>
+  <tr><td><kbd>Delete</kbd></td><td>clear the selection</td></tr>
+  <tr><td><kbd>-</kbd> <kbd>=</kbd> · <kbd>⇧-</kbd> <kbd>⇧=</kbd></td><td>transpose a semitone · an octave</td></tr>
+  <tr><td><kbd>,</kbd> <kbd>.</kbd></td><td>transpose a scale degree in the song's key</td></tr>
+  <tr><td><kbd>[</kbd> <kbd>]</kbd></td><td>shorten / lengthen every selected note</td></tr>
+</table>
+<p>A toolbar appears with the selection and adds velocity up and down, an articulation list, <b>Interpolate</b> (ramp velocity, dynamics or tempo from the first row to the last), <b>Fill</b> (repeat the first row every step rows), <b>Rnd vel</b>, <b>Rnd pitch</b> (in key, within the selection's range) and <b>Humanize</b> (small random DEL on rows with notes). Paste lines cells up by kind: notes land on note columns, a dynamics run on a dynamics column.</p>
+
+<h2 id="key">Key and scale</h2>
+<p>Set the song's key in the key group. Entry stays chromatic, but the pad dims out-of-scale keys, <kbd>,</kbd> <kbd>.</kbd> and −deg / +deg move a selection by scale degrees, Rnd pitch draws from the key, and the controller's single-step nudge follows the scale. Scales: major, natural, harmonic and melodic minor, dorian, phrygian, lydian, mixolydian, pentatonics, whole tone, chromatic.</p>
+
+<h2 id="fx">FX column</h2>
+<p>Each track's <b>fx</b> cell takes one command per row. Press the command's first letter, then two hex digits for its value.</p>
+<table>
+  <tr><th>command</th><th>value</th><th>effect</th></tr>
+  <tr><td><code>CHA</code> chance</td><td>00–FF</td><td>probability the row's notes play; FF always, 80 about half</td></tr>
+  <tr><td><code>RET</code> retrigger</td><td>count</td><td>play each note that many times, evenly across its length</td></tr>
+  <tr><td><code>DEL</code> delay</td><td>xx/256 row</td><td>push the row's notes behind the beat</td></tr>
+  <tr><td><code>ARP</code> arpeggio</td><td>two nibbles</td><td>cycle root, +first, +second semitones each row</td></tr>
+  <tr><td><code>TSP</code> transpose</td><td>signed byte</td><td>shift the track from this row until the next TSP (F9 is −7)</td></tr>
+  <tr><td><code>EXP</code> expression</td><td>shape, depth</td><td>1 swell, 2 sfz, 3 fade in, 4 fade out; then depth 0–F</td></tr>
+</table>
+
+<h2 id="groove">Groove</h2>
+<p>A groove stretches and shrinks rows in a cycle without moving notes. Choose a preset in the pattern group (swing 8ths light, medium, hard; swing 16ths) or type a custom list of multipliers such as <code>1.33 0.67</code>. Playback, export and the playing-row highlight all follow it.</p>
+
+<h2 id="arrange">Patterns, arrangement, live</h2>
+<p><b>+</b> adds a pattern with the current one's settings. The <b>arrangement</b> chips are the song order: click a chip to open that pattern, drag to reorder, × to remove, + to append the current pattern. The text field beside them accepts indices directly.</p>
+<p>While a pattern loops, choosing another pattern (selector or chip) queues it; it takes over when the loop ends and the status shows <b>next</b>. Solo a track with ⇧-click or a long press on its name: with any solo on, only soloed tracks sound.</p>
+
+<h2 id="mixer">Mixer and tracks</h2>
+<p>The <b>mixer</b> sidebar (output group) shows each track with M, S, volume and pan. Tap a name to jump to that track. Volume and pan go out as CC7 and CC10 and are applied by the preview. <b>Tracks…</b> opens the tracks panel to add any instrument as a track, rename, change instrument, channel or columns, reorder and remove. A track's channel is shown in the grid header.</p>
+
+<h2 id="touch">Touch and the pad</h2>
+<p>Tap a cell to place the cursor, drag to scroll, long-press to clear a cell. The pad under the grid appears on touch screens (or tick <b>pad</b> in the entry group). Its key row follows the cell: a piano for notes, hex for velocity and dynamics, digits for tempo, commands for fx, articulation names for the art cell. The other rows move the cursor, switch track, toggle <b>sel</b> (drag selects instead of scrolling), clear, undo, change octave and step, note length, and play.</p>
+
+<h2 id="controller">Game controller</h2>
+<p>Pair a Bluetooth or USB controller and press any button so the browser lists it. The scheme follows LSDJ. Works on iPhone and iPad.</p>
+<table>
+  <tr><td>d-pad / left stick</td><td>move the cursor (hold to repeat)</td></tr>
+  <tr><td>LB / RB</td><td>previous / next track</td></tr>
+  <tr><td>LT / RT</td><td>a bar up / down</td></tr>
+  <tr><td>A + up / down</td><td>nudge the value under the cursor (a scale degree with a key set)</td></tr>
+  <tr><td>A + left / right</td><td>nudge by an octave, 16 or 10 bpm; next fx command</td></tr>
+  <tr><td>A tap</td><td>enter the last pitch on an empty cell and advance; audition an existing note</td></tr>
+  <tr><td>B</td><td>clear the cell or selection; held with the d-pad, extend the selection</td></tr>
+  <tr><td>X / Y</td><td>audition / cycle articulation</td></tr>
+  <tr><td>Start</td><td>play or stop the pattern</td></tr>
+  <tr><td>Back</td><td>undo; held: + Start plays the song, + B copies, + X cuts, + A pastes, + Y duplicates</td></tr>
+</table>
+
+<h2 id="midi">MIDI out, MIDI in, export</h2>
+<h3>Out to a DAW or sampler</h3>
+<p>Press <b>Enable MIDI</b> in the output group and choose an output. On macOS open Audio MIDI Setup → IAC Driver and tick <i>Device is online</i>; on Windows install loopMIDI and add a port. In Bitwig add Settings → Controllers → Generic → MIDI Keyboard with the IAC bus as input, set each instrument track's note input to that controller on the channel shown in Tutti's header, and arm it.</p>
+<p>Each track sends on its own channel. Articulation keyswitches default to C1–G1 in list order (Kontakt shows these as C0–G0); the dynamics lane drives CC1 and the expression lane CC11; the mixer sends CC7 and CC10. Edit the instrument table in <code>src/core/instruments.js</code> to match your library.</p>
+<h3>In from a keyboard</h3>
+<p>Choose an input after enabling MIDI. Played notes go into the cursor cell with their velocity and advance by step; chords spread across note columns. The sustain pedal skips a step, the mod wheel writes dynamics. WebMIDI is not available on iOS.</p>
+<h3>Export</h3>
+<p><b>Export .mid</b> writes a type 1 Standard MIDI File at 960 PPQ: a conductor track with tempo and meter, then one track per instrument with a program change, notes, controllers and keyswitches. Or drop the file on a DAW arranger.</p>
+
+<h2 id="files">Songs, autosave, files</h2>
+<p>Every song you create, load or edit is saved in this browser a moment after each change, and the address bar names the open song and pattern (<code>#song=…&amp;pat=…</code>), so a refresh or a bookmark brings you back. <b>Delete</b> removes your song, or resets a built-in example to its original.</p>
+<p><b>Save</b> downloads the song as JSON; <b>Load</b> adds a saved file to the list. The format is described by a <a href="schema/tutti-song.schema.json">JSON Schema</a>. Built-in examples are written in code with a compact <code>line()</code> notation in <code>src/core/examples.js</code>; copy one to sketch a piece in text.</p>
+<p>The audio preview is a simple synth for checking voice leading. It is not the sound.</p>
+
+<h2 id="theory">Writing a first phrase</h2>
+<p>Plan one chord per bar, for example A minor, F, C, G. Put the roots on Basses and Cellos with step 16. Give Violins II and Violas one chord tone each per bar, moving each voice to the nearest tone. Fill the middle with an open fifth on the two Horns columns. Add a pulse: pizzicato basses on beats 1 and 3, or staccato bassoon on step 2 alternating root and fifth, timpani on tonic and dominant with a roll into the repeat. Write the melody last on Violins I or Flute, chord tones on the beats, and shape the phrase with a dynamics ramp from 30 to 60 across the four bars. Add a pattern B, set the order to 0 0 1 1, and change only the last two chords.</p>
+
+</main>
+</body>
+</html>

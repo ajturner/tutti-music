@@ -283,6 +283,18 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   await page.reload(); await page.waitForTimeout(400);
   await page.evaluate(() => { for (const k of Object.keys(tutti)) if (!(k in window)) Object.defineProperty(window, k, { get: () => tutti[k], configurable: true }); for (const k of ['lastDraw', 'ROW_H']) Object.defineProperty(window, k, { get: () => tutti.view[k], configurable: true }); });
   check('mixer: choice persists across reload', await page.isVisible('#mixer'));
+  // --- help: quick reference in the footer, full guide in a new tab ---
+  check('help: footer link opens in a new tab', (await page.getAttribute('#helpLink', 'target')) === '_blank' && (await page.getAttribute('#helpLink', 'href')) === 'help.html');
+  {
+    const [tab] = await Promise.all([ctx.waitForEvent('page'), page.click('#helpLink')]);
+    const herrs = []; tab.on('pageerror', e => herrs.push(e.message));
+    await tab.waitForLoadState(); await tab.waitForTimeout(200);
+    const anchors = await tab.$$eval('nav ol a', as => as.map(a => a.getAttribute('href')));
+    const missing = await tab.evaluate(ids => ids.filter(h => !document.querySelector(h)), anchors);
+    check('help: guide opens with a resolving table of contents', tab.url().endsWith('help.html') && anchors.length >= 13 && missing.length === 0 && herrs.length === 0, 'missing=' + missing.join(',') + ' errs=' + herrs.join(' '));
+    check('help: guide links back to the app', (await tab.$eval('nav .back', a => a.getAttribute('href'))) === './');
+    await tab.close();
+  }
   // gamepad: mock, press down then A tap
   await page.evaluate(() => {
     window.__gp = { id: 'Mock Pad (STANDARD GAMEPAD)', connected: true, mapping: 'standard', axes: [0, 0], buttons: Array.from({ length: 17 }, () => ({ pressed: false, value: 0 })) };

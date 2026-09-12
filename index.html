@@ -123,79 +123,34 @@
   <div id="notes"></div>
   <div id="status"></div>
   <details>
-    <summary>Keys and MIDI setup <span id="version" title="Version"></span></summary>
+    <summary>Quick keys <a id="helpLink" href="help.html" target="_blank" rel="noopener" title="Open the full guide in a new tab">full guide ↗</a> <span id="version" title="Version"></span></summary>
     <div id="help">
       <div>
-        <h3>Moving the cursor</h3>
+        <h3>Move and play</h3>
         <table class="keys">
-          <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>row</td></tr>
-          <tr><td><kbd>⌘</kbd><kbd>⇧</kbd><kbd>↑</kbd> <kbd>⌘</kbd><kbd>⇧</kbd><kbd>↓</kbd></td><td>bar &nbsp;<span class="alt">(or <kbd>PgUp</kbd>/<kbd>PgDn</kbd>)</span></td></tr>
-          <tr><td><kbd>⌘</kbd><kbd>↑</kbd> <kbd>⌘</kbd><kbd>↓</kbd></td><td>first / last row &nbsp;<span class="alt">(or <kbd>Home</kbd>/<kbd>End</kbd>)</span></td></tr>
-          <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>field</td></tr>
-          <tr><td><kbd>Tab</kbd> <kbd>⇧</kbd><kbd>Tab</kbd></td><td>track</td></tr>
-        </table>
-        <h3>Selecting and batch edits</h3>
-        <table class="keys">
-          <tr><td><kbd>⇧</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd></td><td>extend the selection from the cursor &nbsp;<span class="alt">(or drag with the mouse, ⇧-click)</span></td></tr>
-          <tr><td><kbd>⌘</kbd><kbd>A</kbd></td><td>select the track, again for the whole pattern</td></tr>
-          <tr><td><kbd>⌘</kbd><kbd>C</kbd> <kbd>⌘</kbd><kbd>X</kbd> <kbd>⌘</kbd><kbd>V</kbd></td><td>copy, cut, paste at the cursor</td></tr>
-          <tr><td><kbd>⌘</kbd><kbd>D</kbd></td><td>duplicate right after the selection</td></tr>
-          <tr><td><kbd>-</kbd> <kbd>=</kbd> &nbsp; <kbd>[</kbd> <kbd>]</kbd></td><td>with a selection: transpose a semitone (⇧ octave), note length</td></tr>
-          <tr><td><kbd>Esc</kbd></td><td>deselect</td></tr>
-        </table>
-        <p>The toolbar above the grid applies the same edits, plus velocity, articulation and a linear ramp of velocity, dynamics or tempo across the selected rows. Paste lines cells up by kind, so a block of notes pastes onto note columns and a dynamics run onto a dynamics column.</p>
-        <h3>Key, FX, groove, live</h3>
-        <p><em>Key</em> in the menu sets the song's key and scale. The pad dims out-of-scale keys, <kbd>,</kbd> and <kbd>.</kbd> (or −deg/+deg) move a selection by scale degrees, and the controller's single-step nudge follows the scale.</p>
-        <p>Each track's <em>fx</em> column takes one command per row: press <kbd>C</kbd> <kbd>R</kbd> <kbd>D</kbd> <kbd>A</kbd> <kbd>T</kbd> to pick it, then two hex digits. <b>CHA</b> chance the row plays (FF always). <b>RET</b> retrigger the note n times. <b>DEL</b> delay the row by xx/256 of a row. <b>ARP</b> arpeggiate: root, +high nibble, +low nibble semitones per row. <b>TSP</b> transpose the track by a signed byte from here until the next TSP.</p>
-        <p><em>Groove</em> per pattern stretches and shrinks rows in a cycle for swing; custom takes a list of multipliers. <em>Solo</em> a track with ⇧-click or a long-press on its name. While a pattern loops, choosing another pattern queues it for the end of the loop (the status shows <em>next</em>).</p>
-        <p>Songs autosave in this browser, and the address bar names the open song and pattern, so a refresh or a bookmark brings you back to it. Built-in examples reset when deleted; your own songs are removed.</p>
-        <h3>Tracks, arranger, shaping</h3>
-        <p>The <em>mixer</em> sidebar (output group) shows every track with mute, solo, volume (CC7) and pan (CC10) while you edit; tap a name to jump to that track. <em>Tracks…</em> opens the tracks panel: add any instrument as a new track, rename, change instrument, channel or columns, reorder, remove. The <em>order</em> chips are the arranger: click to open a pattern, drag to reorder, × to remove, + to append the current pattern.</p>
-        <p>The fx command <b>EXP</b> shapes expression inside each note on its row: first hex digit 1 swell, 2 sfz, 3 fade in, 4 fade out; second digit the depth. The selection toolbar also has <em>Fill</em> (repeat the first row every step rows), <em>Rnd vel</em>, <em>Rnd pitch</em> (in key, within the selection's range) and <em>Humanize</em> (random small DEL on rows with notes).</p>
-        <h3>Transport</h3>
-        <table class="keys">
-          <tr><td><kbd>Space</kbd></td><td>loop the pattern / stop</td></tr>
-          <tr><td><kbd>⇧</kbd><kbd>Space</kbd></td><td>loop from the cursor row</td></tr>
-          <tr><td><kbd>Return</kbd></td><td>play the song order</td></tr>
-          <tr><td><kbd>Esc</kbd></td><td>stop</td></tr>
+          <tr><td><kbd>↑</kbd><kbd>↓</kbd> <kbd>←</kbd><kbd>→</kbd> <kbd>Tab</kbd></td><td>row, cell, track</td></tr>
+          <tr><td><kbd>PgUp</kbd><kbd>PgDn</kbd> · <kbd>Home</kbd><kbd>End</kbd></td><td>bar · first/last row</td></tr>
+          <tr><td><kbd>Space</kbd> <kbd>⇧Space</kbd> <kbd>Return</kbd> <kbd>Esc</kbd></td><td>loop · loop from cursor · song · stop</td></tr>
         </table>
       </div>
       <div>
-        <h3>Entering music</h3>
+        <h3>Enter</h3>
         <table class="keys">
-          <tr><td><kbd>Z</kbd>–<kbd>M</kbd></td><td>notes, lower octave (piano layout)</td></tr>
-          <tr><td><kbd>Q</kbd>–<kbd>P</kbd></td><td>notes, octave above</td></tr>
-          <tr><td><kbd>-</kbd> <kbd>=</kbd></td><td>octave down / up</td></tr>
-          <tr><td><kbd>_</kbd> <kbd>+</kbd></td><td>step down / up</td></tr>
-          <tr><td><kbd>[</kbd> <kbd>]</kbd></td><td>note under cursor: shorter / longer</td></tr>
-          <tr><td><kbd>{</kbd> <kbd>}</kbd></td><td>note columns on this track (divisi)</td></tr>
-          <tr><td><kbd>1</kbd>–<kbd>9</kbd></td><td>articulation, in an art field</td></tr>
-          <tr><td><kbd>L</kbd> <kbd>S</kbd></td><td>ramp / hold, in a dyn or tempo field</td></tr>
-          <tr><td><kbd>Delete</kbd></td><td>clear the field</td></tr>
-          <tr><td><kbd>⌘</kbd><kbd>Z</kbd> <kbd>⌘</kbd><kbd>⇧</kbd><kbd>Z</kbd></td><td>undo / redo</td></tr>
+          <tr><td><kbd>Z</kbd>–<kbd>/</kbd> <kbd>Q</kbd>–<kbd>P</kbd></td><td>notes (piano layout), octave up</td></tr>
+          <tr><td><kbd>-</kbd><kbd>=</kbd> · <kbd>⇧-</kbd><kbd>⇧=</kbd> · <kbd>[</kbd><kbd>]</kbd></td><td>octave · step · note length</td></tr>
+          <tr><td><kbd>1</kbd>–<kbd>9</kbd> · <kbd>0</kbd>–<kbd>F</kbd> · <kbd>L</kbd><kbd>S</kbd></td><td>articulation · hex value · ramp/hold</td></tr>
+          <tr><td><kbd>C</kbd><kbd>R</kbd><kbd>D</kbd><kbd>A</kbd><kbd>T</kbd><kbd>E</kbd></td><td>fx command, then hex</td></tr>
+          <tr><td><kbd>Delete</kbd> · <kbd>⌘Z</kbd> <kbd>⌘⇧Z</kbd></td><td>clear · undo, redo</td></tr>
         </table>
-        <p>A new note lasts <em>step</em> rows. Velocity and dynamics take two hex digits; tempo takes up to three decimal digits. Click any cell, or a track name to mute it.</p>
-        <p class="alt">On Windows and Linux use <kbd>Ctrl</kbd> wherever <kbd>⌘</kbd> is shown. Control and Option are never used as modifiers here, because macOS reserves Control with the arrow keys for Mission Control and Spaces, and Option for special characters.</p>
       </div>
       <div>
-        <h3>Songs</h3>
-        <p>The song list holds the built-in examples plus anything you create or load. Everything lives in memory until you save: <em>Save .json</em> writes the whole song (patterns, tracks, lanes) as a file; <em>Load .json</em> adds a saved file to the list. Reloading the page discards unsaved songs.</p>
-        <p>Changing the row size rescales the grid, not the music: ticks stay where they are. Meter sets the bar lines and the exported time signature; 6/8 and 9/8 highlight every third beat.</p>
-        <p>Examples are written in code with <code>line()</code>, a compact note syntax near the end of the core script. Copy one to sketch a piece in text.</p>
-      </div>
-      <div>
-        <h3>MIDI out to Bitwig and others</h3>
-        <p>Works in Chromium browsers (Chrome, Edge, Arc). Use the published site or a local server (<code>npm start</code>); the app is ES modules, so opening index.html from disk does not work.</p>
-        <p>macOS: Audio MIDI Setup → IAC Driver → check "Device is online". Windows: install loopMIDI and add a port.</p>
-        <p>Bitwig: Settings → Controllers → Add → Generic → MIDI Keyboard, input = the IAC bus. On each instrument track set the note input to that controller, channel as shown in the track header, and arm the track. Or drop the exported .mid onto the arranger.</p>
-        <p>Keyswitches default to C1–G1 (Kontakt displays these as C0–G0). Edit <code>INSTRUMENTS</code> in this file to match your library.</p>
-        <p>The audio preview is a simple synth for checking voice leading. It is not the sound.</p>
-      </div>
-      <div>
-        <h3>Touch, game controller, MIDI in</h3>
-        <p>Touch: tap a cell to move the cursor, drag to scroll, long-press to clear a cell. The <em>sel</em> pad button switches dragging to selecting. The pad under the grid enters notes and values and appears on touch screens, or tick <em>pad</em> in the menu.</p>
-        <p>Game controller (Bluetooth or USB; works on iPhone and iPad): d-pad or stick moves the cursor. Hold <kbd>A</kbd> and press up/down to nudge the value under the cursor, left/right for an octave. Tap <kbd>A</kbd> to enter a note or audition one. <kbd>B</kbd> clears, or held with the d-pad extends the selection; <kbd>X</kbd> auditions, <kbd>Y</kbd> cycles articulation, bumpers change track, triggers jump a bar. With <kbd>Back</kbd> held: <kbd>B</kbd> copies, <kbd>X</kbd> cuts, <kbd>A</kbd> pastes, <kbd>Y</kbd> duplicates. <kbd>Start</kbd> plays or stops the pattern, <kbd>Back</kbd>+<kbd>Start</kbd> plays the song, <kbd>Back</kbd> alone undoes. Press any button after pairing so the browser lists it.</p>
-        <p>MIDI in: choose an input after enabling MIDI. Played notes go into the cursor cell with their velocity and advance by <em>step</em>; chords spread across the track's note columns. Sustain pedal skips a step; mod wheel writes dynamics. Not available on iOS, which has no WebMIDI.</p>
+        <h3>Select</h3>
+        <table class="keys">
+          <tr><td><kbd>⇧</kbd>+arrows · <kbd>⌘A</kbd></td><td>extend · track, then all</td></tr>
+          <tr><td><kbd>⌘C</kbd> <kbd>⌘X</kbd> <kbd>⌘V</kbd> <kbd>⌘D</kbd></td><td>copy, cut, paste, duplicate</td></tr>
+          <tr><td><kbd>-</kbd><kbd>=</kbd> · <kbd>,</kbd><kbd>.</kbd> · <kbd>[</kbd><kbd>]</kbd></td><td>semitone · scale degree · length</td></tr>
+        </table>
+        <p class="alt">Windows and Linux: <kbd>Ctrl</kbd> for <kbd>⌘</kbd>. Touch, controller, MIDI setup and the FX reference are in the full guide.</p>
       </div>
     </div>
   </details>

@@ -2,7 +2,7 @@
 
 A browser-based tracker for composing orchestral music, with MIDI export. Plain ES modules, no build step, no runtime dependencies.
 
-**Live:** https://ajturner.github.io/tutti-music/
+**Live:** https://ajturner.github.io/tutti-music/ · **Guide:** https://ajturner.github.io/tutti-music/help.html
 
 ## Input
 

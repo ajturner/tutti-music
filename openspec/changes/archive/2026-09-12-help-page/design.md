@@ -1,0 +1,2 @@
+# Design
+`help.html` is a static page with its own small stylesheet (same palette, a reading typeface, 760 px measure, sticky table of contents) so it does not depend on the app's layout rules. Sections: getting started, the grid, keyboard, selection, key and scale, FX, groove, arrangement and live, mixer and tracks, touch, controller, MIDI and export, files, a first phrase. The footer summary holds a `target="_blank"` link. No JSON change.
