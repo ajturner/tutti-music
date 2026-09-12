@@ -1,0 +1,231 @@
+{
+ "instrument": "tuba",
+ "source": "VSCO 2 CE / VCSL (CC0) by Versilian Studios, converted",
+ "license": "CC0-1.0",
+ "zones": [
+  {
+   "art": "stc",
+   "note": 34,
+   "layer": 0,
+   "file": "stc_n34_0.m4a",
+   "source": "VSCO:Brass/Tuba/stac/Tuba3_stac_A#0_v1_rr1_Sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 34,
+   "layer": 1,
+   "file": "stc_n34_1.m4a",
+   "source": "VSCO:Brass/Tuba/stac/Tuba3_stac_A#0_v2_rr1_Sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 39,
+   "layer": 0,
+   "file": "stc_n39_0.m4a",
+   "source": "VSCO:Brass/Tuba/stac/Tuba3_stac_D#1_v1_rr1_Sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 39,
+   "layer": 1,
+   "file": "stc_n39_1.m4a",
+   "source": "VSCO:Brass/Tuba/stac/Tuba3_stac_D#1_v2_rr1_Sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 41,
+   "layer": 0,
+   "file": "stc_n41_0.m4a",
+   "source": "VSCO:Brass/Tuba/stac/Tuba3_stac_F1_v1_rr1_Sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 41,
+   "layer": 1,
+   "file": "stc_n41_1.m4a",
+   "source": "VSCO:Brass/Tuba/stac/Tuba3_stac_F1_v2_rr1_Sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 46,
+   "layer": 0,
+   "file": "stc_n46_0.m4a",
+   "source": "VSCO:Brass/Tuba/stac/Tuba3_stac_A#1_v1_rr1_Sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 46,
+   "layer": 1,
+   "file": "stc_n46_1.m4a",
+   "source": "VSCO:Brass/Tuba/stac/Tuba3_stac_A#1_v2_rr1_Sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 50,
+   "layer": 0,
+   "file": "stc_n50_0.m4a",
+   "source": "VSCO:Brass/Tuba/stac/Tuba3_stac_D2_v1_rr1_Sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 50,
+   "layer": 1,
+   "file": "stc_n50_1.m4a",
+   "source": "VSCO:Brass/Tuba/stac/Tuba3_stac_D2_v2_rr1_Sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 53,
+   "layer": 0,
+   "file": "stc_n53_0.m4a",
+   "source": "VSCO:Brass/Tuba/stac/Tuba3_stac_F2_v1_rr1_Sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 53,
+   "layer": 1,
+   "file": "stc_n53_1.m4a",
+   "source": "VSCO:Brass/Tuba/stac/Tuba3_stac_F2_v2_rr1_Sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 58,
+   "layer": 0,
+   "file": "stc_n58_0.m4a",
+   "source": "VSCO:Brass/Tuba/stac/Tuba3_stac_A#2_v1_rr1_Sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 58,
+   "layer": 1,
+   "file": "stc_n58_1.m4a",
+   "source": "VSCO:Brass/Tuba/stac/Tuba3_stac_A#2_v2_rr1_Sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 62,
+   "layer": 0,
+   "file": "stc_n62_0.m4a",
+   "source": "VSCO:Brass/Tuba/stac/Tuba3_stac_D3_v1_rr1_Sum.wav"
+  },
+  {
+   "art": "stc",
+   "note": 62,
+   "layer": 1,
+   "file": "stc_n62_1.m4a",
+   "source": "VSCO:Brass/Tuba/stac/Tuba3_stac_D3_v2_rr1_Sum.wav"
+  },
+  {
+   "art": "sus",
+   "note": 29,
+   "layer": 1,
+   "file": "sus_n29_0.m4a",
+   "source": "VSCO:Brass/Tuba/sus/Tuba3_sus_F0_v1_rr1_Mid.wav"
+  },
+  {
+   "art": "sus",
+   "note": 34,
+   "layer": 0,
+   "file": "sus_n34_0.m4a",
+   "source": "VSCO:Brass/Tuba/sus/Tuba3_sus_A#0_v1_rr1_Mid.wav"
+  },
+  {
+   "art": "sus",
+   "note": 34,
+   "layer": 1,
+   "file": "sus_n34_1.m4a",
+   "source": "VSCO:Brass/Tuba/sus/Tuba3_sus_A#0_v3_rr1_Mid.wav"
+  },
+  {
+   "art": "sus",
+   "note": 39,
+   "layer": 0,
+   "file": "sus_n39_0.m4a",
+   "source": "VSCO:Brass/Tuba/sus/Tuba3_sus_D#1_v1_rr1_Mid.wav"
+  },
+  {
+   "art": "sus",
+   "note": 39,
+   "layer": 1,
+   "file": "sus_n39_1.m4a",
+   "source": "VSCO:Brass/Tuba/sus/Tuba3_sus_D#1_v3_rr1_Mid.wav"
+  },
+  {
+   "art": "sus",
+   "note": 41,
+   "layer": 0,
+   "file": "sus_n41_0.m4a",
+   "source": "VSCO:Brass/Tuba/sus/Tuba3_sus_F1_v1_rr1_Mid.wav"
+  },
+  {
+   "art": "sus",
+   "note": 41,
+   "layer": 1,
+   "file": "sus_n41_1.m4a",
+   "source": "VSCO:Brass/Tuba/sus/Tuba3_sus_F1_v3_rr1_Mid.wav"
+  },
+  {
+   "art": "sus",
+   "note": 46,
+   "layer": 0,
+   "file": "sus_n46_0.m4a",
+   "source": "VSCO:Brass/Tuba/sus/Tuba3_sus_A#1_v1_rr1_Mid.wav"
+  },
+  {
+   "art": "sus",
+   "note": 46,
+   "layer": 1,
+   "file": "sus_n46_1.m4a",
+   "source": "VSCO:Brass/Tuba/sus/Tuba3_sus_A#1_v3_rr1_Mid.wav"
+  },
+  {
+   "art": "sus",
+   "note": 50,
+   "layer": 0,
+   "file": "sus_n50_0.m4a",
+   "source": "VSCO:Brass/Tuba/sus/Tuba3_sus_D2_v1_rr1_Mid.wav"
+  },
+  {
+   "art": "sus",
+   "note": 50,
+   "layer": 1,
+   "file": "sus_n50_1.m4a",
+   "source": "VSCO:Brass/Tuba/sus/Tuba3_sus_D2_v3_rr1_Mid.wav"
+  },
+  {
+   "art": "sus",
+   "note": 53,
+   "layer": 0,
+   "file": "sus_n53_0.m4a",
+   "source": "VSCO:Brass/Tuba/sus/Tuba3_sus_F2_v1_rr1_Mid.wav"
+  },
+  {
+   "art": "sus",
+   "note": 53,
+   "layer": 1,
+   "file": "sus_n53_1.m4a",
+   "source": "VSCO:Brass/Tuba/sus/Tuba3_sus_F2_v3_rr1_Mid.wav"
+  },
+  {
+   "art": "sus",
+   "note": 58,
+   "layer": 0,
+   "file": "sus_n58_0.m4a",
+   "source": "VSCO:Brass/Tuba/sus/Tuba3_sus_A#2_v1_rr1_Mid.wav"
+  },
+  {
+   "art": "sus",
+   "note": 58,
+   "layer": 1,
+   "file": "sus_n58_1.m4a",
+   "source": "VSCO:Brass/Tuba/sus/Tuba3_sus_A#2_v3_rr1_Mid.wav"
+  },
+  {
+   "art": "sus",
+   "note": 62,
+   "layer": 1,
+   "file": "sus_n62_0.m4a",
+   "source": "VSCO:Brass/Tuba/sus/Tuba3_sus_D3_v1_rr1_Mid.wav"
+  }
+ ]
+}

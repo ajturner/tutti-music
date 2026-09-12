@@ -7,7 +7,7 @@ import { addTrack, removeTrack, moveTrack, setTrackInstrument, freeChannel, norm
 import { inScale, transposeDiatonic, snapToScale, degreeOf, effectiveKey } from '../src/core/scales.js';
 import { Scheduler } from '../src/core/scheduler.js';
 import { pickZones } from '../src/core/sampler.js';
-import { installBank, banks, unloadBank, ensureSongBanks } from '../src/core/banks.js';
+import { installBank, banks, unloadBank, ensureSongBanks, hiddenBanks, isHidden } from '../src/core/banks.js';
 import { registerInstrument, unregisterInstrument } from '../src/core/instruments.js';
 import { readdir } from 'node:fs/promises';
 import { midiFileBytes } from '../src/core/midifile.js';
@@ -249,6 +249,7 @@ check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[1
   }
   check('samples: every bundled map is complete', maps >= 12 && files > 200 && bad.length === 0, maps + ' maps, ' + files + ' files' + (bad.length ? ' bad: ' + bad.slice(0, 3).join(', ') : ''));
   const ob = JSON.parse(await readFile(new URL('bank.json', dir)));
+  check('orchestra: harp, tuba and voice are in the table', INST.harp && INST.harp.samples === 'orchestra/harp/' && INST.tuba && INST.tuba.samples === 'orchestra/tuba/' && INST.voice && INST.voice.patch && INST.voice.patch.formants.length === 3 && !INST.voice.samples);
   check('orchestra: bank.json matches the instrument table', ob.builtin === true && ob.instruments.length === INSTRUMENTS.filter(i => i.bank === 'orchestra').length && ob.instruments.every(d => INST[d.id] && (!d.samples || INST[d.id].samples === 'orchestra/' + d.samples.replace(/^\.\//, ''))));
   const eb = JSON.parse(await readFile(new URL('../banks/electronica/bank.json', import.meta.url)));
   const dm = eb.instruments.find(i => i.id === 'drum-machine');
@@ -282,7 +283,14 @@ check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[1
     const bj = JSON.parse(await readFile(new URL(e.url, dir))); nb++;
     for (const d of bj.instruments) { ninst++; if (d.samples) { try { const m = JSON.parse(await readFile(new URL(d.samples + 'map.json', new URL(e.url, dir)))); if (!m.zones.length) bad.push(d.id + ' empty'); for (const z of m.zones) { try { await readFile(new URL(d.samples + z.file, new URL(e.url, dir))); } catch { bad.push(d.id + '/' + z.file); } } } catch { bad.push(d.id + ' no map'); } } }
   }
-  check('banks: every bundled bank is complete', nb === 4 && ninst >= 30 && bad.length === 0, nb + ' banks, ' + ninst + ' instruments' + (bad.length ? ' bad: ' + bad.slice(0, 3).join(', ') : ''));
+  hiddenBanks.add('orchestra');
+  check('banks: hiding a bank marks its instruments hidden but keeps them registered', isHidden('flute') && !!INST.flute && !isHidden('nope-x'));
+  hiddenBanks.delete('orchestra');
+  const jazzBank = JSON.parse(await readFile(new URL('jazz/bank.json', dir))), folkBank = JSON.parse(await readFile(new URL('folk/bank.json', dir)));
+  const jid = jazzBank.instruments.map(i => i.id), fid = folkBank.instruments.map(i => i.id);
+  check('banks: jazz adds guitar, alto and bass sax sharing the tenor samples', ['guitar', 'alto-sax', 'bass-sax'].every(i => jid.includes(i)) && jazzBank.instruments.find(i => i.id === 'alto-sax').samples === './tenor-sax/' && jazzBank.instruments.find(i => i.id === 'guitar').patch.ks);
+  check('banks: folk adds banjo, Irish flute, harmonica and washboard', ['banjo', 'irish-flute', 'harmonica', 'washboard'].every(i => fid.includes(i)) && Object.keys(folkBank.instruments.find(i => i.id === 'washboard').kit).length === 8);
+  check('banks: every bundled bank is complete', nb === 4 && ninst >= 40 && bad.length === 0, nb + ' banks, ' + ninst + ' instruments' + (bad.length ? ' bad: ' + bad.slice(0, 3).join(', ') : ''));
 }
 
 // Every example renders and exports

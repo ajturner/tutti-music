@@ -20,6 +20,7 @@ export const FAMILIES = {
   keys:       { label: 'Keys',       color: '#E6C889' },
   plucked:    { label: 'Plucked',    color: '#A9D18E' },
   drums:      { label: 'Drums',      color: '#D98C8C' },
+  voice:      { label: 'Voice',      color: '#F0A8C8' },
 };
 
 // General MIDI percussion map: the note names drum kits use, and the full set the synthesized drum machine plays.

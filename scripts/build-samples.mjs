@@ -134,10 +134,11 @@ const { INSTRUMENTS } = await import('../src/core/instruments.js');
 const defs = INSTRUMENTS.filter(i => i.bank === 'orchestra').map(i => {
   const d = { id: i.id, name: i.name, family: i.family, range: i.range, articulations: i.articulations, program: i.program, keyswitches: i.keyswitches };
   if (i.speakDelayMs) d.speakDelayMs = i.speakDelayMs;
-  if (i.family !== 'electronic') d.samples = './' + (i.id === 'violins-2' ? 'violins-1' : i.id) + '/';
+  if (i.patch) d.patch = i.patch;
+  else if (i.family !== 'electronic') d.samples = './' + (i.id === 'violins-2' ? 'violins-1' : i.id) + '/';
   return d;
 });
 await writeFile(path.join(OUT, 'bank.json'), JSON.stringify({ $schema: 'https://ajturner.github.io/tutti-music/schema/tutti-bank.schema.json', id: 'orchestra', name: 'Symphony orchestra',
-  description: 'Woodwinds, brass, timpani and strings sampled from VSCO 2 Community Edition, plus two synths. Built in: always loaded.',
+  description: 'Woodwinds, brass, timpani, harp, strings and a choir, plus two synths. Built in: always loaded.',
   license: 'CC0-1.0', source: 'VSCO 2 Community Edition by Versilian Studios', builtin: true, instruments: defs }, null, 1) + '\n');
 }

@@ -1,0 +1,168 @@
+{
+ "instrument": "harp",
+ "source": "VSCO 2 CE / VCSL (CC0) by Versilian Studios, converted",
+ "license": "CC0-1.0",
+ "zones": [
+  {
+   "art": "sus",
+   "note": 28,
+   "layer": 1,
+   "file": "sus_n40_0.m4a",
+   "source": "VCSL:Chordophones/Composite Chordophones/Concert Harp/KSHarp_E1_f1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 31,
+   "layer": 1,
+   "file": "sus_n43_0.m4a",
+   "source": "VCSL:Chordophones/Composite Chordophones/Concert Harp/KSHarp_G1_f1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 35,
+   "layer": 1,
+   "file": "sus_n47_0.m4a",
+   "source": "VCSL:Chordophones/Composite Chordophones/Concert Harp/KSHarp_B1_f1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 38,
+   "layer": 1,
+   "file": "sus_n50_0.m4a",
+   "source": "VCSL:Chordophones/Composite Chordophones/Concert Harp/KSHarp_D2_f1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 41,
+   "layer": 1,
+   "file": "sus_n53_0.m4a",
+   "source": "VCSL:Chordophones/Composite Chordophones/Concert Harp/KSHarp_F2_f1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 45,
+   "layer": 1,
+   "file": "sus_n57_0.m4a",
+   "source": "VCSL:Chordophones/Composite Chordophones/Concert Harp/KSHarp_A2_f1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 48,
+   "layer": 1,
+   "file": "sus_n60_0.m4a",
+   "source": "VCSL:Chordophones/Composite Chordophones/Concert Harp/KSHarp_C3_f2.wav"
+  },
+  {
+   "art": "sus",
+   "note": 52,
+   "layer": 1,
+   "file": "sus_n64_0.m4a",
+   "source": "VCSL:Chordophones/Composite Chordophones/Concert Harp/KSHarp_E3_f1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 55,
+   "layer": 1,
+   "file": "sus_n67_0.m4a",
+   "source": "VCSL:Chordophones/Composite Chordophones/Concert Harp/KSHarp_G3_f1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 59,
+   "layer": 1,
+   "file": "sus_n71_0.m4a",
+   "source": "VCSL:Chordophones/Composite Chordophones/Concert Harp/KSHarp_B3_f1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 62,
+   "layer": 1,
+   "file": "sus_n74_0.m4a",
+   "source": "VCSL:Chordophones/Composite Chordophones/Concert Harp/KSHarp_D4_f1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 65,
+   "layer": 1,
+   "file": "sus_n77_0.m4a",
+   "source": "VCSL:Chordophones/Composite Chordophones/Concert Harp/KSHarp_F4_f1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 69,
+   "layer": 1,
+   "file": "sus_n81_0.m4a",
+   "source": "VCSL:Chordophones/Composite Chordophones/Concert Harp/KSHarp_A4_f1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 72,
+   "layer": 1,
+   "file": "sus_n84_0.m4a",
+   "source": "VCSL:Chordophones/Composite Chordophones/Concert Harp/KSHarp_C5_f1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 76,
+   "layer": 1,
+   "file": "sus_n88_0.m4a",
+   "source": "VCSL:Chordophones/Composite Chordophones/Concert Harp/KSHarp_E5_f1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 79,
+   "layer": 1,
+   "file": "sus_n91_0.m4a",
+   "source": "VCSL:Chordophones/Composite Chordophones/Concert Harp/KSHarp_G5_f1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 83,
+   "layer": 1,
+   "file": "sus_n95_0.m4a",
+   "source": "VCSL:Chordophones/Composite Chordophones/Concert Harp/KSHarp_B5_f1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 86,
+   "layer": 1,
+   "file": "sus_n98_0.m4a",
+   "source": "VCSL:Chordophones/Composite Chordophones/Concert Harp/KSHarp_D6_f1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 89,
+   "layer": 1,
+   "file": "sus_n101_0.m4a",
+   "source": "VCSL:Chordophones/Composite Chordophones/Concert Harp/KSHarp_F6_f1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 93,
+   "layer": 1,
+   "file": "sus_n105_0.m4a",
+   "source": "VCSL:Chordophones/Composite Chordophones/Concert Harp/KSHarp_A6_f1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 95,
+   "layer": 1,
+   "file": "sus_n107_0.m4a",
+   "source": "VCSL:Chordophones/Composite Chordophones/Concert Harp/KSHarp_B6_f1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 98,
+   "layer": 1,
+   "file": "sus_n110_0.m4a",
+   "source": "VCSL:Chordophones/Composite Chordophones/Concert Harp/KSHarp_D7_f1.wav"
+  },
+  {
+   "art": "sus",
+   "note": 101,
+   "layer": 1,
+   "file": "sus_n113_0.m4a",
+   "source": "VCSL:Chordophones/Composite Chordophones/Concert Harp/KSHarp_F7_f1.wav"
+  }
+ ]
+}

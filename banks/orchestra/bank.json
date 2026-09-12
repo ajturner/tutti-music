@@ -2,7 +2,7 @@
  "$schema": "https://ajturner.github.io/tutti-music/schema/tutti-bank.schema.json",
  "id": "orchestra",
  "name": "Symphony orchestra",
- "description": "Woodwinds, brass, timpani and strings sampled from VSCO 2 Community Edition, plus two synths. Built in: always loaded.",
+ "description": "Woodwinds, brass, timpani, harp, strings and a choir, plus two synths. Built in: always loaded.",
  "license": "CC0-1.0",
  "source": "VSCO 2 Community Edition by Versilian Studios",
  "builtin": true,
@@ -21,12 +21,12 @@
     "stc"
    ],
    "program": 73,
-   "speakDelayMs": 8,
    "keyswitches": {
     "sus": 24,
     "leg": 25,
     "stc": 26
    },
+   "speakDelayMs": 8,
    "samples": "./flute/"
   },
   {
@@ -43,12 +43,12 @@
     "stc"
    ],
    "program": 68,
-   "speakDelayMs": 10,
    "keyswitches": {
     "sus": 24,
     "leg": 25,
     "stc": 26
    },
+   "speakDelayMs": 10,
    "samples": "./oboe/"
   },
   {
@@ -65,12 +65,12 @@
     "stc"
    ],
    "program": 71,
-   "speakDelayMs": 10,
    "keyswitches": {
     "sus": 24,
     "leg": 25,
     "stc": 26
    },
+   "speakDelayMs": 10,
    "samples": "./clarinet/"
   },
   {
@@ -87,12 +87,12 @@
     "stc"
    ],
    "program": 70,
-   "speakDelayMs": 14,
    "keyswitches": {
     "sus": 24,
     "leg": 25,
     "stc": 26
    },
+   "speakDelayMs": 14,
    "samples": "./bassoon/"
   },
   {
@@ -111,7 +111,6 @@
     "mut"
    ],
    "program": 60,
-   "speakDelayMs": 16,
    "keyswitches": {
     "sus": 24,
     "leg": 25,
@@ -119,6 +118,7 @@
     "mrc": 27,
     "mut": 28
    },
+   "speakDelayMs": 16,
    "samples": "./horns/"
   },
   {
@@ -137,7 +137,6 @@
     "mut"
    ],
    "program": 56,
-   "speakDelayMs": 8,
    "keyswitches": {
     "sus": 24,
     "leg": 25,
@@ -145,6 +144,7 @@
     "mrc": 27,
     "mut": 28
    },
+   "speakDelayMs": 8,
    "samples": "./trumpets/"
   },
   {
@@ -163,7 +163,6 @@
     "mut"
    ],
    "program": 57,
-   "speakDelayMs": 14,
    "keyswitches": {
     "sus": 24,
     "leg": 25,
@@ -171,7 +170,32 @@
     "mrc": 27,
     "mut": 28
    },
+   "speakDelayMs": 14,
    "samples": "./trombones/"
+  },
+  {
+   "id": "tuba",
+   "name": "Tuba",
+   "family": "brass",
+   "range": [
+    28,
+    58
+   ],
+   "articulations": [
+    "sus",
+    "leg",
+    "stc",
+    "mrc"
+   ],
+   "program": 58,
+   "keyswitches": {
+    "sus": 24,
+    "leg": 25,
+    "stc": 26,
+    "mrc": 27
+   },
+   "speakDelayMs": 18,
+   "samples": "./tuba/"
   },
   {
    "id": "timpani",
@@ -187,13 +211,27 @@
     "stc"
    ],
    "program": 47,
-   "speakDelayMs": 0,
    "keyswitches": {
     "sus": 24,
     "rll": 25,
     "stc": 26
    },
    "samples": "./timpani/"
+  },
+  {
+   "id": "harp",
+   "name": "Harp",
+   "family": "plucked",
+   "range": [
+    24,
+    103
+   ],
+   "articulations": [
+    "sus"
+   ],
+   "program": 46,
+   "keyswitches": {},
+   "samples": "./harp/"
   },
   {
    "id": "violins-1",
@@ -212,7 +250,6 @@
     "mrc"
    ],
    "program": 48,
-   "speakDelayMs": 24,
    "keyswitches": {
     "sus": 24,
     "leg": 25,
@@ -221,6 +258,7 @@
     "trm": 28,
     "mrc": 29
    },
+   "speakDelayMs": 24,
    "samples": "./violins-1/"
   },
   {
@@ -240,7 +278,6 @@
     "mrc"
    ],
    "program": 48,
-   "speakDelayMs": 24,
    "keyswitches": {
     "sus": 24,
     "leg": 25,
@@ -249,6 +286,7 @@
     "trm": 28,
     "mrc": 29
    },
+   "speakDelayMs": 24,
    "samples": "./violins-1/"
   },
   {
@@ -268,7 +306,6 @@
     "mrc"
    ],
    "program": 48,
-   "speakDelayMs": 26,
    "keyswitches": {
     "sus": 24,
     "leg": 25,
@@ -277,6 +314,7 @@
     "trm": 28,
     "mrc": 29
    },
+   "speakDelayMs": 26,
    "samples": "./violas/"
   },
   {
@@ -296,7 +334,6 @@
     "mrc"
    ],
    "program": 48,
-   "speakDelayMs": 30,
    "keyswitches": {
     "sus": 24,
     "leg": 25,
@@ -305,6 +342,7 @@
     "trm": 28,
     "mrc": 29
    },
+   "speakDelayMs": 30,
    "samples": "./cellos/"
   },
   {
@@ -324,7 +362,6 @@
     "mrc"
    ],
    "program": 48,
-   "speakDelayMs": 36,
    "keyswitches": {
     "sus": 24,
     "leg": 25,
@@ -333,7 +370,65 @@
     "trm": 28,
     "mrc": 29
    },
+   "speakDelayMs": 36,
    "samples": "./basses/"
+  },
+  {
+   "id": "voice",
+   "name": "Voice",
+   "family": "voice",
+   "range": [
+    43,
+    84
+   ],
+   "articulations": [
+    "sus",
+    "leg"
+   ],
+   "program": 52,
+   "keyswitches": {},
+   "patch": {
+    "waves": [
+     [
+      "sawtooth",
+      -6,
+      0.35
+     ],
+     [
+      "sawtooth",
+      6,
+      0.35
+     ],
+     [
+      "triangle",
+      0,
+      0.3
+     ]
+    ],
+    "a": 0.35,
+    "d": 0.4,
+    "s": 0.9,
+    "r": 0.5,
+    "level": 0.3,
+    "lfo": 5.2,
+    "formants": [
+     [
+      660,
+      8,
+      1
+     ],
+     [
+      1120,
+      10,
+      0.5
+     ],
+     [
+      2750,
+      12,
+      0.25
+     ]
+    ]
+   }
   },
   {
    "id": "synth-bass",
@@ -348,12 +443,8 @@
     "stc",
     "leg"
    ],
-   "program": 0,
-   "keyswitches": {
-    "sus": 24,
-    "stc": 25,
-    "leg": 26
-   }
+   "program": 38,
+   "keyswitches": {}
   },
   {
    "id": "synth-arp",
@@ -368,12 +459,8 @@
     "stc",
     "leg"
    ],
-   "program": 0,
-   "keyswitches": {
-    "sus": 24,
-    "stc": 25,
-    "leg": 26
-   }
+   "program": 81,
+   "keyswitches": {}
   }
  ]
 }

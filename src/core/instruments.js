@@ -17,19 +17,23 @@ export const INSTRUMENTS = [
   inst('horns',     'Horns',      'brass',      [41, 77],  ['sus','leg','stc','mrc','mut'],       { speakDelayMs: 16, program: 60 }),
   inst('trumpets',  'Trumpets',   'brass',      [55, 82],  ['sus','leg','stc','mrc','mut'],       { speakDelayMs: 8,  program: 56 }),
   inst('trombones', 'Trombones',  'brass',      [40, 72],  ['sus','leg','stc','mrc','mut'],       { speakDelayMs: 14, program: 57 }),
+  inst('tuba',      'Tuba',       'brass',      [28, 58],  ['sus','leg','stc','mrc'],             { speakDelayMs: 18, program: 58 }),
   inst('timpani',   'Timpani',    'percussion', [40, 55],  ['sus','rll','stc'],                   { speakDelayMs: 0,  program: 47 }),
+  inst('harp',      'Harp',       'plucked',    [24, 103], ['sus'],                               { keyswitches: {}, program: 46 }),
   inst('violins-1', 'Violins I',  'strings',    [55, 103], ['sus','leg','stc','piz','trm','mrc'], { speakDelayMs: 24, program: 48 }),
   inst('violins-2', 'Violins II', 'strings',    [55, 100], ['sus','leg','stc','piz','trm','mrc'], { speakDelayMs: 24, program: 48 }),
   inst('violas',    'Violas',     'strings',    [48, 91],  ['sus','leg','stc','piz','trm','mrc'], { speakDelayMs: 26, program: 48 }),
   inst('cellos',    'Cellos',     'strings',    [36, 76],  ['sus','leg','stc','piz','trm','mrc'], { speakDelayMs: 30, program: 48 }),
   inst('basses',    'Basses',     'strings',    [28, 60],  ['sus','leg','stc','piz','trm','mrc'], { speakDelayMs: 36, program: 48 }),
   // Synths: no keyswitches; route these channels to whatever you like in Bitwig (the Microfreak, a Massive patch).
+  // Voice: a synthesized choir ("ah") through formant filters; there is no public-domain choir in the sample libraries.
+  inst('voice',      'Voice',      'voice',      [43, 84], ['sus','leg'],       { keyswitches: {}, program: 52, patch: { waves: [['sawtooth', -6, 0.35], ['sawtooth', 6, 0.35], ['triangle', 0, 0.3]], a: 0.35, d: 0.4, s: 0.9, r: 0.5, level: 0.3, lfo: 5.2, formants: [[660, 8, 1], [1120, 10, 0.5], [2750, 12, 0.25]] } }),
   inst('synth-bass', 'Synth bass', 'electronic', [24, 60], ['sus','stc','leg'], { keyswitches: {}, program: 38 }),
   inst('synth-arp',  'Synth arp',  'electronic', [48, 96], ['sus','stc','leg'], { keyswitches: {}, program: 81 }),
 ];
 export const INST = Object.fromEntries(INSTRUMENTS.map(i => [i.id, i]));
 // The built-in orchestra is a bank like any other: its samples live in banks/orchestra/<id>/ (violins II share Violins I).
-for (const i of INSTRUMENTS) { i.bank = 'orchestra'; if (i.family !== 'electronic') i.samples = 'orchestra/' + (i.id === 'violins-2' ? 'violins-1' : i.id) + '/'; }
+for (const i of INSTRUMENTS) { i.bank = 'orchestra'; if (i.family !== 'electronic' && !i.patch) i.samples = 'orchestra/' + (i.id === 'violins-2' ? 'violins-1' : i.id) + '/'; }
 
 // ---- Banks: instruments added at run time --------------------------------------------------
 // A bank definition lists instruments in the same shape as the table above plus optional fields:

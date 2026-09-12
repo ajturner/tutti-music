@@ -65,3 +65,10 @@ Instruments SHALL be registrable at run time from bank definitions, each tagged 
 #### Scenario: Register and remove
 - **WHEN** a bank with a zither is installed and later unloaded while a song uses the zither
 - **THEN** the zither stays registered and other instruments of the bank are removed
+
+### Requirement: Synthesized instruments
+An instrument definition MAY carry a synth patch with a plucked-string model (brightness, decay, pick) or formant filters; such instruments SHALL play through the sketch synth without samples. The family list SHALL include voice.
+
+#### Scenario: Banjo without samples
+- **WHEN** a banjo note plays
+- **THEN** a plucked-string tone sounds and decays on its own

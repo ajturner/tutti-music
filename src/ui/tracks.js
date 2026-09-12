@@ -3,7 +3,7 @@
 import { INSTRUMENTS, INST } from '../core/instruments.js';
 import { FAMILIES } from '../core/constants.js';
 import { addTrack, removeTrack, moveTrack, setTrackInstrument } from '../core/song.js';
-import { banks } from '../core/banks.js';
+import { banks, hiddenBanks } from '../core/banks.js';
 import { $, sched, state, preloadSamples } from './state.js';
 import { deselect } from './selection.js';
 import { withSongUndo } from './edit.js';
@@ -24,8 +24,8 @@ export function sendControl(tr, cc, value) {
 }
 // Instruments grouped by bank: the orchestra first, then each loaded bank (with the instruments it includes).
 export function instOptions(cur) {
-  const groups = [['orchestra', 'Orchestra', INSTRUMENTS.filter(i => i.bank === 'orchestra')]];
-  for (const b of banks.values()) groups.push([b.id, b.name, [...b.instruments, ...b.includes].map(id => INST[id]).filter(Boolean)]);
+  const groups = [];
+  for (const b of banks.values()) { if (hiddenBanks.has(b.id) && !(cur && INST[cur] && INST[cur].bank === b.id)) continue; groups.push([b.id, b.name, [...b.instruments, ...b.includes].map(id => INST[id]).filter(Boolean)]); }
   const rest = INSTRUMENTS.filter(i => i.bank !== 'orchestra' && !banks.has(i.bank));
   if (rest.length) groups.push(['other', 'Other', rest]);
   const opt = i => '<option value="' + i.id + '"' + (i.id === cur ? ' selected' : '') + '>' + i.name + ' (' + (FAMILIES[i.family] || FAMILIES.electronic).label + ')</option>';

@@ -3,20 +3,20 @@
   {
    "id": "orchestra",
    "name": "Symphony orchestra",
-   "description": "Woodwinds, brass, timpani and strings sampled from VSCO 2 Community Edition, plus two synths. Built in: always loaded.",
+   "description": "Woodwinds, brass, timpani, harp, strings and a choir, plus two synths. Built in.",
    "url": "orchestra/bank.json",
    "builtin": true
   },
   {
    "id": "jazz",
    "name": "Jazz combo",
-   "description": "Piano, vibes, tenor sax, upright bass and a drum kit; plus the orchestral trumpets and trombones.",
+   "description": "Piano, vibes, tenor, alto and bass sax, jazz guitar, upright bass and a drum kit; plus the orchestral trumpets and trombones.",
    "url": "jazz/bank.json"
   },
   {
    "id": "folk",
    "name": "Folk group",
-   "description": "Fiddle, folk harp, recorder, harmonica, frame drum and hand percussion; plus flute, clarinet, cellos and basses.",
+   "description": "Fiddle, banjo, folk harp, Irish flute, recorder, harmonica, washboard, frame drum and hand percussion; plus flute, clarinet, cellos and basses.",
    "url": "folk/bank.json"
   },
   {

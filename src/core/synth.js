@@ -84,6 +84,33 @@ export class SynthSink {
     if (cc === 1) b.dyn = value; else if (cc === 11) b.expr = value; else if (cc === 7) b.vol = value; else if (cc === 10) b.panv = value; else return;
     this.applyBus(b, t);
   }
+  // Karplus-Strong plucked string rendered into a buffer (cached per pitch and patch): a noise burst
+  // fed through a delay line the length of one period with a lowpass in the loop. brightness sets the
+  // loop filter (0 dull .. 1 bright), decay the seconds to fade, pick how sharp the excitation is.
+  ksBuffer(freq, ks) {
+    const key = freq.toFixed(2) + ':' + JSON.stringify(ks);
+    this.ksCache = this.ksCache || new Map();
+    if (this.ksCache.has(key)) return this.ksCache.get(key);
+    const rate = this.ctx.sampleRate, secs = Math.min(4, (ks.decay || 1.2) * 1.6), n = Math.floor(rate * secs), out = this.ctx.createBuffer(1, n, rate), d = out.getChannelData(0);
+    const period = rate / freq, len = Math.max(2, Math.floor(period)), frac = period - len;
+    const line = new Float32Array(len + 1);
+    const pick = ks.pick == null ? 0.7 : ks.pick;
+    for (let i = 0; i <= len; i++) { const w = i / len; line[i] = (Math.random() * 2 - 1) * (pick + (1 - pick) * Math.sin(w * Math.PI)); }
+    const b = 0.5 + 0.49 * (ks.brightness == null ? 0.6 : ks.brightness);   // loop filter coefficient: higher keeps more highs
+    const loss = Math.pow(0.001, 1 / (rate * (ks.decay || 1.2)));            // per-sample decay toward -60 dB at `decay` seconds
+    let prev = 0, idx = 0;
+    for (let i = 0; i < n; i++) {
+      const cur = line[idx], next = line[(idx + 1) % (len + 1)];
+      const y = cur + (next - cur) * frac;
+      d[i] = y;
+      const filtered = (b * y + (1 - b) * prev) * loss; prev = y;
+      line[idx] = filtered; idx = (idx + 1) % (len + 1);
+    }
+    // gentle fade at the end so a note that runs the full buffer does not click
+    for (let i = Math.max(0, n - rate * 0.05); i < n; i++) d[i] *= (n - i) / (rate * 0.05);
+    this.ksCache.set(key, out);
+    return out;
+  }
   noteOn(track, family, pitch, vel, art, t, instId) {
     const ctx = this.ctx, b = this.bus(track), key = track + ':' + pitch;
     if (this.active.has(key)) this.release(this.active.get(key), t, 0.05);
@@ -91,8 +118,22 @@ export class SynthSink {
     if (ins && ins.kit && !ins.samples) { if (ins.kit[pitch]) this.drum(b, pitch, vel, t); return; }
     const P = voiceParams(family, art, ins ? ins.patch : null);
     const f = 440 * Math.pow(2, (pitch - 69) / 12);
+    if (P.ks) {   // plucked string: one buffer source, velocity sets level, release stops it
+      const src = ctx.createBufferSource(); src.buffer = this.ksBuffer(f, P.ks);
+      const g = ctx.createGain(); g.gain.setValueAtTime((P.level || 0.3) * (0.4 + 0.6 * vel / 127), t);
+      src.connect(g).connect(b.filter); src.start(t);
+      const v = { key, oscs: [src], extra: [], vg: g, tail: g, start: t, r: 0.08, released: false };
+      this.voices.add(v); this.active.set(key, v);
+      src.onended = () => { this.voices.delete(v); if (this.active.get(key) === v) this.active.delete(key); try { g.disconnect(); } catch (e) { /* gone */ } };
+      return;
+    }
     const vg = ctx.createGain(); vg.gain.value = 0;
     let tail = vg;
+    if (P.formants) {   // voice: parallel bandpass formants, summed
+      const sum = ctx.createGain(); sum.gain.value = 1;
+      for (const [fc, q, gain] of P.formants) { const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = fc; bp.Q.value = q; const fg = ctx.createGain(); fg.gain.value = gain * 2.2; vg.connect(bp).connect(fg).connect(sum); }
+      tail = sum;
+    }
     const extra = [];
     if (P.lfo) {
       const tg = ctx.createGain(); tg.gain.value = 0.6;

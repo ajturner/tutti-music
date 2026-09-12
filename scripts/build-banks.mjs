@@ -26,14 +26,26 @@ function parse(name) {
 const src = (repo, dir) => ({ repo, dir });
 // ---- bank definitions ----------------------------------------------------------------------------
 const BANKS = {
+  // Additions to the built-in orchestra: only their sample folders are built here; banks/orchestra/bank.json
+  // comes from the instrument table (scripts/build-samples.mjs).
+  orchestra: {
+    extra: true,
+    instruments: {
+      'harp': { name: 'Harp', family: 'plucked', range: [24, 103], program: 46, arts: { sus: src('VCSL', 'Chordophones/Composite Chordophones/Concert Harp') }, seconds: 5 },
+      'tuba': { name: 'Tuba', family: 'brass', range: [28, 58], program: 58, arts: { sus: src('VSCO', 'Brass/Tuba/sus'), stc: src('VSCO', 'Brass/Tuba/stac') } },
+    },
+  },
   jazz: {
-    name: 'Jazz combo', description: 'Piano, vibes, tenor sax, upright bass and a drum kit; plus the orchestral trumpets and trombones.',
+    name: 'Jazz combo', description: 'Piano, vibes, tenor, alto and bass sax, jazz guitar, upright bass and a drum kit; plus the orchestral trumpets and trombones.',
     include: ['trumpets', 'trombones'],
     instruments: {
       'piano':       { name: 'Piano', family: 'keys', range: [21, 108], program: 0, arts: { sus: src('VCSL', 'Chordophones/Zithers/Upright Piano, Yamaha/Sustains') }, seconds: 8 },
       'vibraphone':  { name: 'Vibraphone', family: 'keys', range: [53, 89], program: 11, arts: { sus: src('VCSL', 'Idiophones/Struck Idiophones/Vibraphone/Hard Mallets') } },
       'tenor-sax':   { name: 'Tenor sax', family: 'woodwind', range: [44, 76], program: 66, arts: { sus: src('VCSL', 'Aerophones/Reed Aerophones/Tenor Saxophone/Vibrato'), stc: src('VCSL', 'Aerophones/Reed Aerophones/Tenor Saxophone/Staccato') } },
       'upright-bass': { name: 'Upright bass', family: 'strings', range: [28, 60], program: 32, artsOrder: ['piz', 'sus'], arts: { piz: src('VSCO', 'Strings/Solo Contrabass/Pizz'), sus: src('VSCO', 'Strings/Solo Contrabass/SusVib') } },
+      'alto-sax':    { name: 'Alto sax', family: 'woodwind', range: [49, 81], program: 65, shareSamples: 'tenor-sax', arts: {} },
+      'bass-sax':    { name: 'Bass sax', family: 'woodwind', range: [32, 64], program: 67, shareSamples: 'tenor-sax', arts: {} },
+      'guitar':      { name: 'Jazz guitar', family: 'plucked', range: [40, 88], program: 26, patch: { ks: { brightness: 0.45, decay: 1.6, pick: 0.6 }, level: 0.3 } },
       'drum-kit':    { name: 'Drum kit', family: 'drums', range: [35, 52], program: 0, kit: {
         36: ['kick', src('VCSL', 'Membranophones/Struck Membranophones/Bass Drum 1'), /BDrumNew_hit/],
         38: ['snare', src('VCSL', 'Membranophones/Struck Membranophones/Snare Drum, Modern 1'), /Snare2_HitSN/],
@@ -49,13 +61,25 @@ const BANKS = {
     },
   },
   folk: {
-    name: 'Folk group', description: 'Fiddle, folk harp, recorder, harmonica, frame drum and hand percussion; plus flute, clarinet, cellos and basses.',
+    name: 'Folk group', description: 'Fiddle, banjo, folk harp, Irish flute, recorder, harmonica, washboard, frame drum and hand percussion; plus flute, clarinet, cellos and basses.',
     include: ['flute', 'clarinet', 'cellos', 'basses'],
     instruments: {
       'fiddle':    { name: 'Fiddle', family: 'strings', range: [55, 100], program: 110, arts: { sus: src('VSCO', 'Strings/Solo Violin/Arco Vib'), stc: src('VSCO', 'Strings/Solo Violin/spic'), piz: src('VSCO', 'Strings/Solo Violin/Pizz'), trm: src('VSCO', 'Strings/Solo Violin/Trem') } },
       'folk-harp': { name: 'Folk harp', family: 'plucked', range: [36, 84], program: 46, arts: { sus: src('VCSL', 'Chordophones/Composite Chordophones/Folk Harp') }, seconds: 5 },
       'recorder':  { name: 'Recorder', family: 'woodwind', range: [72, 98], program: 74, arts: { sus: src('VCSL', 'Aerophones/Edge-blown Aerophones/Baroque Soprano Recorder/Sustain'), stc: src('VCSL', 'Aerophones/Edge-blown Aerophones/Baroque Soprano Recorder/Staccato') } },
       'harmonica': { name: 'Harmonica', family: 'woodwind', range: [60, 96], program: 22, arts: { sus: src('VCSL', 'Aerophones/Free Aerophones/Harmonica-Hohner-Special20-C/Sustains/Normal'), leg: src('VCSL', 'Aerophones/Free Aerophones/Harmonica-Hohner-Special20-C/Sustains/Vib') } },
+      'irish-flute': { name: 'Irish flute', family: 'woodwind', range: [62, 93], program: 73, arts: { sus: src('VCSL', 'Aerophones/Edge-blown Aerophones/Baroque Alto Recorder/Sustain'), leg: src('VCSL', 'Aerophones/Edge-blown Aerophones/Baroque Alto Recorder/SusVib'), stc: src('VCSL', 'Aerophones/Edge-blown Aerophones/Baroque Alto Recorder/Staccato') } },
+      'banjo':       { name: 'Banjo', family: 'plucked', range: [50, 91], program: 105, patch: { ks: { brightness: 0.85, decay: 0.9, pick: 0.9 }, level: 0.34 } },
+      'washboard':   { name: 'Washboard', family: 'drums', range: [36, 50], program: 0, kit: {
+        36: ['thimble tap', src('VSCO', 'Percussion'), /^Claves1_Hit_/],
+        38: ['scrape', src('VSCO', 'Percussion'), /^Guiro-Hit_/],
+        40: ['short scrape', src('VSCO', 'Percussion'), /^Guiro-M_/],
+        42: ['slow scrape', src('VSCO', 'Percussion'), /^Guiro-Slow_/],
+        44: ['fast scrape', src('VSCO', 'Percussion'), /^Guiro-Fast_/],
+        46: ['ratchet crank', src('VSCO', 'Percussion'), /^Ratchet1-Crank_/],
+        48: ['ratchet slow', src('VSCO', 'Percussion'), /^Ratchet1-Slow_/],
+        50: ['ratchet fast', src('VSCO', 'Percussion'), /^Ratchet1-Fast_/],
+      } },
       'frame-drum': { name: 'Frame drum', family: 'drums', range: [36, 47], program: 0, kit: {
         36: ['large hit', src('VCSL', 'Membranophones/Struck Membranophones/Frame Drum'), /HDrumL_Hit_/],
         38: ['large muted', src('VCSL', 'Membranophones/Struck Membranophones/Frame Drum'), /HDrumL_HitMuted_/],
@@ -128,10 +152,11 @@ async function buildBank(id) {
   const bank = BANKS[id], dir = path.join(OUT, id); await mkdir(dir, { recursive: true });
   const defs = [];
   for (const [iid, d] of Object.entries(bank.instruments)) {
-    const def = { id: iid, name: d.name, family: d.family, range: d.range, program: d.program || 0, articulations: d.artsOrder || Object.keys(d.arts || {}).length ? (d.artsOrder || Object.keys(d.arts)) : ['sus'] };
+    const def = { id: iid, name: d.name, family: d.family, range: d.range, program: d.program || 0, articulations: d.artsOrder || Object.keys(d.arts || {}).length ? (d.artsOrder || Object.keys(d.arts)) : (d.shareSamples ? bank.instruments[d.shareSamples].artsOrder || Object.keys(bank.instruments[d.shareSamples].arts) : ['sus']) };
+    if (d.shareSamples) { def.samples = './' + d.shareSamples + '/'; defs.push(def); continue; }
     if (d.patch) def.patch = d.patch;
     if (d.synthKit) { def.kit = d.synthKit; def.synthKit = true; }
-    if (d.arts || d.kit) {
+    if ((d.arts && Object.keys(d.arts).length) || d.kit) {
       const idir = path.join(dir, iid); await mkdir(idir, { recursive: true });
       let zones = [];
       for (const [art, s] of Object.entries(d.arts || {})) {
@@ -152,9 +177,10 @@ async function buildBank(id) {
     }
     defs.push(def);
   }
+  if (bank.extra) { console.log(id + ': ' + defs.length + ' extra instruments (bank.json from the table)'); return; }
   await writeFile(path.join(dir, 'bank.json'), JSON.stringify({ $schema: 'https://ajturner.github.io/tutti-music/schema/tutti-bank.schema.json', id, name: bank.name, description: bank.description, license: 'CC0-1.0', source: 'VSCO 2 Community Edition and VCSL by Versilian Studios', include: bank.include || [], instruments: defs }, null, 1) + '\n');
   console.log(id + ': ' + defs.length + ' instruments');
 }
 const wanted = process.argv.slice(2).length ? process.argv.slice(2) : Object.keys(BANKS);
 for (const id of wanted) { try { await buildBank(id); } catch (e) { console.error('FAILED', id, e.stack || e.message); } }
-await writeFile(path.join(OUT, 'index.json'), JSON.stringify({ banks: Object.entries(BANKS).map(([id, b]) => ({ id, name: b.name, description: b.description, url: id + '/bank.json' })) }, null, 1) + '\n');
+await writeFile(path.join(OUT, 'index.json'), JSON.stringify({ banks: [{ id: 'orchestra', name: 'Symphony orchestra', description: 'Woodwinds, brass, timpani, harp, strings and a choir, plus two synths. Built in.', url: 'orchestra/bank.json', builtin: true }, ...Object.entries(BANKS).filter(([, b]) => !b.extra).map(([id, b]) => ({ id, name: b.name, description: b.description, url: id + '/bank.json' }))] }, null, 1) + '\n');

@@ -37,7 +37,7 @@ import * as ui_arranger from './ui/arranger.js';
 import * as ui_mixer from './ui/mixer.js';
 import { wireMixer, setMixer, mixerDefault } from './ui/mixer.js';
 import * as ui_sounds from './ui/sounds.js';
-import { wireSounds, restoreBanks } from './ui/sounds.js';
+import { wireSounds, restoreBanks, restoreHiddenBanks } from './ui/sounds.js';
 import * as core_banks from './core/banks.js';
 import * as ui_views from './ui/views.js';
 import { wireViews } from './ui/views.js';
@@ -63,6 +63,7 @@ window.addEventListener('hashchange', () => {
 setPad(coarsePointer());
 wireMixer();
 wireSounds();
+restoreHiddenBanks();
 wireViews();
 setMixer(mixerDefault());
 preloadSamples().then(restoreBanks);

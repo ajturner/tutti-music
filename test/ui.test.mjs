@@ -367,7 +367,7 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   // --- sounds panel ---
   await page.click('#soundsBtn'); await page.waitForTimeout(700);
   const sounds = await page.evaluate(() => ({ rows: document.querySelectorAll('#soundsBody tr').length, v1: document.querySelector('#soundsBody tr[data-id="violins-1"] .status').textContent, arp: document.querySelector('#soundsBody tr[data-id="synth-arp"] .status').textContent, real: [...document.querySelectorAll('#soundsBody tr[data-id="violins-1"] .art.real')].map(b => b.dataset.art), fb: document.querySelector('#soundsBody tr[data-id="violins-1"] .art[data-art="leg"]').textContent }));
-  check('sounds: one row per instrument with source and coverage', sounds.rows === 15 && sounds.v1.startsWith('SMP') && sounds.arp.startsWith('SYN') && sounds.real.join(' ') === 'sus stc piz trm' && sounds.fb === 'leg→sus', JSON.stringify(sounds));
+  check('sounds: one row per instrument with source and coverage', sounds.rows === (await page.evaluate(() => tutti.INSTRUMENTS.length)) && sounds.v1.startsWith('SMP') && sounds.arp.startsWith('SYN') && sounds.real.join(' ') === 'sus stc piz trm' && sounds.fb === 'leg→sus', JSON.stringify(sounds));
   await page.fill('#soundsBody tr[data-id="timpani"] input[data-f="tune"]', '2'); await page.dispatchEvent('#soundsBody tr[data-id="timpani"] input[data-f="tune"]', 'change'); await page.waitForTimeout(30);
   const tuned = await page.evaluate(() => ({ s: tutti.sampler.setting('timpani'), stored: JSON.parse(localStorage.getItem('tutti.sounds.v1') || '{}').timpani, reset: document.querySelector('#soundsBody tr[data-id="timpani"] [data-act="reset"]').disabled }));
   check('sounds: tune is applied and persisted', tuned.s.tune === 2 && tuned.stored && tuned.stored.tune === 2 && tuned.reset === false, JSON.stringify(tuned));
@@ -399,6 +399,11 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   const bankBtns = await page.$$eval('#bankList .bank', b => b.map(x => x.dataset.bank));
   check('banks: catalogue lists the bundled banks', ['orchestra', 'jazz', 'folk', 'electronica'].every(id => bankBtns.includes(id)), bankBtns.join(','));
   check('banks: orchestra is built in and on', await page.$eval('#bankList [data-bank="orchestra"]', b => b.classList.contains('on') && b.classList.contains('builtin')));
+  await page.click('#bankList [data-bank="orchestra"]'); await page.waitForTimeout(80);
+  const hid = await page.evaluate(() => ({ hidden: tutti.hiddenBanks.has('orchestra'), rows: [...document.querySelectorAll('#soundsBody tr')].map(r => r.dataset.id), flute: !!INST.flute, stored: JSON.parse(localStorage.getItem('tutti.hiddenBanks.v1') || '[]') }));
+  check('banks: orchestra can be hidden, stays registered, persists', hid.hidden && !hid.rows.includes('flute') && hid.flute && hid.stored.includes('orchestra'), JSON.stringify({ hidden: hid.hidden, n: hid.rows.length, stored: hid.stored }));
+  await page.click('#bankList [data-bank="orchestra"]'); await page.waitForTimeout(80);
+  check('banks: orchestra shows again', await page.evaluate(() => !tutti.hiddenBanks.has('orchestra') && [...document.querySelectorAll('#soundsBody tr')].some(r => r.dataset.id === 'flute')));
   const drums = await page.evaluate(async () => {
     await tutti.loadBank('electronica'); const s = tutti.synth; s.ensure(); const kit = tutti.INST['drum-machine'].kit, silent = [];
     for (const n of Object.keys(kit)) { const made = s.drum(s.bus('dm'), +n, 100, s.ctx.currentTime); if (!made) silent.push(n); }
@@ -411,7 +416,7 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   await page.click('#soundsClose');
   await page.click('#tracksBtn'); await page.waitForTimeout(50);
   const groups = await page.$$eval('#trackAddInst optgroup', g => g.map(x => x.label));
-  check('banks: instrument picker groups by bank', groups.includes('Orchestra') && groups.includes('Jazz combo'), groups.join(','));
+  check('banks: instrument picker groups by bank', groups.includes('Symphony orchestra') && groups.includes('Jazz combo'), groups.join(','));
   await page.selectOption('#trackAddInst', 'drum-kit'); await page.click('#trackAdd'); await page.waitForTimeout(80);
   const bankAdd = await page.evaluate(() => ({ banks: state.song.banks, inst: state.song.tracks[state.song.tracks.length - 1].instrument, status: document.getElementById('status').textContent }));
   check('banks: adding a bank track records the bank and shows kit pieces', bankAdd.banks.includes('jazz') && bankAdd.inst === 'drum-kit' && bankAdd.status.includes('kick'), JSON.stringify(bankAdd));
@@ -424,6 +429,13 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   await page.evaluate(() => { for (const k of Object.keys(tutti)) if (!(k in window)) Object.defineProperty(window, k, { get: () => tutti[k], configurable: true }); for (const k of ['lastDraw', 'ROW_H']) Object.defineProperty(window, k, { get: () => tutti.view[k], configurable: true }); });
   const bankBack = await page.evaluate(() => ({ loaded: tutti.banks.has('jazz'), inst: !!INST['drum-kit'] && INST['drum-kit'].bank === 'jazz', track: state.song.tracks.some(t => t.instrument === 'drum-kit') }));
   check('banks: a song that uses a bank loads it on reopen', bankBack.loaded && bankBack.inst && bankBack.track, JSON.stringify(bankBack));
+  const synthNew = await page.evaluate(async () => {
+    await tutti.loadBank('folk'); await tutti.loadBank('jazz'); const s = tutti.synth; s.ensure(); const out = {};
+    for (const id of ['voice', 'banjo', 'guitar']) { const before = s.voices.size; s.noteOn('t-' + id, INST[id].family, 60, 100, null, s.ctx.currentTime, id); out[id] = s.voices.size - before; }
+    const ks = s.ksBuffer(220, { brightness: 0.8, decay: 1 }); let peak = 0; const d = ks.getChannelData(0); for (let i = 0; i < d.length; i += 7) peak = Math.max(peak, Math.abs(d[i]));
+    return Object.assign(out, { ksPeak: +peak.toFixed(2), ksLen: +ks.duration.toFixed(1) });
+  });
+  check('synth: voice, banjo and guitar start voices; plucked buffer has signal', synthNew.voice === 1 && synthNew.banjo === 1 && synthNew.guitar === 1 && synthNew.ksPeak > 0.1 && synthNew.ksLen >= 1, JSON.stringify(synthNew));
   await page.evaluate(() => { const i = state.song.tracks.findIndex(t => t.instrument === 'drum-kit'); tutti.removeTrack(state.song, state.song.tracks[i].id); state.song.banks = []; tutti.markEdited(); state.dirty = true; });
   await page.waitForTimeout(500);
   // gamepad: mock, press down then A tap

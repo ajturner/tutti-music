@@ -3,6 +3,8 @@
 // use so opening a song loads them first.
 import { INST, INSTRUMENTS, registerInstrument, unregisterInstrument, placeholderInstrument } from './instruments.js';
 
+export const hiddenBanks = new Set();   // banks kept loaded (songs may use them) but left out of pickers and the Sounds table
+export const isHidden = instrumentId => { const b = INST[instrumentId] && INST[instrumentId].bank; return !!b && hiddenBanks.has(b); };
 export const banks = new Map();          // id -> { id, name, description, url, instruments: [ids], includes: [ids], builtin }
 banks.set('orchestra', { id: 'orchestra', name: 'Symphony orchestra', description: 'Woodwinds, brass, timpani and strings from VSCO 2 CE, plus two synths. Built in.', license: 'CC0-1.0', url: '', instruments: INSTRUMENTS.map(i => i.id), includes: [], builtin: true });
 let catalog = null, catalogUrl = null;
