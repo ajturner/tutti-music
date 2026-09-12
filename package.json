@@ -1,7 +1,7 @@
 {
   "name": "tutti-music",
   "version": "0.1.0",
-  "description": "Tutti — a symphonic tracker: compose orchestral music in a tracker-style grid and export to MIDI. Single-file browser app with no dependencies.",
+  "description": "Tutti \u2014 a symphonic tracker: compose orchestral music in a tracker-style grid and export to MIDI. Single-file browser app with no dependencies.",
   "homepage": "https://ajturner.github.io/tutti-music/",
   "repository": {
     "type": "git",
@@ -25,9 +25,13 @@
   ],
   "scripts": {
     "start": "npx --yes serve -l 3000 .",
-    "dev": "npx --yes serve -l 3000 ."
+    "dev": "npx --yes serve -l 3000 .",
+    "test": "mkdir -p test/out && node test/ui.test.mjs"
   },
   "files": [
     "index.html"
-  ]
+  ],
+  "devDependencies": {
+    "playwright": "^1.49.1"
+  }
 }

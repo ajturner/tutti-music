@@ -1,0 +1,60 @@
+# Pattern Grid
+
+## Purpose
+
+Specifies how a pattern is displayed and navigated: the tracker grid of rows by cells, the cursor, scrolling, and what each cell shows.
+
+## Requirements
+
+### Requirement: Grid layout
+The grid SHALL show one row per pattern row, a fixed left gutter with the row number and the tempo lane, and, for each track, the cells: per note column a note cell and a velocity cell, then one articulation cell and one dynamics cell. Track headers SHALL show family, track name, and MIDI channel, colored by family.
+
+#### Scenario: Track with two columns
+- **WHEN** a track has 2 note columns
+- **THEN** its cells read note, vel, note, vel, art, dyn
+
+### Requirement: Cell rendering
+A note cell SHALL show the note name (for example C-4, F#5) on the row a note starts, a continuation mark on rows the note sustains through, and dots when empty. Velocity, dynamics, and controller values SHALL be shown as two hex digits. Tempo SHALL be shown as decimal bpm. Ramp points SHALL carry a "~" suffix. The dynamics cell SHALL show a filled bar proportional to the current lane value.
+
+#### Scenario: Sustained note
+- **WHEN** a 4-row note starts at row 8
+- **THEN** row 8 shows its name and rows 9 to 11 show a continuation mark
+
+### Requirement: Beat and bar marking
+Rows on a strong beat SHALL be shaded and rows starting a bar SHALL be ruled, derived from the pattern's meter and ticks per row. In 6/8, 9/8, and 12/8 with an eighth-note beat unit the strong beat SHALL be every third beat.
+
+#### Scenario: Default 4/4 at sixteenths
+- **WHEN** a pattern has 240 ticks per row and 4/4 meter
+- **THEN** every 4th row is shaded and every 16th row is ruled
+
+### Requirement: Cursor and view
+The cursor SHALL occupy one cell on one row. The view SHALL keep the cursor row vertically centered, or the playing row when follow is on and the pattern is playing. The view SHALL scroll horizontally to reveal the cursor's track only when the cursor moves to another track; a hand-scrolled view SHALL otherwise stay put.
+
+#### Scenario: Cursor moves off-screen track
+- **WHEN** the cursor moves from Flute to Basses
+- **THEN** the view scrolls so the Basses track is visible
+
+#### Scenario: Hand scroll persists
+- **WHEN** the user scrolls the grid sideways with the wheel or a drag
+- **THEN** the view stays where they left it until the cursor changes track
+
+### Requirement: Follow mode
+When follow is on and the song is playing, the view SHALL switch to the pattern being played and center the playing row. When follow is off the cursor stays where the user left it.
+
+#### Scenario: Song advances to pattern B
+- **WHEN** follow is on and playback crosses from pattern A into B
+- **THEN** the grid shows pattern B with the playing row highlighted
+
+### Requirement: Mute from the header
+Clicking or tapping a track's name in the header SHALL toggle that track's mute. Muted tracks SHALL render their notes in a dimmed color.
+
+#### Scenario: Toggle mute
+- **WHEN** the user taps the Horns header
+- **THEN** Horns is muted; tapping again unmutes it
+
+### Requirement: Status line
+A status line SHALL show the cursor's track, column, row, the note under the cursor with velocity, length, and articulation, the instrument's articulation list with their digit keys, its range, the current octave, preview and MIDI state, playback state, and the latest message or warning.
+
+#### Scenario: Cursor on a note
+- **WHEN** the cursor sits on a G-5 with velocity 64 and length 16 rows
+- **THEN** the status reads the track name, "G-5", "vel 64", "len 16 rows", and the articulation

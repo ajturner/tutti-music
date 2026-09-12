@@ -19,3 +19,8 @@ npm start
 ```
 
 Or just open `index.html` in a browser.
+
+## Development
+
+- **Specs:** behaviour is documented with [OpenSpec](https://github.com/Fission-AI/OpenSpec) under `openspec/specs/`, one capability per folder. Propose changes with `/opsx:propose` in Claude Code, or run `openspec validate --all --strict`.
+- **Tests:** `npm install` once, then `npm test` runs Playwright browser tests (`test/ui.test.mjs`) against `index.html` at desktop and phone sizes, including mocked gamepad and MIDI input. Uses installed Google Chrome by default; set `TUTTI_BROWSER=chromium` to use Playwright's own build.

@@ -1,0 +1,54 @@
+schema: spec-driven
+
+context: |
+  Tutti is a symphonic tracker: a single-file browser app (index.html) with no build step and no
+  runtime dependencies. Vanilla JavaScript, a canvas grid, WebAudio preview synth, WebMIDI in/out,
+  Gamepad API, and a Standard MIDI File writer. Deployed to GitHub Pages from main.
+  The core script (data model, instruments, render, scheduler, sinks, MIDI writer) is UI-free;
+  the UI script holds the grid, keyboard, pointer, pad, controller and toolbar code.
+  Specs exist so the behaviour can be reimplemented (for example as a native mobile app) or
+  refactored without losing decisions. Keep specs about observable behaviour and data formats.
+  Tests: Playwright UI tests in test/ run against a local static server (npm test).
+  Conventions: no external libraries; macOS-safe key bindings (no Control or Option modifiers);
+  every edit goes through undo; timing in ticks at 960 PPQ; MIDI pitch 60 = C4.
+
+rules:
+  proposal:
+    - Include a "Why" section that names the composer-facing problem
+    - Include a "Non-goals" section
+  specs:
+    - Scenarios must be testable from the UI or from the song JSON
+    - Name the exact keys, buttons, and values a user sees
+  design:
+    - Note any change to the song JSON format explicitly, with a migration note
+
+# Project context (optional)
+# This is shown to AI when creating artifacts.
+# Add your tech stack, conventions, style guides, domain knowledge, etc.
+# Example:
+#   context: |
+#     Tech stack: TypeScript, React, Node.js
+#     We use conventional commits
+#     Domain: e-commerce platform
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always include a "Non-goals" section
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing
