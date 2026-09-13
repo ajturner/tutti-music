@@ -11,7 +11,18 @@
   html { height: 100%; }
   body { height: 100vh; height: 100dvh; margin: 0; background: var(--bg); color: var(--text); font: 13px/1.4 var(--mono); }
   body { display: flex; flex-direction: column; }
-  header { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: flex-end; padding: 6px 14px 8px; border-bottom: 1px solid var(--line); background: var(--panel); }
+  /* Header: two fixed rows. Row 1 is identity and the menu bar; row 2 is the transport. */
+  header { display: flex; flex-direction: column; gap: 4px; padding: 6px 14px 8px; border-bottom: 1px solid var(--line); background: var(--panel); }
+  header .bar { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: flex-end; }
+  #topbar { align-items: center; gap: 6px 12px; }
+  #topbar #title { flex: 0 1 18em; min-width: 6em; background: none; border-color: transparent; color: var(--accent); }
+  #topbar #title:hover, #topbar #title:focus { border-color: var(--line); background: var(--field); }
+  #menus { display: flex; gap: 4px; margin-left: auto; }
+  #menus button, .tools button { color: var(--dim); background: none; border-color: transparent; padding: 3px 10px; }
+  #menus button:hover, .tools button:hover { color: var(--text); border-color: var(--line); }
+  #menus button.on, .tools button.on { color: var(--accent); background: var(--field); border-color: var(--line); }
+  .tools { display: flex; gap: 2px; }
+  .tools button { padding: 3px 8px; }
   h1 { font: italic 500 19px/1 "Iowan Old Style", "Palatino Linotype", Georgia, serif; margin: 0 6px 0 0; color: var(--accent); }
   h1 small { font: 12px/1 var(--mono); color: var(--dim); font-style: normal; margin-left: 8px; }
   .group { display: flex; gap: 6px; align-items: center; position: relative; padding-top: 13px; }
@@ -49,6 +60,8 @@
   #status { display: flex; gap: 22px; flex-wrap: wrap; color: var(--dim); min-height: 1.4em; }
   #status b { color: var(--text); font-weight: 500; }
   #status .warn { color: #E9A26B; }
+  #status a[data-panel] { cursor: pointer; }
+  #status a[data-panel]:hover { color: var(--text); text-decoration: underline; }
   details summary { cursor: pointer; color: var(--dim); margin-top: 4px; }
   #version { float: right; color: var(--dim); font-size: 11px; }
   #helpLink { margin-left: 10px; color: var(--accent); text-decoration: none; }
@@ -61,22 +74,20 @@
   #help table.keys td { padding: 1px 0; vertical-align: top; }
   #help table.keys td:first-child { white-space: nowrap; padding-right: 10px; }
   #help .alt { opacity: .7; }
-  /* Header: the transport stays in the first row; everything else lives in #more, which is inline on
-     wide screens and folds behind the ☰ button on narrow ones. */
-  h1 { order: -3; }
-  #more { display: contents; }
-  .songgrp { order: -2; }
-  .primary { order: -1; }
-  .patsel { order: 0; margin-right: -12px; }
-  .patset { order: 0; }
-  .patset::before { display: none; }
-  .arrgrp { order: 1; }
-  .keygrp { order: 2; }
-  .entrygrp { order: 3; }
-  .colgrp { order: 3; }
-  .spacer { order: 4; }
-  .outgrp { order: 5; }
-  #menuToggle { display: none; }
+  /* Panels: one open at a time, a sheet under the header on wide screens */
+  #panels { flex: none; }
+  .panel { border-bottom: 1px solid var(--line); background: var(--panel); padding: 6px 14px 10px; max-height: 60vh; overflow: auto; min-width: 0; box-sizing: border-box; }
+  .trackgrp { max-width: 100%; overflow-x: auto; }
+  .panel[hidden] { display: none; }
+  .panelHead { display: flex; gap: 10px; align-items: center; margin-bottom: 4px; }
+  .panelHead h2 { font: 500 12px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin: 0; }
+  .panelHead .dim { font-size: 11px; }
+  .panelHead button { padding: 1px 7px; }
+  .panelBody { display: flex; flex-wrap: wrap; gap: 8px 28px; align-items: flex-start; }
+  .panelBody .group { flex-wrap: wrap; }
+  .panelBody p.dim { flex-basis: 100%; margin: 0; font-size: 12px; }
+  .trackgrp { flex-basis: 100%; flex-direction: column; align-items: flex-start; }
+  .listen { margin-bottom: 6px; }
   .short { display: none; }
   #rec.on { background: #B23A3A; border-color: #B23A3A; color: #fff; }
   /* Selection toolbar */
@@ -104,23 +115,32 @@
     input[type=checkbox] { width: 20px; height: 20px; min-height: 0; }
   }
   @media (max-width: 760px) {
-    header { gap: 6px 8px; padding: 6px 8px; }
-    h1 small, .full, .spacer { display: none; }
+    header { gap: 4px; padding: 4px 8px 6px; }
+    header .bar { gap: 4px 8px; }
+    h1 small, .full, .spacer, #menus { display: none; }
     .short { display: inline; }
-    header > .group { gap: 4px; }
-    #more .group { flex-wrap: wrap; }
-    #title { flex: 1 1 8em; min-width: 0; }
-    #menuToggle { display: inline-block; margin-left: auto; }
-    #more { display: none; flex-basis: 100%; flex-wrap: wrap; gap: 8px 14px; padding-top: 6px; border-top: 1px solid var(--line); max-height: 55vh; overflow-y: auto; }
-    #more .group { flex-basis: 100%; }
+    #topbar #title { flex: 1 1 6em; }
+    .tools { margin-left: auto; }
     .primary { padding-top: 0; }
     .primary::before { display: none; }
-    .patsel { margin-right: 0; }
-    .patset { padding-top: 13px; }
-    .patset::before { display: block; }
+    .patsel { padding-top: 0; }
+    .patsel::before { display: none; }
     .primary label[title] { display: none; }
+    /* An open panel replaces the grid, except View which stays a sheet over it */
+    #panels { display: contents; }
+    .panel { padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); max-height: none; }
+    .panel:not([data-panel="view"]) { flex: 1; min-height: 0; border-bottom: 0; }
+    body[data-panel="song"] #workspace, body[data-panel="compose"] #workspace, body[data-panel="sounds"] #workspace, body[data-panel="connect"] #workspace { display: none; }
+    body[data-panel="song"] #pad, body[data-panel="compose"] #pad, body[data-panel="sounds"] #pad, body[data-panel="connect"] #pad, body[data-panel="song"] #selbar, body[data-panel="compose"] #selbar, body[data-panel="sounds"] #selbar, body[data-panel="connect"] #selbar { display: none !important; }
+    .panelBody { flex-direction: column; gap: 12px; }
+    .panelBody .group { width: 100%; }
+    .panel { width: 100%; }
+    #transportbar { flex-wrap: nowrap; gap: 4px; }
+    #transportbar label[for="bpm"] { display: none; }
+    #transportbar #bpm { width: 3.2em; padding-left: 6px; padding-right: 4px; }
+    #transportbar button { padding-left: 8px; padding-right: 8px; }
+    .patsel { margin-left: auto; }
     #mixer { position: absolute; right: 0; top: 0; bottom: 0; width: min(82vw, 320px); z-index: 5; box-shadow: -6px 0 18px rgba(0,0,0,.5); }
-    header.open #more { display: flex; }
     footer { padding: 4px 8px calc(4px + env(safe-area-inset-bottom)); }
     body.padon footer { padding-bottom: 4px; }
     #selbar { gap: 3px; padding: 3px 6px; }
@@ -143,7 +163,7 @@
 #chainTable th { color: var(--dim); font-weight: normal; text-align: left; padding: 2px 8px; }
 #chainTable td { padding: 2px 8px; }
 .dim { color: var(--dim); max-width: 46em; }
-/* Tracks and mixer dialog */
+/* Dialogs (repeats and chains) */
 dialog { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; max-width: min(96vw, 900px); max-height: 90vh; overflow: auto; font: inherit; }
 dialog::backdrop { background: rgba(0, 0, 0, .55); }
 .dlgHead, .dlgFoot { display: flex; gap: 8px; align-items: center; margin: 2px 0 8px; }
@@ -155,10 +175,11 @@ dialog::backdrop { background: rgba(0, 0, 0, .55); }
 #tracksTable td:first-child button { padding: 2px 5px; }
 
 /* Sounds panel: dense, monospace, M8-flavoured */
-dialog.m8 { font-family: var(--mono); font-size: 12px; background: #0E1226; border-color: #2A3258; max-width: min(96vw, 1040px); padding: 8px 10px 10px; }
-dialog.m8 .dlgHead b { color: var(--accent); letter-spacing: .12em; }
-dialog.m8 .mono { font-size: 11px; }
-dialog.m8 .dlgHead button { padding: 1px 7px; font-size: 11px; }
+.m8 { font-family: var(--mono); font-size: 12px; background: #0E1226; }
+.m8 .panelHead h2 { letter-spacing: .12em; }
+.m8 .mono { font-size: 11px; }
+.m8 .panelHead button { padding: 1px 7px; font-size: 11px; }
+.m8 .listen label { color: #6C7597; }
 .scopes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 4px 0 10px; }
 .scope { background: #0A0D1C; border: 1px solid #1F2647; border-radius: 3px; height: 92px; position: relative; }
 .scope canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
@@ -184,33 +205,22 @@ dialog.m8 .dlgHead button { padding: 1px 7px; font-size: 11px; }
 #soundsTable .reset:disabled { opacity: .3; }
 @media (max-width: 760px) { .scopes { grid-template-columns: 1fr; } .scope { height: 70px; } #soundsTable th:nth-child(6), #soundsTable td:nth-child(6), #soundsTable th:nth-child(8), #soundsTable td:nth-child(8) { display: none; } }
 
-/* Phone screens: a tab bar switches between pattern, arrange, mixer and tracks */
+/* Phone screens: a tab bar switches between the grid and the panels */
 #tabs { display: none; }
-.view { flex: 1; min-width: 0; overflow-y: auto; padding: 10px 12px; background: var(--bg); }
-.view h2 { font: 500 12px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--dim); margin: 0 0 10px; }
-.view .viewBody { display: flex; flex-direction: column; gap: 14px; }
-.view .group { flex-wrap: wrap; }
-.view #tracksTable { width: 100%; }
-.view #tracksTable td, .view #tracksTable th { white-space: nowrap; }
 @media (max-width: 760px) {
-  #tabs { display: flex; border-top: 1px solid var(--line); background: var(--panel); padding: 4px 6px calc(4px + env(safe-area-inset-bottom)); gap: 6px; }
+  #tabs { display: flex; border-top: 1px solid var(--line); background: var(--panel); padding: 4px 6px calc(4px + env(safe-area-inset-bottom)); gap: 4px; }
   body.padon #tabs { padding-bottom: 4px; }
-  #tabs button { flex: 1; min-height: 38px; color: var(--dim); border-color: transparent; background: none; font-size: 13px; }
+  #tabs button { flex: 1; min-height: 38px; color: var(--dim); border-color: transparent; background: none; font-size: 12px; padding: 4px 2px; }
   #tabs button.on { color: var(--accent); background: var(--field); border-color: var(--line); }
-  body[data-view="mixer"] main, body[data-view="arrange"] main, body[data-view="tracks"] main { display: none; }
-  body[data-view="mixer"] #mixer { position: static; width: auto; flex: 1; box-shadow: none; border-left: 0; }
-  body[data-view="mixer"] #mixerClose { display: none; }
-  body:not([data-view="pattern"]) #pad, body:not([data-view="pattern"]) #selbar { display: none !important; }
-  .view #tracksTable input[type=range] { width: 60px; }
-  .view #tracksTable td:nth-child(6), .view #tracksTable th:nth-child(6), .view #tracksTable td:nth-child(7), .view #tracksTable th:nth-child(7) { display: none; }
-  .view #tracksTable td { padding: 3px 4px; }
-  .view #tracksTable td:first-child { white-space: nowrap; }
-  .view #tracksTable td:first-child button { padding: 2px 6px; min-height: 30px; }
-  .view #tracksTable input[type=text] { width: 6.5em; }
-  .view #tracksTable select { max-width: 8.5em; }
-  .view #tracksTable input[type=number] { width: 3em !important; padding: 4px 4px; }
-  .view #tracksTable input, .view #tracksTable select { min-height: 32px; font-size: 13px; }
-  #tracksView { overflow: auto; }
+  #tracksTable { width: 100%; }
+  #tracksTable input[type=range] { width: 60px; }
+  #tracksTable td:nth-child(6), #tracksTable th:nth-child(6), #tracksTable td:nth-child(7), #tracksTable th:nth-child(7) { display: none; }
+  #tracksTable td { padding: 3px 4px; }
+  #tracksTable td:first-child button { padding: 2px 6px; min-height: 30px; }
+  #tracksTable input[type=text] { width: 6.5em; }
+  #tracksTable select { max-width: 8.5em; }
+  #tracksTable input[type=number] { width: 3em !important; padding: 4px 4px; }
+  #tracksTable input, #tracksTable select { min-height: 32px; font-size: 13px; }
 }
 
 /* Banks in the Sounds panel */

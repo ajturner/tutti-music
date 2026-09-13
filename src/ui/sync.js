@@ -54,6 +54,9 @@ export function syncPatternUI() {
   const sel = $('pattern');
   sel.innerHTML = state.song.patterns.map((p, i) => '<option value="' + i + '">' + i + ' ' + p.name + '</option>').join('');
   sel.value = state.pat;
+  const pm = patMeter(curPat());
+  sel.title = 'Pattern ' + state.pat + ' ' + curPat().name + ': ' + curPat().rows + ' rows, ' + pm[0] + '/' + pm[1] + ' (settings in Compose)';
+  document.querySelector('.patset').dataset.label = 'pattern ' + state.pat + ' ' + curPat().name;
   $('rows').value = curPat().rows;
   $('tpr').value = curPat().ticksPerRow;
   $('meterNum').value = patMeter(curPat())[0];

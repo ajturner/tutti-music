@@ -15,118 +15,144 @@
 </head>
 <body>
 <header>
-  <h1>Tutti<small>symphonic tracker</small></h1>
-  <div class="group primary" data-label="transport">
-    <button id="playPat" class="primary" title="Space"><span class="full">Play pattern</span><span class="short">Play</span></button>
-    <button id="playSong" title="Enter"><span class="full">Play song</span><span class="short">Song</span></button>
-    <button id="stop" title="Esc">Stop</button>
-    <button id="rec" title="Record played MIDI notes into the loop (⇧Return)">● Rec</button>
-    <label for="bpm">bpm</label><input id="bpm" type="number" min="20" max="300" value="100" title="Tempo">
-    <label title="Scroll the grid with playback"><input id="follow" type="checkbox" checked> follow</label>
+  <div class="bar" id="topbar">
+    <h1>Tutti<small>symphonic tracker</small></h1>
+    <input id="title" type="text" placeholder="title" title="Song title" aria-label="Song title">
+    <nav id="menus" aria-label="Panels">
+      <button id="songBtn" data-panel="song" aria-expanded="false" title="Open, save, load and export songs">Song</button>
+      <button id="composeBtn" data-panel="compose" aria-expanded="false" title="Pattern settings, key, arrangement and tracks">Compose</button>
+      <button id="soundsBtn" data-panel="sounds" aria-expanded="false" title="Preview sound, banks, instruments and scopes">Sounds</button>
+      <button id="connectBtn" data-panel="connect" aria-expanded="false" title="MIDI and controllers">Connect</button>
+    </nav>
+    <span class="tools">
+      <button id="viewBtn" data-panel="view" aria-expanded="false" title="View options: follow, pad, mixer, columns">⚙</button>
+      <button id="helpBtn" title="Quick keys (?)">?</button>
+    </span>
   </div>
-  <div class="group primary patsel" data-label="pattern"><select id="pattern" title="Pattern"></select></div>
-  <button id="menuToggle" aria-expanded="false" aria-controls="more" title="More controls">☰</button>
-  <div id="more">
-    <div class="group songgrp" data-label="song">
-      <select id="song"></select>
-      <button id="newSong" title="Start an empty song">New</button>
-      <input id="title" type="text" placeholder="title" title="Song title">
-      <button id="deleteSong" title="Remove this song from the list and from browser storage">Delete</button>
-      <span class="sep"></span>
-      <button id="save" title="Download the song as JSON">Save</button>
-      <button id="load" title="Load a JSON song">Load</button>
-      <button id="exportMidi" title="Download a Standard MIDI File">Export .mid</button>
-      <input id="file" type="file" accept=".json,application/json" hidden>
+  <div class="bar" id="transportbar">
+    <div class="group primary" data-label="transport">
+      <button id="playPat" class="primary" title="Space"><span class="full">Play pattern</span><span class="short">Play</span></button>
+      <button id="playSong" title="Enter"><span class="full">Play song</span><span class="short">Song</span></button>
+      <button id="stop" title="Esc">Stop</button>
+      <button id="rec" title="Record notes played on the MIDI input into the loop (⇧Return). Choose an input in Connect.">● Rec</button>
+      <label for="bpm">bpm</label><input id="bpm" type="number" min="20" max="300" value="100" title="Tempo">
     </div>
-    <div class="group patset" data-label="pattern">
-      <button id="addPattern" title="Add a pattern">+</button>
-      <label for="rows">rows</label><input id="rows" type="number" min="1" max="512" value="64">
-      <label for="tpr">row</label>
-      <select id="tpr">
-        <option value="480">1/8</option>
-        <option value="320">1/8 triplet</option>
-        <option value="240" selected>1/16</option>
-        <option value="160">1/16 triplet</option>
-        <option value="120">1/32</option>
-      </select>
-      <label for="meterNum">meter</label><input id="meterNum" type="number" min="1" max="16" value="4" style="width:3em" title="Beats per bar">
-      <select id="meterDen" title="Beat unit"><option value="2">/2</option><option value="4" selected>/4</option><option value="8">/8</option></select>
-      <label for="groove">groove</label>
-      <select id="groove" title="Row-length multipliers applied cyclically to this pattern"></select>
-      <input id="grooveList" type="text" placeholder="1.33 0.67" title="Custom groove: row-length multipliers, cycled" style="width:7em">
-    </div>
-    <div class="group arrgrp" data-label="arrangement">
-      <span id="arranger" title="Song order"></span>
-      <input id="order" type="text" value="0" title="Order as text: pattern index with optional xN repeat, e.g. 0x2 1 0">
-    </div>
-    <div class="group keygrp" data-label="key">
-      <select id="keyRoot" title="Tonic"><option value="">none</option></select>
-      <select id="keyScale" title="Scale"></select>
-      <label title="Give this pattern its own key"><input id="keyPattern" type="checkbox"> this pattern</label>
-    </div>
-    <div class="group entrygrp" data-label="entry">
-      <label for="octave">octave</label><input id="octave" type="number" min="0" max="8" value="4">
-      <label for="step">step</label><input id="step" type="number" min="0" max="64" value="4">
-      <label title="On-screen entry pad under the grid"><input id="padToggle" type="checkbox"> pad</label>
-    </div>
-    <div class="group colgrp" data-label="columns">
-      <label title="Velocity column per note"><input type="checkbox" data-show="vel" checked> vel</label>
-      <label title="Articulation column"><input type="checkbox" data-show="art" checked> art</label>
-      <label title="Dynamics lane"><input type="checkbox" data-show="dyn" checked> dyn</label>
-      <label title="FX column"><input type="checkbox" data-show="fx" checked> fx</label>
-    </div>
-    <div class="spacer"></div>
-    <div class="group outgrp" data-label="output">
-      <label><input id="preview" type="checkbox" checked> preview</label>
-      <select id="sound" title="Preview sound: bundled orchestral samples (VSCO 2, CC0) with synth fallback, or the sketch synth"><option value="samples">samples</option><option value="synth">synth</option></select>
-      <button id="midiEnable">Enable MIDI</button>
-      <select id="midiOut" hidden title="MIDI output"><option value="">MIDI out: off</option></select>
-      <select id="midiIn" hidden title="MIDI input for step recording"><option value="">MIDI in: off</option></select>
-      <label title="Show the mixer beside the grid"><input id="mixerToggle" type="checkbox"> mixer</label>
-      <button id="tracksBtn" title="Tracks: add, remove, reorder, instruments">Tracks…</button>
-      <button id="soundsBtn" title="Sounds: samples, articulations, tuning, scopes">Sounds…</button>
-    </div>
+    <div class="group patsel" data-label="pattern"><select id="pattern" title="Pattern"></select></div>
   </div>
 </header>
+<div id="panels">
+  <section class="panel" id="songPanel" data-panel="song" hidden aria-label="Song">
+    <div class="panelHead"><h2>Song</h2><span class="dim">Autosaved in this browser a moment after each change; the address bar remembers the open song and pattern.</span><span class="spacer"></span><button data-close title="Close (Esc)">✕</button></div>
+    <div class="panelBody">
+      <div class="group songgrp" data-label="open">
+        <select id="song"></select>
+        <button id="newSong" title="Start an empty song">New</button>
+        <button id="deleteSong" title="Remove this song from the list and from browser storage, or reset a built-in example">Delete</button>
+      </div>
+      <div class="group filegrp" data-label="files">
+        <button id="save" title="Download the song as JSON">Save JSON</button>
+        <button id="load" title="Add a saved JSON song to the list">Load JSON</button>
+        <button id="exportMidi" title="Download a Standard MIDI File for a DAW">Export .mid</button>
+        <input id="file" type="file" accept=".json,application/json" hidden>
+      </div>
+    </div>
+  </section>
+  <section class="panel" id="composePanel" data-panel="compose" hidden aria-label="Compose">
+    <div class="panelHead"><h2>Compose</h2><span class="spacer"></span><button data-close title="Close (Esc)">✕</button></div>
+    <div class="panelBody">
+      <div class="group patset" data-label="pattern">
+        <button id="addPattern" title="Add a pattern">+</button>
+        <label for="rows">rows</label><input id="rows" type="number" min="1" max="512" value="64">
+        <label for="tpr">row</label>
+        <select id="tpr">
+          <option value="480">1/8</option>
+          <option value="320">1/8 triplet</option>
+          <option value="240" selected>1/16</option>
+          <option value="160">1/16 triplet</option>
+          <option value="120">1/32</option>
+        </select>
+        <label for="meterNum">meter</label><input id="meterNum" type="number" min="1" max="16" value="4" style="width:3em" title="Beats per bar">
+        <select id="meterDen" title="Beat unit"><option value="2">/2</option><option value="4" selected>/4</option><option value="8">/8</option></select>
+        <label for="groove">groove</label>
+        <select id="groove" title="Row-length multipliers applied cyclically to this pattern"></select>
+        <input id="grooveList" type="text" placeholder="1.33 0.67" title="Custom groove: row-length multipliers, cycled" style="width:7em">
+      </div>
+      <div class="group keygrp" data-label="key">
+        <select id="keyRoot" title="Tonic"><option value="">none</option></select>
+        <select id="keyScale" title="Scale"></select>
+        <label title="Give this pattern its own key"><input id="keyPattern" type="checkbox"> this pattern</label>
+      </div>
+      <div class="group arrgrp" data-label="arrangement">
+        <span id="arranger" title="Song order"></span>
+        <input id="order" type="text" value="0" title="Order as text: pattern index with optional xN repeat, e.g. 0x2 1 0">
+      </div>
+      <div class="group trackgrp" data-label="tracks">
+        <table id="tracksTable">
+          <thead><tr><th></th><th>name</th><th>instrument</th><th>ch</th><th>cols</th><th>volume</th><th>pan</th><th></th><th></th></tr></thead>
+          <tbody id="tracksBody"></tbody>
+        </table>
+        <div class="dlgFoot"><select id="trackAddInst" title="Instrument for the new track"></select><button id="trackAdd">Add track</button></div>
+      </div>
+    </div>
+  </section>
+  <section class="panel m8" id="soundsPanel" data-panel="sounds" hidden aria-label="Sounds">
+    <div class="panelHead"><h2>SOUNDS</h2><span class="dim mono">settings stay in this browser</span><span class="spacer"></span><button id="soundsResetAll" title="All instruments back to defaults">reset all</button><button id="soundsClose" data-close title="Close (Esc)">✕</button></div>
+    <div class="group listen" data-label="listen">
+      <label title="Hear the preview while editing and playing"><input id="preview" type="checkbox" checked> preview</label>
+      <select id="sound" title="Preview sound: sampled banks with synth fallback, or the sketch synth"><option value="samples">samples</option><option value="synth">synth</option></select>
+    </div>
+    <div id="bankBar">
+      <span class="lbl">banks</span>
+      <span id="bankList"></span>
+      <form id="bankUrlForm"><input id="bankUrl" type="url" placeholder="https://…/bank.json" title="Load a bank from a URL"><button type="submit" title="Load the bank at this URL">load url</button></form>
+    </div>
+    <div class="scopes">
+      <div class="scope"><div class="scopeLabel">out</div><canvas id="scopeOut"></canvas></div>
+      <div class="scope"><div class="scopeLabel" id="scopeZoneLabel">zone: play a note</div><canvas id="scopeZone"></canvas></div>
+    </div>
+    <table id="soundsTable">
+      <thead><tr><th>instrument</th><th>bank</th><th>src</th><th>articulations</th><th></th><th>tune</th><th>cents</th><th>trim dB</th><th>rel ×</th><th></th></tr></thead>
+      <tbody id="soundsBody"></tbody>
+    </table>
+  </section>
+  <section class="panel" id="connectPanel" data-panel="connect" hidden aria-label="Connect">
+    <div class="panelHead"><h2>Connect</h2><span class="spacer"></span><button data-close title="Close (Esc)">✕</button></div>
+    <div class="panelBody">
+      <div class="group midigrp" data-label="midi">
+        <button id="midiEnable">Enable MIDI</button>
+        <select id="midiOut" hidden title="MIDI output"><option value="">MIDI out: off</option></select>
+        <select id="midiIn" hidden title="MIDI input for step and real-time recording"><option value="">MIDI in: off</option></select>
+      </div>
+      <p class="dim">Each track plays on its own channel, shown in the grid header. On macOS turn on the IAC Driver in Audio MIDI Setup; on Windows add a loopMIDI port. Choose an input to step-record from a keyboard or arm ● Rec. WebMIDI needs a Chromium browser.</p>
+      <div class="group padgrp" data-label="controller">
+        <span id="controllerStatus" class="dim">No controller. Pair a Bluetooth gamepad and press any button.</span>
+      </div>
+    </div>
+  </section>
+  <section class="panel" id="viewPanel" data-panel="view" hidden aria-label="View">
+    <div class="panelHead"><h2>View</h2><span class="spacer"></span><button data-close title="Close (Esc)">✕</button></div>
+    <div class="panelBody">
+      <div class="group" data-label="grid">
+        <label title="Scroll the grid with playback"><input id="follow" type="checkbox" checked> follow playback</label>
+        <label title="Show the mixer beside the grid"><input id="mixerToggle" type="checkbox"> mixer</label>
+        <label title="On-screen entry pad under the grid"><input id="padToggle" type="checkbox"> entry pad</label>
+      </div>
+      <div class="group colgrp" data-label="columns">
+        <label title="Velocity column per note"><input type="checkbox" data-show="vel" checked> vel</label>
+        <label title="Articulation column"><input type="checkbox" data-show="art" checked> art</label>
+        <label title="Dynamics lane"><input type="checkbox" data-show="dyn" checked> dyn</label>
+        <label title="FX column"><input type="checkbox" data-show="fx" checked> fx</label>
+      </div>
+    </div>
+  </section>
+</div>
 <div id="workspace">
   <main><canvas id="grid" tabindex="0" aria-label="Pattern grid"></canvas></main>
-  <section id="arrangeView" class="view" hidden aria-label="Arrange">
-    <h2>Arrange</h2>
-    <div class="viewBody"></div>
-  </section>
-  <section id="tracksView" class="view" hidden aria-label="Tracks">
-    <h2>Tracks</h2>
-    <div class="viewBody"></div>
-  </section>
   <aside id="mixer" hidden aria-label="Mixer">
-    <div class="mixHead"><b>Mixer</b><span class="spacer"></span><button id="mixerTracks" title="Tracks: add, remove, reorder, instruments">Tracks…</button><button id="mixerClose" title="Hide the mixer">✕</button></div>
+    <div class="mixHead"><b>Mixer</b><span class="spacer"></span><button id="mixerTracks" data-panel="compose" title="Compose: tracks, key, arrangement">Tracks…</button><button id="mixerClose" title="Hide the mixer">✕</button></div>
     <div id="mixerStrips"></div>
   </aside>
 </div>
-<dialog id="tracksDlg" aria-label="Tracks and mixer">
-  <div class="dlgHead"><b>Tracks and mixer</b><span class="spacer"></span><button id="tracksClose" title="Close">✕</button></div>
-  <table id="tracksTable">
-    <thead><tr><th></th><th>name</th><th>instrument</th><th>ch</th><th>cols</th><th>volume</th><th>pan</th><th></th><th></th></tr></thead>
-    <tbody id="tracksBody"></tbody>
-  </table>
-  <div class="dlgFoot"><select id="trackAddInst" title="Instrument for the new track"></select><button id="trackAdd">Add track</button></div>
-</dialog>
-<dialog id="soundsDlg" class="m8" aria-label="Sounds">
-  <div class="dlgHead"><b>SOUNDS</b><span class="dim mono">bundled orchestra · VSCO 2 CE · settings stay in this browser</span><span class="spacer"></span><button id="soundsResetAll" title="All instruments back to defaults">reset all</button><button id="soundsClose" title="Close">✕</button></div>
-  <div id="bankBar">
-    <span class="lbl">banks</span>
-    <span id="bankList"></span>
-    <form id="bankUrlForm"><input id="bankUrl" type="url" placeholder="https://…/bank.json" title="Load a bank from a URL"><button type="submit" title="Load the bank at this URL">load url</button></form>
-  </div>
-  <div class="scopes">
-    <div class="scope"><div class="scopeLabel">out</div><canvas id="scopeOut"></canvas></div>
-    <div class="scope"><div class="scopeLabel" id="scopeZoneLabel">zone: play a note</div><canvas id="scopeZone"></canvas></div>
-  </div>
-  <table id="soundsTable">
-    <thead><tr><th>instrument</th><th>bank</th><th>src</th><th>articulations</th><th></th><th>tune</th><th>cents</th><th>trim dB</th><th>rel ×</th><th></th></tr></thead>
-    <tbody id="soundsBody"></tbody>
-  </table>
-</dialog>
 <dialog id="chainDlg" aria-label="Repeats and chains">
   <div class="dlgHead"><b id="chainTitle">Entry</b><span class="spacer"></span><button id="chainCancel" title="Close">✕</button></div>
   <p class="dim">Repeat this entry, and let any track follow another pattern instead (looped or clipped to this entry's length), like independent chains.</p>
@@ -168,9 +194,10 @@
 </div>
 <nav id="tabs" aria-label="Screens">
   <button data-view="pattern" class="on">Pattern</button>
-  <button data-view="arrange">Arrange</button>
-  <button data-view="mixer">Mixer</button>
-  <button data-view="tracks">Tracks</button>
+  <button data-view="song">Song</button>
+  <button data-view="compose">Compose</button>
+  <button data-view="sounds">Sounds</button>
+  <button data-view="connect">Connect</button>
 </nav>
 <footer>
   <div id="status"></div>

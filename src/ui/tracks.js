@@ -8,6 +8,7 @@ import { $, sched, state, preloadSamples } from './state.js';
 import { deselect } from './selection.js';
 import { withSongUndo } from './edit.js';
 import { markEdited } from './storage.js';
+import { setPanel } from './panels.js';
 
 const clampInt = (v, lo, hi, d) => { const n = parseInt(v, 10); return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : d; };
 function afterChange() {
@@ -87,10 +88,8 @@ export function addTrackFromPanel() {
   afterChange();
   return tr;
 }
-export function openTracks() { renderTracks(); $('tracksDlg').showModal(); }
+export function openTracks() { setPanel('compose'); }
 export function wireTracks() {
-  $('tracksBtn').onclick = openTracks;
-  $('tracksClose').onclick = () => $('tracksDlg').close();
   $('trackAdd').onclick = addTrackFromPanel;
   $('tracksBody').addEventListener('change', onChange);
   $('tracksBody').addEventListener('input', e => { if (e.target.type === 'range') onChange(e); });
@@ -98,5 +97,4 @@ export function wireTracks() {
   $('tracksBody').addEventListener('pointerdown', snap);
   $('tracksBody').addEventListener('keydown', e => { if (e.target.type === 'range' && !e.repeat) snap(e); });
   $('tracksBody').addEventListener('click', onClick);
-  $('tracksDlg').addEventListener('keydown', e => e.stopPropagation());   // typing in the panel must not edit the grid
 }

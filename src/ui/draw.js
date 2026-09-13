@@ -198,13 +198,14 @@ export function updateStatus(playRow) {
     parts.push('range ' + noteName(ins.range[0]) + '–' + noteName(ins.range[1]));
   } else parts.push('<b>tempo</b> row ' + row + ' (digits, L ramp, S hold)');
   if (cell.kind === 'fx') { const f = fxAtRow(pat, tr.id, row); parts.push('fx ' + (f ? '<b>' + f.cmd + ' ' + hex2(f.value) + '</b> ' + FX_HELP[f.cmd] : 'C R D A T pick a command, hex sets its value')); }
-  parts.push('octave <b>' + state.octave + '</b>');
+  parts.push('octave <b>' + state.octave + '</b> step <b>' + state.step + '</b>');
   parts.push('key <b>' + keyName(activeKey()) + '</b>' + (pat.key ? ' (pattern)' : '') + (grooveOf(pat) ? ' | groove <b>on</b>' : ''));
   if (state.queued != null) parts.push('next <b>' + state.queued + ' ' + (state.song.patterns[state.queued] || {}).name + '</b>');
-  parts.push('preview ' + (state.preview ? (state.sound === 'samples' ? 'samples' : 'synth') + (state.loadingSamples ? ' <span class="warn">loading ' + esc(state.loadingSamples) + '</span>' : '') : 'off') + ' | MIDI ' + (midi.out ? '<b>' + esc(midi.out.name) + '</b>' : 'off'));
+  parts.push('<a data-panel="sounds" title="Open Sounds">preview ' + (state.preview ? (state.sound === 'samples' ? 'samples' : 'synth') + (state.loadingSamples ? ' <span class="warn">loading ' + esc(state.loadingSamples) + '</span>' : '') : 'off') + '</a> | <a data-panel="connect" title="Open Connect">MIDI ' + (midi.out ? '<b>' + esc(midi.out.name) + '</b>' : 'off') + '</a>');
   if (state.sel) parts.push('selected <b>' + (state.sel.r1 - state.sel.r0 + 1) + '</b> rows × <b>' + (state.sel.g1 - state.sel.g0 + 1) + '</b> cells');
   if (midi.in) parts.push('MIDI in <b>' + esc(midi.in.name) + '</b>');
   if (gamepad.name) parts.push('\u{1F3AE} <b>' + esc(gamepad.name.replace(/\s*\(.*$/, '')) + '</b>');
+  const cs = $('controllerStatus'); if (cs) { const t = gamepad.name ? 'Connected: ' + gamepad.name : 'No controller. Pair a Bluetooth gamepad and press any button.'; if (cs.textContent !== t) cs.textContent = t; }
   if (state.record) parts.push('<b class="warn">REC</b> notes land on the passing row');
   if (sched.playing) parts.push('<b>playing</b>' + (sched.loop ? ' (loop)' : '') + (playRow != null ? ' row ' + playRow : ''));
   if (state.message) parts.push('<span class="warn">' + state.message + '</span>');

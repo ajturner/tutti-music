@@ -7,14 +7,15 @@ A browser-based tracker for composing orchestral music, with MIDI export. Plain 
 ## Input
 
 - **Keyboard:** piano-layout letters, arrows, and the shortcuts listed under "Keys and MIDI setup" in the app.
-- **Touch:** tap to place the cursor, drag to scroll, long-press to clear. An on-screen pad appears on touch screens (or tick *pad* in the menu).
+- **Touch:** tap to place the cursor, drag to scroll, long-press to clear. An on-screen pad appears on touch screens (or tick *entry pad* in ⚙ View).
 - **Game controller:** Bluetooth or USB gamepad, LSDJ-style. D-pad moves, A + d-pad edits, B clears, Start plays. Works on iPhone and iPad.
 - **Selection and batch edits:** Shift+arrows or mouse drag select a block. Copy, cut, paste, duplicate, clear, transpose, velocity, note length, articulation, and linear ramps from the toolbar or keyboard.
 - **Key and scale:** set the song's key; the pad dims out-of-scale notes, selections transpose by scale degree, controller nudges follow the scale.
 - **FX column:** one command per row per track: CHA chance, RET retrigger, DEL delay, ARP arpeggio, TSP transpose.
 - **Groove:** per-pattern swing presets or a custom cycle of row-length multipliers.
 - **Live:** solo tracks with shift-click or long press; pick another pattern while one loops to queue it.
-- **Mixer sidebar:** volume, pan, mute and solo per track beside the grid while editing; a captioned header groups transport, pattern, song, arrangement, key, entry and output.
+- **Workflow panels:** the header keeps only the transport and pattern selector; Song (files), Compose (pattern, key, arrangement, tracks), Sounds, Connect (MIDI, controller) and ⚙ View open one at a time under it, and become full screens behind a tab bar on a phone.
+- **Mixer sidebar:** volume, pan, mute and solo per track beside the grid while editing.
 - **Tracks and mixer:** add any instrument as a track, rename, reorder, remove, set channel and columns, volume and pan (CC7 and CC10), mute and solo.
 - **Arranger:** the song order as chips: click to open, drag to reorder, × to remove, + to append; each entry has a repeat count and per-track chains so a track can follow another pattern (song format 2).
 - **Shaping and variation:** EXP fx command for per-note swell, sfz, fade in and out; Fill, Rnd vel, Rnd pitch and Humanize on selections.

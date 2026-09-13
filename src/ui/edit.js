@@ -230,8 +230,8 @@ export function moveTrack(d) {
   if (t < -1) t = n - 1; if (t >= n) t = -1;
   state.cursor.track = t; state.cursor.cell = 0; state.typing = null; state.message = ''; state.ensureVisible = true; state.dirty = true;
 }
-export function setOctave(o) { state.octave = clamp(o, 0, 8); $('octave').value = state.octave; state.dirty = true; }
-export function setStep(s) { state.step = clamp(s, 0, 64); $('step').value = state.step; state.dirty = true; }
+export function setOctave(o) { state.octave = clamp(o, 0, 8); state.dirty = true; }
+export function setStep(s) { state.step = clamp(s, 0, 64); state.dirty = true; }
 
 // ---- Clearing, length, columns ----------------------------------------------------------
 export function clearCell() {

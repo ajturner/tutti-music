@@ -44,6 +44,7 @@ export const state = {
   clipboard: null,
   queued: null,
   mixer: false,          // mixer sidebar shown
+  panel: null,           // open workflow panel: 'song' | 'compose' | 'sounds' | 'connect' | 'view' | null
   record: false,         // real-time MIDI record while the pattern loops
   show: { vel: true, art: true, dyn: true, fx: true },   // grid columns shown per track (note columns always)
   sound: 'samples',      // preview sound: 'samples' (bundled orchestra, synth fallback) or 'synth'

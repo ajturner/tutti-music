@@ -1,4 +1,4 @@
-// Header controls: songs, patterns, meter, order, files, menu.
+// Header and panel controls: songs, patterns, meter, order, files, key, groove, view options.
 import { markEdited, deleteCurrentSong } from './storage.js';
 import { placeholdersFor } from '../core/banks.js';
 import { arranger, syncArranger, wireArranger } from './arranger.js';
@@ -10,7 +10,7 @@ import { clamp } from '../core/constants.js';
 import { newPattern, newSong, normalizeSong, orderEntry, orderText, parseOrderText, patMeter } from '../core/song.js';
 import { midiFileBytes } from '../core/midifile.js';
 import { $, curPat, curTrack, preloadSamples, sampler, state, synth } from './state.js';
-import { setOctave, setStep, withSongUndo, withUndo } from './edit.js';
+import { withSongUndo, withUndo } from './edit.js';
 import { articulationSel, batchOp, deselect } from './selection.js';
 import { cellKinds } from './layout.js';
 import { playPattern, playSong, stopAll } from './transport.js';
@@ -81,8 +81,6 @@ $('order').onchange = e => {
   const o = parseOrderText(e.target.value, state.song);
   withSongUndo(() => { state.song.order = o; }); e.target.value = orderText(state.song); syncArranger();
 };
-$('octave').onchange = e => setOctave(parseInt(e.target.value, 10) || 0);
-$('step').onchange = e => setStep(parseInt(e.target.value, 10) || 0);
 $('follow').onchange = e => { state.follow = e.target.checked; };
 $('preview').onchange = e => { state.preview = e.target.checked; synth.enabled = sampler.enabled = state.preview; if (!state.preview) sampler.allOff(); else preloadSamples(); state.dirty = true; };
 $('sound').onchange = e => {
@@ -104,10 +102,6 @@ for (const box of document.querySelectorAll('input[data-show]')) {
 $('selbar').addEventListener('pointerdown', e => { const b = e.target.closest('button[data-op]'); if (!b) return; e.preventDefault(); batchOp(b.dataset.op); });
 $('selbar').addEventListener('click', e => { if (e.target.closest('button')) e.preventDefault(); });
 $('selArt').onchange = e => { if (e.target.value) articulationSel(e.target.value); e.target.value = ''; state.dirty = true; };
-$('menuToggle').onclick = () => {
-  const open = document.querySelector('header').classList.toggle('open');
-  $('menuToggle').setAttribute('aria-expanded', String(open));
-};
 export function download(name, blob) {
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
   document.body.appendChild(a); a.click(); a.remove();

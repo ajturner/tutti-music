@@ -39,8 +39,7 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
 {
   const { ctx, page, errors } = await open({ viewport: { width: 1400, height: 900 } }, 'desktop');
   check('desktop: no errors on load', errors.length === 0, errors.join(' | '));
-  check('desktop: menu toggle hidden', !(await page.isVisible('#menuToggle')));
-  check('desktop: song select visible', await page.isVisible('#song'));
+  check('desktop: menu bar visible, panels closed', await page.isVisible('#menus') && !(await page.isVisible('#song')) && (await page.evaluate(() => state.panel)) === null);
   check('desktop: pad hidden', !(await page.isVisible('#pad')));
   check('desktop: no tab bar', !(await page.isVisible('#tabs')));
   check('desktop: row height 18', (await cur(page)).rowH === 18);
@@ -133,7 +132,9 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   const rec = await page.evaluate(() => { const t = curTrack(); return { a: noteAt(curPat(), t.id, 0, 8), b: noteAt(curPat(), t.id, 1, 8), row: state.cursor.row, cols: t.columns }; });
   check('midi in: chord recorded across columns and advanced', rec.a && rec.a.pitch === 67 && rec.a.vel === 90 && rec.b && rec.b.pitch === 71 && rec.row === 12 && rec.cols >= 2, JSON.stringify(rec));
   // --- key and diatonic transpose ---
+  await page.evaluate(() => tutti.setPanel('compose'));
   await page.selectOption('#keyRoot', '0'); await page.selectOption('#keyScale', 'major'); await page.waitForTimeout(30);
+  await page.evaluate(() => tutti.setPanel(null));
   check('key: song key set from the menu', await page.evaluate(() => state.song.key && state.song.key.root === 0 && state.song.key.scale === 'major'));
   await page.evaluate(() => { deselect(); const t = curTrack(); curPat().tracks[t.id].events = []; state.cursor.track = 0; state.cursor.cell = 0; state.cursor.row = 0; enterPitch(64, null, 0); state.cursor.row = 0; state.dirty = true; });
   await page.keyboard.press('Shift+ArrowDown'); await page.keyboard.press('.'); await page.waitForTimeout(30);
@@ -159,10 +160,12 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   check('fx: Delete clears the command', (await page.evaluate(() => fxAtRow(curPat(), curTrack().id, 0))) === null);
   check('fx: status explains the cell', (await page.textContent('#status')).includes('pick a command'));
   // --- groove ---
+  await page.evaluate(() => tutti.setPanel('compose'));
   await page.selectOption('#groove', 'swing 16ths'); await page.waitForTimeout(30);
   const gr = await page.evaluate(() => ({ g: curPat().groove, custom: document.getElementById('grooveList').hidden }));
   check('groove: preset applies to the pattern', gr.g && gr.g.length === 2 && gr.g[0] > 1 && gr.custom, JSON.stringify(gr));
   await page.selectOption('#groove', 'straight'); await page.waitForTimeout(30);
+  await page.evaluate(() => tutti.setPanel(null));
   check('groove: straight clears', (await page.evaluate(() => curPat().groove.length)) === 0);
   // --- solo via shift-click on the header ---
   await page.keyboard.down('Shift'); await page.mouse.click(box.x + 130, box.y + 30); await page.keyboard.up('Shift'); await page.waitForTimeout(30);
@@ -193,17 +196,21 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   await page.evaluate(() => { for (const k of Object.keys(tutti)) if (!(k in window)) Object.defineProperty(window, k, { get: () => tutti[k], configurable: true }); });
   const back = await page.evaluate(() => JSON.stringify(state.songs[0].patterns[0].tracks.fl.events) !== JSON.stringify(EXAMPLES[0].build().patterns[0].tracks.fl.events) && !!noteAt(state.songs[0].patterns[0], 'fl', 0, 40));
   check('autosave: edit survives a reload', back);
+  await page.evaluate(() => tutti.setPanel('song'));
   await page.click('#deleteSong'); await page.waitForTimeout(300);
   const reset = await page.evaluate(() => ({ same: JSON.stringify(state.songs[0].patterns[0].tracks.fl.events) === JSON.stringify(EXAMPLES[0].build().patterns[0].tracks.fl.events), stored: JSON.parse(localStorage.getItem('tutti.songs.v1') || '[]').length }));
   check('autosave: delete resets the example and clears storage', reset.same && reset.stored === 0, JSON.stringify(reset));
   await page.evaluate(() => { for (const k of ['lastDraw', 'ROW_H']) Object.defineProperty(window, k, { get: () => tutti.view[k], configurable: true }); });
   // --- session URL: new song, edit, refresh lands on the same song and pattern ---
   await page.click('#newSong'); await page.waitForTimeout(50);
+  await page.evaluate(() => tutti.setPanel(null));
   const newUid = await page.evaluate(() => state.song.uid);
   check('session: URL names the new song', (await page.evaluate(() => location.hash)) === '#song=' + encodeURIComponent(newUid));
   await page.evaluate(() => { state.cursor.track = 0; state.cursor.cell = 0; state.cursor.row = 3; });
   await page.keyboard.press('x'); await page.waitForTimeout(50);
+  await page.evaluate(() => tutti.setPanel('compose'));
   await page.click('#addPattern'); await page.waitForTimeout(600);
+  await page.evaluate(() => tutti.setPanel(null));
   check('session: URL carries the pattern', (await page.evaluate(() => location.hash)).endsWith('&pat=1'));
   await page.reload(); await page.waitForTimeout(400);
   await page.evaluate(() => { for (const k of Object.keys(tutti)) if (!(k in window)) Object.defineProperty(window, k, { get: () => tutti[k], configurable: true }); for (const k of ['lastDraw', 'ROW_H']) Object.defineProperty(window, k, { get: () => tutti.view[k], configurable: true }); });
@@ -224,7 +231,9 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   await page.locator('#selbar button[data-op="rndvel"]').dispatchEvent('pointerdown'); await page.waitForTimeout(30);
   const vels = await page.evaluate(() => [0, 4].map(r => noteAt(curPat(), curTrack().id, 0, r).vel));
   check('rnd vel: velocities move within the range', vels.every(v => v === 102), JSON.stringify(vels));
+  await page.evaluate(() => tutti.setPanel('compose'));
   await page.selectOption('#keyRoot', '0'); await page.selectOption('#keyScale', 'major');
+  await page.evaluate(() => tutti.setPanel(null));
   await page.evaluate(() => { state.random = () => 0.5; });
   await page.locator('#selbar button[data-op="rndpitch"]').dispatchEvent('pointerdown'); await page.waitForTimeout(30);
   const pitches = await page.evaluate(() => [0, 4].map(r => noteAt(curPat(), curTrack().id, 0, r).pitch));
@@ -235,8 +244,8 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   check('humanize: DEL on rows with notes only', hum[0] && hum[0].cmd === 'DEL' && hum[0].value === 8 && hum[1] && hum[1].cmd === 'DEL' && hum[2] === null, JSON.stringify(hum));
   await page.evaluate(() => { state.random = null; deselect(); });
   // --- tracks and mixer panel ---
-  await page.click('#tracksBtn'); await page.waitForTimeout(50);
-  check('tracks: panel opens with one row per track', (await page.$$eval('#tracksBody tr', r => r.length)) === (await page.evaluate(() => state.song.tracks.length)));
+  await page.click('#composeBtn'); await page.waitForTimeout(50);
+  check('tracks: Compose opens with one row per track', await page.isVisible('#composePanel') &&  (await page.$$eval('#tracksBody tr', r => r.length)) === (await page.evaluate(() => state.song.tracks.length)));
   const nTracks = await page.evaluate(() => state.song.tracks.length);
   await page.selectOption('#trackAddInst', 'synth-arp'); await page.click('#trackAdd'); await page.waitForTimeout(50);
   const added = await page.evaluate(() => ({ n: state.song.tracks.length, last: state.song.tracks[state.song.tracks.length - 1], cursor: state.cursor.track, cells: allCells().length }));
@@ -250,9 +259,10 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   check('tracks: move up', (await page.evaluate(() => state.song.tracks[state.song.tracks.length - 2].name)) === 'Lead');
   await page.click('#tracksBody tr:nth-last-child(2) button[data-act="remove"]'); await page.waitForTimeout(30);
   check('tracks: remove', (await page.evaluate(() => state.song.tracks.length)) === nTracks && !(await page.evaluate(() => state.song.tracks.some(t => t.name === 'Lead'))));
-  await page.click('#tracksClose'); await page.waitForTimeout(30);
+  await page.click('#composePanel [data-close]'); await page.waitForTimeout(30);
   // --- arranger ---
   await page.evaluate(() => { if (state.song.patterns.length < 2) document.getElementById('addPattern').click(); state.pat = 0; state.song.order = [0, 1, 0]; tutti.syncPatternUI(); });
+  await page.evaluate(() => tutti.setPanel('compose'));
   check('arranger: one chip per order entry', (await page.$$eval('#arranger .chip', c => c.length)) === 3);
   await page.click('#arranger .chip:nth-child(2)', { position: { x: 6, y: 6 } }); await page.waitForTimeout(30);
   check('arranger: click opens the pattern', (await page.evaluate(() => state.pat)) === 1);
@@ -265,12 +275,30 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   const chain = await page.evaluate(() => ({ text: tutti.orderText(state.song), e: state.song.order[0], chip: document.querySelector('#arranger .chip').textContent, len: tutti.renderSong(state.song).lengthTicks }));
   check('arranger: dialog sets repeat and a chain', chain.e.repeat === 2 && chain.e.tracks.cb === 1 && chain.text.startsWith('0x2') && chain.chip.includes('×2') && chain.chip.includes('⛓'), JSON.stringify(chain));
   await page.fill('#order', '0x3 1'); await page.dispatchEvent('#order', 'change'); await page.waitForTimeout(30);
+  await page.evaluate(() => tutti.setPanel(null));
   check('arranger: order text with repeats keeps the chain', await page.evaluate(() => state.song.order.length === 2 && state.song.order[0].repeat === 3 && state.song.order[0].tracks.cb === 1));
   await page.evaluate(() => { state.song.order = [0]; tutti.normalizeOrder(state.song); state.pat = 0; tutti.syncPatternUI(); });
   check('version: footer shows semver', /^v\d+\.\d+\.\d+$/.test(await page.textContent('#version')));
-  // --- header groups and mixer sidebar ---
-  const labels = await page.$$eval('header .group[data-label]', g => g.map(x => x.dataset.label));
-  check('header: labelled groups', ['transport', 'pattern', 'song', 'arrangement', 'key', 'entry', 'output'].every(l => labels.includes(l)), labels.join(','));
+  // --- header, panels and mixer sidebar ---
+  const hdr = await page.evaluate(() => ({ labels: [...document.querySelectorAll('header .group[data-label]')].map(x => x.dataset.label), menus: [...document.querySelectorAll('#menus button')].map(b => b.dataset.panel), rows: document.getElementById('transportbar').getBoundingClientRect().top > document.getElementById('topbar').getBoundingClientRect().top, h: document.querySelector('header').offsetHeight, octave: !!document.getElementById('octave') }));
+  check('header: two rows, transport and pattern only, five panels', hdr.labels.join(',') === 'transport,pattern' && hdr.menus.join(',') === 'song,compose,sounds,connect' && hdr.rows && hdr.h < 90 && !hdr.octave, JSON.stringify(hdr));
+  await page.click('#songBtn'); await page.waitForTimeout(40);
+  const songP = await page.evaluate(() => ({ panel: state.panel, open: !document.getElementById('songPanel').hidden, save: !!document.querySelector('#songPanel #save'), exp: !!document.querySelector('#songPanel #exportMidi'), grid: document.getElementById('grid').clientHeight > 100, on: document.getElementById('songBtn').classList.contains('on') }));
+  check('panels: Song holds the list and file actions with the grid still below', songP.panel === 'song' && songP.open && songP.save && songP.exp && songP.grid && songP.on, JSON.stringify(songP));
+  await page.click('#composeBtn'); await page.waitForTimeout(40);
+  const compP = await page.evaluate(() => ({ panel: state.panel, song: document.getElementById('songPanel').hidden, rows: !!document.querySelector('#composePanel #rows'), key: !!document.querySelector('#composePanel #keyRoot'), chips: !!document.querySelector('#composePanel #arranger .chip'), tracks: document.querySelectorAll('#composePanel #tracksBody tr').length === state.song.tracks.length, cap: document.querySelector('.patset').dataset.label }));
+  check('panels: Compose replaces Song and holds pattern, key, arrangement, tracks', compP.panel === 'compose' && compP.song && compP.rows && compP.key && compP.chips && compP.tracks && /^pattern 0 /.test(compP.cap), JSON.stringify(compP));
+  await page.click('#composePanel #rows'); await page.keyboard.press('Escape'); await page.waitForTimeout(40);
+  check('panels: Escape in a panel closes it and focuses the grid', (await page.evaluate(() => state.panel === null && document.activeElement === document.getElementById('grid'))));
+  await page.click('#connectBtn'); await page.waitForTimeout(40);
+  check('panels: Connect holds MIDI and the controller status', await page.evaluate(() => state.panel === 'connect' && !!document.querySelector('#connectPanel #midiEnable') && /controller/i.test(document.getElementById('controllerStatus').textContent)));
+  await page.click('#connectBtn'); await page.waitForTimeout(40);
+  check('panels: the same button closes its panel', (await page.evaluate(() => state.panel)) === null);
+  await page.click('#status a[data-panel="connect"]'); await page.waitForTimeout(40);
+  check('panels: the status line MIDI segment opens Connect', (await page.evaluate(() => state.panel)) === 'connect');
+  check('status: shows octave and step', /octave.*step/.test(await page.textContent('#status')));
+  await page.click('#viewBtn'); await page.waitForTimeout(40);
+  check('panels: View holds follow, pad, mixer and columns', await page.evaluate(() => state.panel === 'view' && ['follow', 'padToggle', 'mixerToggle'].every(id => !!document.querySelector('#viewPanel #' + id)) && document.querySelectorAll('#viewPanel input[data-show]').length === 4));
   check('mixer: shown by default on a wide screen', await page.isVisible('#mixer') && await page.evaluate(() => state.mixer));
   await page.waitForTimeout(60);
   check('mixer: one strip per track', (await page.$$eval('#mixerStrips .strip', s => s.length)) === (await page.evaluate(() => state.song.tracks.length)));
@@ -284,9 +312,11 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   check('mixer: slider sets volume live', (await page.evaluate(() => state.song.tracks[2].volume)) === 77 && (await page.textContent('#mixerStrips .strip:nth-child(3) [data-f="volume"] + span')) === '77');
   const gridW = await page.evaluate(() => document.getElementById('grid').clientWidth);
   await page.click('#mixerClose'); await page.waitForTimeout(60);
+  await page.evaluate(() => tutti.setPanel('view'));
   check('mixer: close hides it and the grid widens', !(await page.isVisible('#mixer')) && (await page.evaluate(() => document.getElementById('grid').clientWidth)) > gridW);
   await page.check('#mixerToggle'); await page.waitForTimeout(40);
   check('mixer: toggle shows it again', await page.isVisible('#mixer'));
+  await page.evaluate(() => tutti.setPanel(null));
   await page.reload(); await page.waitForTimeout(400);
   await page.evaluate(() => { for (const k of Object.keys(tutti)) if (!(k in window)) Object.defineProperty(window, k, { get: () => tutti[k], configurable: true }); for (const k of ['lastDraw', 'ROW_H']) Object.defineProperty(window, k, { get: () => tutti.view[k], configurable: true }); });
   check('mixer: choice persists across reload', await page.isVisible('#mixer'));
@@ -296,6 +326,9 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   check('help: ? opens the quick keys', await page.evaluate(() => document.querySelector('footer details').open));
   await page.keyboard.press('Shift+/'); await page.waitForTimeout(30);
   check('help: ? again closes them', !(await page.evaluate(() => document.querySelector('footer details').open)));
+  await page.click('#helpBtn'); await page.waitForTimeout(30);
+  check('help: the ? button opens them too', await page.evaluate(() => document.querySelector('footer details').open));
+  await page.click('#helpBtn');
   {
     const [win] = await Promise.all([ctx.waitForEvent('page'), page.keyboard.press('Meta+Shift+/')]);
     await win.waitForLoadState();
@@ -315,6 +348,7 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   }
   // --- pattern key ---
   await page.evaluate(() => { if (state.song.patterns.length < 2) document.getElementById('addPattern').click(); state.pat = 1; tutti.syncPatternUI(); });
+  await page.evaluate(() => tutti.setPanel('compose'));
   await page.selectOption('#keyRoot', '9'); await page.selectOption('#keyScale', 'natural-minor'); await page.waitForTimeout(30);
   await page.check('#keyPattern'); await page.selectOption('#keyRoot', '0'); await page.selectOption('#keyScale', 'major'); await page.waitForTimeout(30);
   const pk = await page.evaluate(() => ({ song: state.song.key, pat: curPat().key, active: tutti.activeKey(), status: document.getElementById('status').textContent }));
@@ -323,11 +357,12 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   check('pattern key: other pattern keeps the song key', await page.evaluate(() => tutti.activeKey().root === 9 && !document.getElementById('keyPattern').checked));
   await page.evaluate(() => { state.pat = 1; tutti.syncPatternUI(); });
   await page.uncheck('#keyPattern'); await page.waitForTimeout(30);
+  await page.evaluate(() => tutti.setPanel(null));
   check('pattern key: untick removes the override', await page.evaluate(() => curPat().key === null && tutti.activeKey().root === 9));
   await page.evaluate(() => { state.song.key = null; state.pat = 0; tutti.syncPatternUI(); });
   // --- song-level undo ---
   const nT = await page.evaluate(() => state.song.tracks.length);
-  await page.click('#tracksBtn'); await page.click('#tracksBody tr:nth-child(2) button[data-act="remove"]'); await page.click('#tracksClose'); await page.waitForTimeout(30);
+  await page.click('#composeBtn'); await page.click('#tracksBody tr:nth-child(2) button[data-act="remove"]'); await page.click('#composePanel [data-close]'); await page.waitForTimeout(30);
   check('song undo: track removed', (await page.evaluate(() => state.song.tracks.length)) === nT - 1);
   await page.evaluate(() => document.getElementById('grid').focus()); await page.keyboard.press('Meta+z'); await page.waitForTimeout(30);
   check('song undo: cmd+Z restores the track', (await page.evaluate(() => state.song.tracks.length)) === nT && (await page.evaluate(() => state.song.tracks[1].id)) === 'ob');
@@ -361,9 +396,11 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   check('samples: violins load and decode, synth instruments fall back', loaded.v1 && loaded.zones > 20 && !loaded.arp && loaded.known, JSON.stringify(loaded));
   const picked = await page.evaluate(() => tutti.pickZones(tutti.sampler.maps.get('violins-1'), 'piz', 64, 100, 90).map(p => [p.zone.art, p.zone.note, +p.gain.toFixed(2)]));
   check('samples: pizzicato zones picked near the pitch', picked.length === 2 && picked.every(p => p[0] === 'piz' && Math.abs(p[1] - 64) <= 4), JSON.stringify(picked));
+  await page.evaluate(() => tutti.setPanel('sounds'));
   await page.selectOption('#sound', 'synth'); await page.waitForTimeout(30);
   check('samples: switching to synth persists', (await page.evaluate(() => state.sound + '/' + localStorage.getItem('tutti.sound'))) === 'synth/synth');
   await page.selectOption('#sound', 'samples');
+  await page.evaluate(() => tutti.setPanel(null));
   // --- sounds panel ---
   await page.click('#soundsBtn'); await page.waitForTimeout(700);
   const sounds = await page.evaluate(() => ({ rows: document.querySelectorAll('#soundsBody tr').length, v1: document.querySelector('#soundsBody tr[data-id="violins-1"] .status').textContent, arp: document.querySelector('#soundsBody tr[data-id="synth-arp"] .status').textContent, real: [...document.querySelectorAll('#soundsBody tr[data-id="violins-1"] .art.real')].map(b => b.dataset.art), fb: document.querySelector('#soundsBody tr[data-id="violins-1"] .art[data-art="leg"]').textContent }));
@@ -414,13 +451,13 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   const jazz = await page.evaluate(() => ({ loaded: tutti.banks.has('jazz'), sax: !!INST['tenor-sax'], kit: INST['drum-kit'] && INST['drum-kit'].kit['36'], rows: document.querySelectorAll('#soundsBody tr').length, saxSrc: document.querySelector('#soundsBody tr[data-id="tenor-sax"] .status')?.textContent }));
   check('banks: loading jazz registers its instruments with samples', jazz.loaded && jazz.sax && jazz.kit === 'kick' && jazz.rows > 15 && jazz.saxSrc && jazz.saxSrc.startsWith('SMP'), JSON.stringify(jazz));
   await page.click('#soundsClose');
-  await page.click('#tracksBtn'); await page.waitForTimeout(50);
+  await page.click('#composeBtn'); await page.waitForTimeout(50);
   const groups = await page.$$eval('#trackAddInst optgroup', g => g.map(x => x.label));
   check('banks: instrument picker groups by bank', groups.includes('Symphony orchestra') && groups.includes('Jazz combo'), groups.join(','));
   await page.selectOption('#trackAddInst', 'drum-kit'); await page.click('#trackAdd'); await page.waitForTimeout(80);
   const bankAdd = await page.evaluate(() => ({ banks: state.song.banks, inst: state.song.tracks[state.song.tracks.length - 1].instrument, status: document.getElementById('status').textContent }));
   check('banks: adding a bank track records the bank and shows kit pieces', bankAdd.banks.includes('jazz') && bankAdd.inst === 'drum-kit' && bankAdd.status.includes('kick'), JSON.stringify(bankAdd));
-  await page.click('#tracksClose');
+  await page.click('#composePanel [data-close]');
   await page.evaluate(() => { const t = curTrack(); const pat = curPat(); state.cursor.cell = 0; state.cursor.row = 0; enterPitch(36, 100, 0); state.dirty = true; });
   await page.waitForTimeout(40);
   check('banks: kit note names in the status', (await page.textContent('#status')).includes('kick'));
@@ -453,6 +490,7 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   // --- column visibility and the labelled header ---
   const cols0 = await page.evaluate(() => ({ kinds: tutti.cellKinds(state.song.tracks[0]).map(k => k.kind).join(' '), header: tutti.view.lastDraw.headerH, rows: tutti.HEADER_ROWS, notes: !!document.getElementById('notes') }));
   check('columns: header has three rows and the footer has no song description', cols0.header === 18 * 3 + 8 && cols0.rows === 3 && !cols0.notes, JSON.stringify(cols0));
+  await page.evaluate(() => tutti.setPanel('view'));
   await page.uncheck('input[data-show="fx"]'); await page.uncheck('input[data-show="dyn"]'); await page.waitForTimeout(60);
   const cols1 = await page.evaluate(() => ({ kinds: tutti.cellKinds(state.song.tracks[0]).map(k => k.kind).join(' '), all: tutti.allCells().filter(c => c.track === 0).map(c => c.kind).join(' '), stored: JSON.parse(localStorage.getItem('tutti.show.v1')) }));
   check('columns: hiding fx and dyn removes them from the layout and selection indices', cols1.kinds === 'note vel art' && cols1.all === 'note vel art' && cols1.stored.fx === false && cols1.stored.dyn === false, JSON.stringify(cols1));
@@ -461,6 +499,7 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   check('columns: hiding the cursor column clamps the cursor', (await page.evaluate(() => state.cursor.cell)) === 1);
   await page.check('input[data-show="art"]'); await page.waitForTimeout(60);
   await page.check('input[data-show="fx"]'); await page.check('input[data-show="dyn"]'); await page.waitForTimeout(60);
+  await page.evaluate(() => tutti.setPanel(null));
   check('columns: showing again restores the cells', (await page.evaluate(() => tutti.cellKinds(state.song.tracks[0]).map(k => k.kind).join(' '))) === 'note vel art dyn fx');
   // gamepad: mock, press down then A tap
   await page.evaluate(() => {
@@ -507,15 +546,15 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   check('phone: coarse pointer emulated', coarse);
   let c = await cur(page);
   check('phone: pad shown and rows 30px', c.pad && c.rowH === 30, JSON.stringify(c));
-  check('phone: menu toggle visible', await page.isVisible('#menuToggle'));
-  check('phone: secondary controls folded', !(await page.isVisible('#song')));
+  check('phone: menu bar hidden, tab bar and tools shown', !(await page.isVisible('#menus')) && await page.isVisible('#tabs') && await page.isVisible('#viewBtn'));
+  check('phone: secondary controls out of the header', !(await page.isVisible('#song')) && !(await page.isVisible('#rows')));
   const overflow = await page.evaluate(() => ({ sh: document.documentElement.scrollHeight, ih: innerHeight }));
   check('phone: page does not scroll', overflow.sh <= overflow.ih, JSON.stringify(overflow));
   await page.screenshot({ path: 'test/out/phone.png' });
-  await page.tap('#menuToggle'); await page.waitForTimeout(100);
-  check('phone: menu opens', await page.isVisible('#song'));
+  await page.tap('#tabs button[data-view="song"]'); await page.waitForTimeout(100);
+  check('phone: Song tab fills the screen', await page.isVisible('#song') && (await page.evaluate(() => getComputedStyle(document.getElementById('workspace')).display)) === 'none');
   await page.screenshot({ path: 'test/out/phone-menu.png' });
-  await page.tap('#menuToggle');
+  await page.tap('#tabs button[data-view="pattern"]'); await page.waitForTimeout(60);
   // tap a cell on the grid, then a pad key
   const box = await page.locator('#grid').boundingBox();
   const y3 = await page.evaluate(() => lastDraw.headerH + (3 - lastDraw.top) * ROW_H + 15);
@@ -533,25 +572,20 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   const hex = await page.$$eval('#padKeys button', bs => bs.map(b => b.textContent).join(''));
   check('phone: pad shows hex for velocity', hex === '0123456789ABCDEF', hex);
   check('phone: mixer hidden by default', !(await page.isVisible('#mixer')));
-  await page.tap('#menuToggle'); await page.waitForTimeout(60);
-  const menuLabels = await page.$$eval('#more .group[data-label]', g => g.filter(x => getComputedStyle(x, '::before').content !== 'none').length);
-  check('phone: menu groups keep their labels', menuLabels >= 5, 'n=' + menuLabels);
+  await page.tap('#viewBtn'); await page.waitForTimeout(60);
+  const viewLabels = await page.$$eval('#viewPanel .group[data-label]', g => g.filter(x => getComputedStyle(x, '::before').content !== 'none').length);
+  check('phone: View opens as a sheet with captioned groups', viewLabels >= 2 && (await page.evaluate(() => document.getElementById('grid').clientWidth > 0)), 'n=' + viewLabels);
   await page.tap('#mixerToggle'); await page.waitForTimeout(60);
-  check('phone: mixer overlays the grid', await page.isVisible('#mixer') && (await page.evaluate(() => getComputedStyle(document.getElementById('mixer')).position)) === 'absolute');
+  check('phone: mixer overlays the grid and closed the sheet', await page.isVisible('#mixer') && (await page.evaluate(() => getComputedStyle(document.getElementById('mixer')).position)) === 'absolute' && (await page.evaluate(() => state.panel)) === null);
   await page.tap('#mixerClose'); await page.waitForTimeout(60);
-  check('phone: toggling the mixer closed the menu', !(await page.isVisible('#song')));
-  check('phone: tab bar visible', await page.isVisible('#tabs'));
-  await page.tap('#tabs button[data-view="mixer"]'); await page.waitForTimeout(80);
-  const mv = await page.evaluate(() => ({ view: state.view, mixer: !document.getElementById('mixer').hidden, main: getComputedStyle(document.querySelector('main')).display, pos: getComputedStyle(document.getElementById('mixer')).position, strips: document.querySelectorAll('#mixerStrips .strip').length }));
-  check('phone: mixer screen fills the view', mv.view === 'mixer' && mv.mixer && mv.main === 'none' && mv.pos === 'static' && mv.strips > 10, JSON.stringify(mv));
-  await page.tap('#tabs button[data-view="arrange"]'); await page.waitForTimeout(80);
-  const av = await page.evaluate(() => ({ chips: !!document.querySelector('#arrangeView #arranger .chip'), rows: !!document.querySelector('#arrangeView #rows'), key: !!document.querySelector('#arrangeView #keyRoot'), mixerHidden: document.getElementById('mixer').hidden }));
-  check('phone: arrange screen holds the order, pattern settings and key', av.chips && av.rows && av.key && av.mixerHidden, JSON.stringify(av));
-  await page.tap('#tabs button[data-view="tracks"]'); await page.waitForTimeout(80);
-  check('phone: tracks screen shows the table', (await page.$$eval('#tracksView #tracksBody tr', r => r.length)) === (await page.evaluate(() => state.song.tracks.length)) && !(await page.evaluate(() => !!document.querySelector('#arrangeView #rows'))));
+  await page.tap('#tabs button[data-view="compose"]'); await page.waitForTimeout(80);
+  const cv = await page.evaluate(() => ({ panel: state.panel, chips: !!document.querySelector('#composePanel #arranger .chip'), rows: !!document.querySelector('#composePanel #rows'), key: !!document.querySelector('#composePanel #keyRoot'), tracks: document.querySelectorAll('#composePanel #tracksBody tr').length === state.song.tracks.length, main: getComputedStyle(document.getElementById('workspace')).display, tab: document.querySelector('#tabs button.on').dataset.view }));
+  check('phone: Compose screen holds the order, pattern settings, key and tracks', cv.panel === 'compose' && cv.chips && cv.rows && cv.key && cv.tracks && cv.main === 'none' && cv.tab === 'compose', JSON.stringify(cv));
+  await page.tap('#tabs button[data-view="sounds"]'); await page.waitForTimeout(300);
+  check('phone: Sounds screen shows the banks and instruments', await page.evaluate(() => state.panel === 'sounds' && document.querySelectorAll('#soundsBody tr').length > 5 && !!document.querySelector('#soundsPanel #preview')));
   await page.tap('#tabs button[data-view="pattern"]'); await page.waitForTimeout(80);
-  const back = await page.evaluate(() => ({ view: state.view, grid: document.getElementById('grid').clientWidth > 0, rowsHome: !!document.querySelector('#more #rows'), tableHome: !!document.querySelector('#tracksDlg #tracksTable') }));
-  check('phone: pattern screen restores everything home', back.view === 'pattern' && back.grid && back.rowsHome && back.tableHome, JSON.stringify(back));
+  const back = await page.evaluate(() => ({ panel: state.panel, grid: document.getElementById('grid').clientWidth > 0, sounds: document.getElementById('soundsPanel').hidden }));
+  check('phone: Pattern tab restores the grid', back.panel === null && back.grid && back.sounds, JSON.stringify(back));
   await page.tap('#padNav button:text-is("sel")'); await page.waitForTimeout(80);
   check('phone: sel mode shows toolbar', (await page.evaluate(() => state.selectMode)) && await page.isVisible('#selbar'));
   const selDrag = await page.evaluate(async () => {

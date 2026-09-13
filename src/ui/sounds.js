@@ -117,7 +117,7 @@ function drawZone() {
   ctx.fillStyle = '#6C7597'; ctx.font = '10px ui-monospace, Menlo, monospace'; ctx.fillText((lz.buffer.duration).toFixed(2) + ' s', W - 44, 12);
 }
 function loop() {
-  if (!$('soundsDlg').open) { raf = 0; return; }
+  if ($('soundsPanel').hidden) { raf = 0; return; }
   drawOut(); if (zoneDirty) { drawZone(); zoneDirty = false; }
   raf = requestAnimationFrame(loop);
 }
@@ -127,15 +127,15 @@ function fitCanvases() {
 }
 
 // ---- wiring ---------------------------------------------------------------------------------
-export async function openSounds() {
-  catalog = await loadCatalog(); renderBanks(); renderSounds(); $('soundsDlg').showModal(); fitCanvases();
-  if (!raf) raf = requestAnimationFrame(loop);
+// Called by the panels module when the Sounds panel opens and closes.
+export async function showSounds() {
+  fitCanvases(); if (!raf) raf = requestAnimationFrame(loop);
+  catalog = await loadCatalog(); renderBanks(); renderSounds(); fitCanvases();
   // load anything not loaded yet so the rows fill in
   const ids = INSTRUMENTS.map(i => i.id); sampler.preload(ids).then(renderSounds);
 }
+export function hideSounds() { raf = 0; }
 export function wireSounds() {
-  $('soundsBtn').onclick = openSounds;
-  $('soundsClose').onclick = () => $('soundsDlg').close();
   $('soundsResetAll').onclick = () => { for (const id of Object.keys(sampler.settings)) delete sampler.settings[id]; saveSoundSettings(); renderSounds(); };
   const body = $('soundsBody');
   body.addEventListener('click', e => {
@@ -153,7 +153,6 @@ export function wireSounds() {
     e.target.closest('tr').querySelector('[data-act="reset"]').disabled = !(s.tune || s.cents || s.trim || s.release !== 1);
     state.dirty = true;
   });
-  $('soundsDlg').addEventListener('keydown', e => e.stopPropagation());
   $('bankList').addEventListener('click', e => { const b = e.target.closest('button[data-bank]'); if (b) toggleBank(b.dataset.bank); });
   $('bankUrlForm').addEventListener('submit', async e => {
     e.preventDefault(); const url = $('bankUrl').value.trim(); if (!url) return;
@@ -161,7 +160,7 @@ export function wireSounds() {
     saveBanks(); renderBanks(); renderSounds(); renderTracks();
   });
   sampler.onZone = () => { zoneDirty = true; };
-  sampler.onProgress = ((prev) => (id, done, total) => { if (prev) prev(id, done, total); if ($('soundsDlg').open && done === total) renderSounds(); })(sampler.onProgress);
-  window.addEventListener('resize', () => { if ($('soundsDlg').open) fitCanvases(); });
+  sampler.onProgress = ((prev) => (id, done, total) => { if (prev) prev(id, done, total); if (!$('soundsPanel').hidden && done === total) renderSounds(); })(sampler.onProgress);
+  window.addEventListener('resize', () => { if (!$('soundsPanel').hidden) fitCanvases(); });
   loadSoundSettings();
 }

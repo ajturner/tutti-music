@@ -5,6 +5,7 @@ import { $, state } from './state.js';
 import { sendControl, openTracks } from './tracks.js';
 import { markEdited } from './storage.js';
 import { withSongUndo } from './edit.js';
+import { closePanel } from './panels.js';
 
 
 const KEY = 'tutti.mixer';
@@ -14,8 +15,8 @@ export function mixerDefault() {
   return window.innerWidth >= 1100;
 }
 export function setMixer(on) {
-  state.mixer = on; $('mixer').hidden = !on && state.view !== 'mixer'; $('mixerToggle').checked = on;
-  if (on && window.innerWidth < 760) { document.querySelector('header').classList.remove('open'); $('menuToggle').setAttribute('aria-expanded', 'false'); }   // phone: reveal the overlay
+  state.mixer = on; $('mixer').hidden = !on; $('mixerToggle').checked = on;
+  if (on && window.innerWidth < 760) closePanel();   // phone: reveal the overlay
   try { localStorage.setItem(KEY, on ? '1' : '0'); } catch { /* no storage */ }
   sig = ''; state.dirty = true;
 }
@@ -23,7 +24,7 @@ const vol = t => (t.volume == null ? 100 : t.volume), pan = t => (t.pan == null 
 const panText = v => v === 64 ? 'C' : v < 64 ? 'L' + (64 - v) : 'R' + (v - 64);
 // Called every frame; rebuilds only when something it shows has changed.
 export function syncMixer() {
-  if (!state.mixer && state.view !== 'mixer') return;
+  if (!state.mixer) return;
   const tracks = state.song.tracks, anySolo = tracks.some(t => t.solo);
   const s = tracks.map(t => [t.id, t.name, t.mute ? 1 : 0, t.solo ? 1 : 0, vol(t), pan(t)].join('|')).join(';') + '#' + state.cursor.track;
   if (s === sig) return; sig = s;
