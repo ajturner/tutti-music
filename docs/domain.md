@@ -63,7 +63,7 @@ One JSON document per song. Field names are the vocabulary above; nothing is abb
 }
 ```
 
-Rules the loader enforces, in this order: a song needs `tracks`, `patterns` and `arrangement`; an entry naming a missing pattern is dropped; a follows naming the entry's own pattern, a missing pattern or a missing chain is removed; a placement or link naming a missing phrase is removed; a phrase's `columns` may be fewer than the placing track's but never more (extra columns are dropped at render time with a status warning); `ticksPerRow` on a phrase lets it be placed in a pattern with a different row size, scaled as chained patterns are today.
+Rules the loader enforces, in this order: a song needs `tracks`, `patterns` and `arrangement`; an entry naming a missing pattern is dropped; a follows naming the entry's own pattern, a missing pattern or a missing chain is removed; a placement or link naming a missing phrase is removed; a phrase carries its own `columns`; placed on a track with fewer columns, the extra columns are dropped at render time with a status warning, and on a track with more they simply stay empty; `ticksPerRow` on a phrase lets it be placed in a pattern with a different row size, scaled as chained patterns are today.
 
 What changes from version 2, all deliberate: `order` → `arrangement`, entry `tracks` → `follows`, pattern `tracks` → `material`, `events` → `notes`, plus the new `phrases`, `chains` and `placements`. Version 1 and 2 files are refused with a message; the built-in examples are code and move with the app.
 
