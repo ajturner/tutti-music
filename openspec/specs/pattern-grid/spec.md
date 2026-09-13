@@ -57,7 +57,7 @@ Clicking or tapping a track's name in the header SHALL toggle that track's mute;
 - **THEN** Horns shows S and every other track is dimmed
 
 ### Requirement: Status line
-A status line SHALL show the cursor's track, column, row, the note under the cursor with velocity, length, and articulation, the instrument's articulation list with their digit keys, its range, the current octave and step, key, preview and MIDI state, playback state, and the latest message or warning. Clicking the preview segment SHALL open the Sounds panel and clicking the MIDI segment SHALL open the Connect panel.
+A status line SHALL show the cursor's track, column, row, the note under the cursor with velocity, length, and articulation, the instrument's articulation list with their digit keys, its range, the current octave and step, key, preview and MIDI state, playback state, and the latest message or warning. On a placement it SHALL read the phrase tag, the use count and the Enter hint; while a phrase is open it SHALL say so and that Escape returns. Clicking the preview segment SHALL open the Sounds panel and clicking the MIDI segment SHALL open the Connect panel.
 
 #### Scenario: Cursor on a note
 - **WHEN** the cursor sits on a G-5 with velocity 64 and length 16 rows
@@ -66,6 +66,10 @@ A status line SHALL show the cursor's track, column, row, the note under the cur
 #### Scenario: Open Connect from the status
 - **WHEN** the user clicks "MIDI off" in the status line
 - **THEN** the Connect panel opens
+
+#### Scenario: Cursor on a placement
+- **WHEN** the cursor is on a placement of Vamp transposed 5 and repeated 4 times, used twice
+- **THEN** the status reads "phrase Vamp +5 ×4 used 2× · Enter edits"
 
 ### Requirement: Column visibility
 The View panel SHALL show or hide the velocity, articulation, dynamics and fx cells for every track. Hidden cells SHALL leave the layout, cursor movement and selection indexing, their data SHALL be kept, and the choice SHALL persist per browser.

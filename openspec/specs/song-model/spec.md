@@ -9,11 +9,15 @@ The normative description of the file format is the JSON Schema at `schema/tutti
 ## Requirements
 
 ### Requirement: Song structure
-A song SHALL consist of a title, free-text notes, a base tempo in bpm, an ordered list of pattern indices (the song order), a list of patterns, and a list of tracks. A new song SHALL start with one pattern named "A", the order [0], tempo 100, and the default orchestral track list.
+A song SHALL have a title, a base tempo in bpm, an optional key, a list of bank ids, tracks, patterns, phrases and an arrangement (entries). Every pattern SHALL hold material per track keyed by track id: notes, dynamics and expression lanes, fx and placements. Field names follow docs/domain.md exactly.
+
+#### Scenario: Minimal song
+- **WHEN** a song has one pattern, one track and one entry
+- **THEN** it renders and saves with `arrangement`, `patterns[0].material` and `phrases` present
 
 #### Scenario: New song defaults
 - **WHEN** a user creates a new song
-- **THEN** it has one 64-row pattern, order [0], tempo 100 bpm, and the default tracks in score order
+- **THEN** it has one 64-row pattern, an arrangement of one entry playing pattern 0, no phrases, tempo 100 bpm, and the default tracks in score order
 
 ### Requirement: Timing units
 All timing SHALL be expressed in ticks at 960 pulses per quarter note (PPQ). A pattern SHALL declare its row count (1 to 512) and ticks per row, where 240 ticks is one sixteenth note. Positions inside a pattern are relative to the pattern start.
@@ -78,14 +82,18 @@ A song SHALL be serializable to JSON conforming to the published song schema, an
 - **THEN** it passes
 
 ### Requirement: Format identity
-A song object SHALL carry `format` equal to "tutti-song", an integer `version` (currently 2), and `$schema` pointing at the published song schema. Loading SHALL accept files that omit these fields, accept version 1 files, reject a different `format`, and reject a `version` newer than the app supports.
+Saved songs SHALL carry `format: "tutti-song"`, `version: 3` and the schema URL. Loading SHALL refuse files whose version is absent or below 3 with a message naming the version, refuse newer versions, refuse other formats, and fill missing optional fields: material lists, phrases, arrangement (entry 0 when empty). Placements naming a missing phrase SHALL be dropped and their transpose and repeat clamped.
+
+#### Scenario: Old file
+- **WHEN** a version 2 file is loaded
+- **THEN** the status says version 2 is older than the app reads and the current song is unchanged
 
 #### Scenario: Legacy file
-- **WHEN** a file saved before the format fields existed is loaded
-- **THEN** it loads, and the fields are present after the next save
+- **WHEN** a file that omits the version field (a version 1 file) is loaded
+- **THEN** loading fails with a message saying version 1 is older than the app reads
 
 #### Scenario: Newer version
-- **WHEN** a file with version 3 is loaded by a version 2 app
+- **WHEN** a file with version 4 is loaded by a version 3 app
 - **THEN** loading fails with a message naming the version
 
 ### Requirement: FX data
@@ -110,17 +118,25 @@ A song SHALL carry a `uid` string. New songs get a random one, built-in examples
 - **THEN** the song has a uid after loading
 
 ### Requirement: Order entries
-Each entry in the song order SHALL name a pattern, a repeat count (1 to 64, default 1), and an optional map from track id to another pattern that the track follows for that entry. A plain integer SHALL be accepted as an entry that plays once. Entries naming a missing pattern SHALL be dropped on load, and a track mapping to the entry's own pattern or a missing pattern SHALL be removed.
+Each entry in the arrangement SHALL name a pattern, a repeat count (1 to 64, default 1), and `follows`: an optional map from track id to another pattern index that the track follows for that entry. In code a plain integer is accepted as an entry that plays once. Entries naming a missing pattern SHALL be dropped, and a follows naming the entry's own pattern or a missing pattern SHALL be removed.
+
+#### Scenario: Integer entries in code
+- **WHEN** an example sets the arrangement to [0, 1, 0]
+- **THEN** it becomes three entries with repeat 1 and no follows
 
 #### Scenario: Version 1 order
-- **WHEN** a file with order [0, 1, 0] is loaded
-- **THEN** it becomes three entries with repeat 1 and no chains, and plays as before
+- **WHEN** a version 1 file with an `order` list is loaded
+- **THEN** it is refused as older than format 3; only `arrangement` entries are read
 
 ### Requirement: Chained track data
-A track following another pattern SHALL play that pattern's notes, lanes and fx repeated to fill the entry's length and cut at its end, with ticks scaled when the two patterns' row sizes differ.
+A track following another pattern SHALL play that pattern's material with placements expanded, repeated to fill the entry's length and cut at its end, with ticks scaled when the two patterns' row sizes differ.
+
+#### Scenario: Pattern of placements
+- **WHEN** the bass follows a 64-row pattern holding four placements of one riff and the entry repeats twice
+- **THEN** the riff plays eight times with the placements' transposes
 
 #### Scenario: Ostinato under a melody
-- **WHEN** a 16-row pattern is chained onto the Basses track of a 64-row entry
+- **WHEN** Basses follow a 16-row pattern during a 64-row entry
 - **THEN** the bass figure sounds four times under the entry
 
 ### Requirement: Song banks
