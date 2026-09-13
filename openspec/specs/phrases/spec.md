@@ -1,7 +1,7 @@
 # phrases Specification
 
 ## Purpose
-TBD - created by archiving change phrases. Update Purpose after archive.
+Lets a composer write a figure once and play it in many places: a phrase is one track's reusable material, a placement plays it at a row with a transpose and a repeat, and editing the phrase changes every placement. Together with a track following a pattern of placements this is how a song grows from patterns into a composition (docs/domain.md).
 
 ## Requirements
 
