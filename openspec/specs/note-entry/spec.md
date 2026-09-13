@@ -18,11 +18,15 @@ On a note cell, the bottom two keyboard rows (Z to /) SHALL enter notes chromati
 - **THEN** the cursor stays on the same row
 
 ### Requirement: Octave and step
-The minus and equals keys SHALL lower and raise the entry octave (0 to 8). With Shift they SHALL lower and raise the step (0 to 64). A new note SHALL last step rows, at least one.
+The minus and equals keys SHALL lower and raise the entry octave (0 to 8). With Shift they SHALL lower and raise the step (0 to 64). A new note SHALL last step rows, at least one. The status line SHALL show both values; the pad SHALL offer buttons for them; there are no header fields for them.
 
 #### Scenario: Raise octave
 - **WHEN** the user presses = with octave 4
 - **THEN** octave becomes 5 and the status shows it
+
+#### Scenario: Step in the status
+- **WHEN** the user presses ⇧= with step 4
+- **THEN** the status shows step 5
 
 ### Requirement: Hex and decimal fields
 Velocity and dynamics cells SHALL accept two hex digits typed in sequence into the same cell; the first digit replaces the value and the second completes it. Tempo SHALL accept up to three decimal digits. Values are clamped to velocity 1 to 127, dynamics 0 to 127, tempo 20 to 300. Moving the cursor ends the typing sequence.
