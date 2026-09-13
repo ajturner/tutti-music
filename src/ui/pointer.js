@@ -1,6 +1,6 @@
 // Mouse and touch on the grid: tap, drag to scroll or select, long-press to clear, wheel.
 import { clamp } from '../core/constants.js';
-import { canvas, curPat, state, view } from './state.js';
+import { canvas, curPat, state, view, tracksShown } from './state.js';
 import { moveRow } from './edit.js';
 import { cellIndex, cursorIndex, deselect, selUpdate } from './selection.js';
 import { clearCell } from './edit.js';
@@ -71,13 +71,13 @@ canvas.addEventListener('pointermove', e => {
   state.dirty = true;
 });
 // Solo is a performance toggle: with any track soloed, only soloed tracks sound.
-export function toggleSolo(ti) { const tr = state.song.tracks[ti]; tr.solo = !tr.solo; state.dirty = true; }
+export function toggleSolo(ti) { const tr = tracksShown()[ti]; tr.solo = !tr.solo; state.dirty = true; }
 export function endDrag(e) {
   if (!drag || e.pointerId !== drag.id) return;
   clearTimeout(drag.timer);
   if (!drag.moved && !drag.done && e.type === 'pointerup') {
     const hit = hitTest(e.offsetX, e.offsetY);
-    if (hit && hit.header) { if (hit.track >= 0) { if (drag.shift) toggleSolo(hit.track); else { state.song.tracks[hit.track].mute = !state.song.tracks[hit.track].mute; state.dirty = true; } } }
+    if (hit && hit.header) { if (hit.track >= 0) { if (drag.shift) toggleSolo(hit.track); else { const t = tracksShown()[hit.track]; t.mute = !t.mute; state.dirty = true; } } }
     else if (hit) placeCursor(hit, drag.shift);
   }
   drag = null; state.topLock = null; state.dirty = true;

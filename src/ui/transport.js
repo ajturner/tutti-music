@@ -1,13 +1,16 @@
 // Play pattern, play song, stop.
 import { renderSong, rowTicks } from '../core/render.js';
-import { curPat, sched, state, synth, preloadSamples } from './state.js';
+import { curPat, curPhrase, sched, state, synth, preloadSamples } from './state.js';
 import { withUndo } from './edit.js';
 
 // ---- Transport ----------------------------------------------------------------------------
 export function playPattern(fromCursor) {
   if (state.preview) { synth.ensure(); preloadSamples(); }
-  const r = renderSong(state.song, { patterns: [state.pat] });
-  sched.play(state.song, r, { loop: true, startTick: fromCursor ? rowTicks(curPat())[state.cursor.row] : 0 });
+  // While a phrase is open the loop is the phrase alone, on its track, through a stand-in pattern.
+  const song = curPhrase() ? Object.assign({}, state.song, { patterns: [curPat()], arrangement: [{ pattern: 0, repeat: 1, follows: {} }] }) : state.song;
+  const r = renderSong(song, { patterns: [curPhrase() ? 0 : state.pat] });
+  if (curPhrase()) r.phrase = curPhrase().id;
+  sched.play(song, r, { loop: true, startTick: fromCursor ? rowTicks(curPat())[state.cursor.row] : 0 });
   state.queued = null;
   state.dirty = true;
 }

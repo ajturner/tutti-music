@@ -1,9 +1,9 @@
 // Headless tests of the core: it must import and run under Node with no DOM.
 import { PPQ, noteName, clamp, GM_DRUMS } from '../src/core/constants.js';
 import { INSTRUMENTS, INST } from '../src/core/instruments.js';
-import { newSong, newPattern, patTrack, laneSet, laneValueAt, normalizeSong, SONG_FORMAT } from '../src/core/song.js';
+import { newSong, newPattern, materialOf, laneSet, laneValueAt, normalizeSong, SONG_FORMAT, SONG_VERSION, newPhrase, makePhrase, detachPlacement, expandMaterial, placementAt, phraseUses, removePhrase } from '../src/core/song.js';
 import { renderSong, TimeMap, TYPE_ORDER, rowTicks, tickMapper, rowAtTick, applyFx, expShape } from '../src/core/render.js';
-import { addTrack, removeTrack, moveTrack, setTrackInstrument, freeChannel, normalizeOrder, orderText, parseOrderText, trackDataFor } from '../src/core/song.js';
+import { addTrack, removeTrack, moveTrack, setTrackInstrument, freeChannel, normalizeArrangement, arrangementText, parseArrangementText, materialFor, entries } from '../src/core/song.js';
 import { inScale, transposeDiatonic, snapToScale, degreeOf, effectiveKey } from '../src/core/scales.js';
 import { Scheduler } from '../src/core/scheduler.js';
 import { pickZones } from '../src/core/sampler.js';
@@ -44,12 +44,13 @@ check('lane: step holds', laneValueAt(pts, 480) === 40);
 
 // New song and normalisation
 const song = newSong();
-check('newSong carries format marker and uid', song.format === SONG_FORMAT && song.version === 2 && song.$schema.endsWith('tutti-song.schema.json') && typeof song.uid === 'string' && song.uid.length > 8);
-const legacy = JSON.parse(JSON.stringify(song)); delete legacy.format; delete legacy.version; delete legacy.$schema; delete legacy.patterns[0].meter;
-const norm = normalizeSong(legacy, 'x');
-check('normalizeSong fills legacy fields', norm.format === SONG_FORMAT && norm.version === 2 && norm.patterns[0].meter[0] === 4 && typeof norm.order[0] === 'object');
+check('newSong carries format marker and uid', song.format === SONG_FORMAT && song.version === 3 && SONG_VERSION === 3 && song.$schema.endsWith('tutti-song.schema.json') && typeof song.uid === 'string' && song.uid.length > 8 && Array.isArray(song.phrases) && song.arrangement[0].pattern === 0);
+const sparse = JSON.parse(JSON.stringify(song)); delete sparse.$schema; delete sparse.patterns[0].meter; delete sparse.phrases; delete sparse.arrangement; delete sparse.patterns[0].material;
+const norm = normalizeSong(sparse, 'x');
+check('normalizeSong fills missing version-3 fields', norm.format === SONG_FORMAT && norm.version === 3 && norm.patterns[0].meter[0] === 4 && norm.arrangement.length === 1 && norm.arrangement[0].pattern === 0 && Array.isArray(norm.phrases) && typeof norm.patterns[0].material === 'object');
 let threw = false; try { normalizeSong({ title: 'nope' }); } catch { threw = true; }
 check('normalizeSong rejects non-songs', threw);
+for (const v of [undefined, 1, 2]) { let msg = ''; try { const o = JSON.parse(JSON.stringify(song)); o.version = v; if (v === undefined) delete o.version; normalizeSong(o); } catch (e) { msg = e.message; } check('normalizeSong refuses version ' + (v || 1) + ' files', /older than this app/.test(msg), msg); }
 
 // Rendering rules
 const pat = song.patterns[0], tpr = pat.ticksPerRow;
@@ -146,7 +147,7 @@ check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[1
   check('fx: ARP 47 cycles root, +4, +7 per row', arp.length === 2 && arp[0].pitch === 60 && arp[1].pitch === 64);
   const s = newSong(), p = s.patterns[0];
   line(p, 'tp', 0, 0, 4, 'C5 C5 C5 C5');
-  p.tracks.tp.fx = [{ tick: 4 * tpr, cmd: 'TSP', value: 0xF9 }, { tick: 12 * tpr, cmd: 'TSP', value: 0 }, { tick: 8 * tpr, cmd: 'CHA', value: 0 }];
+  p.material.tp.fx = [{ tick: 4 * tpr, cmd: 'TSP', value: 0xF9 }, { tick: 12 * tpr, cmd: 'TSP', value: 0 }, { tick: 8 * tpr, cmd: 'CHA', value: 0 }];
   const ons = renderSong(s, { random: () => 0.5 }).events.filter(e => e.track === 'tp' && e.type === 'on');
   check('fx: TSP persists until the next TSP, CHA 00 drops a row', ons.map(e => e.pitch).join(',') === '72,65,72' , ons.map(e => e.pitch).join(','));
 }
@@ -158,7 +159,7 @@ check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[1
   check('exp: fade in and out', expShape(3, 1, 0) === 0 && expShape(3, 1, 1) === 1 && expShape(4, 1, 0) === 1 && expShape(4, 1, 1) === 0);
   const s = newSong(), p = s.patterns[0], tpr = p.ticksPerRow;
   line(p, 'vc', 0, 0, 16, 'C3');
-  p.tracks.vc.fx = [{ tick: 0, cmd: 'EXP', value: 0x1F }];
+  p.material.vc.fx = [{ tick: 0, cmd: 'EXP', value: 0x1F }];
   const r = renderSong(s);
   const cc11 = r.events.filter(e => e.track === 'vc' && e.type === 'cc' && e.cc === 11).map(e => e.value);
   check('exp: EXP renders an expression curve inside the note', cc11.length > 10 && cc11[0] < 40 && Math.max(...cc11) === 127 && cc11[cc11.length - 1] === 127, cc11.slice(0, 5).join(',') + ' ... n=' + cc11.length);
@@ -176,36 +177,78 @@ check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[1
   check('tracks: add gives a unique id and free channel', t.id === 'flute' && addTrack(s, 'flute').id === 'flute-2' && t.channel === 15 && s.tracks.length === n + 2);
   removeTrack(s, 'flute-2');
   line(s.patterns[0], t.id, 0, 0, 4, 'C5@stc');
-  check('tracks: set instrument drops unsupported articulations', setTrackInstrument(s, t.id, 'timpani') && s.patterns[0].tracks[t.id].events[0].art === 'stc' && setTrackInstrument(s, t.id, 'synth-bass') && s.patterns[0].tracks[t.id].events[0].art === 'stc');
-  setTrackInstrument(s, t.id, 'violins-1'); s.patterns[0].tracks[t.id].events[0].art = 'piz'; setTrackInstrument(s, t.id, 'flute');
-  check('tracks: piz falls back on flute', s.patterns[0].tracks[t.id].events[0].art === null);
+  check('tracks: set instrument drops unsupported articulations', setTrackInstrument(s, t.id, 'timpani') && s.patterns[0].material[t.id].notes[0].art === 'stc' && setTrackInstrument(s, t.id, 'synth-bass') && s.patterns[0].material[t.id].notes[0].art === 'stc');
+  setTrackInstrument(s, t.id, 'violins-1'); s.patterns[0].material[t.id].notes[0].art = 'piz'; setTrackInstrument(s, t.id, 'flute');
+  check('tracks: piz falls back on flute', s.patterns[0].material[t.id].notes[0].art === null);
   check('tracks: move', moveTrack(s, n, -1) && s.tracks[n - 1].id === t.id && !moveTrack(s, 0, -1));
-  check('tracks: remove drops pattern data', removeTrack(s, t.id) && !s.tracks.some(x => x.id === t.id) && !s.patterns[0].tracks[t.id]);
+  check('tracks: remove drops pattern material', removeTrack(s, t.id) && !s.tracks.some(x => x.id === t.id) && !s.patterns[0].material[t.id]);
 }
 
-// Order entries, repeats and chains
+// Arrangement: entries, repeats and follows
 {
   const s = newSong(); const B = newPattern('B', 16, 240); s.patterns.push(B);
   line(s.patterns[0], 'fl', 0, 0, 16, 'C5 D5 E5 F5');      // 4-bar melody
   line(B, 'cb', 0, 0, 4, 'A1 . E2 .');                      // 1-bar bass figure
-  s.order = [0, 1, 0];
-  const o = normalizeOrder(s);
-  check('order: integers normalise to entries', o.length === 3 && o[0].pattern === 0 && o[0].repeat === 1 && Object.keys(o[0].tracks).length === 0);
-  s.order[0].repeat = 2; s.order[0].tracks = { cb: 1 };
-  check('order: text form', orderText(s) === '0x2 1 0');
-  const parsed = parseOrderText('0x3 0 1', s);
-  check('order: parse keeps chains on unchanged positions', parsed[0].repeat === 3 && parsed[0].tracks.cb === 1 && parsed[1].tracks.cb == null && parsed.length === 3);
-  const td = trackDataFor(s, s.order[0], 'cb');
-  check('chain: short pattern loops to fill the entry', td.events.length === 8 && td.events[7].tick === 13440 && td.events.every(e => e.tick + e.len <= 64 * 240), JSON.stringify(td.events.map(e => e.tick)));
+  s.arrangement = [0, 1, 0];
+  const o = normalizeArrangement(s);
+  check('arrangement: integers normalise to entries', o.length === 3 && o[0].pattern === 0 && o[0].repeat === 1 && Object.keys(o[0].follows).length === 0);
+  s.arrangement[0].repeat = 2; s.arrangement[0].follows = { cb: 1 };
+  check('arrangement: text form', arrangementText(s) === '0x2 1 0');
+  const parsed = parseArrangementText('0x3 0 1', s);
+  check('arrangement: parse keeps follows on unchanged positions', parsed[0].repeat === 3 && parsed[0].follows.cb === 1 && parsed[1].follows.cb == null && parsed.length === 3);
+  const td = materialFor(s, s.arrangement[0], 'cb');
+  check('follows: short pattern loops to fill the entry', td.notes.length === 8 && td.notes[7].tick === 13440 && td.notes.every(e => e.tick + e.len <= 64 * 240), JSON.stringify(td.notes.map(e => e.tick)));
   const r = renderSong(s);
   const cbOns = r.events.filter(e => e.track === 'cb' && e.type === 'on');
   const flOns = r.events.filter(e => e.track === 'fl' && e.type === 'on');
-  check('chain: render length is entries × repeats', r.lengthTicks === (64 * 2 + 16 + 64) * 240 && r.starts.length === 4 && r.starts[1].repeat === 1);
-  check('chain: bass figure sounds eight times across the repeated entry, melody twice', cbOns.filter(e => e.tick < 128 * 240).length === 16 && flOns.filter(e => e.tick < 128 * 240).length === 8, cbOns.length + ' ' + flOns.length);
-  check('chain: entry 2 plays pattern B itself', r.starts[2].pattern === 1 && r.starts[2].tick === 128 * 240);
-  const st = newSong(); st.order = [{ pattern: 5 }, 0, { pattern: 0, tracks: { fl: 0, ob: 9 } }];
-  normalizeOrder(st);
-  check('order: invalid patterns and self/missing chains are dropped', st.order.length === 2 && Object.keys(st.order[1].tracks).length === 0);
+  check('follows: render length is entries × repeats', r.lengthTicks === (64 * 2 + 16 + 64) * 240 && r.starts.length === 4 && r.starts[1].repeat === 1);
+  check('follows: bass figure sounds eight times across the repeated entry, melody twice', cbOns.filter(e => e.tick < 128 * 240).length === 16 && flOns.filter(e => e.tick < 128 * 240).length === 8, cbOns.length + ' ' + flOns.length);
+  check('follows: entry 2 plays pattern B itself', r.starts[2].pattern === 1 && r.starts[2].tick === 128 * 240);
+  const st = newSong(); st.arrangement = [{ pattern: 5 }, 0, { pattern: 0, follows: { fl: 0, ob: 9 } }];
+  normalizeArrangement(st);
+  check('arrangement: invalid patterns and self or missing follows are dropped', st.arrangement.length === 2 && Object.keys(st.arrangement[1].follows).length === 0);
+  check('arrangement: entries() helper', entries(0, { pattern: 1, repeat: 3 }).map(e => e.pattern + 'x' + e.repeat).join(' ') === '0x1 1x3');
+}
+
+// Phrases and placements
+{
+  const s = newSong(); const A = s.patterns[0], tpr = A.ticksPerRow;
+  line(A, 'fl', 0, 4, 2, 'C5 D5 E5 F5 G5 A5 B5 C6');       // 16 rows of tune from row 4
+  line(A, 'fl', 0, 0, 1, 'G4 A4 B4');                       // pickup on rows 0-2
+  laneSet(materialOf(A, 'fl').dyn, 8 * tpr, 90);
+  const ph = makePhrase(s, A, 'fl', 4, 19, 'Reel A');
+  const m = A.material.fl;
+  check('phrase: made from rows keeps the pickup loose and moves the tune', ph.id === 'reel-a' && ph.rows === 16 && ph.columns === 1 && ph.material.notes.length === 8 && ph.material.notes[0].tick === 0 && m.notes.length === 3 && m.placements.length === 1 && m.placements[0].row === 4 && ph.material.dyn.length === 1 && ph.material.dyn[0].tick === 4 * tpr && m.dyn.length === 0, JSON.stringify(m.placements));
+  m.placements.push({ phrase: ph.id, row: 36, transpose: 12, repeat: 1 });
+  m.placements.push({ phrase: ph.id, row: 56, transpose: 0, repeat: 2 });   // runs past the end: clipped
+  const x = expandMaterial(s, A, 'fl');
+  const placed = x.notes.filter(n => n.placed);
+  check('phrase: expansion places notes, transposes and clips at the pattern end', placed.length === 8 + 8 + 4 && placed.some(n => n.tick === 36 * tpr && n.pitch === 84) && placed.every(n => n.tick + n.len <= 64 * tpr) && x.notes.length === 23, placed.length + ' ' + x.notes.length);
+  const at = placementAt(s, A, 'fl', 40);
+  check('phrase: placementAt finds the covering placement and its rows', at && at.r0 === 36 && at.r1 === 51 && at.phrase === ph && !at.first && placementAt(s, A, 'fl', 36).first && placementAt(s, A, 'fl', 3) === null);
+  check('phrase: uses are counted across placements', phraseUses(s, ph.id) === 3);
+  const r = renderSong(s, { patterns: [0] });
+  const ons = r.events.filter(e => e.track === 'fl' && e.type === 'on');
+  check('phrase: renderer plays loose notes and placements together', ons.length === 23 && ons.some(e => e.tick === 36 * tpr && e.pitch === 84), ons.length);
+  const two = newPhrase(s, 'Two', 4, tpr, 2); two.material.notes.push({ tick: 0, len: tpr, pitch: 60, vel: 100, col: 0, art: null }, { tick: 0, len: tpr, pitch: 64, vel: 100, col: 1, art: null });
+  A.material.ob = { notes: [], dyn: [], expr: [], fx: [], placements: [{ phrase: 'two', row: 0 }] };
+  const ob1 = materialFor(s, s.arrangement[0], 'ob', 1), ob2 = materialFor(s, s.arrangement[0], 'ob', 2);
+  check('phrase: columns beyond the track are dropped, within it kept', ob1.notes.length === 1 && ob2.notes.length === 2);
+  const eighth = newPhrase(s, 'Eighths', 4, 480, 1); eighth.material.notes.push({ tick: 0, len: 480, pitch: 60, vel: 100, col: 0, art: null }, { tick: 480, len: 480, pitch: 62, vel: 100, col: 0, art: null });
+  A.material.cl = { notes: [], dyn: [], expr: [], fx: [], placements: [{ phrase: 'eighths', row: 0 }] };
+  const cl = expandMaterial(s, A, 'cl');
+  check('phrase: ticks scale to the pattern row size', cl.notes[1].tick === 240 && cl.notes[1].len === 240, JSON.stringify(cl.notes.map(n => [n.tick, n.len])));
+  check('phrase: detach', detachPlacement(s, A, 'fl', 1) && m.placements.length === 2 && m.notes.length === 11 && m.notes.filter(n => n.tick >= 36 * tpr && n.tick < 52 * tpr).length === 8 && !m.notes.some(n => n.placed));
+  check('phrase: remove detaches remaining uses', removePhrase(s, ph.id) && !s.phrases.some(p => p.id === ph.id) && m.placements.length === 0 && m.notes.length === 11 + 8 + 4);
+  const W = newPattern('Bass walk', 32, tpr); s.patterns.push(W);
+  const riff = newPhrase(s, 'Riff', 8, tpr, 1); line({ ticksPerRow: tpr, rows: 8, material: { cb: riff.material } }, 'cb', 0, 0, 2, 'A1 A1 E2 A1');
+  W.material.cb = { notes: [], dyn: [], expr: [], fx: [], placements: [{ phrase: 'riff', row: 0, repeat: 2 }, { phrase: 'riff', row: 16, transpose: 5 }, { phrase: 'riff', row: 24, transpose: 7 }] };
+  s.arrangement = [{ pattern: 0, repeat: 2, follows: { cb: 1 } }];
+  const rr = renderSong(s), cb = rr.events.filter(e => e.track === 'cb' && e.type === 'on');
+  check('follows: a pattern of placements loops under the entry', cb.length === 4 * 4 * 2 * 2 && cb.some(e => e.tick === 16 * tpr && e.pitch === 33 + 5) && cb.some(e => e.tick === 24 * tpr && e.pitch === 33 + 7), cb.length);
+  const loaded = normalizeSong(JSON.parse(JSON.stringify(Object.assign({}, s, { patterns: [Object.assign({}, A, { material: { fl: { notes: [], placements: [{ phrase: 'ghost', row: 0 }, { phrase: 'two', row: 3, transpose: 99, repeat: 0 }] } } })] }))));
+  const lp = loaded.patterns[0].material.fl.placements;
+  check('loader: placements of missing phrases dropped, transpose and repeat clamped', lp.length === 1 && lp[0].transpose === 48 && lp[0].repeat === 1, JSON.stringify(lp));
 }
 
 // Scheduler: solo gating and live queue
@@ -298,7 +341,7 @@ for (const b of ['jazz', 'folk', 'electronica']) installBank(JSON.parse(await re
 check('examples: one showcase per bundled bank', ['jazz', 'folk', 'electronica'].every(b => EXAMPLES.some(e => e.build().banks.includes(b) && e.title.toLowerCase().includes(b))));
 for (const ex of EXAMPLES) {
   const s0 = ex.build(); const problems = [];
-  for (const t of s0.tracks) { const ins = INST[t.instrument]; const evs = s0.patterns.flatMap(p => (p.tracks[t.id] || { events: [] }).events); if (!ins || !evs.length) continue;
+  for (const t of s0.tracks) { const ins = INST[t.instrument]; const evs = s0.patterns.flatMap(p => (expandMaterial(s0, p, t.id, 4) || { notes: [] }).notes); if (!ins || !evs.length) continue;
     for (const e of evs) { if (e.pitch < ins.range[0] || e.pitch > ins.range[1]) { problems.push(t.id + ' ' + e.pitch); break; } if (ins.kit && !ins.kit[e.pitch]) { problems.push(t.id + ' unmapped ' + e.pitch); break; } } }
   check('example in range: ' + ex.title, problems.length === 0, problems.join(', '));
 }

@@ -3,7 +3,7 @@ import { rowTicks, rowAtTick } from '../core/render.js';
 import { putNote, noteAt, maxLength } from '../core/edit.js';
 import { markEdited } from './storage.js';
 import { INST } from '../core/instruments.js';
-import { laneSet, patTrack } from '../core/song.js';
+import { laneSet, materialOf } from '../core/song.js';
 import { $, auditionPreview, curPat, curTrack, midi, sched, state } from './state.js';
 import { currentCell } from './layout.js';
 import { enterPitch, moveRow } from './edit.js';
@@ -46,7 +46,7 @@ export function onMidiMessage(e) {
   else if (type === 0xB0 && d1 === 64 && d2 >= 64) moveRow(Math.max(1, state.step));
   else if (type === 0xB0 && d1 === 1) {
     const tr = curTrack(); if (!tr) return;
-    const pat = curPat(); laneSet(patTrack(pat, tr.id).dyn, state.cursor.row * pat.ticksPerRow, d2); state.dirty = true;
+    const pat = curPat(); laneSet(materialOf(pat, tr.id).dyn, state.cursor.row * pat.ticksPerRow, d2); state.dirty = true;
   }
 }
 export function recordPitch(pitch, vel) {

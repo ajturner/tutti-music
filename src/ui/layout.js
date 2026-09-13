@@ -1,6 +1,6 @@
 // Grid geometry: cell positions per track and the cell under the cursor.
 import { clamp } from '../core/constants.js';
-import { PAD, state, view } from './state.js';
+import { PAD, state, tracksShown, view } from './state.js';
 
 // ---- Layout -----------------------------------------------------------------------
 // The visible cells of a track, in order: per note column a note and (if shown) a velocity cell, then
@@ -20,7 +20,7 @@ export function computeLayout() {
   const cw = view.charW;
   const gutter = { rowX: PAD, tempoX: PAD + cw * 4.5, w: PAD + cw * 10 };
   let x = gutter.w, g = 1;
-  const tracks = state.song.tracks.map(tr => {
+  const tracks = tracksShown().map(tr => {
     const cells = []; let cx = x;
     for (const k of cellKinds(tr)) { cells.push({ kind: k.kind, col: k.col, x: cx, w: CELL_W[k.kind] * cw }); cx += (CELL_W[k.kind] + CELL_GAP[k.kind]) * cw; }
     cx += 0.5 * cw;

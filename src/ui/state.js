@@ -44,6 +44,7 @@ export const state = {
   clipboard: null,
   queued: null,
   mixer: false,          // mixer sidebar shown
+  phraseEdit: null,      // { id, trackId, back:{ pat, row, track, cell, scrollX } } while a phrase is open in the grid
   panel: null,           // open workflow panel: 'song' | 'compose' | 'sounds' | 'connect' | 'view' | null
   record: false,         // real-time MIDI record while the pattern loops
   show: { vel: true, art: true, dyn: true, fx: true },   // grid columns shown per track (note columns always)
@@ -84,8 +85,21 @@ sched.onStop = () => { state.dirty = true; };
 export const $ = id => document.getElementById(id);
 export const canvas = $('grid'), ctx = canvas.getContext('2d');
 
-export const curPat = () => state.song.patterns[state.pat];
-export const curTrack = () => state.cursor.track >= 0 ? state.song.tracks[state.cursor.track] : null;
+// The phrase open in the grid, if any. While editing a phrase the grid shows a stand-in pattern that holds
+// the phrase's material on its one track, so every editing path works unchanged on the phrase.
+export const curPhrase = () => state.phraseEdit ? (state.song.phrases || []).find(p => p.id === state.phraseEdit.id) || null : null;
+let phraseStandIn = null;
+export function curPat() {
+  const ph = curPhrase();
+  if (!ph) return state.song.patterns[state.pat];
+  const host = state.song.patterns[state.pat] || {};
+  if (!phraseStandIn || phraseStandIn.phrase !== ph) phraseStandIn = { phrase: ph, name: ph.name, rows: ph.rows, ticksPerRow: ph.ticksPerRow, meter: patMeter(host), groove: [], key: host.key || null, tempo: [], material: { [state.phraseEdit.trackId]: ph.material } };
+  phraseStandIn.rows = ph.rows; phraseStandIn.name = ph.name; phraseStandIn.ticksPerRow = ph.ticksPerRow; phraseStandIn.material[state.phraseEdit.trackId] = ph.material;
+  return phraseStandIn;
+}
+// The tracks the grid shows: every track, or only the phrase's track while a phrase is open.
+export const tracksShown = () => state.phraseEdit ? state.song.tracks.filter(t => t.id === state.phraseEdit.trackId) : state.song.tracks;
+export const curTrack = () => state.cursor.track >= 0 ? tracksShown()[state.cursor.track] || null : null;
 export const activeKey = () => effectiveKey(state.song, curPat());
 export const rowsPerBeat = () => { const [, unit] = patMeter(curPat()); return Math.max(1, Math.round(PPQ * 4 / unit / curPat().ticksPerRow)); };
 export const rowsPerBar = () => patMeter(curPat())[0] * rowsPerBeat();

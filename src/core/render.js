@@ -1,7 +1,7 @@
 // Render a song to a flat, absolute-tick event list and map ticks to milliseconds under a changing tempo.
 import { PPQ, clamp } from './constants.js';
 import { INST } from './instruments.js';
-import { laneValueAt, normalizeOrder, orderEntry, trackDataFor } from './song.js';
+import { laneValueAt, normalizeArrangement, entryOf, materialFor } from './song.js';
 
 // ---- Render: song -> flat, absolute-tick event list --------------------------
 // Event types: 'ks' keyswitch, 'cc' controller, 'off' note off, 'on' note on. Order at equal tick matters:
@@ -64,7 +64,7 @@ export function rowAtTick(pat, tick) {
 }
 
 // ---- FX column --------------------------------------------------------------------------------
-// One command per row per track (pattern.tracks[id].fx = [{ tick, cmd, value }], value 0-255):
+// One command per row per track (pattern.material[id].fx = [{ tick, cmd, value }], value 0-255):
 //   CHA  chance the notes on this row play, value/255 (FF always, 80 about half)
 //   RET  retrigger: play each note on this row `value` times, evenly across its length
 //   DEL  delay the notes on this row by value/256 of a row (humanise, play behind the beat)
@@ -113,7 +113,7 @@ export function applyFx(note, fx, transpose, tpr, random) {
 }
 
 export function renderSong(song, opts = {}) {
-  const entries = opts.patterns ? opts.patterns.map(orderEntry) : normalizeOrder(song);
+  const entries = opts.patterns ? opts.patterns.map(entryOf) : normalizeArrangement(song);
   const random = opts.random || Math.random;
   const events = [], tempo = [{ tick: 0, bpm: song.bpm }], starts = [];
   let offset = 0;
@@ -122,7 +122,7 @@ export function renderSong(song, opts = {}) {
   for (const { e, ei, k } of plays) {
     const pi = e.pattern, pat = song.patterns[pi];
     const len = pat.rows * pat.ticksPerRow, tpr = pat.ticksPerRow, map = tickMapper(pat);
-    starts.push({ pattern: pi, tick: offset, rows: pat.rows, ticksPerRow: tpr, groove: !!grooveOf(pat), entry: ei, repeat: k, tracks: e.tracks });
+    starts.push({ pattern: pi, tick: offset, rows: pat.rows, ticksPerRow: tpr, groove: !!grooveOf(pat), entry: ei, repeat: k, follows: e.follows });
     renderLane(pat.tempo, len, offset, (t, v) => tempo.push({ tick: offset + map(t - offset), bpm: v }), fmtBpm);
     for (const tr of song.tracks) {
       const ins = INST[tr.instrument];
@@ -130,9 +130,9 @@ export function renderSong(song, opts = {}) {
         events.push({ tick: 0, type: 'cc', track: tr.id, cc: 7, value: fmtCC(tr.volume == null ? 100 : tr.volume) });
         events.push({ tick: 0, type: 'cc', track: tr.id, cc: 10, value: fmtCC(tr.pan == null ? 64 : tr.pan) });
       }
-      const pt = trackDataFor(song, e, tr.id);
+      const pt = materialFor(song, e, tr.id, tr.columns || 1);
       if (!pt) continue;
-      const evs = pt.events.slice().sort((a, b) => a.tick - b.tick || a.col - b.col);
+      const evs = pt.notes.slice().sort((a, b) => a.tick - b.tick || a.col - b.col);
       const fx = (pt.fx || []).slice().sort((a, b) => a.tick - b.tick);
       const tsp = fx.filter(f => f.cmd === 'TSP');
       const open = {};            // pitch -> the pending 'off' event, so same-pitch overlaps truncate

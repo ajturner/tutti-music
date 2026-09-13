@@ -1,11 +1,11 @@
 // Keep the song and pattern controls in the header in step with the state.
 import { KEY_ROOTS, SCALE_NAMES } from '../core/scales.js';
-import { orderText } from '../core/song.js';
+import { arrangementText, phraseUses } from '../core/song.js';
 import { updateLocation } from './session.js';
 import { syncArranger } from './arranger.js';
 import { clamp } from '../core/constants.js';
 import { patMeter } from '../core/song.js';
-import { $, curPat, state } from './state.js';
+import { $, curPat, curPhrase, state } from './state.js';
 
 // ---- Toolbar wiring -------------------------------------------------------------------------
 export const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -56,16 +56,31 @@ export function syncPatternUI() {
   sel.value = state.pat;
   const pm = patMeter(curPat());
   sel.title = 'Pattern ' + state.pat + ' ' + curPat().name + ': ' + curPat().rows + ' rows, ' + pm[0] + '/' + pm[1] + ' (settings in Compose)';
-  document.querySelector('.patset').dataset.label = 'pattern ' + state.pat + ' ' + curPat().name;
+  const ph = curPhrase();
+  document.querySelector('.patset').dataset.label = ph ? 'phrase ' + ph.name + ' (Esc returns)' : 'pattern ' + state.pat + ' ' + curPat().name;
+  syncPhrases();
   $('rows').value = curPat().rows;
   $('tpr').value = curPat().ticksPerRow;
   $('meterNum').value = patMeter(curPat())[0];
   $('meterDen').value = patMeter(curPat())[1];
-  $('order').value = orderText(state.song);
+  $('order').value = arrangementText(state.song);
   $('bpm').value = state.song.bpm;
   state.cursor.row = clamp(state.cursor.row, 0, curPat().rows - 1);
   syncGrooveUI();
   syncKeyUI();
   syncArranger();
   updateLocation();
+}
+
+// Compose → phrases: one row per phrase with its size and use count. Hidden until the song has a phrase.
+export function syncPhrases() {
+  const grp = document.querySelector('.phrasegrp'), body = $('phrasesBody'); if (!grp || !body) return;
+  const list = state.song.phrases || [];
+  grp.hidden = list.length === 0;
+  const sig = list.map(p => [p.id, p.name, p.rows, p.columns, phraseUses(state.song, p.id)].join('|')).join(';') + '#' + (state.phraseEdit ? state.phraseEdit.id : '');
+  if (body.dataset.sig === sig) return; body.dataset.sig = sig;
+  body.innerHTML = list.map(p => `<tr data-id="${p.id}"${state.phraseEdit && state.phraseEdit.id === p.id ? ' class="cur"' : ''}>
+    <td><input data-f="name" type="text" value="${esc(p.name)}" size="12" title="Rename the phrase"></td>
+    <td>${p.rows}</td><td>${p.columns}</td><td>${phraseUses(state.song, p.id)}</td>
+    <td><button data-act="edit" title="Open this phrase in the grid (Esc returns)">Edit</button><button data-act="remove" title="Remove the phrase; every placement becomes loose notes">Remove</button></td></tr>`).join('');
 }

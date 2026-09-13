@@ -86,6 +86,10 @@
         <span id="arranger" title="Song order"></span>
         <input id="order" type="text" value="0" title="Order as text: pattern index with optional xN repeat, e.g. 0x2 1 0">
       </div>
+      <div class="group phrasegrp" data-label="phrases" hidden>
+        <table id="phrasesTable"><thead><tr><th>name</th><th>rows</th><th>cols</th><th>uses</th><th></th></tr></thead><tbody id="phrasesBody"></tbody></table>
+        <span class="dim">Select rows on one track and press Make phrase on the selection toolbar. Enter on a tag edits the phrase; − = transpose a placement, [ ] repeat it.</span>
+      </div>
       <div class="group trackgrp" data-label="tracks">
         <table id="tracksTable">
           <thead><tr><th></th><th>name</th><th>instrument</th><th>ch</th><th>cols</th><th>volume</th><th>pan</th><th></th><th></th></tr></thead>
@@ -153,11 +157,11 @@
     <div id="mixerStrips"></div>
   </aside>
 </div>
-<dialog id="chainDlg" aria-label="Repeats and chains">
+<dialog id="chainDlg" aria-label="Entry: repeat and follows">
   <div class="dlgHead"><b id="chainTitle">Entry</b><span class="spacer"></span><button id="chainCancel" title="Close">✕</button></div>
-  <p class="dim">Repeat this entry, and let any track follow another pattern instead (looped or clipped to this entry's length), like independent chains.</p>
+  <p class="dim">Repeat this entry, and let any track follow another pattern instead of this one, looped or clipped to this entry's length. A pattern of placements followed this way is how one track walks through phrases under the others.</p>
   <label>repeat <input id="chainRepeat" type="number" min="1" max="64" value="1" style="width:4em"></label>
-  <table id="chainTable"><thead><tr><th>track</th><th>plays</th></tr></thead><tbody id="chainBody"></tbody></table>
+  <table id="chainTable"><thead><tr><th>track</th><th>follows</th></tr></thead><tbody id="chainBody"></tbody></table>
   <div class="dlgFoot"><span class="spacer"></span><button id="chainOk" class="primary">Apply</button></div>
 </dialog>
 <div id="selbar" hidden aria-label="Selection">
@@ -167,6 +171,9 @@
   <button data-op="paste" title="Paste at the cursor (⌘V)">Paste</button>
   <button data-op="dup" title="Paste a copy right after the selection (⌘D)">Duplicate</button>
   <button data-op="clear" title="Clear (Delete)">Clear</button>
+  <span class="sep"></span>
+  <button data-op="phrase" title="Turn the selected rows of one track into a phrase placed here; the phrase then lives in Compose">Make phrase</button>
+  <button data-op="detach" title="Turn the phrase under the cursor (or the selected placements) back into loose notes">Detach</button>
   <span class="sep"></span>
   <button data-op="tr:-1" title="Transpose down a semitone (−)">−1</button>
   <button data-op="tr:1" title="Transpose up a semitone (=)">+1</button>

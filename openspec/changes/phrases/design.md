@@ -1,0 +1,6 @@
+# Design
+Follows docs/domain.md. Core (`src/core/song.js`): `newMaterial`, `materialOf`, `newPhrase`, `makePhrase`, `detachPlacement`, `removePhrase`, `placementAt`, `expandPlacement`, `expandPlacements`, `expandMaterial`, `materialFor`, `entryOf`, `entries`, `normalizeArrangement`, `arrangementText`, `parseArrangementText`; all pure. The renderer calls `materialFor` per track per entry so preview, MIDI out and .mid export cannot disagree.
+
+UI: while a phrase is open (`state.phraseEdit`), `curPat()` returns a stand-in pattern holding the phrase's material on its one track and `tracksShown()` lists only that track, so every editing path, the layout, the pad and the selection code work on the phrase unchanged. Undo entries record `{ phrase, json }` in that mode. Placements are guarded in `typeIntoCell`, `enterPitch`, `nudgeArticulation`, `tapCell` and `clearCell` (Delete removes the placement). The clipboard carries placements on a track's first note cell. Drawing indexes the placement expansion separately and draws it at 55 % under a band, with a tag on the first row.
+
+Compatibility: `normalizeSong` refuses `version` below 3; stored autosaves in the old shape are skipped on restore.

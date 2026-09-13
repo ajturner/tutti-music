@@ -5,7 +5,7 @@ A browser-based tracker for composing orchestral music, with MIDI export. Plain 
 **Live:** https://ajturner.github.io/tutti-music/ · **Guide:** https://ajturner.github.io/tutti-music/help.html
 
 
-The vocabulary (song, track, pattern, phrase, placement, chain, arrangement, entry, follows) and how it fits together is in [docs/domain.md](docs/domain.md).
+The vocabulary (song, track, pattern, material, phrase, placement, arrangement, entry, follows) and how it fits together is in [docs/domain.md](docs/domain.md).
 ## Input
 
 - **Keyboard:** piano-layout letters, arrows, and the shortcuts listed under "Keys and MIDI setup" in the app.
@@ -16,6 +16,7 @@ The vocabulary (song, track, pattern, phrase, placement, chain, arrangement, ent
 - **FX column:** one command per row per track: CHA chance, RET retrigger, DEL delay, ARP arpeggio, TSP transpose.
 - **Groove:** per-pattern swing presets or a custom cycle of row-length multipliers.
 - **Live:** solo tracks with shift-click or long press; pick another pattern while one loops to queue it.
+- **Phrases:** select rows on one track and Make phrase; place it anywhere with a transpose and a repeat, edit it once with Enter and every placement follows, Detach to vary one copy. A track can follow a pattern of placements under the others, which is how a bass walks through one riff per chord.
 - **Workflow panels:** the header keeps only the transport and pattern selector; Song (files), Compose (pattern, key, arrangement, tracks), Sounds, Connect (MIDI, controller) and ⚙ View open one at a time under it, and become full screens behind a tab bar on a phone.
 - **Mixer sidebar:** volume, pan, mute and solo per track beside the grid while editing.
 - **Tracks and mixer:** add any instrument as a track, rename, reorder, remove, set channel and columns, volume and pan (CC7 and CC10), mute and solo.

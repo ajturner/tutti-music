@@ -1,8 +1,9 @@
 // Keyboard bindings. See the help panel for the scheme and its macOS constraints.
 import { curPat, rowsPerBar, sched, state } from './state.js';
-import { moveCell, moveRow, moveTrack, redo, setOctave, setRow, setStep, typeIntoCell, undo } from './edit.js';
+import { moveCell, moveRow, moveTrack, redo, setOctave, setRow, setStep, typeIntoCell, undo, placementHere, transposePlacement, editPhraseHere, leavePhrase } from './edit.js';
 import { clearSel, copySel, cutSel, deselect, duplicateSel, lengthSel, pasteSel, selExtend, selectTrackOrAll, transposeSel, transposeSelDiatonic } from './selection.js';
 import { changeColumns, changeLength, clearCell } from './edit.js';
+import { currentCell } from './layout.js';
 import { playPattern, playSong, stopAll, toggleRecord } from './transport.js';
 
 // ---- Keyboard -----------------------------------------------------------------------------
@@ -50,6 +51,11 @@ export function handleKey(e) {
     if (code === 'Comma' || k === ',' || k === '<') { transposeSelDiatonic(-1); return true; }
     if (code === 'Period' || k === '.' || k === '>') { transposeSelDiatonic(1); return true; }
   }
+  // On a placement tag the minus and equals keys transpose the placement (⇧ by an octave).
+  if (placementHere() && ['note', 'vel', 'art'].includes(currentCell().kind)) {
+    if (code === 'Minus' || k === '-' || k === '_') { transposePlacement(sh ? -12 : -1); return true; }
+    if (code === 'Equal' || k === '=' || k === '+') { transposePlacement(sh ? 12 : 1); return true; }
+  }
   // Octave and step: the two keys to the right of 0. Shift switches from octave to step.
   if (code === 'Minus' || k === '-' || k === '_') {
     if (sh) { setStep(state.step - 1); state.message = 'Step ' + state.step; }
@@ -75,8 +81,8 @@ export function handleKey(e) {
     case 'End': setRow(curPat().rows - 1); return true;
     case 'Tab': moveTrack(sh ? -1 : 1); return true;
     case ' ': if (sched.playing) stopAll(); else playPattern(sh); return true;
-    case 'Enter': sh ? toggleRecord() : playSong(); return true;
-    case 'Escape': if (state.sel) deselect(); else stopAll(); return true;
+    case 'Enter': if (sh) toggleRecord(); else if (!editPhraseHere()) playSong(); return true;
+    case 'Escape': if (state.sel) deselect(); else if (sched.playing) stopAll(); else if (!leavePhrase()) stopAll(); return true;
     case 'Delete': case 'Backspace': state.sel ? clearSel() : clearCell(); return true;
   }
   if (k.length === 1) return typeIntoCell(k);

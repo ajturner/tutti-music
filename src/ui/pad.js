@@ -3,7 +3,7 @@ import { inScale } from '../core/scales.js';
 import { FX_COMMANDS } from '../core/render.js';
 import { ART } from '../core/constants.js';
 import { INST } from '../core/instruments.js';
-import { $, KEYMAP, activeKey, curTrack, sched, state } from './state.js';
+import { $, KEYMAP, activeKey, curTrack, sched, state, tracksShown } from './state.js';
 import { currentCell } from './layout.js';
 import { moveCell, moveRow, moveTrack, setOctave, setStep, typeIntoCell, undo } from './edit.js';
 import { clearSel, selCells, selRect } from './selection.js';
@@ -75,7 +75,7 @@ export function syncSelBar() {
   if (!show) { selBarSig = ''; return; }
   const rect = selRect();
   const tracks = new Set(selCells(rect).map(c => c.track).filter(t => t >= 0));
-  const arts = tracks.size ? [...new Set([...tracks].flatMap(t => INST[state.song.tracks[t].instrument].articulations))] : [];
+  const arts = tracks.size ? [...new Set([...tracks].flatMap(t => INST[tracksShown()[t].instrument].articulations))] : [];
   const sig = [rect.r0, rect.r1, rect.g0, rect.g1, arts.join(','), state.sel ? 1 : 0].join('|');
   if (sig === selBarSig) return; selBarSig = sig;
   $('selInfo').textContent = state.sel ? (rect.r1 - rect.r0 + 1) + ' rows × ' + (rect.g1 - rect.g0 + 1) + ' cells' : 'cursor cell';

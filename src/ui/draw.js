@@ -1,10 +1,11 @@
 // Canvas drawing of the grid, the status line, and the animation-frame loop.
 import { FAMILIES, clamp, hex2, noteName } from '../core/constants.js';
 import { INST } from '../core/instruments.js';
-import { laneValueAt } from '../core/song.js';
-import { $, COLORS, activeKey, applyDensity, canvas, ctx, curPat, curTrack, midi, rowsPerBar, rowsPerStrongBeat, sched, state, view } from './state.js';
+import { laneValueAt, expandPlacements, phraseById, placementRows } from '../core/song.js';
+import { $, COLORS, activeKey, applyDensity, canvas, ctx, curPat, curPhrase, curTrack, midi, rowsPerBar, rowsPerStrongBeat, sched, state, tracksShown, view } from './state.js';
 import { computeLayout, currentCell, HEADER_ROWS, CELL_LABEL } from './layout.js';
-import { indexTrack, noteCovering } from './edit.js';
+import { indexTrack, noteCovering, phraseStatus } from './edit.js';
+import { indexMaterial } from '../core/edit.js';
 import { rowAtTick, grooveOf, FX_HELP } from '../core/render.js';
 import { fxAtRow } from '../core/edit.js';
 import { keyName } from '../core/scales.js';
@@ -34,11 +35,12 @@ export function draw() {
   const song = state.song;
   const playTick = sched.positionTick();
   let playRow = null, playPat = null, playStart = null;
-  if (playTick != null && sched.rendered) {
-    for (const s of sched.rendered.starts) if (playTick >= s.tick && playTick < s.tick + s.rows * s.ticksPerRow) { playPat = s.pattern; playStart = s; playRow = rowAtTick(song.patterns[s.pattern], playTick - s.tick); }
-    if (state.follow && playPat != null && playPat !== state.pat) { state.pat = playPat; syncPatternUI(); }
-  }
   const pat = curPat();
+  if (playTick != null && sched.rendered) {
+    if (sched.rendered.phrase) { if (state.phraseEdit && sched.rendered.phrase === state.phraseEdit.id) { playPat = state.pat; playRow = rowAtTick(pat, playTick); } }   // the open phrase looping on its own
+    else for (const s of sched.rendered.starts) if (playTick >= s.tick && playTick < s.tick + s.rows * s.ticksPerRow) { playPat = s.pattern; playStart = s; playRow = rowAtTick(song.patterns[s.pattern], playTick - s.tick); }
+    if (state.follow && !state.phraseEdit && playPat != null && playPat !== state.pat) { state.pat = playPat; syncPatternUI(); }
+  }
   const L = computeLayout();
   const headerH = view.ROW_H * HEADER_ROWS + 8;
   const visible = Math.max(1, Math.floor((H - headerH) / view.ROW_H));
@@ -80,19 +82,40 @@ export function draw() {
     if (lay.x + lay.w < state.scrollX || lay.x > state.scrollX + W) continue;
     const tr = lay.track, ins = INST[tr.instrument], fam = FAMILIES[ins.family];
     const idx = indexTrack(pat, tr.id);
+    // Placements: the phrase's notes drawn dimmed under the track, a band over the rows, a tag on the first row.
+    const mat = pat.material[tr.id], placements = state.phraseEdit ? [] : (mat && mat.placements || []).map(pl => { const ph = phraseById(song, pl.phrase); return ph ? Object.assign(placementRows(pat, pl, ph), { pl, ph }) : null; }).filter(Boolean);
+    const pidx = placements.length ? indexMaterial(pat, expandPlacements(song, pat, tr.id, tr.columns)) : null;
+    const noteEnd = lay.cells.filter(c => c.kind === 'note' || c.kind === 'vel' || c.kind === 'art').reduce((m, c) => Math.max(m, c.x + c.w), lay.x);
     ctx.fillStyle = COLORS.line; ctx.fillRect(lay.x - view.charW * 0.75, headerH, 1, H - headerH);
+    for (const pr of placements) {
+      const y0 = rowY(Math.max(pr.r0, top)), y1 = rowY(Math.min(pr.r1, top + visible) + 1);
+      if (y1 <= headerH || y0 >= H) continue;
+      ctx.fillStyle = fam.color; ctx.globalAlpha = 0.09; ctx.fillRect(lay.x - 2, y0, noteEnd - lay.x + 4, y1 - y0); ctx.globalAlpha = 1;
+      ctx.fillRect(lay.x - 2, y0, 2, y1 - y0);
+    }
     for (let r = Math.max(0, top); r < Math.min(pat.rows, top + visible + 1); r++) {
       const y = rowY(r), ym = y + view.ROW_H / 2;
-      const starts = idx.starts.get(r) || {}, spans = idx.spans.get(r) || {};
+      const tag = placements.find(pr => pr.r0 === r);
+      const pstarts = pidx ? (pidx.starts.get(r) || {}) : {}, pspans = pidx ? (pidx.spans.get(r) || {}) : {};
+      const starts = Object.assign({}, pstarts, idx.starts.get(r) || {}), spans = Object.assign({}, pspans, idx.spans.get(r) || {});
       for (let ci = 0; ci < lay.cells.length; ci++) {
         const cell = lay.cells[ci];
         const isCursor = cur.track === ti && cell === cursorCell && r === cur.row;
         if (state.sel && inSel(lay.g0 + ci, r)) { ctx.fillStyle = COLORS.accent; ctx.globalAlpha = 0.22; ctx.fillRect(cell.x - 2, y, cell.w + 4, view.ROW_H); ctx.globalAlpha = 1; }
         if (isCursor) { ctx.fillStyle = COLORS.accent; ctx.fillRect(cell.x - 2, y + 1, cell.w + 4, view.ROW_H - 2); }
         const textColor = isCursor ? COLORS.cursorText : COLORS.text;
+        if (tag) {   // the tag row names the phrase across the whole track
+          if (cell === lay.cells[0]) {
+            const label = '\u25b8' + tag.ph.name + (tag.pl.transpose ? (tag.pl.transpose > 0 ? ' +' : ' ') + tag.pl.transpose : '') + (tag.pl.repeat > 1 ? ' \u00d7' + tag.pl.repeat : '');
+            if (isCursor) { ctx.fillStyle = COLORS.accent; ctx.fillRect(cell.x - 2, y + 1, lay.w - view.charW * 0.5, view.ROW_H - 2); }
+            ctx.fillStyle = isCursor ? COLORS.cursorText : COLORS.accent; ctx.fillText(label, cell.x, ym, lay.x + lay.w - view.charW - cell.x);
+          }
+          continue;
+        }
         if (cell.kind === 'note') {
           const ev = starts[cell.col];
-          if (ev) { ctx.fillStyle = isCursor ? COLORS.cursorText : (tr.mute ? COLORS.num : fam.color); ctx.fillText(noteName(ev.pitch), cell.x, ym); }
+          if (ev && ev.placed) { ctx.fillStyle = isCursor ? COLORS.cursorText : fam.color; ctx.globalAlpha = isCursor ? 1 : 0.55; ctx.fillText(noteName(ev.pitch), cell.x, ym); ctx.globalAlpha = 1; }
+          else if (ev) { ctx.fillStyle = isCursor ? COLORS.cursorText : (tr.mute ? COLORS.num : fam.color); ctx.fillText(noteName(ev.pitch), cell.x, ym); }
           else if (spans[cell.col]) { ctx.fillStyle = isCursor ? COLORS.cursorText : fam.color; ctx.globalAlpha = isCursor ? 1 : 0.45; ctx.fillRect(cell.x + view.charW * 1.35, y, 2, view.ROW_H); ctx.globalAlpha = 1; }
           else { ctx.fillStyle = isCursor ? COLORS.cursorText : COLORS.dim; ctx.fillText('···', cell.x, ym); }
         } else if (cell.kind === 'vel') {
@@ -155,16 +178,16 @@ export function draw() {
     labelEnd.set(i, x0 + ctx.measureText(FAMILIES[fam].label).width + view.charW);
     i = j + 1;
   }
-  const anySolo = song.tracks.some(t => t.solo);
+  const anySolo = tracksShown().some(t => t.solo);
   L.tracks.forEach((lay, ti) => {
     const tr = lay.track, fam = FAMILIES[INST[tr.instrument].family];
     const silent = tr.mute || (anySolo && !tr.solo);
     ctx.fillStyle = silent ? COLORS.num : fam.color;
-    ctx.fillText(tr.name, lay.x, nameY);
+    ctx.fillText(state.phraseEdit ? tr.name + ' \u00b7 phrase ' + (curPhrase() || {}).name : tr.name, lay.x, nameY);
     if (tr.mute) ctx.fillRect(lay.x, nameY, ctx.measureText(tr.name).width, 1);
     if (tr.solo) { ctx.fillStyle = COLORS.accent; ctx.fillText('S', lay.x + ctx.measureText(tr.name).width + view.charW * 0.6, nameY); }
     // During song playback a chained track plays another pattern's data: show which.
-    if (playStart && playStart.tracks && playStart.tracks[tr.id] != null) { const p = song.patterns[playStart.tracks[tr.id]]; ctx.fillStyle = COLORS.accent; ctx.fillText('\u25b8' + (p ? p.name : '?'), lay.x + ctx.measureText(tr.name).width + view.charW * (tr.solo ? 2 : 0.6), nameY); }
+    if (playStart && playStart.follows && playStart.follows[tr.id] != null) { const p = song.patterns[playStart.follows[tr.id]]; ctx.fillStyle = COLORS.accent; ctx.fillText('\u25b8' + (p ? p.name : '?'), lay.x + ctx.measureText(tr.name).width + view.charW * (tr.solo ? 2 : 0.6), nameY); }
     // third row: what each cell holds, so a new user can read the columns
     ctx.fillStyle = COLORS.num; ctx.font = Math.round(parseInt(view.FONT, 10) * 0.78) + 'px ' + view.FONT.slice(view.FONT.indexOf(' ') + 1);   // small caps-sized labels fit inside each cell
     for (const cell of lay.cells) { const label = cell.kind === 'note' && cell.col > 0 ? ['2nd', '3rd', '4th'][cell.col - 1] : CELL_LABEL[cell.kind]; ctx.fillText(label, cell.x, labelY); }
@@ -187,6 +210,8 @@ export let lastStatus = '';
 export function updateStatus(playRow) {
   const pat = curPat(), tr = curTrack(), cell = currentCell(), row = state.cursor.row;
   const parts = [];
+  if (state.phraseEdit) parts.push('<b class="warn">phrase ' + esc((curPhrase() || {}).name || '') + '</b> Esc returns to pattern ' + state.pat);
+  const ps = phraseStatus(); if (ps) parts.push(ps);
   if (tr) {
     const ins = INST[tr.instrument];
     let s = '<b>' + tr.name + '</b> col ' + ((cell.col | 0) + 1) + ' row ' + row;
