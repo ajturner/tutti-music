@@ -4,6 +4,8 @@ A browser-based tracker for composing orchestral music, with MIDI export. Plain 
 
 **Live:** https://ajturner.github.io/tutti-music/ · **Guide:** https://ajturner.github.io/tutti-music/help.html
 
+
+The vocabulary (song, track, pattern, phrase, placement, chain, arrangement, entry, follows) and how it fits together is in [docs/domain.md](docs/domain.md).
 ## Input
 
 - **Keyboard:** piano-layout letters, arrows, and the shortcuts listed under "Keys and MIDI setup" in the app.
