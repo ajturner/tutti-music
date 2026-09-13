@@ -103,3 +103,10 @@ The song order SHALL be shown as one chip per entry, marking the open pattern an
 #### Scenario: Repeat and chain
 - **WHEN** the user sets entry 1 to repeat 2 and Basses to follow pattern 1
 - **THEN** its chip reads "0 A ×2 ⛓" and the text field reads "0x2 …"
+
+### Requirement: Bank showcases
+The built-in song list SHALL include at least one song for each bundled bank other than the orchestra (jazz, folk, electronica), using that bank's instruments and recording the bank so it loads on open. Every built-in song's notes SHALL lie within its instruments' ranges and on mapped kit pieces.
+
+#### Scenario: Open the jazz example
+- **WHEN** the user selects "Blue in F (jazz)"
+- **THEN** the jazz bank loads and the song plays piano, guitar, vibraphone, tenor sax, upright bass and the drum kit

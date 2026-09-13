@@ -1,7 +1,7 @@
 // Service worker: the app shell is cached at install so Tutti opens offline; samples are cached the
 // first time they play, so instruments you have used keep working without a network. The cache is
 // named after the app version, and old caches are dropped on activation.
-const VERSION = '2.9.0';
+const VERSION = '2.10.0';
 const SHELL = 'tutti-shell-' + VERSION, SAMPLES = 'tutti-samples-v1';
 const SHELL_FILES = [
   './', 'index.html', 'help.html', 'styles.css', 'manifest.webmanifest', 'assets/icon-192.png', 'assets/icon-512.png',

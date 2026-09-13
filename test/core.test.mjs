@@ -293,7 +293,15 @@ check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[1
   check('banks: every bundled bank is complete', nb === 4 && ninst >= 40 && bad.length === 0, nb + ' banks, ' + ninst + ' instruments' + (bad.length ? ' bad: ' + bad.slice(0, 3).join(', ') : ''));
 }
 
-// Every example renders and exports
+// Every example renders and exports, with its notes inside instrument ranges and on mapped kit pieces
+for (const b of ['jazz', 'folk', 'electronica']) installBank(JSON.parse(await readFile(new URL('../banks/' + b + '/bank.json', import.meta.url))), 'file:///banks/' + b + '/bank.json');
+check('examples: one showcase per bundled bank', ['jazz', 'folk', 'electronica'].every(b => EXAMPLES.some(e => e.build().banks.includes(b) && e.title.toLowerCase().includes(b))));
+for (const ex of EXAMPLES) {
+  const s0 = ex.build(); const problems = [];
+  for (const t of s0.tracks) { const ins = INST[t.instrument]; const evs = s0.patterns.flatMap(p => (p.tracks[t.id] || { events: [] }).events); if (!ins || !evs.length) continue;
+    for (const e of evs) { if (e.pitch < ins.range[0] || e.pitch > ins.range[1]) { problems.push(t.id + ' ' + e.pitch); break; } if (ins.kit && !ins.kit[e.pitch]) { problems.push(t.id + ' unmapped ' + e.pitch); break; } } }
+  check('example in range: ' + ex.title, problems.length === 0, problems.join(', '));
+}
 for (const ex of EXAMPLES) {
   const s = ex.build(); let ok = true, why = '';
   try { const rr = renderSong(s); const b = midiFileBytes(s); ok = rr.events.length > 0 && b.length > 100; } catch (e) { ok = false; why = e.message; }

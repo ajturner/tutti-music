@@ -1,0 +1,2043 @@
+{
+ "$schema": "https://ajturner.github.io/tutti-music/schema/tutti-song.schema.json",
+ "format": "tutti-song",
+ "version": 2,
+ "uid": "e0bf7269-b017-44d7-9b1b-f7cf58bec936",
+ "title": "Curran 12",
+ "notes": "",
+ "bpm": 100,
+ "key": null,
+ "banks": [],
+ "order": [
+  {
+   "pattern": 0,
+   "repeat": 1,
+   "tracks": {}
+  }
+ ],
+ "patterns": [
+  {
+   "name": "A",
+   "rows": 64,
+   "ticksPerRow": 240,
+   "meter": [
+    4,
+    4
+   ],
+   "tempo": [],
+   "tracks": {
+    "tb": {
+     "events": [
+      {
+       "tick": 0,
+       "len": 960,
+       "pitch": 69,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 960,
+       "len": 960,
+       "pitch": 71,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 1920,
+       "len": 960,
+       "pitch": 60,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 2880,
+       "len": 960,
+       "pitch": 62,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 3840,
+       "len": 960,
+       "pitch": 64,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 4800,
+       "len": 960,
+       "pitch": 65,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 5760,
+       "len": 960,
+       "pitch": 67,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 6720,
+       "len": 960,
+       "pitch": 69,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 7680,
+       "len": 960,
+       "pitch": 60,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      }
+     ],
+     "dyn": [],
+     "expr": [],
+     "fx": []
+    },
+    "tp": {
+     "events": [
+      {
+       "tick": 2880,
+       "len": 960,
+       "pitch": 69,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 3840,
+       "len": 960,
+       "pitch": 71,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 4800,
+       "len": 960,
+       "pitch": 60,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 5760,
+       "len": 960,
+       "pitch": 62,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 6720,
+       "len": 960,
+       "pitch": 64,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 7680,
+       "len": 960,
+       "pitch": 65,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 8640,
+       "len": 960,
+       "pitch": 67,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 9600,
+       "len": 960,
+       "pitch": 69,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 10560,
+       "len": 960,
+       "pitch": 60,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 11520,
+       "len": 960,
+       "pitch": 67,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 12480,
+       "len": 960,
+       "pitch": 69,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 13440,
+       "len": 960,
+       "pitch": 60,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      }
+     ],
+     "dyn": [],
+     "expr": [],
+     "fx": []
+    },
+    "hn": {
+     "events": [
+      {
+       "tick": 5760,
+       "len": 960,
+       "pitch": 69,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 6720,
+       "len": 960,
+       "pitch": 71,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 7680,
+       "len": 960,
+       "pitch": 60,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 8640,
+       "len": 960,
+       "pitch": 62,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 9600,
+       "len": 960,
+       "pitch": 64,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 10560,
+       "len": 960,
+       "pitch": 65,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 11520,
+       "len": 960,
+       "pitch": 67,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 12480,
+       "len": 960,
+       "pitch": 69,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 13440,
+       "len": 960,
+       "pitch": 60,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      }
+     ],
+     "dyn": [],
+     "expr": [],
+     "fx": []
+    },
+    "bn": {
+     "events": [
+      {
+       "tick": 0,
+       "len": 960,
+       "pitch": 60,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 960,
+       "len": 960,
+       "pitch": 60,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 1920,
+       "len": 960,
+       "pitch": 60,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 2880,
+       "len": 960,
+       "pitch": 62,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 3840,
+       "len": 960,
+       "pitch": 62,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 4800,
+       "len": 960,
+       "pitch": 62,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 5760,
+       "len": 960,
+       "pitch": 64,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 6720,
+       "len": 960,
+       "pitch": 64,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 7680,
+       "len": 960,
+       "pitch": 64,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 8640,
+       "len": 960,
+       "pitch": 60,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 9600,
+       "len": 960,
+       "pitch": 60,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 10560,
+       "len": 960,
+       "pitch": 60,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 11520,
+       "len": 960,
+       "pitch": 62,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 12480,
+       "len": 960,
+       "pitch": 62,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 13440,
+       "len": 960,
+       "pitch": 64,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 14400,
+       "len": 960,
+       "pitch": 65,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      }
+     ],
+     "dyn": [],
+     "expr": [],
+     "fx": []
+    },
+    "v1": {
+     "events": [
+      {
+       "tick": 0,
+       "len": 240,
+       "pitch": 69,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 240,
+       "len": 240,
+       "pitch": 69,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 480,
+       "len": 240,
+       "pitch": 71,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 720,
+       "len": 480,
+       "pitch": 60,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 1200,
+       "len": 240,
+       "pitch": 67,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 1440,
+       "len": 240,
+       "pitch": 69,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 1680,
+       "len": 240,
+       "pitch": 67,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 1920,
+       "len": 240,
+       "pitch": 69,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 2160,
+       "len": 240,
+       "pitch": 65,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 2400,
+       "len": 240,
+       "pitch": 64,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 2640,
+       "len": 240,
+       "pitch": 65,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 2880,
+       "len": 960,
+       "pitch": 71,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 3840,
+       "len": 240,
+       "pitch": 69,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 4080,
+       "len": 960,
+       "pitch": 65,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 5040,
+       "len": 960,
+       "pitch": 67,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 6000,
+       "len": 960,
+       "pitch": 69,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 6960,
+       "len": 720,
+       "pitch": 65,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 7680,
+       "len": 960,
+       "pitch": 67,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 8640,
+       "len": 480,
+       "pitch": 69,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 9120,
+       "len": 960,
+       "pitch": 71,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 10080,
+       "len": 960,
+       "pitch": 71,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 11040,
+       "len": 960,
+       "pitch": 64,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 12000,
+       "len": 960,
+       "pitch": 64,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 12960,
+       "len": 960,
+       "pitch": 63,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 13920,
+       "len": 960,
+       "pitch": 63,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 14880,
+       "len": 480,
+       "pitch": 68,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      }
+     ],
+     "dyn": [],
+     "expr": [],
+     "fx": []
+    },
+    "v2": {
+     "events": [
+      {
+       "tick": 0,
+       "len": 240,
+       "pitch": 69,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 240,
+       "len": 240,
+       "pitch": 69,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 480,
+       "len": 240,
+       "pitch": 71,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 720,
+       "len": 480,
+       "pitch": 60,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 1200,
+       "len": 240,
+       "pitch": 69,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 1440,
+       "len": 240,
+       "pitch": 69,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 1680,
+       "len": 240,
+       "pitch": 67,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 1920,
+       "len": 240,
+       "pitch": 69,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 2160,
+       "len": 240,
+       "pitch": 65,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 2400,
+       "len": 240,
+       "pitch": 64,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 2640,
+       "len": 240,
+       "pitch": 65,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 2880,
+       "len": 960,
+       "pitch": 71,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 3840,
+       "len": 240,
+       "pitch": 69,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 4080,
+       "len": 960,
+       "pitch": 65,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 5040,
+       "len": 960,
+       "pitch": 67,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 6000,
+       "len": 960,
+       "pitch": 69,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 6960,
+       "len": 720,
+       "pitch": 65,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 7680,
+       "len": 960,
+       "pitch": 67,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 8640,
+       "len": 480,
+       "pitch": 69,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 9120,
+       "len": 960,
+       "pitch": 71,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 10080,
+       "len": 960,
+       "pitch": 71,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 11040,
+       "len": 960,
+       "pitch": 64,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 12000,
+       "len": 960,
+       "pitch": 64,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 12960,
+       "len": 960,
+       "pitch": 63,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 13920,
+       "len": 960,
+       "pitch": 63,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 14880,
+       "len": 480,
+       "pitch": 68,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      }
+     ],
+     "dyn": [],
+     "expr": [],
+     "fx": []
+    },
+    "ti": {
+     "events": [
+      {
+       "tick": 0,
+       "len": 240,
+       "pitch": 65,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 240,
+       "len": 240,
+       "pitch": 69,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 480,
+       "len": 240,
+       "pitch": 71,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 720,
+       "len": 240,
+       "pitch": 67,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 960,
+       "len": 240,
+       "pitch": 65,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 1200,
+       "len": 240,
+       "pitch": 60,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 1440,
+       "len": 240,
+       "pitch": 60,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 1680,
+       "len": 240,
+       "pitch": 69,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 1920,
+       "len": 480,
+       "pitch": 67,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 2400,
+       "len": 480,
+       "pitch": 65,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 2880,
+       "len": 480,
+       "pitch": 60,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 3360,
+       "len": 480,
+       "pitch": 68,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 3840,
+       "len": 480,
+       "pitch": 61,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 4320,
+       "len": 480,
+       "pitch": 63,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 4800,
+       "len": 480,
+       "pitch": 70,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 5280,
+       "len": 480,
+       "pitch": 68,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 5760,
+       "len": 960,
+       "pitch": 63,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 6720,
+       "len": 960,
+       "pitch": 66,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 7680,
+       "len": 960,
+       "pitch": 66,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 8640,
+       "len": 960,
+       "pitch": 68,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 9600,
+       "len": 960,
+       "pitch": 68,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 10560,
+       "len": 960,
+       "pitch": 68,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 11520,
+       "len": 960,
+       "pitch": 68,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 12480,
+       "len": 960,
+       "pitch": 63,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 13440,
+       "len": 960,
+       "pitch": 63,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 14400,
+       "len": 960,
+       "pitch": 64,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      }
+     ],
+     "dyn": [
+      {
+       "tick": 1440,
+       "value": 127,
+       "interp": "lin"
+      }
+     ],
+     "expr": [],
+     "fx": []
+    },
+    "ob": {
+     "events": [
+      {
+       "tick": 0,
+       "len": 960,
+       "pitch": 79,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 960,
+       "len": 960,
+       "pitch": 82,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 1920,
+       "len": 960,
+       "pitch": 82,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 2880,
+       "len": 960,
+       "pitch": 82,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 3840,
+       "len": 960,
+       "pitch": 82,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 4800,
+       "len": 960,
+       "pitch": 80,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 5760,
+       "len": 960,
+       "pitch": 80,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 6720,
+       "len": 960,
+       "pitch": 80,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 7680,
+       "len": 960,
+       "pitch": 80,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 8640,
+       "len": 960,
+       "pitch": 78,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 9600,
+       "len": 960,
+       "pitch": 78,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 10560,
+       "len": 960,
+       "pitch": 78,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 11520,
+       "len": 960,
+       "pitch": 78,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 12480,
+       "len": 960,
+       "pitch": 79,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 13440,
+       "len": 960,
+       "pitch": 79,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 14400,
+       "len": 960,
+       "pitch": 79,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      }
+     ],
+     "dyn": [],
+     "expr": [],
+     "fx": []
+    },
+    "cl": {
+     "events": [
+      {
+       "tick": 0,
+       "len": 480,
+       "pitch": 79,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 960,
+       "len": 240,
+       "pitch": 81,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 1200,
+       "len": 240,
+       "pitch": 83,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 1920,
+       "len": 480,
+       "pitch": 81,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 2880,
+       "len": 480,
+       "pitch": 83,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 3840,
+       "len": 480,
+       "pitch": 72,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 4800,
+       "len": 480,
+       "pitch": 76,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 5760,
+       "len": 480,
+       "pitch": 74,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 6720,
+       "len": 480,
+       "pitch": 73,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 7680,
+       "len": 480,
+       "pitch": 75,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 8640,
+       "len": 480,
+       "pitch": 78,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 9600,
+       "len": 480,
+       "pitch": 80,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 10560,
+       "len": 480,
+       "pitch": 82,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 11520,
+       "len": 480,
+       "pitch": 77,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 12480,
+       "len": 480,
+       "pitch": 79,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 13440,
+       "len": 480,
+       "pitch": 81,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 14400,
+       "len": 480,
+       "pitch": 84,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 480,
+       "len": 480,
+       "pitch": 79,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 1440,
+       "len": 480,
+       "pitch": 81,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 2400,
+       "len": 480,
+       "pitch": 83,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 3360,
+       "len": 480,
+       "pitch": 78,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 4320,
+       "len": 480,
+       "pitch": 80,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 5280,
+       "len": 480,
+       "pitch": 82,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 6240,
+       "len": 480,
+       "pitch": 73,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 7200,
+       "len": 480,
+       "pitch": 75,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 8160,
+       "len": 480,
+       "pitch": 77,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 9120,
+       "len": 480,
+       "pitch": 79,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 10080,
+       "len": 480,
+       "pitch": 76,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 11040,
+       "len": 480,
+       "pitch": 83,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 12000,
+       "len": 480,
+       "pitch": 84,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 12960,
+       "len": 480,
+       "pitch": 84,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 13920,
+       "len": 480,
+       "pitch": 77,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 14880,
+       "len": 480,
+       "pitch": 81,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      }
+     ],
+     "dyn": [],
+     "expr": [],
+     "fx": []
+    },
+    "fl": {
+     "events": [
+      {
+       "tick": 0,
+       "len": 960,
+       "pitch": 24,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 960,
+       "len": 960,
+       "pitch": 24,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 1920,
+       "len": 960,
+       "pitch": 24,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 2880,
+       "len": 960,
+       "pitch": 24,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 3840,
+       "len": 960,
+       "pitch": 24,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 4800,
+       "len": 960,
+       "pitch": 24,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 5760,
+       "len": 960,
+       "pitch": 24,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 6720,
+       "len": 960,
+       "pitch": 24,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 7680,
+       "len": 960,
+       "pitch": 48,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 8640,
+       "len": 960,
+       "pitch": 50,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 9600,
+       "len": 960,
+       "pitch": 52,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 10560,
+       "len": 960,
+       "pitch": 76,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 11520,
+       "len": 960,
+       "pitch": 76,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 12480,
+       "len": 960,
+       "pitch": 72,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 13440,
+       "len": 960,
+       "pitch": 24,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 14400,
+       "len": 960,
+       "pitch": 25,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      }
+     ],
+     "dyn": [],
+     "expr": [],
+     "fx": []
+    },
+    "vc": {
+     "events": [
+      {
+       "tick": 4800,
+       "len": 480,
+       "pitch": 97,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 0,
+       "len": 480,
+       "pitch": 97,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 480,
+       "len": 480,
+       "pitch": 98,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 960,
+       "len": 480,
+       "pitch": 100,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 1440,
+       "len": 480,
+       "pitch": 101,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 1920,
+       "len": 480,
+       "pitch": 105,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 2400,
+       "len": 480,
+       "pitch": 96,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 2880,
+       "len": 480,
+       "pitch": 96,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 3360,
+       "len": 480,
+       "pitch": 96,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 3840,
+       "len": 480,
+       "pitch": 96,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 4320,
+       "len": 480,
+       "pitch": 108,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 5280,
+       "len": 480,
+       "pitch": 99,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 5760,
+       "len": 480,
+       "pitch": 98,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 6240,
+       "len": 480,
+       "pitch": 64,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 6720,
+       "len": 480,
+       "pitch": 60,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 7200,
+       "len": 480,
+       "pitch": 67,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 9600,
+       "len": 480,
+       "pitch": 67,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 8160,
+       "len": 480,
+       "pitch": 69,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 8640,
+       "len": 480,
+       "pitch": 69,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 12960,
+       "len": 480,
+       "pitch": 69,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      }
+     ],
+     "dyn": [],
+     "expr": [],
+     "fx": []
+    },
+    "cb": {
+     "events": [
+      {
+       "tick": 0,
+       "len": 480,
+       "pitch": 65,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 480,
+       "len": 240,
+       "pitch": 65,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 960,
+       "len": 480,
+       "pitch": 67,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 1440,
+       "len": 480,
+       "pitch": 60,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 1920,
+       "len": 480,
+       "pitch": 48,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 2400,
+       "len": 480,
+       "pitch": 48,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 2880,
+       "len": 480,
+       "pitch": 49,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 3360,
+       "len": 480,
+       "pitch": 57,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 3840,
+       "len": 480,
+       "pitch": 58,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 4320,
+       "len": 480,
+       "pitch": 60,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 4800,
+       "len": 1200,
+       "pitch": 57,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 6000,
+       "len": 1200,
+       "pitch": 57,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 7200,
+       "len": 1200,
+       "pitch": 59,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 8400,
+       "len": 1200,
+       "pitch": 59,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 9600,
+       "len": 2160,
+       "pitch": 57,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 11760,
+       "len": 2160,
+       "pitch": 57,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      },
+      {
+       "tick": 13920,
+       "len": 1440,
+       "pitch": 55,
+       "vel": 100,
+       "col": 0,
+       "art": null
+      }
+     ],
+     "dyn": [],
+     "expr": [],
+     "fx": []
+    }
+   }
+  }
+ ],
+ "tracks": [
+  {
+   "id": "fl",
+   "name": "Flute",
+   "instrument": "flute",
+   "channel": 1,
+   "columns": 1,
+   "mute": false,
+   "volume": 86
+  },
+  {
+   "id": "ob",
+   "name": "Oboe",
+   "instrument": "oboe",
+   "channel": 2,
+   "columns": 1,
+   "mute": false
+  },
+  {
+   "id": "cl",
+   "name": "Clarinet",
+   "instrument": "clarinet",
+   "channel": 3,
+   "columns": 1,
+   "mute": false
+  },
+  {
+   "id": "bn",
+   "name": "Bassoon",
+   "instrument": "bassoon",
+   "channel": 4,
+   "columns": 1,
+   "mute": false
+  },
+  {
+   "id": "hn",
+   "name": "Horns",
+   "instrument": "horns",
+   "channel": 5,
+   "columns": 2,
+   "mute": false,
+   "volume": 111
+  },
+  {
+   "id": "tp",
+   "name": "Trumpets",
+   "instrument": "trumpets",
+   "channel": 6,
+   "columns": 1,
+   "mute": false,
+   "volume": 89
+  },
+  {
+   "id": "tb",
+   "name": "Trombones",
+   "instrument": "trombones",
+   "channel": 7,
+   "columns": 1,
+   "mute": false
+  },
+  {
+   "id": "ti",
+   "name": "Timpani",
+   "instrument": "timpani",
+   "channel": 8,
+   "columns": 1,
+   "mute": false
+  },
+  {
+   "id": "v1",
+   "name": "Violins I",
+   "instrument": "violins-1",
+   "channel": 9,
+   "columns": 2,
+   "mute": false,
+   "volume": 127,
+   "pan": 68
+  },
+  {
+   "id": "v2",
+   "name": "Violins II",
+   "instrument": "violins-2",
+   "channel": 11,
+   "columns": 1,
+   "mute": false,
+   "volume": 127
+  },
+  {
+   "id": "va",
+   "name": "Violas",
+   "instrument": "violas",
+   "channel": 12,
+   "columns": 1,
+   "mute": false
+  },
+  {
+   "id": "vc",
+   "name": "Cellos",
+   "instrument": "cellos",
+   "channel": 13,
+   "columns": 1,
+   "mute": false,
+   "volume": 72
+  },
+  {
+   "id": "cb",
+   "name": "Basses",
+   "instrument": "basses",
+   "channel": 14,
+   "columns": 1,
+   "mute": false
+  }
+ ]
+}

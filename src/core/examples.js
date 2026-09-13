@@ -321,6 +321,127 @@ export function exLament() {
   lane(A.tempo, '0:60_ 56:60 63:44', tpr);
   return fitColumns(song);
 }
+
+// ---- Bank showcases: one song per bundled bank ---------------------------------------------------
+// Tracks are listed as [id, name, instrument, channel]; the song records its bank so it loads on open.
+function bankSong(title, bank, tracks) {
+  const song = newSong(); song.title = title; song.banks = ['orchestra', bank].filter((b, i, a) => a.indexOf(b) === i);
+  song.tracks = tracks.map(([id, name, instrument, channel]) => ({ id, name, instrument, channel, columns: 1, mute: false }));
+  return song;
+}
+// Kit pieces by name so the drum lines read as music, not MIDI numbers.
+// (C4 is 60 here, so General MIDI's kick at 36 is C2.)
+const K = { kick: 'C2', snare: 'D2', clap: 'D#2', hatC: 'F#2', hatP: 'G#2', hatO: 'A#2', tom: 'A2', crash: 'C#3', ride: 'D#3', china: 'E3', bell: 'F3', tamb: 'F#3', cowbell: 'G#3' };
+
+export function exBlueInF() {
+  const song = bankSong('Blue in F (jazz)', 'jazz', [['pn', 'Piano', 'piano', 1], ['gt', 'Guitar', 'guitar', 2], ['vb', 'Vibraphone', 'vibraphone', 3], ['ts', 'Tenor sax', 'tenor-sax', 4], ['ub', 'Upright bass', 'upright-bass', 5], ['dk', 'Drum kit', 'drum-kit', 9]]);
+  song.bpm = 126; song.key = { root: 5, scale: 'mixolydian' };
+  song.notes = 'Twelve-bar blues in F over three four-bar patterns with a swing groove: walking bass, ride and pedal hat, piano and guitar comping, a sax head with a vibes answer in the turnaround.';
+  const A = song.patterns[0], B = newPattern('B'), C = newPattern('C'); song.patterns.push(B, C); song.order = [0, 1, 2];
+  const tpr = A.ticksPerRow;
+  for (const p of [A, B, C]) p.groove = [1.33, 1.33, 0.67, 0.67];
+  // chords per bar: F7 Bb7 F7 F7 | Bb7 Bb7 F7 F7 | C7 Bb7 F7 C7
+  const bars = { A: ['F7', 'Bb7', 'F7', 'F7'], B: ['Bb7', 'Bb7', 'F7', 'F7'], C: ['C7', 'Bb7', 'F7', 'C7'] };
+  const voicing = { F7: ['A3', 'Eb4', 'F4', 'A4'], Bb7: ['Ab3', 'D4', 'F4', 'Bb4'], C7: ['Bb3', 'E4', 'G4', 'C5'] };
+  const walk = { F7: 'F2 A2 C3 D3', Bb7: 'Bb2 D3 F3 Ab3', C7: 'C3 E3 G3 Bb3' };
+  const gtv = { F7: ['A2', 'Eb3', 'A3'], Bb7: ['Ab2', 'D3', 'F3'], C7: ['Bb2', 'E3', 'G3'] };
+  for (const [pat, name] of [[A, 'A'], [B, 'B'], [C, 'C']]) {
+    bars[name].forEach((ch, bar) => {
+      const r = bar * 16;
+      line(pat, 'ub', 0, r, 4, walk[ch]);
+      // piano: chord stabs on the "and" of 2 and on 4 (rows 6 and 12), four voices across columns
+      voicing[ch].forEach((n, c) => { line(pat, 'pn', c, r + 6, 2, n + ':2@stc'); line(pat, 'pn', c, r + 12, 2, n + ':3'); });
+      // guitar: four-to-the-bar quarter chords, muted and short
+      gtv[ch].forEach((n, c) => line(pat, 'gt', c, r, 4, rep(4, n + ':2')));
+      // drums: ride every eighth, pedal hat on 2 and 4, kick softly on 1 and 3, a snare kiss on the and of 4
+      line(pat, 'dk', 0, r, 2, rep(8, K.ride + '!84'));
+      line(pat, 'dk', 1, r + 4, 8, K.hatP + '!70 ' + K.hatP + '!70');
+      line(pat, 'dk', 2, r, 8, K.kick + '!56 ' + K.kick + '!50');
+      line(pat, 'dk', 3, r + 14, 2, K.snare + '!44');
+    });
+  }
+  // the head on the sax, a call in A, a reply in B, and the turnaround with vibes in C
+  line(A, 'ts', 0, 0, 2, 'C4:2 . Eb4:2 F4:2 F#4:2 G4:4 . . F4:2 Eb4:2 C4:4 . . . . Ab3:2 C4:2 Eb4:2 C4:2 . . . .', { art: 'sus', vel: 96 });
+  line(A, 'ts', 0, 32, 2, 'C4:2 . Eb4:2 F4:2 F#4:2 G4:4 . . Bb4:2 G4:2 F4:6 . . . . . . . .', { art: 'sus', vel: 100 });
+  line(B, 'ts', 0, 0, 2, 'Bb4:2 . Ab4:2 F4:2 D4:2 F4:4 . . Ab4:2 F4:2 Eb4:6 . . . . C4:2 Eb4:2 F4:2 C4:2 . . . .', { art: 'sus', vel: 100 });
+  line(B, 'ts', 0, 32, 2, 'F4:2 . Eb4:2 C4:2 Ab3:2 C4:8 . . . . . . . . . . . . . . . .', { art: 'sus', vel: 92 });
+  line(C, 'ts', 0, 0, 2, 'G4:2 . E4:2 G4:2 Bb4:2 G4:4 . . F4:2 D4:2 Bb3:6 . . . . . . . .', { art: 'sus', vel: 100 });
+  line(C, 'vb', 0, 32, 2, 'A4 C5 Eb5 F5 A5:4 . . F5 Eb5 C5 A4:4 . . E4 G4 Bb4 C5:4 . .', { art: 'sus', vel: 88 });
+  line(C, 'vb', 1, 32, 2, 'F4 A4 C5 Eb5 F5:4 . . Eb5 C5 A4 F4:4 . . C4 E4 G4 Bb4:4 . .', { art: 'sus', vel: 72 });
+  line(C, 'dk', 3, 60, 2, K.snare + '!70 ' + K.snare + '!90');
+  for (const p of [A, B, C]) { lane(patTrack(p, 'dk').dyn, '0:96_', tpr); lane(patTrack(p, 'ub').dyn, '0:100_', tpr); lane(patTrack(p, 'pn').dyn, '0:84_', tpr); lane(patTrack(p, 'gt').dyn, '0:70_', tpr); lane(patTrack(p, 'ts').dyn, '0:90 63:110', tpr); lane(patTrack(p, 'vb').dyn, '0:80_', tpr); }
+  return fitColumns(song);
+}
+
+export function exCrossroadsReel() {
+  const song = bankSong('Crossroads reel (folk)', 'folk', [['fd', 'Fiddle', 'fiddle', 1], ['if', 'Irish flute', 'irish-flute', 2], ['hm', 'Harmonica', 'harmonica', 3], ['bj', 'Banjo', 'banjo', 4], ['fh', 'Folk harp', 'folk-harp', 5], ['fdr', 'Frame drum', 'frame-drum', 9], ['wb', 'Washboard', 'washboard', 11], ['hp', 'Hand percussion', 'hand-percussion', 12]]);
+  song.bpm = 112; song.key = { root: 2, scale: 'major' };
+  song.notes = 'A reel in D: fiddle and Irish flute carry the tune in eighths, banjo rolls and harp arpeggios under it, harmonica holds the drone, frame drum plays the bodhrán part with washboard and shaker keeping time. Order A A B B.';
+  const A = song.patterns[0], B = newPattern('B'); song.patterns.push(B); song.order = [{ pattern: 0, repeat: 2, tracks: {} }, { pattern: 1, repeat: 2, tracks: {} }];
+  const tpr = A.ticksPerRow;
+  const tuneA = 'D5 F#5 A5 F#5 D5 F#5 A5 B5 | A5 F#5 D5 F#5 E5 D5 C#5 E5 | D5 F#5 A5 F#5 D5 F#5 A5 B5 | A5 F#5 E5 C#5 D5:4 . D5:2';
+  const tuneB = 'D6 C#6 B5 A5 B5 A5 F#5 A5 | G5 F#5 E5 F#5 G5 A5 B5 C#6 | D6 C#6 B5 A5 B5 A5 F#5 A5 | G5 E5 C#5 E5 D5:4 . D5:2';
+  line(A, 'fd', 0, 0, 2, tuneA, { art: 'stc', vel: 100 }); line(B, 'fd', 0, 0, 2, tuneB, { art: 'stc', vel: 104 });
+  line(A, 'if', 0, 0, 2, tuneA, { art: 'sus', vel: 84 }); line(B, 'if', 0, 0, 2, tuneB, { art: 'sus', vel: 90 });
+  // banjo forward rolls over the chords D | G | D | A
+  const rolls = { D: 'D4 F#4 A4 D5 F#4 A4 D5 F#5', G: 'G4 B4 D5 G5 B4 D5 G5 B5', A: 'A4 C#5 E5 A5 C#5 E5 A5 C#6' };
+  for (const [pat, chords] of [[A, ['D', 'G', 'D', 'A']], [B, ['D', 'G', 'A', 'D']]]) {
+    chords.forEach((ch, bar) => {
+      line(pat, 'bj', 0, bar * 16, 2, rolls[ch], { vel: 90 });
+      const root = ch === 'D' ? ['D3', 'A3', 'D4', 'F#4'] : ch === 'G' ? ['G3', 'D4', 'G4', 'B4'] : ['A3', 'E4', 'A4', 'C#5'];
+      line(pat, 'fh', 0, bar * 16, 4, root.join(' '), { vel: 80 });
+      line(pat, 'hm', 0, bar * 16, 16, (ch === 'A' ? 'A4' : 'D5') + ':16', { vel: 60 });
+      line(pat, 'hm', 1, bar * 16, 16, (ch === 'A' ? 'E5' : 'A4') + ':16', { vel: 50 });
+      // bodhrán: low on 1 and 3, small hits on the eighths between, a muted low on the and of 4
+      line(pat, 'fdr', 0, bar * 16, 2, 'C2!100 G2!60 G2!50 G2!70 C2!96 G2!60 G2!50 D2!80');
+      line(pat, 'wb', 0, bar * 16, 4, 'C2!70 D2!80 C2!70 D2!84');
+      line(pat, 'hp', 0, bar * 16, 2, rep(8, 'C3!56'));
+      line(pat, 'hp', 1, bar * 16 + 12, 4, 'F#2!80');
+    });
+  }
+  line(B, 'wb', 1, 56, 2, 'G#2!90 A#2!100 D3!100 D3!110');
+  for (const p of [A, B]) { lane(patTrack(p, 'fd').dyn, '0:96_', tpr); lane(patTrack(p, 'if').dyn, '0:80_', tpr); lane(patTrack(p, 'hm').dyn, '0:60_', tpr); lane(patTrack(p, 'bj').dyn, '0:90_', tpr); lane(patTrack(p, 'fh').dyn, '0:80_', tpr); lane(patTrack(p, 'fdr').dyn, '0:100_', tpr); lane(patTrack(p, 'wb').dyn, '0:80_', tpr); lane(patTrack(p, 'hp').dyn, '0:70_', tpr); }
+  return fitColumns(song);
+}
+
+export function exNightDrive() {
+  const song = bankSong('Night drive (electronica)', 'electronica', [['dm', 'Drum machine', 'drum-machine', 9], ['sb', 'Synth bass', 'synth-bass', 1], ['pd', 'Pad', 'pad', 2], ['sa', 'Synth arp', 'synth-arp', 3], ['pl', 'Pluck', 'pluck', 4], ['fp', 'FM piano', 'fm-piano', 5], ['cs', 'Clavisynth', 'clavisynth', 6], ['ld', 'Lead', 'lead', 7]]);
+  song.bpm = 124; song.key = { root: 9, scale: 'natural-minor' };
+  song.notes = 'Four on the floor in A minor: kick, clap and hats from the drum machine (chance on the ghost hats, a retrigger fill), octave bass, a pad that swells with the EXP command, an arpeggio made by ARP on held notes, FM piano and clavisynth stabs, and a lead that enters in the second pattern. Order A B B A.';
+  const A = song.patterns[0], B = newPattern('B'); song.patterns.push(B); song.order = [0, 1, 1, 0];
+  const tpr = A.ticksPerRow;
+  const prog = ['A', 'F', 'C', 'G'], bassOf = { A: 'A1', F: 'F1', C: 'C2', G: 'G1' }, chord = { A: ['A3', 'C4', 'E4'], F: ['F3', 'A3', 'C4'], C: ['C4', 'E4', 'G4'], G: ['G3', 'B3', 'D4'] };
+  for (const [pat, drop] of [[A, false], [B, true]]) {
+    prog.forEach((ch, bar) => {
+      const r = bar * 16;
+      line(pat, 'dm', 0, r, 4, rep(4, K.kick + '!110'));
+      line(pat, 'dm', 1, r + 4, 8, K.clap + '!100 ' + K.clap + '!100');
+      line(pat, 'dm', 2, r + 2, 4, rep(4, K.hatC + '!70'));
+      line(pat, 'dm', 3, r + 1, 2, rep(8, K.hatC + '!40'));       // ghost hats, thinned by chance
+      if (drop) line(pat, 'dm', 1, r + 6, 8, K.hatO + '!80 ' + K.hatO + '!80');   // shares the clap column (rows 6 and 14 are free)
+      const b = bassOf[ch];
+      line(pat, 'sb', 0, r, 2, rep(4, b + '!100 ' + b.replace(/\d/, d => +d + 1) + '!84'), { art: 'stc' });
+      chord[ch].forEach((n, c) => line(pat, 'pd', c, r, 16, n + ':16', { vel: 80 }));
+      line(pat, 'sa', 0, r, 16, chord[ch][0].replace(/\d/, d => +d + 1) + ':16', { vel: 90 });   // one held note; ARP makes the pattern
+      if (drop) { chord[ch].forEach((n, c) => line(pat, 'cs', c, r + 6, 2, n + ':1@stc', { vel: 96 })); chord[ch].forEach((n, c) => line(pat, 'cs', c, r + 14, 2, n + ':1@stc', { vel: 88 })); }
+      else chord[ch].forEach((n, c) => line(pat, 'fp', c, r, 8, n + ':6 . ' + n + ':4', { vel: 76 }));
+      line(pat, 'pl', 0, r + 2, 4, rep(4, chord[ch][2] + '!70'), { art: 'stc' });
+    });
+    const dm = patTrack(pat, 'dm');
+    for (let bar = 0; bar < 4; bar++) for (let i = 1; i < 16; i += 2) if (bar * 16 + i !== 63) dm.fx.push({ tick: (bar * 16 + i) * tpr, cmd: 'CHA', value: 0x70 });   // ghost hats play about 45% of the time (row 63 keeps its fill)
+    dm.fx.push({ tick: 62 * tpr, cmd: 'RET', value: 0x04 }, { tick: 63 * tpr, cmd: 'RET', value: 0x08 });
+    line(pat, 'dm', 0, 62, 1, K.snare + '!90 ' + K.snare + '!110');   // the kick column is free on the last two rows
+    const pd = patTrack(pat, 'pd'); for (let bar = 0; bar < 4; bar++) pd.fx.push({ tick: bar * 16 * tpr, cmd: 'EXP', value: 0x1C });
+    const sa = patTrack(pat, 'sa'); for (let bar = 0; bar < 4; bar++) sa.fx.push({ tick: bar * 16 * tpr, cmd: 'ARP', value: 0x37 });   // minor third and fifth
+  }
+  line(B, 'ld', 0, 0, 2, 'E5:2 . G5:2 A5:4 . . G5:2 E5:2 D5:4 . . C5:2 D5:2 E5:6 . . . . . . . .', { art: 'sus', vel: 100 });
+  line(B, 'ld', 0, 32, 2, 'E5:2 . G5:2 B5:4 . . A5:2 G5:2 E5:4 . . D5:2 E5:2 A5:6 . . . . . . . .', { art: 'sus', vel: 104 });
+  line(B, 'dm', 1, 0, 16, K.crash + '!100');
+  for (const p of [A, B]) { lane(patTrack(p, 'dm').dyn, '0:100_', tpr); lane(patTrack(p, 'sb').dyn, '0:100_', tpr); lane(patTrack(p, 'pd').dyn, '0:60 63:96', tpr); lane(patTrack(p, 'sa').dyn, '0:70 63:96', tpr); lane(patTrack(p, 'fp').dyn, '0:76_', tpr); lane(patTrack(p, 'cs').dyn, '0:90_', tpr); lane(patTrack(p, 'pl').dyn, '0:70_', tpr); lane(patTrack(p, 'ld').dyn, '0:96_', tpr); }
+  lane(patTrack(A, 'pd').expr, '0:90_', tpr); lane(patTrack(B, 'pd').expr, '0:110_', tpr);
+  return fitColumns(song);
+}
+
 const EXAMPLE_LIST = [
   { title: 'Sketch in C', build: seedSong },
   { title: 'Brass chorale', build: exBrassChorale },
@@ -333,6 +454,9 @@ const EXAMPLE_LIST = [
   { title: 'Reel (folk)', build: exReel },
   { title: 'Waltz (folk, 3/4)', build: exWaltz },
   { title: 'Lament (folk, A Dorian)', build: exLament },
+  { title: 'Blue in F (jazz)', build: exBlueInF },
+  { title: 'Crossroads reel (folk)', build: exCrossroadsReel },
+  { title: 'Night drive (electronica)', build: exNightDrive },
 ];
 // Built-in examples get stable ids so autosave can tell an edited example from a fresh one.
 export const EXAMPLES = EXAMPLE_LIST.map(e => ({ title: e.title, uid: 'example:' + e.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),

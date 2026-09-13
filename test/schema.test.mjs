@@ -4,6 +4,8 @@ import { readFile } from 'node:fs/promises';
 import { EXAMPLES } from '../src/core/examples.js';
 import { newSong } from '../src/core/song.js';
 import { INSTRUMENTS } from '../src/core/instruments.js';
+import { installBank } from '../src/core/banks.js';
+for (const b of ['jazz', 'folk', 'electronica']) installBank(JSON.parse(await readFile(new URL('../banks/' + b + '/bank.json', import.meta.url))), 'file:///banks/' + b + '/bank.json');
 
 const ajv = new Ajv2020({ allErrors: true, strict: true });
 ajv.addFormat('uri', /^https?:\/\/\S+$/);
