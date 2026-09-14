@@ -384,6 +384,25 @@ Goal: perform rather than arrange, from the phone.
 
 Afterwards: nothing new in the song; entries and follows were only played.
 
+## Planned terms
+
+Words the roadmap (docs/roadmap.md) will add, fixed now so specs and labels agree when they arrive. None changes the file format version; every field is optional.
+
+| Term | Meaning | Lives in | Phase |
+|---|---|---|---|
+| **Chord** | A symbol (root, quality, extensions) at a row of a pattern's chord lane, held until the next. Describes; never sounds. | pattern.chords | 3.1 |
+| **Role** | What a note is against the chord on its row: root, third, fifth, seventh, extension, in scale, outside. | derived | 3.1 |
+| **Shift** | A placement's move in scale degrees of the active key, beside its chromatic transpose. | placement.shift | 3.2 |
+| **Modulation** | An entry's own key, overriding the pattern's and the song's while it plays. | entry.key | 3.2 |
+| **Check** | A rule evaluated over expanded material, reported as findings; informs, never blocks. | core | 3.3 |
+| **Finding** | One result of a check: row, tracks, reason. | derived | 3.3 |
+| **Exercise** | A prompt with the checks that apply and the rows it covers, attached to a song or a phrase. | song.exercise, phrase.prompt | 3.3 |
+| **Scratch** | The pattern Capture records into; a pattern like any other once placed in the arrangement. | song.scratch | 3.4 |
+| **Variation** | A phrase derived from another by an operation (invert, retrograde, displace, thin, augment, diminish, shuffle). | phrase.from | 3.4 |
+| **Loop selection**, **Slow**, **Interval** | Listening controls: play the selected rows, scale the tempo, name the distance to the bass. | UI only | 3.5 |
+
+Words not used for these: *progression* (say chords), *degree shift* (say shift), *lint* or *error* (say check and finding), *clip* for a capture (say scratch), *mutation* (say variation).
+
 ## Consistency checklist for specs and UI
 
 - Phrases are the song's; there is no store across songs (save a song to share phrases).
