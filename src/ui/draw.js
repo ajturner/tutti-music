@@ -26,6 +26,12 @@ export function resize() {
 }
 window.addEventListener('resize', resize);
 
+// Text cut to a width, so narrow columns (note-only tracks on a phone) do not overlap their neighbours.
+function fitText(text, maxW) {
+  if (ctx.measureText(text).width <= maxW) return text;
+  let n = text.length; while (n > 1 && ctx.measureText(text.slice(0, n)).width > maxW) n--;
+  return text.slice(0, n);
+}
 export function draw() {
   if (!canvas.clientWidth || !canvas.clientHeight) { syncPad(); syncSelBar(); syncMixer(); updateStatus(null); return; }   // hidden behind another phone screen: keep the panels in step
   const dpr = window.devicePixelRatio || 1;
@@ -174,8 +180,9 @@ export function draw() {
     let j = i; while (j + 1 < L.tracks.length && INST[L.tracks[j + 1].track.instrument].family === fam) j++;
     const x0 = L.tracks[i].x, x1 = L.tracks[j].x + L.tracks[j].w - view.charW;
     ctx.fillStyle = FAMILIES[fam].color; ctx.fillRect(x0, 4, x1 - x0, 2);
-    ctx.globalAlpha = 0.75; ctx.fillText(FAMILIES[fam].label, x0, bandY); ctx.globalAlpha = 1;
-    labelEnd.set(i, x0 + ctx.measureText(FAMILIES[fam].label).width + view.charW);
+    const famLabel = fitText(FAMILIES[fam].label, Math.max(view.charW * 2, x1 - x0));
+    ctx.globalAlpha = 0.75; ctx.fillText(famLabel, x0, bandY); ctx.globalAlpha = 1;
+    for (let k = i; k <= j; k++) labelEnd.set(k, x0 + ctx.measureText(famLabel).width + view.charW);   // every track under the label
     i = j + 1;
   }
   const anySolo = tracksShown().some(t => t.solo);
@@ -183,11 +190,12 @@ export function draw() {
     const tr = lay.track, fam = FAMILIES[INST[tr.instrument].family];
     const silent = tr.mute || (anySolo && !tr.solo);
     ctx.fillStyle = silent ? COLORS.num : fam.color;
-    ctx.fillText(state.phraseEdit ? tr.name + ' \u00b7 phrase ' + (curPhrase() || {}).name : tr.name, lay.x, nameY);
-    if (tr.mute) ctx.fillRect(lay.x, nameY, ctx.measureText(tr.name).width, 1);
-    if (tr.solo) { ctx.fillStyle = COLORS.accent; ctx.fillText('S', lay.x + ctx.measureText(tr.name).width + view.charW * 0.6, nameY); }
+    const nameFull = state.phraseEdit ? tr.name + ' \u00b7 phrase ' + (curPhrase() || {}).name : tr.name, name = fitText(nameFull, lay.w - view.charW * (tr.solo ? 2 : 0.75));
+    ctx.fillText(name, lay.x, nameY);
+    if (tr.mute) ctx.fillRect(lay.x, nameY, ctx.measureText(name).width, 1);
+    if (tr.solo) { ctx.fillStyle = COLORS.accent; ctx.fillText('S', lay.x + ctx.measureText(name).width + view.charW * 0.6, nameY); }
     // During song playback a chained track plays another pattern's data: show which.
-    if (playStart && playStart.follows && playStart.follows[tr.id] != null) { const p = song.patterns[playStart.follows[tr.id]]; ctx.fillStyle = COLORS.accent; ctx.fillText('\u25b8' + (p ? p.name : '?'), lay.x + ctx.measureText(tr.name).width + view.charW * (tr.solo ? 2 : 0.6), nameY); }
+    if (playStart && playStart.follows && playStart.follows[tr.id] != null) { const p = song.patterns[playStart.follows[tr.id]]; ctx.fillStyle = COLORS.accent; ctx.fillText(fitText('\u25b8' + (p ? p.name : '?'), Math.max(view.charW, lay.w - ctx.measureText(name).width - view.charW * 1.5)), lay.x + ctx.measureText(name).width + view.charW * (tr.solo ? 2 : 0.6), nameY); }
     // third row: what each cell holds, so a new user can read the columns
     ctx.fillStyle = COLORS.num; ctx.font = Math.round(parseInt(view.FONT, 10) * 0.78) + 'px ' + view.FONT.slice(view.FONT.indexOf(' ') + 1);   // small caps-sized labels fit inside each cell
     for (const cell of lay.cells) { const label = cell.kind === 'note' && cell.col > 0 ? ['2nd', '3rd', '4th'][cell.col - 1] : CELL_LABEL[cell.kind]; ctx.fillText(label, cell.x, labelY); }
