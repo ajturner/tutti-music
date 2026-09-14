@@ -72,7 +72,11 @@ A status line SHALL show the cursor's track, column, row, the note under the cur
 - **THEN** the status reads "phrase Vamp +5 ×4 used 2× · Enter edits"
 
 ### Requirement: Column visibility
-The View panel SHALL show or hide the velocity, articulation, dynamics and fx cells for every track. Hidden cells SHALL leave the layout, cursor movement and selection indexing, their data SHALL be kept, and the choice SHALL persist per browser.
+The View panel SHALL show or hide the velocity, articulation, dynamics and fx cells for every track. Hidden cells SHALL leave the layout, cursor movement and selection indexing, their data SHALL be kept, and the choice SHALL persist per browser. On a screen narrower than 760 px with no stored choice, only note columns SHALL show, so the whole ensemble fits across the screen.
+
+#### Scenario: Phone default
+- **WHEN** the app opens on a phone for the first time
+- **THEN** every track shows its note columns only and at least eight tracks are visible without scrolling
 
 #### Scenario: Hide fx and dynamics
 - **WHEN** the user unticks fx and dyn

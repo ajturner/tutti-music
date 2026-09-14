@@ -108,4 +108,10 @@ export const rowsPerStrongBeat = () => { const [beats, unit] = patMeter(curPat()
 
 sampler.onProgress = (id, done, total) => { state.loadingSamples = done < total ? id + ' ' + done + '/' + total : null; state.dirty = true; };
 try { const v = localStorage.getItem('tutti.sound'); if (v === 'synth' || v === 'samples') state.sound = v; } catch { /* no storage */ }
-try { const v = JSON.parse(localStorage.getItem('tutti.show.v1') || 'null'); if (v && typeof v === 'object') Object.assign(state.show, v); } catch { /* no storage */ }
+// Column visibility: a phone starts with note columns only so the whole orchestra fits across the screen
+// (ten tracks instead of one); the View menu turns the other cells on, and the choice is remembered.
+try {
+  const v = JSON.parse(localStorage.getItem('tutti.show.v1') || 'null');
+  if (v && typeof v === 'object') Object.assign(state.show, v);
+  else if (window.innerWidth < 760) state.show = { vel: false, art: false, dyn: false, fx: false };
+} catch { /* no storage */ }

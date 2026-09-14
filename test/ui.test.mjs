@@ -613,7 +613,11 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   await page.tap('#padKeys button:text-is("E")'); await page.waitForTimeout(50);
   const n = await page.evaluate(() => { const t = curTrack(); return { n: noteAt(curPat(), t.id, 0, 3), row: state.cursor.row }; });
   check('phone: pad key entered E4 and advanced', n.n && n.n.pitch === 64 && n.row === 7, JSON.stringify(n));
-  // move to the velocity cell: pad should switch to hex
+  const fit = await page.evaluate(() => ({ show: Object.values(state.show).every(v => !v), tracksVisible: tutti.computeLayout().tracks.filter(t => t.x - state.scrollX >= 0 && t.x + t.w - state.scrollX <= document.getElementById('grid').clientWidth).length }));
+  check('phone: note columns only by default, so most tracks fit across', fit.show && fit.tracksVisible >= 8, JSON.stringify(fit));
+  // turn velocity on from View, then move to the velocity cell: pad should switch to hex
+  await page.evaluate(() => tutti.setPanel('view')); await page.check('input[data-show="vel"]'); await page.evaluate(() => tutti.setPanel(null)); await page.waitForTimeout(60);
+  await page.evaluate(() => { state.cursor.track = 0; state.cursor.cell = 0; state.cursor.row = 3; state.dirty = true; }); await page.waitForTimeout(40);
   await page.tap('#padNav button:nth-child(4)'); await page.waitForTimeout(80);
   const hex = await page.$$eval('#padKeys button', bs => bs.map(b => b.textContent).join(''));
   check('phone: pad shows hex for velocity', hex === '0123456789ABCDEF', hex);
