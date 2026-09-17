@@ -32,12 +32,16 @@ export function sendControl(tr, cc, value) {
   const ev = { type: 'cc', track: tr.id, cc, value, channel: tr.channel - 1, family: ins.family, trackRef: tr };
   for (const s of sched.getSinks()) s.send(ev, performance.now());
 }
+// A sound is on offer when its bank is loaded and showing. Sounds can stay registered without that: another song in
+// the list still uses them after their bank was unloaded, or a song was opened before its bank arrived (a placeholder
+// that plays through the synth). Those keep playing, but they are not something to choose from.
+export const offered = ins => !!ins && banks.has(ins.bank) && !hiddenBanks.has(ins.bank);
 // Sounds grouped by bank: the orchestra first, then each loaded bank (with the sounds it includes).
 export function soundOptions(cur) {
   const groups = [];
   for (const b of banks.values()) { if (hiddenBanks.has(b.id) && !(cur && INST[cur] && INST[cur].bank === b.id)) continue; groups.push([b.id, b.name, [...b.instruments, ...b.includes].map(id => INST[id]).filter(Boolean)]); }
-  const rest = INSTRUMENTS.filter(i => i.bank !== 'orchestra' && !banks.has(i.bank));
-  if (rest.length) groups.push(['other', 'Other', rest]);
+  // an instrument's own sound always shows in its picker, even when its bank is not on offer
+  if (cur && INST[cur] && !groups.some(([, , list]) => list.includes(INST[cur]))) groups.push(['current', 'This instrument', [INST[cur]]]);
   const opt = i => '<option value="' + i.id + '"' + (i.id === cur ? ' selected' : '') + '>' + esc(i.name) + ' (' + (FAMILIES[i.family] || FAMILIES.electronic).label + ')</option>';
   return groups.map(([id, label, list]) => '<optgroup label="' + esc(label) + '">' + list.map(opt).join('') + '</optgroup>').join('');
 }
@@ -92,7 +96,7 @@ export function renderInstruments() {
       </div>` : ''}
     </div>`;
   }).join('');
-  const add = $('instAddSound'), cur = add.value; add.innerHTML = soundOptions(cur || 'violins-1');
+  const add = $('instAddSound'), cur = add.value; add.innerHTML = soundOptions(null); if (cur && [...add.options].some(o => o.value === cur)) add.value = cur;
   if ($('soundBrowser').open) renderSounds();
 }
 const rowOf = el => { const r = el.closest('.inst'); return r ? state.song.instruments[parseInt(r.dataset.i, 10)] : null; };
@@ -156,7 +160,7 @@ export function openInstruments() { setPanel('instruments'); }
 export function renderSounds() {
   const body = $('soundsBody'); if (!body) return;
   const uses = {}; for (const tr of state.song.instruments) uses[tr.sound] = (uses[tr.sound] || 0) + 1;
-  body.innerHTML = INSTRUMENTS.filter(ins => !hiddenBanks.has(ins.bank)).map(ins => {
+  body.innerHTML = INSTRUMENTS.filter(offered).map(ins => {
     const cov = sampler.coverage(ins.id), fam = FAMILIES[ins.family] || FAMILIES.electronic;
     return `<tr data-id="${ins.id}" style="--fam:${fam.color}">
       <td class="name"><span class="swatch"></span>${esc(ins.name)}<small>${fam.label}</small></td>
@@ -251,7 +255,7 @@ function fitCanvases() {
 async function showBrowser() {
   fitCanvases(); if (!raf) raf = requestAnimationFrame(loop);
   catalog = await loadCatalog(); renderBanks(); renderSounds(); fitCanvases();
-  sampler.preload(INSTRUMENTS.map(i => i.id)).then(() => { if ($('soundBrowser').open) renderSounds(); });   // load what is not loaded yet so the rows fill in
+  sampler.preload(INSTRUMENTS.filter(offered).map(i => i.id)).then(() => { if ($('soundBrowser').open) renderSounds(); });   // load what is not loaded yet so the rows fill in
 }
 // Called by the panels module when the Instruments panel opens and closes.
 export function showInstruments() { if (!state.song.instruments.length) $('soundBrowser').open = true; renderInstruments(); if ($('soundBrowser').open) showBrowser(); }

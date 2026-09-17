@@ -7,11 +7,15 @@
 ## ADDED Requirements
 
 ### Requirement: Sound browser
-Under the instruments, closed until asked for, the Instruments panel SHALL list every sound of the loaded banks with its bank, its current source (samples, synth, or loading), each articulation marked as sampled or showing which sampled articulation it falls back to, an audition of a short figure (of one articulation when an articulation is clicked), and a button that adds an instrument made from it with a count of the instruments already using it. A sound SHALL have no settings of its own. The browser SHALL hold the banks bar and show a live oscilloscope of the preview output and the waveform of the zone that last played with its sound, articulation, root and file.
+Under the instruments, closed until asked for, the Instruments panel SHALL list every sound of the loaded banks with its bank, its current source (samples, synth, or loading), each articulation marked as sampled or showing which sampled articulation it falls back to, an audition of a short figure (of one articulation when an articulation is clicked), and a button that adds an instrument made from it with a count of the instruments already using it. A sound SHALL have no settings of its own. Only sounds whose bank is loaded and showing SHALL be listed, here and in the sound pickers: a sound that stays registered because another song in the list uses it after its bank was unloaded, or a placeholder for a sound whose bank has not arrived, SHALL keep playing but SHALL NOT be offered; an instrument's own sound SHALL still show in that instrument's picker. The browser SHALL hold the banks bar and show a live oscilloscope of the preview output and the waveform of the zone that last played with its sound, articulation, root and file.
 
 #### Scenario: See what a fallback does
 - **WHEN** the user opens the browser with violins loaded
 - **THEN** sus, stc, piz and trm are marked sampled and leg reads "leg→sus"
+
+#### Scenario: Unload a bank another song uses
+- **WHEN** the user loads Electronica, then unloads it, while an example in the song list uses its sounds
+- **THEN** no Electronica sound is listed or offered in a picker, and no row reads "missing"
 
 #### Scenario: Add from the browser
 - **WHEN** the user presses + on Timpani in a song that already has timpani

@@ -621,6 +621,17 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   check('banks: loading jazz registers its instruments with samples', jazz.loaded && jazz.sax && jazz.kit === 'kick' && jazz.rows > 15 && jazz.saxSrc && jazz.saxSrc.startsWith('SMP'), JSON.stringify(jazz));
   const groups = await page.$$eval('#instAddSound optgroup', g => g.map(x => x.label));
   check('banks: instrument picker groups by bank', groups.includes('Symphony orchestra') && groups.includes('Jazz combo'), groups.join(','));
+  // unloading a bank takes its sounds off the list even when another song in the list still uses them, and a
+  // placeholder for a sound whose bank never arrived is never offered
+  if (!(await page.evaluate(() => tutti.banks.has('electronica')))) { await page.click('#bankList [data-bank="electronica"]'); await page.waitForTimeout(1500); }
+  await page.evaluate(() => tutti.renderSounds());
+  const elOn = await page.evaluate(() => ({ loaded: tutti.banks.has('electronica'), rows: [...document.querySelectorAll('#soundsBody tr .bankcell')].filter(c => c.textContent === 'Electronica').length, usedElsewhere: tutti.INSTRUMENTS.filter(i => i.bank === 'electronica' && state.songs.some(s => s !== state.song && s.instruments.some(t => t.sound === i.id))).map(i => i.id) }));
+  await page.click('#bankList [data-bank="electronica"]'); await page.waitForTimeout(300);
+  await page.evaluate(() => { tutti.placeholdersFor({ instruments: [{ id: 'g', name: 'Ghost', sound: 'ghost-sound', channel: 1 }], banks: [] }); tutti.renderInstruments(); });
+  const elOff = await page.evaluate(used => ({ loaded: tutti.banks.has('electronica'), kept: used.filter(id => !!INST[id]), ghost: !!INST['ghost-sound'], rows: [...document.querySelectorAll('#soundsBody tr')].map(r => r.dataset.id), banks: [...new Set([...document.querySelectorAll('#soundsBody .bankcell')].map(c => c.textContent))], picker: [...document.querySelectorAll('#instAddSound option')].map(o => o.value) }), elOn.usedElsewhere);
+  check('banks: an unloaded bank\'s sounds leave the browser and the pickers even while other songs keep them registered, and missing placeholders are never listed',
+    elOn.loaded && elOn.rows > 3 && elOn.usedElsewhere.length > 0 && !elOff.loaded && elOff.kept.length === elOn.usedElsewhere.length && elOff.ghost && !elOff.rows.some(id => elOff.kept.includes(id) || id === 'ghost-sound') && !elOff.picker.some(id => elOff.kept.includes(id) || id === 'ghost-sound') && !elOff.banks.some(b => /electronica|missing/i.test(b)), JSON.stringify({ elOn, banks: elOff.banks, kept: elOff.kept }));
+  await page.evaluate(() => tutti.unregisterInstrument('ghost-sound'));
   await page.selectOption('#instAddSound', 'drum-kit'); await page.click('#instAdd'); await page.waitForTimeout(80);
   const bankAdd = await page.evaluate(() => ({ banks: state.song.banks, inst: state.song.instruments[state.song.instruments.length - 1].sound, status: document.getElementById('status').textContent }));
   check('banks: adding an instrument from a bank\'s sound records the bank and shows kit pieces', bankAdd.banks.includes('jazz') && bankAdd.inst === 'drum-kit' && bankAdd.status.includes('kick'), JSON.stringify(bankAdd));
