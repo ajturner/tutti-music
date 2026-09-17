@@ -1,5 +1,7 @@
 # Roadmap: learning theory while making music
 
+> **Paused** on 2026-09-17 while the composition model is revised ([domain-4.md](domain-4.md)). Phase 2 shrinks once that lands: key per section and placement shift are part of the new model.
+
 Five phases, one OpenSpec change each, released as 3.1 to 3.5. Each phase adds its words to docs/domain.md before any code, keeps the core UI-free with tests, and ships with a showcase song that uses it. Order matters: the chord lane upgrades everything after it, and nothing later needs a format break.
 
 | Phase | Version | Teaches | Fun | Depends on |

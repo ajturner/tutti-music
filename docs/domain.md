@@ -1,5 +1,7 @@
 # Tutti domain model
 
+> **A revision is proposed in [domain-4.md](domain-4.md):** sections arranged into a song, phrases as the multi-track block, patterns as the reusable line, and no follows. This document describes what 3.0.x implements.
+
 The vocabulary the app, the specs, the file format and the guide all use. One word per concept, one home per concept, and the JSON field is the same word as the label on screen. Format version 3 is the first to follow this document; earlier files are not read (no songs were saved with them).
 
 ## Ubiquitous language
