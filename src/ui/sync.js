@@ -1,11 +1,9 @@
 // Keep the song and phrase controls in the header in step with the state.
 import { KEY_ROOTS, SCALE_NAMES } from '../core/scales.js';
-import { arrangementText, patternUses } from '../core/song.js';
 import { updateLocation } from './session.js';
-import { syncArranger } from './arranger.js';
 import { clamp } from '../core/constants.js';
 import { phraseMeter } from '../core/song.js';
-import { $, curPhrase, curPattern, state } from './state.js';
+import { $, curPhrase, curPattern, curSection, state } from './state.js';
 
 // ---- Toolbar wiring -------------------------------------------------------------------------
 export const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -23,13 +21,17 @@ function fillOnce(sel, options) {
   sel.innerHTML = options.map(([v, l]) => '<option value="' + v + '">' + l + '</option>').join('');
   sel.dataset.filled = '1';
 }
+// The key selects show the key at the chosen scope: the song's, this section's, or this phrase's own.
 export function syncKeyUI() {
-  const root = $('keyRoot'), scale = $('keyScale');
+  const root = $('keyRoot'), scale = $('keyScale'), scopeSel = $('keyScope');
   fillOnce(root, [['', 'none'], ...KEY_ROOTS.map((n, i) => [String(i), n])]);
   fillOnce(scale, SCALE_NAMES.map(n => [n, n]));
-  const pk = curPhrase().key, key = pk || state.song.key;
-  $('keyPhrase').checked = !!pk;
+  const sec = curSection(), ptn = curPattern();
+  for (const o of scopeSel.options) { if (o.value === 'section') { o.disabled = !sec; o.textContent = sec ? 'section ' + sec.name : 'this section'; } if (o.value === 'phrase') { o.disabled = !!ptn; o.textContent = ptn ? 'this phrase' : 'phrase ' + state.song.phrases[state.phr].name; } }
+  if (scopeSel.selectedOptions[0] && scopeSel.selectedOptions[0].disabled) scopeSel.value = 'song';
+  const scope = scopeSel.value, key = scope === 'phrase' ? state.song.phrases[state.phr].key : scope === 'section' ? (sec && sec.key) : state.song.key;
   root.value = key ? String(key.root) : ''; scale.value = key ? key.scale : 'major';
+  root.options[0].textContent = scope === 'song' ? 'none' : 'as above';
 }
 export function syncGrooveUI() {
   const sel = $('groove'), list = $('grooveList');
@@ -51,36 +53,24 @@ export function syncSongUI() {
   syncKeyUI();
 }
 export function syncPhraseUI() {
-  const sel = $('phrase');
-  sel.innerHTML = state.song.phrases.map((p, i) => '<option value="' + i + '">' + i + ' ' + p.name + '</option>').join('');
-  sel.value = state.phr;
-  const pm = phraseMeter(curPhrase());
-  sel.title = 'Phrase ' + state.phr + ' ' + curPhrase().name + ': ' + curPhrase().rows + ' rows, ' + pm[0] + '/' + pm[1] + ' (settings in Compose)';
-  const ptn = curPattern();
-  document.querySelector('.phraseset').dataset.label = ptn ? 'pattern ' + ptn.name + ' (Esc returns)' : 'phrase ' + state.phr + ' ' + curPhrase().name;
-  syncPatterns();
+  const song = state.song, sel = $('phrase');
+  state.phr = clamp(state.phr, 0, song.phrases.length - 1);
+  const sec = curSection(), si = sec ? song.sections.indexOf(sec) : -1;
+  // Phrases are listed under their sections, in the order the sections hold them.
+  sel.innerHTML = song.sections.map((x, xi) => '<optgroup label="' + esc(x.name) + '">' + x.phrases.map(sl => { const pi = song.phrases.findIndex(p => p.id === sl.phrase); return pi < 0 ? '' : '<option value="' + xi + ':' + pi + '">' + esc(song.phrases[pi].name) + (sl.repeat > 1 ? ' ×' + sl.repeat : '') + '</option>'; }).join('') + '</optgroup>').join('');
+  sel.value = si + ':' + state.phr;
+  const pm = phraseMeter(curPhrase()), ptn = curPattern(), phr = song.phrases[state.phr];
+  sel.title = 'Phrase ' + phr.name + (sec ? ' in section ' + sec.name : '') + ': ' + phr.rows + ' rows, ' + phraseMeter(phr).join('/') + ' (settings in Compose)';
+  document.querySelector('.phraseset').dataset.label = ptn ? 'pattern ' + ptn.name + ' (Esc returns)' : 'phrase ' + phr.name + (state.queued != null ? ' · next ' + (song.phrases[state.queued] || {}).name : '');
+  $('blockName').value = ptn ? ptn.name : phr.name;
   $('rows').value = curPhrase().rows;
   $('tpr').value = curPhrase().ticksPerRow;
-  $('meterNum').value = phraseMeter(curPhrase())[0];
-  $('meterDen').value = phraseMeter(curPhrase())[1];
-  $('order').value = arrangementText(state.song);
-  $('bpm').value = state.song.bpm;
+  $('meterNum').value = pm[0];
+  $('meterDen').value = pm[1];
+  for (const id of ['meterNum', 'meterDen', 'groove', 'grooveList', 'addPhrase']) $(id).disabled = !!ptn;   // a pattern owns no time: only its rows and row size
+  $('bpm').value = song.bpm;
   state.cursor.row = clamp(state.cursor.row, 0, curPhrase().rows - 1);
   syncGrooveUI();
   syncKeyUI();
-  syncArranger();
   updateLocation();
-}
-
-// Compose → patterns: one row per pattern with its size and use count. Hidden until the song has a pattern.
-export function syncPatterns() {
-  const grp = document.querySelector('.patterngrp'), body = $('patternsBody'); if (!grp || !body) return;
-  const list = state.song.patterns || [];
-  grp.hidden = list.length === 0;
-  const sig = list.map(p => [p.id, p.name, p.rows, p.columns, patternUses(state.song, p.id)].join('|')).join(';') + '#' + (state.patternEdit ? state.patternEdit.id : '');
-  if (body.dataset.sig === sig) return; body.dataset.sig = sig;
-  body.innerHTML = list.map(p => `<tr data-id="${p.id}"${state.patternEdit && state.patternEdit.id === p.id ? ' class="cur"' : ''}>
-    <td><input data-f="name" type="text" value="${esc(p.name)}" size="12" title="Rename the pattern"></td>
-    <td>${p.rows}</td><td>${p.columns}</td><td>${patternUses(state.song, p.id)}</td>
-    <td><button data-act="edit" title="Open this pattern in the grid (Esc returns)">Edit</button><button data-act="remove" title="Remove the pattern; every placement becomes loose notes">Remove</button></td></tr>`).join('');
 }

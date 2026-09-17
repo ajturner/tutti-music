@@ -19,6 +19,7 @@ export function saveNow() {
 }
 // Called after any edit: remembers the current song and writes shortly after the last change.
 export function markEdited(song = state.song) {
+  state.rev++;
   if (song && song.uid) persisted.add(song.uid);
   clearTimeout(timer); timer = setTimeout(saveNow, 400);
 }

@@ -10,7 +10,7 @@ const SHELL_FILES = [
   'src/core/midi.js', 'src/core/midifile.js', 'src/core/examples.js', 'src/core/edit.js', 'src/core/scales.js', 'src/core/sampler.js',
   'src/ui/state.js', 'src/ui/layout.js', 'src/ui/sync.js', 'src/ui/edit.js', 'src/ui/selection.js', 'src/ui/transport.js', 'src/ui/keyboard.js',
   'src/ui/pointer.js', 'src/ui/draw.js', 'src/ui/gamepad.js', 'src/ui/pad.js', 'src/ui/midi-in.js', 'src/ui/toolbar.js', 'src/ui/storage.js',
-  'src/ui/session.js', 'src/ui/tracks.js', 'src/ui/arranger.js', 'src/ui/mixer.js', 'src/ui/sounds.js', 'src/ui/panels.js',
+  'src/ui/session.js', 'src/ui/tracks.js', 'src/ui/map.js', 'src/ui/songview.js', 'src/ui/monitor.js', 'src/ui/mixer.js', 'src/ui/sounds.js', 'src/ui/panels.js',
   'banks/index.json',
   'src/core/banks.js',
 ];

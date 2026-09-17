@@ -1,26 +1,25 @@
-// Header and panel controls: songs, phrases, meter, order, files, key, groove, view options.
+// Header and panel controls: songs, the open phrase or pattern, meter, files, key, groove, view options.
 import { markEdited, deleteCurrentSong } from './storage.js';
 import { placeholdersFor } from '../core/banks.js';
-import { arranger, syncArranger, wireArranger } from './arranger.js';
 import { wireTracks } from './tracks.js';
 import { queuePhrase, toggleRecord } from './transport.js';
 import { GROOVES, syncKeyUI, syncGrooveUI } from './sync.js';
 import { padSigReset } from './pad.js';
 import { clamp } from '../core/constants.js';
-import { newPhrase, newSong, normalizeSong, entryOf, arrangementText, parseArrangementText, phraseMeter, removePattern } from '../core/song.js';
+import { addPhrase, addSlot, newSong, nextPhraseName, normalizeSong, phraseMeter } from '../core/song.js';
 import { midiFileBytes } from '../core/midifile.js';
-import { $, curPhrase, curPattern, curTrack, preloadSamples, sampler, state, synth } from './state.js';
-import { withSongUndo, withUndo, editPattern, leavePattern } from './edit.js';
+import { $, curPhrase, curPattern, curSection, curTrack, preloadSamples, sampler, state, synth } from './state.js';
+import { withSongUndo, withUndo, leavePattern } from './edit.js';
 import { articulationSel, batchOp, deselect } from './selection.js';
 import { cellKinds } from './layout.js';
-import { playPhrase, playSong, stopAll } from './transport.js';
+import { playPhrase, playSection, playSong, stopAll } from './transport.js';
 import { setPad } from './pad.js';
-import { setPanel } from './panels.js';
-import { syncPhraseUI, syncSongUI, syncPatterns } from './sync.js';
+import { syncPhraseUI, syncSongUI } from './sync.js';
+import { openPhrase } from './map.js';
 
 export function selectSong(i) {
   stopAll();
-  state.songIndex = i; state.song = state.songs[i]; state.phr = 0;
+  state.songIndex = i; state.song = state.songs[i]; state.phr = 0; state.section = 0; state.patternEdit = null; state.songCursor = { row: 0, track: 0 }; state.rev++;
   placeholdersFor(state.song);
   state.undo.length = 0; state.redo.length = 0;
   state.cursor = { row: 0, track: 0, cell: 0 }; state.scrollX = 0; state.typing = null; state.message = '';
@@ -32,31 +31,36 @@ $('song').onchange = e => selectSong(parseInt(e.target.value, 10));
 $('newSong').onclick = () => addSong(Object.assign(newSong(), { title: 'Untitled ' + (state.songs.length + 1) }));
 $('title').onchange = e => { withSongUndo(() => { state.song.title = e.target.value.trim() || 'Untitled'; }); syncSongUI(); };
 $('playPhrase').onclick = () => playPhrase(false);
+$('playSection').onclick = () => playSection();
 $('playSong').onclick = () => playSong();
 $('stop').onclick = () => stopAll();
 $('rec').onclick = () => toggleRecord();
 $('bpm').onchange = e => { withSongUndo(() => { state.song.bpm = clamp(parseInt(e.target.value, 10) || 100, 20, 300); }); };
-export function choosePhrase(i) {
+// Open a phrase from the selector. While a phrase loops the choice is queued and takes over when the loop ends.
+export function choosePhrase(i, sectionIndex) {
   if (!state.song.phrases[i]) return;
-  if (queuePhrase(i)) { $('phrase').value = state.phr; syncArranger(); return; }   // live: takes over when the loop ends
-  state.phr = i; syncPhraseUI(); state.dirty = true;
+  if (queuePhrase(i)) { syncPhraseUI(); return; }
+  state.phr = i; if (sectionIndex != null) state.section = sectionIndex;
+  syncPhraseUI(); state.dirty = true;
 }
-$('phrase').onchange = e => { leavePattern(); choosePhrase(parseInt(e.target.value, 10)); };
-arranger.onPick = choosePhrase;
-arranger.onChange = () => { $('order').value = arrangementText(state.song); };
-wireArranger();
+// Option values are "section:phrase" so a phrase that sits in two sections opens in the one that was picked.
+$('phrase').onchange = e => { leavePattern(); const [si, pi] = e.target.value.split(':').map(n => parseInt(n, 10)); if (queuePhrase(pi)) syncPhraseUI(); else openPhrase(pi, si); };
 wireTracks();
-// The key selects edit the phrase's key when "this phrase" is ticked, else the song's.
+// Keys nest: a phrase's key over its section's over the song's. The scope select says which one the two key
+// selects are showing and editing; "none" at a narrower scope hands the decision back to the wider one.
 $('keyRoot').onchange = $('keyScale').onchange = () => {
-  const r = $('keyRoot').value, key = r === '' ? null : { root: parseInt(r, 10), scale: $('keyScale').value };
-  if ($('keyPhrase').checked) withUndo(() => { curPhrase().key = key || { root: 0, scale: 'major' }; });
+  const r = $('keyRoot').value, key = r === '' ? null : { root: parseInt(r, 10), scale: $('keyScale').value }, scope = $('keyScope').value;
+  if (scope === 'phrase' && !curPattern()) withUndo(() => { curPhrase().key = key; });
+  else if (scope === 'section' && curSection()) withSongUndo(() => { curSection().key = key; });
   else withSongUndo(() => { state.song.key = key; });
   syncKeyUI(); padSigReset(); state.dirty = true;
 };
-$('keyPhrase').onchange = e => {
-  if (e.target.checked) withUndo(() => { curPhrase().key = Object.assign({}, state.song.key || { root: 0, scale: 'major' }); });
-  else withUndo(() => { curPhrase().key = null; });
-  syncKeyUI(); padSigReset(); state.dirty = true;
+$('keyScope').onchange = () => { syncKeyUI(); };
+// The name of whatever the grid shows: the open phrase, or the pattern while one is open.
+$('blockName').onchange = e => {
+  const v = e.target.value.trim(), ptn = curPattern();
+  if (v) withSongUndo(() => { if (ptn) ptn.name = v; else state.song.phrases[state.phr].name = v; });
+  syncPhraseUI(); state.dirty = true;
 };
 $('groove').onchange = e => {
   const preset = GROOVES.find(([n]) => n === e.target.value);
@@ -69,19 +73,21 @@ $('grooveList').onchange = e => {
   withUndo(() => { curPhrase().groove = g.length ? g : []; }); markEdited(); syncGrooveUI();
 };
 $('deleteSong').onclick = () => { stopAll(); selectSong(deleteCurrentSong()); };
+// A new empty phrase shaped like this one, right after it in its section.
 $('addPhrase').onclick = () => {
-  const p = state.song.phrases;
-  p.push(newPhrase(String.fromCharCode(65 + (p.length % 26)), curPhrase().rows, curPhrase().ticksPerRow, phraseMeter(curPhrase())));
-  state.song.arrangement.push(entryOf(p.length - 1)); state.phr = p.length - 1; syncPhraseUI(); state.dirty = true;
+  leavePattern();
+  const sec = curSection(); if (!sec) return;
+  withSongUndo(() => {
+    const song = state.song, like = song.phrases[state.phr], phr = addPhrase(song, nextPhraseName(song, sec), like);
+    addSlot(song, sec, phr.id, sec.phrases.findIndex(sl => sl.phrase === like.id));
+    state.phr = song.phrases.indexOf(phr);
+  });
+  syncPhraseUI(); state.dirty = true;
 };
 $('rows').onchange = e => { const n = clamp(parseInt(e.target.value, 10) || 64, 1, 512); const ptn = curPattern(); withUndo(() => { if (ptn) ptn.rows = n; else curPhrase().rows = n; }); syncPhraseUI(); };
-$('tpr').onchange = e => { const n = parseInt(e.target.value, 10); withUndo(() => { curPhrase().ticksPerRow = n; }); };
+$('tpr').onchange = e => { const n = parseInt(e.target.value, 10), ptn = curPattern(); withUndo(() => { if (ptn) ptn.ticksPerRow = n; else curPhrase().ticksPerRow = n; }); syncPhraseUI(); };
 $('meterNum').onchange = e => { const n = clamp(parseInt(e.target.value, 10) || 4, 1, 16); withUndo(() => { curPhrase().meter = [n, phraseMeter(curPhrase())[1]]; }); syncPhraseUI(); };
 $('meterDen').onchange = e => { const n = parseInt(e.target.value, 10); withUndo(() => { curPhrase().meter = [phraseMeter(curPhrase())[0], n]; }); };
-$('order').onchange = e => {
-  const o = parseArrangementText(e.target.value, state.song);
-  withSongUndo(() => { state.song.arrangement = o; }); e.target.value = arrangementText(state.song); syncArranger();
-};
 $('follow').onchange = e => { state.follow = e.target.checked; };
 $('preview').onchange = e => { state.preview = e.target.checked; synth.enabled = sampler.enabled = state.preview; if (!state.preview) sampler.allOff(); else preloadSamples(); state.dirty = true; };
 $('sound').onchange = e => {
@@ -102,22 +108,6 @@ for (const box of document.querySelectorAll('input[data-show]')) {
 }
 $('selbar').addEventListener('pointerdown', e => { const b = e.target.closest('button[data-op]'); if (!b) return; e.preventDefault(); batchOp(b.dataset.op); });
 $('selbar').addEventListener('click', e => { if (e.target.closest('button')) e.preventDefault(); });
-// Compose → patterns: rename, open in the grid, remove.
-$('patternsBody').addEventListener('change', e => {
-  const row = e.target.closest('tr'); if (!row || e.target.dataset.f !== 'name') return;
-  const ptn = (state.song.patterns || []).find(p => p.id === row.dataset.id); if (!ptn) return;
-  withSongUndo(() => { ptn.name = e.target.value.trim() || ptn.id; }); $('patternsBody').dataset.sig = ''; syncPatterns(); state.dirty = true;
-});
-$('patternsBody').addEventListener('click', e => {
-  const b = e.target.closest('button[data-act]'); if (!b) return;
-  const id = b.closest('tr').dataset.id;
-  if (b.dataset.act === 'edit') {
-    // open it on a track that places it, else the cursor's track
-    let trackId = null;
-    for (const phr of state.song.phrases) for (const [tid, m] of Object.entries(phr.material)) if (!trackId && (m.placements || []).some(p => p.pattern === id)) trackId = tid;
-    editPattern(id, trackId); setPanel(null);
-  } else if (b.dataset.act === 'remove') { if (state.patternEdit && state.patternEdit.id === id) leavePattern(); withSongUndo(() => removePattern(state.song, id)); $('patternsBody').dataset.sig = ''; syncPatterns(); state.dirty = true; }
-});
 $('selArt').onchange = e => { if (e.target.value) articulationSel(e.target.value); e.target.value = ''; state.dirty = true; };
 export function download(name, blob) {
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;

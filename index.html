@@ -19,8 +19,8 @@
     <h1>Tutti<small>symphonic tracker</small></h1>
     <input id="title" type="text" placeholder="title" title="Song title" aria-label="Song title">
     <nav id="menus" aria-label="Panels">
-      <button id="songBtn" data-panel="song" aria-expanded="false" title="Open, save, load and export songs">Song</button>
-      <button id="composeBtn" data-panel="compose" aria-expanded="false" title="Phrase settings, key, arrangement and tracks">Compose</button>
+      <button id="filesBtn" data-panel="files" aria-expanded="false" title="Open, new, save, load and export songs">Files</button>
+      <button id="composeBtn" data-panel="compose" aria-expanded="false" title="The open phrase or pattern, key and tracks">Compose</button>
       <button id="soundsBtn" data-panel="sounds" aria-expanded="false" title="Preview sound, banks, instruments and scopes">Sounds</button>
       <button id="connectBtn" data-panel="connect" aria-expanded="false" title="MIDI and controllers">Connect</button>
     </nav>
@@ -32,17 +32,18 @@
   <div class="bar" id="transportbar">
     <div class="group primary" data-label="transport">
       <button id="playPhrase" class="primary" title="Space"><span class="full">Play phrase</span><span class="short">Play</span></button>
+      <button id="playSection" class="wide" title="Loop the section this phrase is in">Play section</button>
       <button id="playSong" title="Enter"><span class="full">Play song</span><span class="short">Song</span></button>
       <button id="stop" title="Esc">Stop</button>
       <button id="rec" title="Record notes played on the MIDI input into the loop (⇧Return). Choose an input in Connect.">● Rec</button>
       <label for="bpm">bpm</label><input id="bpm" type="number" min="20" max="300" value="100" title="Tempo">
     </div>
-    <div class="group phrasesel" data-label="phrase"><select id="phrase" title="Phrase"></select></div>
+    <div class="group phrasesel" data-label="phrase"><select id="phrase" title="Open a phrase; they are listed under their sections"></select></div>
   </div>
 </header>
 <div id="panels">
-  <section class="panel" id="songPanel" data-panel="song" hidden aria-label="Song">
-    <div class="panelHead"><h2>Song</h2><span class="dim">Autosaved in this browser a moment after each change; the address bar remembers the open song and phrase.</span><span class="spacer"></span><button data-close title="Close (Esc)">✕</button></div>
+  <section class="panel" id="filesPanel" data-panel="files" hidden aria-label="Files">
+    <div class="panelHead"><h2>Files</h2><span class="dim">Autosaved in this browser a moment after each change; the address bar remembers the open song and phrase.</span><span class="spacer"></span><button data-close title="Close (Esc)">✕</button></div>
     <div class="panelBody">
       <div class="group songgrp" data-label="open">
         <select id="song"></select>
@@ -61,7 +62,8 @@
     <div class="panelHead"><h2>Compose</h2><span class="spacer"></span><button data-close title="Close (Esc)">✕</button></div>
     <div class="panelBody">
       <div class="group phraseset" data-label="phrase">
-        <button id="addPhrase" title="Add a phrase">+</button>
+        <input id="blockName" type="text" size="9" title="Name of the open phrase, or of the pattern while one is open" aria-label="Name">
+        <button id="addPhrase" title="Add an empty phrase after this one in its section">+</button>
         <label for="rows">rows</label><input id="rows" type="number" min="1" max="512" value="64">
         <label for="tpr">row</label>
         <select id="tpr">
@@ -80,15 +82,8 @@
       <div class="group keygrp" data-label="key">
         <select id="keyRoot" title="Tonic"><option value="">none</option></select>
         <select id="keyScale" title="Scale"></select>
-        <label title="Give this phrase its own key"><input id="keyPhrase" type="checkbox"> this phrase</label>
-      </div>
-      <div class="group arrgrp" data-label="arrangement">
-        <span id="arranger" title="Song order"></span>
-        <input id="order" type="text" value="0" title="Order as text: phrase index with optional xN repeat, e.g. 0x2 1 0">
-      </div>
-      <div class="group patterngrp" data-label="patterns" hidden>
-        <table id="patternsTable"><thead><tr><th>name</th><th>rows</th><th>cols</th><th>uses</th><th></th></tr></thead><tbody id="patternsBody"></tbody></table>
-        <span class="dim">Select rows on one track and press Make pattern on the selection toolbar. Enter on a tag edits the pattern; − = transpose a placement, [ ] repeat it.</span>
+        <label for="keyScope">for</label>
+        <select id="keyScope" title="Keys nest: a phrase's key over its section's over the song's. A section's key is where a modulation lives."><option value="song">the song</option><option value="section">this section</option><option value="phrase">this phrase</option></select>
       </div>
       <div class="group trackgrp" data-label="tracks">
         <table id="tracksTable">
@@ -150,20 +145,15 @@
     </div>
   </section>
 </div>
+<nav id="map" aria-label="Where you are: song, section, phrase, pattern"></nav>
 <div id="workspace">
   <main><canvas id="grid" tabindex="0" aria-label="Phrase grid"></canvas></main>
+  <section id="songView" tabindex="0" hidden aria-label="Song overview: sections, phrases and tracks"><div id="songBody"></div></section>
   <aside id="mixer" hidden aria-label="Mixer">
-    <div class="mixHead"><b>Mixer</b><span class="spacer"></span><button id="mixerTracks" data-panel="compose" title="Compose: tracks, key, arrangement">Tracks…</button><button id="mixerClose" title="Hide the mixer">✕</button></div>
+    <div class="mixHead"><b>Mixer</b><span class="spacer"></span><button id="mixerTracks" data-panel="compose" title="Compose: the tracks table">Tracks…</button><button id="mixerClose" title="Hide the mixer">✕</button></div>
     <div id="mixerStrips"></div>
   </aside>
 </div>
-<dialog id="chainDlg" aria-label="Entry: repeat and follows">
-  <div class="dlgHead"><b id="chainTitle">Entry</b><span class="spacer"></span><button id="chainCancel" title="Close">✕</button></div>
-  <p class="dim">Repeat this entry, and let any track follow another phrase instead of this one, looped or clipped to this entry's length. A phrase of placements followed this way is how one track walks through patterns under the others.</p>
-  <label>repeat <input id="chainRepeat" type="number" min="1" max="64" value="1" style="width:4em"></label>
-  <table id="chainTable"><thead><tr><th>track</th><th>follows</th></tr></thead><tbody id="chainBody"></tbody></table>
-  <div class="dlgFoot"><span class="spacer"></span><button id="chainOk" class="primary">Apply</button></div>
-</dialog>
 <div id="selbar" hidden aria-label="Selection">
   <span id="selInfo"></span>
   <button data-op="copy" title="Copy (⌘C)">Copy</button>
@@ -172,7 +162,7 @@
   <button data-op="dup" title="Paste a copy right after the selection (⌘D)">Duplicate</button>
   <button data-op="clear" title="Clear (Delete)">Clear</button>
   <span class="sep"></span>
-  <button data-op="pattern" title="Turn the selected rows of one track into a pattern placed here; the pattern then lives in Compose">Make pattern</button>
+  <button data-op="pattern" title="Turn the selected rows of one track into a pattern placed here; the pattern is then listed in the Song view">Make pattern</button>
   <button data-op="detach" title="Turn the pattern under the cursor (or the selected placements) back into loose notes">Detach</button>
   <span class="sep"></span>
   <button data-op="tr:-1" title="Transpose down a semitone (−)">−1</button>
@@ -200,8 +190,8 @@
   <div class="padrow" id="padCtl"></div>
 </div>
 <nav id="tabs" aria-label="Screens">
-  <button data-view="phrase" class="on">Phrase</button>
-  <button data-view="song">Song</button>
+  <button data-view="song" class="on">Song</button>
+  <button data-view="files">Files</button>
   <button data-view="compose">Compose</button>
   <button data-view="sounds">Sounds</button>
   <button data-view="connect">Connect</button>

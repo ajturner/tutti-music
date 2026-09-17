@@ -2,6 +2,8 @@
 // track; M and S toggle mute and solo; sliders set volume (CC7) and pan (CC10) and send them while playing.
 import { INST } from '../core/instruments.js';
 import { $, state } from './state.js';
+import { noteName } from '../core/constants.js';
+import { soundingNow } from './monitor.js';
 import { sendControl, openTracks } from './tracks.js';
 import { markEdited } from './storage.js';
 import { withSongUndo, leavePattern } from './edit.js';
@@ -23,8 +25,10 @@ export function setMixer(on) {
 const vol = t => (t.volume == null ? 100 : t.volume), pan = t => (t.pan == null ? 64 : t.pan);
 const panText = v => v === 64 ? 'C' : v < 64 ? 'L' + (64 - v) : 'R' + (v - 64);
 // Called every frame; rebuilds only when something it shows has changed.
+let liveSig = '';
 export function syncMixer() {
   if (!state.mixer) return;
+  syncLive();
   const tracks = state.song.tracks, anySolo = tracks.some(t => t.solo);
   const s = tracks.map(t => [t.id, t.name, t.mute ? 1 : 0, t.solo ? 1 : 0, vol(t), pan(t)].join('|')).join(';') + '#' + state.cursor.track;
   if (s === sig) return; sig = s;
@@ -35,6 +39,7 @@ export function syncMixer() {
     box.innerHTML = tracks.map((t, i) => `
       <div class="strip" data-id="${t.id}" data-i="${i}">
         <button class="name" data-act="go" title="Go to this track"></button>
+        <span class="live" title="What this track is sounding now"></span>
         <button class="tog" data-act="mute" title="Mute">M</button>
         <button class="tog" data-act="solo" title="Solo">S</button>
         <label class="sl" title="Volume (CC7)">vol <input data-f="volume" type="range" min="0" max="127"><span></span></label>
@@ -53,12 +58,17 @@ export function syncMixer() {
     if (document.activeElement !== p) p.value = pan(t); p.nextElementSibling.textContent = panText(pan(t));
   });
 }
+// The track monitor: the note each strip is sounding and how hard, like the M8's track readout.
+function syncLive() {
+  const now = soundingNow(), next = JSON.stringify(now); if (next === liveSig) return; liveSig = next;
+  for (const el of $('mixerStrips').children) { const n = now[el.dataset.id], live = el.querySelector('.live'); if (!live) continue; live.textContent = n ? noteName(n.pitch) : ''; live.style.setProperty('--vel', n ? Math.round(n.vel / 127 * 100) + '%' : '0%'); el.classList.toggle('sounding', !!n); }
+}
 export function wireMixer() {
   const box = $('mixerStrips');
   box.addEventListener('click', e => {
     const b = e.target.closest('button[data-act]'); if (!b) return;
     const i = parseInt(b.closest('.strip').dataset.i, 10), t = state.song.tracks[i];
-    if (b.dataset.act === 'go') { leavePattern(); state.cursor.track = i; state.cursor.cell = 0; state.ensureVisible = true; $('grid').focus(); }
+    if (b.dataset.act === 'go') { leavePattern(); state.songCursor.track = i; state.cursor.track = i; state.cursor.cell = 0; state.ensureVisible = true; $('grid').focus(); }
     else if (b.dataset.act === 'mute') withSongUndo(() => { t.mute = !t.mute; });
     else if (b.dataset.act === 'solo') withSongUndo(() => { t.solo = !t.solo; });
     state.dirty = true;

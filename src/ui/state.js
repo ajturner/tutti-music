@@ -30,7 +30,12 @@ export const KEYMAP = {
 };
 
 export const state = {
-  songs: EXAMPLES.map(e => e.build()), songIndex: 0, song: null, phr: 0,
+  songs: EXAMPLES.map(e => e.build()), songIndex: 0, song: null,
+  phr: 0,                // index of the open phrase
+  section: 0,            // index of the section the open phrase is seen in: its key, the map, Play section
+  level: 'grid',         // 'grid' shows a phrase, or a pattern opened from it; 'song' shows the overview
+  songCursor: { row: 0, track: 0 },   // the cell under the cursor in the Song view
+  rev: 0,                // bumped by every edit so the DOM views know to rebuild
   cursor: { row: 0, track: 8, cell: 0 },        // track -1 = tempo column
   octave: 4, step: 4, follow: true, preview: true,
   scrollX: 0, typing: null, undo: [], redo: [], dirty: true, message: '',
@@ -45,7 +50,7 @@ export const state = {
   queued: null,
   mixer: false,          // mixer sidebar shown
   patternEdit: null,      // { id, trackId, back:{ phr, row, track, cell, scrollX } } while a pattern is open in the grid
-  panel: null,           // open workflow panel: 'song' | 'compose' | 'sounds' | 'connect' | 'view' | null
+  panel: null,           // open workflow panel: 'files' | 'compose' | 'sounds' | 'connect' | 'view' | null
   record: false,         // real-time MIDI record while the phrase loops
   show: { vel: true, art: true, dyn: true, fx: true },   // grid columns shown per track (note columns always)
   sound: 'samples',      // preview sound: 'samples' (bundled orchestra, synth fallback) or 'synth'
@@ -100,7 +105,17 @@ export function curPhrase() {
 // The tracks the grid shows: every track, or only the pattern's track while a pattern is open.
 export const tracksShown = () => state.patternEdit ? state.song.tracks.filter(t => t.id === state.patternEdit.trackId) : state.song.tracks;
 export const curTrack = () => state.cursor.track >= 0 ? tracksShown()[state.cursor.track] || null : null;
-export const activeKey = () => effectiveKey(state.song, curPhrase());
+// The section the open phrase is seen in. A phrase may sit in several sections; the one it was opened from
+// decides its key and what Play section loops. Falls back to the first section that holds the phrase.
+export function curSection() {
+  const song = state.song, phr = song.phrases[state.phr]; if (!phr) return null;
+  const holds = sec => !!sec && sec.phrases.some(sl => sl.phrase === phr.id);
+  if (holds(song.sections[state.section])) return song.sections[state.section];
+  const i = song.sections.findIndex(holds);
+  if (i >= 0) state.section = i;
+  return i >= 0 ? song.sections[i] : null;
+}
+export const activeKey = () => effectiveKey(state.song, curPhrase(), curSection());
 export const rowsPerBeat = () => { const [, unit] = phraseMeter(curPhrase()); return Math.max(1, Math.round(PPQ * 4 / unit / curPhrase().ticksPerRow)); };
 export const rowsPerBar = () => phraseMeter(curPhrase())[0] * rowsPerBeat();
 // In compound meters (6/8, 9/8, 12/8) the felt beat is every three written beats.

@@ -1,5 +1,5 @@
 // Compact text notation for writing songs in code, and the built-in example songs.
-import { normalizeArrangement, entries, entryOf, makePattern, materialOf } from './song.js';
+import { ensureStructure, makePattern, materialOf, patternById, slug } from './song.js';
 import { FAMILIES, PPQ, noteName } from './constants.js';
 import { INST, SYNTH_TRACKS, addTracks } from './instruments.js';
 import { laneSet, laneValueAt, newPhrase, newSong, phraseMeter } from './song.js';
@@ -74,10 +74,28 @@ export function lane(points, spec, tpr) {
   }
 }
 export const rep = (n, tokens) => Array(n).fill(tokens).join(' ');
+// arrange(song, [[sectionName, [phraseIndex | [phraseIndex, repeat], ...], key?], ...], [sectionName | [sectionName, repeat], ...])
+// Sections hold phrases by index into song.phrases; the second list is the arrangement. Phrases still carrying a
+// one-letter working name take their section's: "A1", "A2", or "Verse 1" for a word.
+export function arrange(song, sections, order) {
+  const named = new Set();
+  for (const [name, slots] of sections) slots.forEach(x => {
+    const phr = song.phrases[Array.isArray(x) ? x[0] : x];
+    if (named.has(phr) || !/^[A-Z]\d?$/.test(phr.name)) return;
+    let n = 1; const base = name.length <= 2 ? name : name + ' ';
+    while (song.phrases.some(o => o !== phr && named.has(o) && o.name === base + n)) n++;
+    phr.name = base + n; named.add(phr);
+  });
+  for (const phr of song.phrases) phr.id = null;
+  song.sections = []; song.arrangement = []; ensureStructure(song);   // fresh ids from the final names
+  song.sections = sections.map(([name, slots, key]) => ({ id: slug(name, 'section'), name, key: key || null, phrases: slots.map(x => Array.isArray(x) ? { phrase: song.phrases[x[0]].id, repeat: x[1] } : { phrase: song.phrases[x].id, repeat: 1 }) }));
+  song.arrangement = order.map(x => Array.isArray(x) ? { section: slug(x[0], 'section'), repeat: x[1] } : { section: slug(x, 'section'), repeat: 1 });
+  return ensureStructure(song);
+}
 export function fitColumns(song) {
   for (const tr of song.tracks) {
     let max = tr.columns;
-    for (const phr of song.phrases) { const pt = phr.material[tr.id]; if (pt) for (const e of pt.notes) max = Math.max(max, e.col + 1); }
+    for (const phr of song.phrases) { const pt = phr.material[tr.id]; if (!pt) continue; for (const e of pt.notes) max = Math.max(max, e.col + 1); for (const pl of pt.placements || []) { const ptn = patternById(song, pl.pattern); if (ptn) max = Math.max(max, ptn.columns); } }
     tr.columns = max;
   }
   return song;
@@ -86,8 +104,8 @@ export function fitColumns(song) {
 // ---- Example songs ------------------------------------------------------------------------------
 export function exBrassChorale() {
   const song = newSong(); song.title = 'Brass chorale'; song.bpm = 66;
-  song.notes = 'Divisi horns, trumpets and trombones in six parts, timpani under each chord. Two phrases played in order, with a ritardando into the final chord.';
-  const A = song.phrases[0], B = newPhrase('B'); song.phrases.push(B); song.arrangement = entries(0, 1);
+  song.notes = 'Divisi horns, trumpets and trombones in six parts, timpani under each chord. Two sections, Chorale and Close, with a ritardando into the final chord.';
+  const A = song.phrases[0], B = newPhrase('B'); song.phrases.push(B); arrange(song, [['Chorale', [0]], ['Close', [1]]], ['Chorale', 'Close']);
   const tpr = A.ticksPerRow;
   line(A, 'tp', 0, 0, 8, 'F5 G5 A5 F5 G5 G5 A5:16');
   line(A, 'tp', 1, 0, 8, 'D5 Eb5 C5 D5 D5 Eb5 F5:16');
@@ -165,8 +183,8 @@ export function exFanfare() {
 }
 export function exPulse() {
   const song = newSong(); song.title = 'Pulse'; song.bpm = 144;
-  song.notes = 'Minimalist phrase piece in the order A A B B: sixteenth-note flute, eighth-note clarinet, pizzicato bass and viola, sustained horns, tremolo violins. Repeated figures are built with rep().';
-  const A = song.phrases[0], B = newPhrase('B'); song.phrases.push(B); song.arrangement = entries(0, 0, 1, 1);
+  song.notes = 'Minimalist piece, arrangement A×2 B×2: sixteenth-note flute, eighth-note clarinet, pizzicato bass and viola, sustained horns, tremolo violins. Repeated figures are built with rep().';
+  const A = song.phrases[0], B = newPhrase('B'); song.phrases.push(B); arrange(song, [['A', [0]], ['B', [1]]], [['A', 2], ['B', 2]]);
   const tpr = A.ticksPerRow;
   line(A, 'fl', 0, 0, 1, rep(8, 'A5 C6 E6 C6') + ' ' + rep(8, 'A5 C6 F6 C6'), { art: 'stc' });
   line(A, 'cl', 0, 0, 2, rep(8, 'C5 E5') + ' ' + rep(8, 'C5 F5'), { art: 'stc' });
@@ -195,8 +213,8 @@ export function exPulse() {
 }
 export function exNeonCorridor() {
   const song = addTracks(newSong(), SYNTH_TRACKS); song.title = 'Neon corridor (Tron-style)'; song.bpm = 128;
-  song.notes = 'Hybrid electronic and orchestral, order A A B B. Octave synth bass and a sixteenth-note arp on channels 15 and 16, low strings hammering the root, brass and tremolo strings swelling, trumpet stabs into the fourth bar.';
-  const A = song.phrases[0], B = newPhrase('B'); song.phrases.push(B); song.arrangement = entries(0, 0, 1, 1);
+  song.notes = 'Hybrid electronic and orchestral: a Build section twice, then the Drive section twice. Octave synth bass and a sixteenth-note arp on channels 15 and 16, low strings hammering the root, brass and tremolo strings swelling, trumpet stabs into the fourth bar.';
+  const A = song.phrases[0], B = newPhrase('B'); song.phrases.push(B); arrange(song, [['Build', [0]], ['Drive', [1]]], [['Build', 2], ['Drive', 2]]);
   const tpr = A.ticksPerRow;
   // A: Em Em C D
   line(A, 'sb', 0, 0, 2, rep(8, 'E1 E2') + ' ' + rep(4, 'C1 C2') + ' ' + rep(4, 'D1 D2'), { art: 'stc' });
@@ -250,8 +268,8 @@ export function exAfterglow() {
 }
 export function exReel() {
   const song = newSong(); song.title = 'Reel (folk)'; song.bpm = 112;
-  song.notes = 'A fiddle reel in D, AABB with 128-row phrases (8 bars each). Violins I carry the tune, flute doubles an octave up, clarinet joins on the B part, viola chops on 2 and 4, pizzicato cello and bass alternate root and fifth.';
-  const A = newPhrase('A', 128), B = newPhrase('B', 128); song.phrases = [A, B]; song.arrangement = entries(0, 0, 1, 1);
+  song.notes = 'A fiddle reel in D, arrangement A×2 B×2 with one 128-row phrase (8 bars) in each section. Violins I carry the tune, flute doubles an octave up, clarinet joins on the B part, viola chops on 2 and 4, pizzicato cello and bass alternate root and fifth.';
+  const A = newPhrase('A', 128), B = newPhrase('B', 128); song.phrases = [A, B]; arrange(song, [['A', [0]], ['B', [1]]], [['A', 2], ['B', 2]]);
   const tpr = A.ticksPerRow;
   const tuneA = 'D4 F#4 A4 F#4 D5 A4 F#4 D4 | E4 F#4 G4 E4 A4 G4 F#4 E4 | D4 F#4 A4 F#4 D5 A4 F#4 D4 | E4 C#4 D4 E4 F#4 G4 A4 B4 | ' +
                 'D5 B4 A4 F#4 D5 B4 A4 F#4 | E5 C#5 A4 C#5 E5 C#5 B4 A4 | D5 B4 A4 F#4 G4 F#4 E4 D4 | E4 C#4 A3 C#4 D4:8';
@@ -336,8 +354,8 @@ const K = { kick: 'C2', snare: 'D2', clap: 'D#2', hatC: 'F#2', hatP: 'G#2', hatO
 export function exBlueInF() {
   const song = bankSong('Blue in F (jazz)', 'jazz', [['pn', 'Piano', 'piano', 1], ['gt', 'Guitar', 'guitar', 2], ['vb', 'Vibraphone', 'vibraphone', 3], ['ts', 'Tenor sax', 'tenor-sax', 4], ['ub', 'Upright bass', 'upright-bass', 5], ['dk', 'Drum kit', 'drum-kit', 9]]);
   song.bpm = 126; song.key = { root: 5, scale: 'mixolydian' };
-  song.notes = 'Twelve-bar blues in F over three four-bar phrases with a swing groove: walking bass, ride and pedal hat, piano and guitar comping, a sax head with a vibes answer in the turnaround.';
-  const A = song.phrases[0], B = newPhrase('B'), C = newPhrase('C'); song.phrases.push(B, C); song.arrangement = entries(0, 1, 2);
+  song.notes = 'Twelve-bar blues in F: one section, the Head, made of three four-bar phrases with a swing groove and played twice: walking bass, ride and pedal hat, piano and guitar comping, a sax head with a vibes answer in the turnaround.';
+  const A = song.phrases[0], B = newPhrase('B'), C = newPhrase('C'); song.phrases.push(B, C); arrange(song, [['Head', [0, 1, 2]]], [['Head', 2]]);
   const tpr = A.ticksPerRow;
   for (const p of [A, B, C]) p.groove = [1.33, 1.33, 0.67, 0.67];
   // chords per bar: F7 Bb7 F7 F7 | Bb7 Bb7 F7 F7 | C7 Bb7 F7 C7
@@ -376,8 +394,8 @@ export function exBlueInF() {
 export function exCrossroadsReel() {
   const song = bankSong('Crossroads reel (folk)', 'folk', [['fd', 'Fiddle', 'fiddle', 1], ['if', 'Irish flute', 'irish-flute', 2], ['hm', 'Harmonica', 'harmonica', 3], ['bj', 'Banjo', 'banjo', 4], ['fh', 'Folk harp', 'folk-harp', 5], ['fdr', 'Frame drum', 'frame-drum', 9], ['wb', 'Washboard', 'washboard', 11], ['hp', 'Hand percussion', 'hand-percussion', 12]]);
   song.bpm = 112; song.key = { root: 2, scale: 'major' };
-  song.notes = 'A reel in D: fiddle and Irish flute carry the tune in eighths, banjo rolls and harp arpeggios under it, harmonica holds the drone, frame drum plays the bodhrán part with washboard and shaker keeping time. Arrangement A A B B. The banjo rolls and the fiddle tunes are patterns: open Compose to see them, Enter on a tag to edit one.';
-  const A = song.phrases[0], B = newPhrase('B'); song.phrases.push(B); song.arrangement = [entryOf({ phrase: 0, repeat: 2 }), entryOf({ phrase: 1, repeat: 2 })];
+  song.notes = 'A reel in D: fiddle and Irish flute carry the tune in eighths, banjo rolls and harp arpeggios under it, harmonica holds the drone, frame drum plays the bodhrán part with washboard and shaker keeping time. Arrangement A×2 B×2. The banjo rolls and the fiddle tunes are patterns: open Compose to see them, Enter on a tag to edit one.';
+  const A = song.phrases[0], B = newPhrase('B'); song.phrases.push(B); arrange(song, [['A', [0]], ['B', [1]]], [['A', 2], ['B', 2]]);
   const tpr = A.ticksPerRow;
   const tuneA = 'D5 F#5 A5 F#5 D5 F#5 A5 B5 | A5 F#5 D5 F#5 E5 D5 C#5 E5 | D5 F#5 A5 F#5 D5 F#5 A5 B5 | A5 F#5 E5 C#5 D5:4 . D5:2';
   const tuneB = 'D6 C#6 B5 A5 B5 A5 F#5 A5 | G5 F#5 E5 F#5 G5 A5 B5 C#6 | D6 C#6 B5 A5 B5 A5 F#5 A5 | G5 E5 C#5 E5 D5:4 . D5:2';
@@ -400,8 +418,8 @@ export function exCrossroadsReel() {
     });
   }
   line(B, 'wb', 1, 56, 2, 'G#2!90 A#2!100 D3!100 D3!110');
-  // Patterns (docs/domain.md, level 2): the banjo's three rolls are patterns placed per chord in both phrases,
-  // and each phrase's fiddle tune is a pattern, so the banjo and the tune are written once each.
+  // Patterns (docs/domain.md): the banjo's three rolls are patterns placed per chord in both phrases, and each
+  // phrase's fiddle tune is a pattern, so the banjo and the tune are written once each.
   const rollD = makePattern(song, A, 'bj', 0, 15, 'Roll D'), rollG = makePattern(song, A, 'bj', 16, 31, 'Roll G'), rollA = makePattern(song, A, 'bj', 48, 63, 'Roll A');
   const rollOf = { D: rollD.id, G: rollG.id, A: rollA.id };
   for (const [phr, chords] of [[A, ['D', 'G', 'D', 'A']], [B, ['D', 'G', 'A', 'D']]]) {
@@ -415,10 +433,10 @@ export function exCrossroadsReel() {
 export function exNightDrive() {
   const song = bankSong('Night drive (electronica)', 'electronica', [['dm', 'Drum machine', 'drum-machine', 9], ['sb', 'Synth bass', 'synth-bass', 1], ['pd', 'Pad', 'pad', 2], ['sa', 'Synth arp', 'synth-arp', 3], ['pl', 'Pluck', 'pluck', 4], ['fp', 'FM piano', 'fm-piano', 5], ['cs', 'Clavisynth', 'clavisynth', 6], ['ld', 'Lead', 'lead', 7]]);
   song.bpm = 124; song.key = { root: 9, scale: 'natural-minor' };
-  song.notes = 'Four on the floor in A minor: kick, clap and hats from the drum machine (chance on the ghost hats, a retrigger fill), octave bass, a pad that swells with the EXP command, an arpeggio made by ARP on held notes, FM piano and clavisynth stabs, and a lead that enters in the second phrase. Arrangement A B B A, with the bass following phrase 2 Bass walk: one Riff pattern placed four times with the chord transposes.';
+  song.notes = 'Four on the floor in A minor: kick, clap and hats from the drum machine (chance on the ghost hats, a retrigger fill), octave bass, a pad that swells with the EXP command, an arpeggio made by ARP on held notes, FM piano and clavisynth stabs, and a lead that enters in the Drop. Arrangement Verse, Drop, Verse, with the Drop phrase twice. The bass is one Riff pattern placed on every bar and shifted by scale degrees to follow the chords.';
   const A = song.phrases[0], B = newPhrase('B'); song.phrases.push(B);
   const tpr = A.ticksPerRow;
-  const prog = ['A', 'F', 'C', 'G'], bassOf = { A: 'A1', F: 'F1', C: 'C2', G: 'G1' }, chord = { A: ['A3', 'C4', 'E4'], F: ['F3', 'A3', 'C4'], C: ['C4', 'E4', 'G4'], G: ['G3', 'B3', 'D4'] };
+  const prog = ['A', 'F', 'C', 'G'], chord = { A: ['A3', 'C4', 'E4'], F: ['F3', 'A3', 'C4'], C: ['C4', 'E4', 'G4'], G: ['G3', 'B3', 'D4'] };
   for (const [phr, drop] of [[A, false], [B, true]]) {
     prog.forEach((ch, bar) => {
       const r = bar * 16;
@@ -427,7 +445,6 @@ export function exNightDrive() {
       line(phr, 'dm', 2, r + 2, 4, rep(4, K.hatC + '!70'));
       line(phr, 'dm', 3, r + 1, 2, rep(8, K.hatC + '!40'));       // ghost hats, thinned by chance
       if (drop) line(phr, 'dm', 1, r + 6, 8, K.hatO + '!80 ' + K.hatO + '!80');   // shares the clap column (rows 6 and 14 are free)
-      void bassOf[ch];   // the bass lives in phrase 2 Bass walk, which both entries follow (see below)
       chord[ch].forEach((n, c) => line(phr, 'pd', c, r, 16, n + ':16', { vel: 80 }));
       line(phr, 'sa', 0, r, 16, chord[ch][0].replace(/\d/, d => +d + 1) + ':16', { vel: 90 });   // one held note; ARP makes the figure
       if (drop) { chord[ch].forEach((n, c) => line(phr, 'cs', c, r + 6, 2, n + ':1@stc', { vel: 96 })); chord[ch].forEach((n, c) => line(phr, 'cs', c, r + 14, 2, n + ':1@stc', { vel: 88 })); }
@@ -444,14 +461,13 @@ export function exNightDrive() {
   line(B, 'ld', 0, 0, 2, 'E5:2 . G5:2 A5:4 . . G5:2 E5:2 D5:4 . . C5:2 D5:2 E5:6 . . . . . . . .', { art: 'sus', vel: 100 });
   line(B, 'ld', 0, 32, 2, 'E5:2 . G5:2 B5:4 . . A5:2 G5:2 E5:4 . . D5:2 E5:2 A5:6 . . . . . . . .', { art: 'sus', vel: 104 });
   line(B, 'dm', 1, 0, 16, K.crash + '!100');
-  // Follows (docs/domain.md, level 3): the bass is one 16-row pattern placed four times with the chord's
-  // transpose in phrase 2 Bass walk; every entry's Synth bass follows that phrase instead of its own.
-  const W = newPhrase('Bass walk'); song.phrases.push(W);
-  line(W, 'sb', 0, 0, 2, rep(4, 'A1!100 A2!84'), { art: 'stc' });
-  const riff = makePattern(song, W, 'sb', 0, 15, 'Riff');
-  materialOf(W, 'sb').placements = [0, -4, 3, -2].map((transpose, bar) => ({ pattern: riff.id, row: bar * 16, transpose, repeat: 1 }));   // A F C G
-  lane(materialOf(W, 'sb').dyn, '0:100_', tpr);
-  song.arrangement = [0, 1, 1, 0].map(phrase => entryOf({ phrase, follows: { sb: 2 } }));
+  // Placements with transformations (docs/domain.md): the bass is one 16-row pattern placed on every bar of both
+  // phrases and shifted by scale degrees, so it stays in A minor under A F C G. The riff is written once.
+  const scratch = newPhrase('scratch', 16);
+  line(scratch, 'sb', 0, 0, 2, rep(4, 'A1!100 A2!84'), { art: 'stc' });
+  const riff = makePattern(song, scratch, 'sb', 0, 15, 'Riff');
+  for (const p of [A, B]) { materialOf(p, 'sb').placements = [0, -2, 2, -1].map((shift, bar) => ({ pattern: riff.id, row: bar * 16, shift })); lane(materialOf(p, 'sb').dyn, '0:100_', tpr); }
+  arrange(song, [['Verse', [0]], ['Drop', [[1, 2]]]], ['Verse', 'Drop', 'Verse']);
   for (const p of [A, B]) { lane(materialOf(p, 'dm').dyn, '0:100_', tpr); lane(materialOf(p, 'pd').dyn, '0:60 63:96', tpr); lane(materialOf(p, 'sa').dyn, '0:70 63:96', tpr); lane(materialOf(p, 'fp').dyn, '0:76_', tpr); lane(materialOf(p, 'cs').dyn, '0:90_', tpr); lane(materialOf(p, 'pl').dyn, '0:70_', tpr); lane(materialOf(p, 'ld').dyn, '0:96_', tpr); }
   lane(materialOf(A, 'pd').expr, '0:90_', tpr); lane(materialOf(B, 'pd').expr, '0:110_', tpr);
   return fitColumns(song);
@@ -475,6 +491,6 @@ const EXAMPLE_LIST = [
 ];
 // Built-in examples get stable ids so autosave can tell an edited example from a fresh one.
 export const EXAMPLES = EXAMPLE_LIST.map(e => ({ title: e.title, uid: 'example:' + e.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-  build: () => { const s = Object.assign(e.build(), { uid: 'example:' + e.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') }); normalizeArrangement(s); return s; } }));
+  build: () => { const s = Object.assign(e.build(), { uid: 'example:' + e.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') }); ensureStructure(s); return s; } }));
 
 if (typeof module !== 'undefined') module.exports = { PPQ, INST, FAMILIES, newSong, newPhrase, materialOf, laneSet, laneValueAt, renderSong, TimeMap, midiFileBytes, seedSong, noteName, line, lane, rep, EXAMPLES, phraseMeter };

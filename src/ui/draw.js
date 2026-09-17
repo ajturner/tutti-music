@@ -1,8 +1,8 @@
 // Canvas drawing of the grid, the status line, and the animation-frame loop.
 import { FAMILIES, clamp, hex2, noteName } from '../core/constants.js';
 import { INST } from '../core/instruments.js';
-import { laneValueAt, expandPlacements, patternById, placementRows } from '../core/song.js';
-import { $, COLORS, activeKey, applyDensity, canvas, ctx, curPhrase, curPattern, curTrack, midi, rowsPerBar, rowsPerStrongBeat, sched, state, tracksShown, view } from './state.js';
+import { laneValueAt, expandPlacements, patternById, placementLabel, placementRows } from '../core/song.js';
+import { $, COLORS, activeKey, applyDensity, canvas, ctx, curPhrase, curPattern, curSection, curTrack, midi, rowsPerBar, rowsPerStrongBeat, sched, state, tracksShown, view } from './state.js';
 import { computeLayout, currentCell, HEADER_ROWS, CELL_LABEL } from './layout.js';
 import { indexTrack, noteCovering, patternStatus } from './edit.js';
 import { indexMaterial } from '../core/edit.js';
@@ -13,6 +13,9 @@ import { inSel } from './selection.js';
 import { gamepad, pollGamepad } from './gamepad.js';
 import { syncPad, syncSelBar } from './pad.js';
 import { syncMixer } from './mixer.js';
+import { syncMap } from './map.js';
+import { songStatus, syncSongView } from './songview.js';
+import { soundingNow } from './monitor.js';
 import { esc, syncPhraseUI } from './sync.js';
 
 // ---- Drawing ---------------------------------------------------------------------------------
@@ -33,7 +36,7 @@ function fitText(text, maxW) {
   return text.slice(0, n);
 }
 export function draw() {
-  if (!canvas.clientWidth || !canvas.clientHeight) { syncPad(); syncSelBar(); syncMixer(); updateStatus(null); return; }   // hidden behind another phone screen: keep the panels in step
+  if (!canvas.clientWidth || !canvas.clientHeight) { syncPad(); syncSelBar(); syncMixer(); syncMap(); syncSongView(); updateStatus(null); return; }   // the Song view or a phone panel is up: keep the DOM views in step
   const dpr = window.devicePixelRatio || 1;
   if (canvas.width !== Math.floor(canvas.clientWidth * dpr) || canvas.height !== Math.floor(canvas.clientHeight * dpr)) resize();
   const W = canvas.clientWidth, H = canvas.clientHeight;
@@ -45,7 +48,7 @@ export function draw() {
   if (playTick != null && sched.rendered) {
     if (sched.rendered.pattern) { if (state.patternEdit && sched.rendered.pattern === state.patternEdit.id) { playPhr = state.phr; playRow = rowAtTick(phr, playTick); } }   // the open pattern looping on its own
     else for (const s of sched.rendered.starts) if (playTick >= s.tick && playTick < s.tick + s.rows * s.ticksPerRow) { playPhr = s.phrase; playStart = s; playRow = rowAtTick(song.phrases[s.phrase], playTick - s.tick); }
-    if (state.follow && !state.patternEdit && playPhr != null && playPhr !== state.phr) { state.phr = playPhr; syncPhraseUI(); }
+    if (state.follow && !state.patternEdit && playPhr != null && playPhr !== state.phr) { state.phr = playPhr; const si = playStart ? song.sections.findIndex(x => x.id === playStart.section) : -1; if (si >= 0) state.section = si; syncPhraseUI(); }
   }
   const L = computeLayout();
   const headerH = view.ROW_H * HEADER_ROWS + 8;
@@ -90,7 +93,7 @@ export function draw() {
     const idx = indexTrack(phr, tr.id);
     // Placements: the pattern's notes drawn dimmed under the track, a band over the rows, a tag on the first row.
     const mat = phr.material[tr.id], placements = state.patternEdit ? [] : (mat && mat.placements || []).map(pl => { const ptn = patternById(song, pl.pattern); return ptn ? Object.assign(placementRows(phr, pl, ptn), { pl, ptn }) : null; }).filter(Boolean);
-    const pidx = placements.length ? indexMaterial(phr, expandPlacements(song, phr, tr.id, tr.columns)) : null;
+    const pidx = placements.length ? indexMaterial(phr, expandPlacements(song, phr, tr.id, tr.columns, activeKey())) : null;
     const noteEnd = lay.cells.filter(c => c.kind === 'note' || c.kind === 'vel' || c.kind === 'art').reduce((m, c) => Math.max(m, c.x + c.w), lay.x);
     ctx.fillStyle = COLORS.line; ctx.fillRect(lay.x - view.charW * 0.75, headerH, 1, H - headerH);
     for (const pr of placements) {
@@ -112,7 +115,7 @@ export function draw() {
         const textColor = isCursor ? COLORS.cursorText : COLORS.text;
         if (tag) {   // the tag row names the pattern across the whole track
           if (cell === lay.cells[0]) {
-            const label = '\u25b8' + tag.ptn.name + (tag.pl.transpose ? (tag.pl.transpose > 0 ? ' +' : ' ') + tag.pl.transpose : '') + (tag.pl.repeat > 1 ? ' \u00d7' + tag.pl.repeat : '');
+            const label = '\u25b8' + placementLabel(tag.pl, tag.ptn.name);
             if (isCursor) { ctx.fillStyle = COLORS.accent; ctx.fillRect(cell.x - 2, y + 1, lay.w - view.charW * 0.5, view.ROW_H - 2); }
             ctx.fillStyle = isCursor ? COLORS.cursorText : COLORS.accent; ctx.fillText(label, cell.x, ym, lay.x + lay.w - view.charW - cell.x);
           }
@@ -185,7 +188,7 @@ export function draw() {
     for (let k = i; k <= j; k++) labelEnd.set(k, x0 + ctx.measureText(famLabel).width + view.charW);   // every track under the label
     i = j + 1;
   }
-  const anySolo = tracksShown().some(t => t.solo);
+  const anySolo = tracksShown().some(t => t.solo), sounding = soundingNow();
   L.tracks.forEach((lay, ti) => {
     const tr = lay.track, fam = FAMILIES[INST[tr.instrument].family];
     const silent = tr.mute || (anySolo && !tr.solo);
@@ -194,8 +197,15 @@ export function draw() {
     ctx.fillText(name, lay.x, nameY);
     if (tr.mute) ctx.fillRect(lay.x, nameY, ctx.measureText(name).width, 1);
     if (tr.solo) { ctx.fillStyle = COLORS.accent; ctx.fillText('S', lay.x + ctx.measureText(name).width + view.charW * 0.6, nameY); }
-    // During song playback a chained track plays another phrase's data: show which.
-    if (playStart && playStart.follows && playStart.follows[tr.id] != null) { const p = song.phrases[playStart.follows[tr.id]]; ctx.fillStyle = COLORS.accent; ctx.fillText(fitText('\u25b8' + (p ? p.name : '?'), Math.max(view.charW, lay.w - ctx.measureText(name).width - view.charW * 1.5)), lay.x + ctx.measureText(name).width + view.charW * (tr.solo ? 2 : 0.6), nameY); }
+    // While playing, the note this track is sounding sits beside its name (or in its place in a narrow column).
+    const live = sounding[tr.id];
+    if (live) {
+      const txt = noteName(live.pitch), nameW = ctx.measureText(name).width, x = lay.x + nameW + view.charW * (tr.solo ? 2 : 0.8);
+      ctx.fillStyle = COLORS.accent; ctx.globalAlpha = 0.55 + 0.45 * live.vel / 127;
+      if (x + ctx.measureText(txt).width <= lay.x + lay.w - view.charW * 0.5) ctx.fillText(txt, x, nameY);
+      else { ctx.fillStyle = COLORS.header; ctx.globalAlpha = 1; ctx.fillRect(lay.x - 1, nameY - view.ROW_H / 2, lay.w - view.charW * 0.5, view.ROW_H); ctx.fillStyle = COLORS.accent; ctx.fillText(fitText(txt, lay.w - view.charW * 0.75), lay.x, nameY); }
+      ctx.globalAlpha = 1;
+    }
     // third row: what each cell holds, so a new user can read the columns
     ctx.fillStyle = COLORS.num; ctx.font = Math.round(parseInt(view.FONT, 10) * 0.78) + 'px ' + view.FONT.slice(view.FONT.indexOf(' ') + 1);   // small caps-sized labels fit inside each cell
     for (const cell of lay.cells) { const label = cell.kind === 'note' && cell.col > 0 ? ['2nd', '3rd', '4th'][cell.col - 1] : CELL_LABEL[cell.kind]; ctx.fillText(label, cell.x, labelY); }
@@ -210,7 +220,7 @@ export function draw() {
   ctx.fillText('bpm', L.gutter.tempoX, labelY);
 
   view.lastDraw = { L, top, headerH };
-  syncPad(); syncSelBar(); syncMixer();
+  syncPad(); syncSelBar(); syncMixer(); syncMap(); syncSongView();
   updateStatus(playRow);
 }
 
@@ -218,6 +228,7 @@ export let lastStatus = '';
 export function updateStatus(playRow) {
   const phr = curPhrase(), tr = curTrack(), cell = currentCell(), row = state.cursor.row;
   const parts = [];
+  if (state.level === 'song') { const st = songStatus(); if (st) parts.push(st); if (sched.playing) parts.push('<b>playing</b>'); if (state.message) parts.push('<span class="warn">' + state.message + '</span>'); const h = parts.map(x => '<span>' + x + '</span>').join(''); if (h !== lastStatus) { $('status').innerHTML = h; lastStatus = h; } return; }
   if (state.patternEdit) parts.push('<b class="warn">pattern ' + esc((curPattern() || {}).name || '') + '</b> Esc returns to phrase ' + state.phr);
   const ps = patternStatus(); if (ps) parts.push(ps);
   if (tr) {
@@ -232,7 +243,7 @@ export function updateStatus(playRow) {
   } else parts.push('<b>tempo</b> row ' + row + ' (digits, L ramp, S hold)');
   if (cell.kind === 'fx') { const f = fxAtRow(phr, tr.id, row); parts.push('fx ' + (f ? '<b>' + f.cmd + ' ' + hex2(f.value) + '</b> ' + FX_HELP[f.cmd] : 'C R D A T pick a command, hex sets its value')); }
   parts.push('octave <b>' + state.octave + '</b> step <b>' + state.step + '</b>');
-  parts.push('key <b>' + keyName(activeKey()) + '</b>' + (phr.key ? ' (phrase)' : '') + (grooveOf(phr) ? ' | groove <b>on</b>' : ''));
+  parts.push('key <b>' + keyName(activeKey()) + '</b>' + (phr.key ? ' (phrase)' : (curSection() && curSection().key) ? ' (section)' : '') + (grooveOf(phr) ? ' | groove <b>on</b>' : ''));
   if (state.queued != null) parts.push('next <b>' + state.queued + ' ' + (state.song.phrases[state.queued] || {}).name + '</b>');
   parts.push('<a data-panel="sounds" title="Open Sounds">preview ' + (state.preview ? (state.sound === 'samples' ? 'samples' : 'synth') + (state.loadingSamples ? ' <span class="warn">loading ' + esc(state.loadingSamples) + '</span>' : '') : 'off') + '</a> | <a data-panel="connect" title="Open Connect">MIDI ' + (midi.out ? '<b>' + esc(midi.out.name) + '</b>' : 'off') + '</a>');
   if (state.sel) parts.push('selected <b>' + (state.sel.r1 - state.sel.r0 + 1) + '</b> rows × <b>' + (state.sel.g1 - state.sel.g0 + 1) + '</b> cells');

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ajturner.github.io/tutti-music/schema/tutti-song.schema.json",
   "title": "Tutti song",
-  "description": "A Tutti symphonic-tracker song, format version 3. Vocabulary: docs/domain.md. Timing is in ticks at 960 pulses per quarter note. Pitches are MIDI note numbers (60 = C4). Velocities and controller values follow MIDI (0-127).",
+  "description": "A Tutti symphonic-tracker song, format version 4. Vocabulary: docs/domain.md. A song is arranged from sections, a section is made of phrases, a phrase is a few bars for every track, and the ideas inside it are patterns placed on tracks. Timing is in ticks at 960 pulses per quarter note. Pitches are MIDI note numbers (60 = C4). Velocities and controller values follow MIDI (0-127).",
   "type": "object",
   "required": [
     "format",
@@ -11,6 +11,7 @@
     "bpm",
     "tracks",
     "phrases",
+    "sections",
     "arrangement"
   ],
   "properties": {
@@ -23,8 +24,8 @@
       "description": "File format marker."
     },
     "version": {
-      "const": 3,
-      "description": "Format version. 3: arrangement, follows, material, notes, patterns, placements. Versions 1 and 2 are not read."
+      "const": 4,
+      "description": "Format version. 4: sections arranged into a song, phrases as the multi-track block, patterns placed with transformations. Earlier versions are not read."
     },
     "uid": {
       "type": "string",
@@ -73,22 +74,31 @@
       "items": {
         "$ref": "#/$defs/pattern"
       },
-      "description": "Reusable single-track material, placed by placements; never arranged."
+      "description": "Reusable single-voice lines (what musicians call a motif, riff, lick, figure or hook). Only placed, never arranged."
     },
     "phrases": {
       "type": "array",
       "minItems": 1,
       "items": {
         "$ref": "#/$defs/phrase"
-      }
+      },
+      "description": "A few bars for every track: the unit the grid shows and the only owner of time."
+    },
+    "sections": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/section"
+      },
+      "description": "Named spans of the song (intro, verse, chorus, bridge; A, B; exposition, coda), each made of phrases in order."
     },
     "arrangement": {
       "type": "array",
       "minItems": 1,
       "items": {
-        "$ref": "#/$defs/entry"
+        "$ref": "#/$defs/arrangementItem"
       },
-      "description": "The entries that make the song from start to end."
+      "description": "The sections in playing order."
     }
   },
   "$defs": {
@@ -151,11 +161,17 @@
     "phrase": {
       "type": "object",
       "required": [
+        "id",
         "name",
         "rows",
         "ticksPerRow"
       ],
       "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$",
+          "description": "Stable key used by sections."
+        },
         "name": {
           "type": "string"
         },
@@ -200,13 +216,12 @@
         },
         "groove": {
           "type": "array",
-          "minItems": 1,
           "maxItems": 16,
           "items": {
             "type": "number",
             "exclusiveMinimum": 0
           },
-          "description": "Row-length multipliers applied cyclically and normalised to keep the phrase length; [1.33, 0.67] swings pairs of rows. Absent or all 1 means straight."
+          "description": "Row-length multipliers applied cyclically and normalised to keep the phrase length; [1.33, 0.67] swings pairs of rows. Empty, absent or all 1 means straight."
         },
         "key": {
           "oneOf": [
@@ -226,7 +241,8 @@
             "$ref": "#/$defs/material"
           }
         }
-      }
+      },
+      "description": "A few bars for every track, with its own length, row size, meter, tempo lane, groove and optional key."
     },
     "track": {
       "type": "object",
@@ -440,6 +456,7 @@
         "row"
       ],
       "additionalProperties": false,
+      "description": "One use of a pattern on a track of a phrase, with its transformations.",
       "properties": {
         "pattern": {
           "type": "string",
@@ -455,7 +472,28 @@
           "minimum": -48,
           "maximum": 48,
           "default": 0,
-          "description": "Semitones added to every note of the pattern."
+          "description": "Semitones added to every note."
+        },
+        "shift": {
+          "type": "integer",
+          "minimum": -28,
+          "maximum": 28,
+          "default": 0,
+          "description": "Scale degrees moved in the key in force where the placement sounds (phrase, else section, else song). Applied before transpose."
+        },
+        "octave": {
+          "type": "integer",
+          "minimum": -4,
+          "maximum": 4,
+          "default": 0,
+          "description": "Octaves added to every note."
+        },
+        "dynamics": {
+          "type": "integer",
+          "minimum": -96,
+          "maximum": 96,
+          "default": 0,
+          "description": "Added to every note's velocity: negative is softer."
         },
         "repeat": {
           "type": "integer",
@@ -477,7 +515,8 @@
       "additionalProperties": false,
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
         },
         "name": {
           "type": "string"
@@ -501,35 +540,111 @@
           "description": "Note columns the pattern uses. Columns beyond the placing track's are dropped at render time."
         },
         "material": {
-          "$ref": "#/$defs/material"
+          "$ref": "#/$defs/lineMaterial"
         }
-      }
+      },
+      "description": "A reusable line for one voice, written once and placed many times."
     },
-    "entry": {
+    "lineMaterial": {
+      "type": "object",
+      "properties": {
+        "notes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/note"
+          }
+        },
+        "dyn": {
+          "$ref": "#/$defs/lane",
+          "description": "Dynamics lane, 0-127, sent as the instrument's dynamics controller (CC1 by default)."
+        },
+        "expr": {
+          "$ref": "#/$defs/lane",
+          "description": "Expression lane, 0-127, sent as the instrument's expression controller (CC11 by default)."
+        },
+        "fx": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/fx"
+          },
+          "description": "FX column: at most one command per row."
+        },
+        "placements": {
+          "type": "array",
+          "maxItems": 0,
+          "description": "Always empty: a pattern never places another pattern."
+        }
+      },
+      "description": "Notes, lanes and fx of one voice. The shape a pattern holds."
+    },
+    "section": {
       "type": "object",
       "required": [
-        "phrase"
+        "id",
+        "name",
+        "phrases"
       ],
       "additionalProperties": false,
       "properties": {
-        "phrase": {
-          "type": "integer",
-          "minimum": 0,
-          "description": "Phrase that sets the entry's length, tempo lane and groove, and plays on every track not overridden."
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "name": {
+          "type": "string"
+        },
+        "key": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/key"
+            }
+          ],
+          "description": "The section's own key: overrides the song's for every phrase in it that has none. Where a modulation lives."
+        },
+        "phrases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "phrase"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "phrase": {
+                "type": "string",
+                "description": "Id of a phrase in the song."
+              },
+              "repeat": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 64,
+                "default": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "arrangementItem": {
+      "type": "object",
+      "required": [
+        "section"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "section": {
+          "type": "string",
+          "description": "Id of a section in the song."
         },
         "repeat": {
           "type": "integer",
           "minimum": 1,
           "maximum": 64,
           "default": 1
-        },
-        "follows": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "description": "Track id to phrase index: that track plays the other phrase's material, looped or clipped to the entry's length."
         }
       }
     }

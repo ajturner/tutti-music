@@ -179,9 +179,9 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   await page.waitForTimeout(50);
   await page.evaluate(() => { state.phr = 0; tutti.syncPhraseUI(); });
   await page.keyboard.press(' '); await page.waitForTimeout(30); await page.keyboard.press(' '); await page.waitForTimeout(50);
-  await page.selectOption('#phrase', '1'); await page.waitForTimeout(30);
+  await page.selectOption('#phrase', '0:1'); await page.waitForTimeout(30);
   const q = await page.evaluate(() => ({ queued: state.queued, phr: state.phr, playing: sched.playing, sel: document.getElementById('phrase').value }));
-  check('live: choosing a phrase while looping queues it', q.playing && q.queued === 1 && q.phr === 0 && q.sel === '0', JSON.stringify(q));
+  check('live: choosing a phrase while looping queues it', q.playing && q.queued === 1 && q.phr === 0 && q.sel === '0:0', JSON.stringify(q));
   check('live: status shows next', (await page.textContent('#status')).includes('next'));
   await page.evaluate(() => { sched.swapToQueued(); });
   await page.waitForTimeout(30);
@@ -196,7 +196,7 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   await page.evaluate(() => { for (const k of Object.keys(tutti)) if (!(k in window)) Object.defineProperty(window, k, { get: () => tutti[k], configurable: true }); });
   const back = await page.evaluate(() => JSON.stringify(state.songs[0].phrases[0].material.fl.notes) !== JSON.stringify(EXAMPLES[0].build().phrases[0].material.fl.notes) && !!noteAt(state.songs[0].phrases[0], 'fl', 0, 40));
   check('autosave: edit survives a reload', back);
-  await page.evaluate(() => tutti.setPanel('song'));
+  await page.evaluate(() => tutti.setPanel('files'));
   await page.click('#deleteSong'); await page.waitForTimeout(300);
   const reset = await page.evaluate(() => ({ same: JSON.stringify(state.songs[0].phrases[0].material.fl.notes) === JSON.stringify(EXAMPLES[0].build().phrases[0].material.fl.notes), stored: JSON.parse(localStorage.getItem('tutti.songs.v1') || '[]').length }));
   check('autosave: delete resets the example and clears storage', reset.same && reset.stored === 0, JSON.stringify(reset));
@@ -211,7 +211,7 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   await page.evaluate(() => tutti.setPanel('compose'));
   await page.click('#addPhrase'); await page.waitForTimeout(600);
   await page.evaluate(() => tutti.setPanel(null));
-  check('session: URL carries the phrase', (await page.evaluate(() => location.hash)).endsWith('&phr=1'));
+  check('session: URL carries the phrase', (await page.evaluate(() => location.hash)).endsWith('&phrase=a2'));
   await page.reload(); await page.waitForTimeout(400);
   await page.evaluate(() => { for (const k of Object.keys(tutti)) if (!(k in window)) Object.defineProperty(window, k, { get: () => tutti[k], configurable: true }); for (const k of ['lastDraw', 'ROW_H']) Object.defineProperty(window, k, { get: () => tutti.view[k], configurable: true }); });
   const reopened = await page.evaluate(() => ({ uid: state.song.uid, phr: state.phr, note: !!noteAt(state.song.phrases[0], 'fl', 0, 3), title: state.song.title }));
@@ -260,34 +260,60 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   await page.click('#tracksBody tr:nth-last-child(2) button[data-act="remove"]'); await page.waitForTimeout(30);
   check('tracks: remove', (await page.evaluate(() => state.song.tracks.length)) === nTracks && !(await page.evaluate(() => state.song.tracks.some(t => t.name === 'Lead'))));
   await page.click('#composePanel [data-close]'); await page.waitForTimeout(30);
-  // --- arranger ---
-  await page.evaluate(() => { if (state.song.phrases.length < 2) document.getElementById('addPhrase').click(); state.phr = 0; state.song.arrangement = tutti.entries(0, 1, 0); tutti.syncPhraseUI(); });
-  await page.evaluate(() => tutti.setPanel('compose'));
-  check('arranger: one chip per order entry', (await page.$$eval('#arranger .chip', c => c.length)) === 3);
-  await page.click('#arranger .chip:nth-child(2)', { position: { x: 6, y: 6 } }); await page.waitForTimeout(30);
-  check('arranger: click opens the phrase', (await page.evaluate(() => state.phr)) === 1);
-  await page.click('#arranger #arrAdd'); await page.waitForTimeout(30);
-  check('arranger: + appends the current phrase', (await page.evaluate(() => tutti.arrangementText(state.song))) === '0 1 0 1' && (await page.inputValue('#order')) === '0 1 0 1');
-  await page.click('#arranger .chip:nth-child(3) button[data-x]'); await page.waitForTimeout(30);
-  check('arranger: × removes an entry', (await page.evaluate(() => tutti.arrangementText(state.song))) === '0 1 1');
-  await page.click('#arranger .chip:nth-child(1) button[data-edit]'); await page.waitForTimeout(50);
-  await page.fill('#chainRepeat', '2'); await page.selectOption('#chainBody select[data-track="cb"]', '1'); await page.click('#chainOk'); await page.waitForTimeout(50);
-  const chain = await page.evaluate(() => ({ text: tutti.arrangementText(state.song), e: state.song.arrangement[0], chip: document.querySelector('#arranger .chip').textContent, len: tutti.renderSong(state.song).lengthTicks }));
-  check('arranger: dialog sets repeat and a chain', chain.e.repeat === 2 && chain.e.follows.cb === 1 && chain.text.startsWith('0x2') && chain.chip.includes('×2') && chain.chip.includes('⛓'), JSON.stringify(chain));
-  await page.fill('#order', '0x3 1'); await page.dispatchEvent('#order', 'change'); await page.waitForTimeout(30);
-  await page.evaluate(() => tutti.setPanel(null));
-  check('arranger: order text with repeats keeps the chain', await page.evaluate(() => state.song.arrangement.length === 2 && state.song.arrangement[0].repeat === 3 && state.song.arrangement[0].follows.cb === 1));
-  await page.evaluate(() => { state.song.arrangement = [0]; tutti.normalizeArrangement(state.song); state.phr = 0; tutti.syncPhraseUI(); });
+  // --- the Song view: sections, phrases and tracks at a glance; the arrangement is edited here ---
+  await page.evaluate(() => { tutti.selectSong(0); tutti.setPanel(null); state.preview = false; });
+  await page.click('#map button[data-level="song"]'); await page.waitForTimeout(80);
+  const sv0 = await page.evaluate(() => ({ level: state.level, shown: !document.getElementById('songView').hidden, gridHidden: getComputedStyle(document.querySelector('main')).display === 'none', secs: document.querySelectorAll('#songBody .svSec').length, rows: document.querySelectorAll('#songBody .svPhrase').length, cells: document.querySelectorAll('#songBody .svPhrase .svCell').length, thumbs: document.querySelectorAll('#songBody .svCell .thumb rect').length, crumb: document.querySelector('#map .crumb.on').dataset.level, focus: document.activeElement.id }));
+  check('song view: the Song crumb shows one section with one phrase row and a cell per track', sv0.level === 'song' && sv0.shown && sv0.gridHidden && sv0.secs === 1 && sv0.rows === 1 && sv0.cells === (await page.evaluate(() => state.song.tracks.length)) && sv0.thumbs > 10 && sv0.crumb === 'song' && sv0.focus === 'songView', JSON.stringify(sv0));
+  await page.selectOption('#songBody .svSec select[data-f="addPhrase"]', 'new'); await page.waitForTimeout(80);
+  await page.selectOption('#songBody select[data-f="addSection"]', 'new'); await page.waitForTimeout(80);
+  await page.selectOption('#songBody select[data-f="addSection"]', 'id:a'); await page.waitForTimeout(80);
+  const sv1 = await page.evaluate(() => ({ text: tutti.arrangementText(state.song), a: tutti.sectionText(state.song, state.song.sections[0]), b: tutti.sectionText(state.song, state.song.sections[1]), phrases: state.song.phrases.map(p => p.name).join(','), blocks: document.querySelectorAll('#songBody .svSec').length, again: document.querySelectorAll('#songBody .svSec.again').length, form: [...document.querySelectorAll('#songBody .formChip')].map(c => c.textContent).join(' ') }));
+  check('song view: add a phrase, a new section, and play section A again', sv1.text === 'A B A' && sv1.a === 'A1 A2' && sv1.b === 'B1' && sv1.phrases === 'A1,A2,B1' && sv1.blocks === 3 && sv1.again === 1 && sv1.form === 'A B A', JSON.stringify(sv1));
+  await page.fill('#songBody .svSec[data-sec="b"] input[data-f="secName"]', 'Bridge'); await page.dispatchEvent('#songBody .svSec[data-sec="b"] input[data-f="secName"]', 'change'); await page.waitForTimeout(60);
+  await page.fill('#songBody .svSec[data-ai="0"] input[data-f="itemRepeat"]', '2'); await page.dispatchEvent('#songBody .svSec[data-ai="0"] input[data-f="itemRepeat"]', 'change'); await page.waitForTimeout(60);
+  await page.selectOption('#songBody .svSec[data-sec="b"] select[data-f="secKeyRoot"]', '10'); await page.waitForTimeout(60);
+  const sv2 = await page.evaluate(() => ({ text: tutti.arrangementText(state.song), key: state.song.sections[1].key, scale: !!document.querySelector('#songBody .svSec[data-sec="b"] select[data-f="secKeyScale"]'), starts: tutti.renderSong(state.song).starts.map(s => state.song.phrases[s.phrase].name).join(' ') }));
+  check('song view: rename, repeat and give the bridge its own key', sv2.text === 'A×2 Bridge A' && sv2.key && sv2.key.root === 10 && sv2.scale && sv2.starts === 'A1 A2 A1 A2 B1 A1 A2', JSON.stringify(sv2));
+  // keys: arrows move the cell cursor, Enter opens the phrase on that track, backquote comes back out
+  await page.evaluate(() => document.getElementById('songView').focus());
+  await page.keyboard.press('Home'); await page.keyboard.press('ArrowDown'); await page.keyboard.press('ArrowDown'); await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowRight'); await page.waitForTimeout(40);
+  const cur1 = await page.evaluate(() => ({ c: state.songCursor, status: document.getElementById('status').textContent }));
+  check('song view: arrows move the cursor and the status names the cell', cur1.c.row === 2 && cur1.c.track === 2 && /Bridge.*B1.*key A# major.*Clarinet/.test(cur1.status), JSON.stringify(cur1));
+  await page.keyboard.press('Enter'); await page.waitForTimeout(80);
+  const in1 = await page.evaluate(() => ({ level: state.level, phr: state.song.phrases[state.phr].name, sec: state.song.sections[state.section].name, track: state.cursor.track, key: tutti.keyName(tutti.activeKey()), crumbs: [...document.querySelectorAll('#map .crumb b')].map(b => b.textContent).join(' | '), on: document.querySelector('#map .crumb.on').dataset.level, focus: document.activeElement.id, sel: document.getElementById('phrase').value }));
+  check('drill in: Enter opens that phrase on that track, in that section, with the section key', in1.level === 'grid' && in1.phr === 'B1' && in1.sec === 'Bridge' && in1.track === 2 && in1.key === 'A# major' && in1.on === 'phrase' && /Bridge \| B1/.test(in1.crumbs) && in1.focus === 'grid' && in1.sel === '1:2', JSON.stringify(in1));
+  await page.keyboard.press('Backquote'); await page.waitForTimeout(60);
+  check('drill out: the backquote key returns to the Song view', (await page.evaluate(() => state.level)) === 'song');
+  // play from the cursor row: the playing row and form chip light up, the monitor shows sounding notes
+  await page.keyboard.press('Home'); await page.keyboard.press(' '); await page.waitForTimeout(500);
+  const pl = await page.evaluate(() => ({ playing: sched.playing, row: (document.querySelector('#songBody .svPhrase.playing') || { dataset: {} }).dataset.row, chip: (document.querySelector('#songBody .formChip.playing') || {}).textContent, live: [...document.querySelectorAll('#songBody .svTrack.sounding .live')].map(x => x.textContent).filter(Boolean).length, now: (document.querySelector('#map .now') || {}).textContent, mixer: document.querySelectorAll('#mixerStrips .strip.sounding').length, sounding: Object.keys(tutti.soundingNow()).length }));
+  check('song view: Space plays from the row, which lights up with its form chip', pl.playing && pl.row === '0' && /^A/.test(pl.chip || '') && /A › A1/.test(pl.now || ''), JSON.stringify(pl));
+  check('monitor: sounding tracks show their note in the Song view header and the mixer', pl.sounding >= 3 && pl.live === pl.sounding && pl.mixer === pl.sounding, JSON.stringify(pl));
+  await page.keyboard.press('Escape'); await page.waitForTimeout(60);
+  // structure edits keep the song showable and are one undo step each
+  await page.click('#songBody .svSec[data-ai="2"] button[data-act="itemRemove"]'); await page.waitForTimeout(60);
+  await page.click('#songBody .svSec[data-ai="1"] button[data-act="itemRemove"]'); await page.waitForTimeout(60);
+  const sv3 = await page.evaluate(() => ({ text: tutti.arrangementText(state.song), spare: document.querySelectorAll('#songBody .svSec.spare').length, msg: state.message }));
+  check('song view: a section taken out of the arrangement waits at the bottom', sv3.text === 'A×2' && sv3.spare === 1 && /waits at the bottom/.test(sv3.msg), JSON.stringify(sv3));
+  await page.click('#songBody .svSec[data-ai="0"] button[data-act="itemRemove"]'); await page.waitForTimeout(60);
+  check('song view: the arrangement keeps at least one section', (await page.evaluate(() => tutti.arrangementText(state.song) + '|' + state.message)) === 'A×2|The arrangement keeps at least one section');
+  await page.click('#songBody .svSec.spare button[data-act="secDelete"]'); await page.waitForTimeout(60);
+  check('song view: deleting the spare section takes its phrase', await page.evaluate(() => state.song.sections.length === 1 && state.song.phrases.map(p => p.name).join() === 'A1,A2'));
+  await page.evaluate(() => document.getElementById('songView').focus()); await page.keyboard.press('Meta+z'); await page.waitForTimeout(80);
+  check('song view: undo brings the section back', await page.evaluate(() => state.song.sections.length === 2 && state.song.phrases.length === 3 && document.querySelectorAll('#songBody .svSec.spare').length === 1));
+  await page.evaluate(() => { tutti.selectSong(tutti.deleteCurrentSong()); tutti.openPhrase(0, 0, 0); state.preview = true; });
+  await page.waitForTimeout(100);
   check('version: footer shows semver', /^v\d+\.\d+\.\d+$/.test(await page.textContent('#version')));
   // --- header, panels and mixer sidebar ---
   const hdr = await page.evaluate(() => ({ labels: [...document.querySelectorAll('header .group[data-label]')].map(x => x.dataset.label), menus: [...document.querySelectorAll('#menus button')].map(b => b.dataset.panel), rows: document.getElementById('transportbar').getBoundingClientRect().top > document.getElementById('topbar').getBoundingClientRect().top, h: document.querySelector('header').offsetHeight, octave: !!document.getElementById('octave') }));
-  check('header: two rows, transport and phrase only, five panels', hdr.labels.join(',') === 'transport,phrase' && hdr.menus.join(',') === 'song,compose,sounds,connect' && hdr.rows && hdr.h < 90 && !hdr.octave, JSON.stringify(hdr));
-  await page.click('#songBtn'); await page.waitForTimeout(40);
-  const songP = await page.evaluate(() => ({ panel: state.panel, open: !document.getElementById('songPanel').hidden, save: !!document.querySelector('#songPanel #save'), exp: !!document.querySelector('#songPanel #exportMidi'), grid: document.getElementById('grid').clientHeight > 100, on: document.getElementById('songBtn').classList.contains('on') }));
-  check('panels: Song holds the list and file actions with the grid still below', songP.panel === 'song' && songP.open && songP.save && songP.exp && songP.grid && songP.on, JSON.stringify(songP));
+  check('header: two rows, transport and phrase only, five panels', hdr.labels.join(',') === 'transport,phrase' && hdr.menus.join(',') === 'files,compose,sounds,connect' && hdr.rows && hdr.h < 90 && !hdr.octave, JSON.stringify(hdr));
+  await page.click('#filesBtn'); await page.waitForTimeout(40);
+  const songP = await page.evaluate(() => ({ panel: state.panel, open: !document.getElementById('filesPanel').hidden, save: !!document.querySelector('#filesPanel #save'), exp: !!document.querySelector('#filesPanel #exportMidi'), grid: document.getElementById('grid').clientHeight > 100, on: document.getElementById('filesBtn').classList.contains('on') }));
+  check('panels: Files holds the list and file actions with the grid still below', songP.panel === 'files' && songP.open && songP.save && songP.exp && songP.grid && songP.on, JSON.stringify(songP));
   await page.click('#composeBtn'); await page.waitForTimeout(40);
-  const compP = await page.evaluate(() => ({ panel: state.panel, song: document.getElementById('songPanel').hidden, rows: !!document.querySelector('#composePanel #rows'), key: !!document.querySelector('#composePanel #keyRoot'), chips: !!document.querySelector('#composePanel #arranger .chip'), tracks: document.querySelectorAll('#composePanel #tracksBody tr').length === state.song.tracks.length, cap: document.querySelector('.phraseset').dataset.label }));
-  check('panels: Compose replaces Song and holds phrase, key, arrangement, tracks', compP.panel === 'compose' && compP.song && compP.rows && compP.key && compP.chips && compP.tracks && /^phrase 0 /.test(compP.cap), JSON.stringify(compP));
+  const compP = await page.evaluate(() => ({ panel: state.panel, song: document.getElementById('filesPanel').hidden, rows: !!document.querySelector('#composePanel #rows'), key: !!document.querySelector('#composePanel #keyRoot'), name: document.querySelector('#composePanel #blockName').value, scope: !!document.querySelector('#composePanel #keyScope'), tracks: document.querySelectorAll('#composePanel #tracksBody tr').length === state.song.tracks.length, cap: document.querySelector('.phraseset').dataset.label }));
+  check('panels: Compose replaces Files and holds the open phrase, key with its scope, and tracks', compP.panel === 'compose' && compP.song && compP.rows && compP.key && compP.name === 'A1' && compP.scope && compP.tracks && /^phrase A1/.test(compP.cap), JSON.stringify(compP));
   await page.click('#composePanel #rows'); await page.keyboard.press('Escape'); await page.waitForTimeout(40);
   check('panels: Escape in a panel closes it and focuses the grid', (await page.evaluate(() => state.panel === null && document.activeElement === document.getElementById('grid'))));
   await page.click('#connectBtn'); await page.waitForTimeout(40);
@@ -354,13 +380,19 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   await page.waitForTimeout(40);
   check('pattern: selection toolbar offers Make pattern', await page.isVisible('#selbar button[data-op="pattern"]'));
   await page.locator('#selbar button[data-op="pattern"]').dispatchEvent('pointerdown'); await page.waitForTimeout(60);
-  const made = await page.evaluate(() => { const t = curTrack(), m = curPhrase().material[t.id]; return { patterns: state.song.patterns.length, name: state.song.patterns[0] && state.song.patterns[0].name, rows: state.song.patterns[0] && state.song.patterns[0].rows, loose: m.notes.length, placements: m.placements.length, row: m.placements[0] && m.placements[0].row, group: !document.querySelector('.patterngrp').hidden, listed: document.querySelectorAll('#patternsBody tr').length, status: document.getElementById('status').textContent }; });
-  check('pattern: Make pattern moves the rows into a pattern placed at the selection', made.patterns === 1 && made.rows === 8 && made.loose === 0 && made.placements === 1 && made.row === 0 && made.group && made.listed === 1 && /pattern .* used 1/.test(made.status), JSON.stringify(made));
+  const made = await page.evaluate(() => { const t = curTrack(), m = curPhrase().material[t.id]; return { patterns: state.song.patterns.length, name: state.song.patterns[0] && state.song.patterns[0].name, rows: state.song.patterns[0] && state.song.patterns[0].rows, loose: m.notes.length, placements: m.placements.length, row: m.placements[0] && m.placements[0].row, crumb: (document.querySelector('#map .crumb[data-level="pattern"] b') || {}).textContent, enabled: !document.querySelector('#map .crumb[data-level="pattern"]').disabled, status: document.getElementById('status').textContent }; });
+  check('pattern: Make pattern moves the rows into a pattern placed at the selection', made.patterns === 1 && made.rows === 8 && made.loose === 0 && made.placements === 1 && made.row === 0 && made.enabled && made.crumb === made.name && /pattern .* used 1/.test(made.status), JSON.stringify(made));
   await page.evaluate(() => { state.cursor.row = 3; state.dirty = true; }); await page.keyboard.press('z'); await page.waitForTimeout(40);
   check('pattern: typing inside a placement is refused with a hint', await page.evaluate(() => curPhrase().material[curTrack().id].notes.length === 0 && /Inside pattern/.test(state.message)));
   await page.evaluate(() => { state.cursor.row = 0; }); await page.keyboard.press('Equal'); await page.keyboard.press('Equal'); await page.keyboard.press('BracketRight'); await page.waitForTimeout(40);
   const plc = await page.evaluate(() => { const p = curPhrase().material[curTrack().id].placements[0]; return { t: p.transpose, r: p.repeat, rendered: renderSong(state.song, { phrases: [0] }).events.filter(e => e.track === curTrack().id && e.type === 'on').map(e => e.pitch + '@' + e.tick / 240).join(' ') }; });
   check('pattern: = transposes and ] repeats the placement, and the render follows', plc.t === 2 && plc.r === 2 && plc.rendered === '62@0 64@2 66@4 67@6 62@8 64@10 66@12 67@14', JSON.stringify(plc));
+  await page.evaluate(() => { state.song.key = { root: 0, scale: 'major' }; tutti.syncKeyUI(); state.cursor.row = 0; state.dirty = true; });
+  await page.keyboard.press('Period'); await page.keyboard.press('Shift+Equal'); await page.keyboard.press('Shift+Comma'); await page.keyboard.press('Shift+Comma'); await page.waitForTimeout(40);
+  const tf = await page.evaluate(() => { const p = curPhrase().material[curTrack().id].placements[0]; const ons = renderSong(state.song, { phrases: [state.phr] }).events.filter(e => e.track === curTrack().id && e.type === 'on'); return { shift: p.shift, octave: p.octave, dynamics: p.dynamics, first: ons[0].pitch, vel: ons[0].vel, msg: state.message, status: document.getElementById('status').textContent }; });
+  check('transform: . shifts a degree in the key, ⇧= lifts an octave, < makes it softer; the tag says so', tf.shift === 1 && tf.octave === 1 && tf.dynamics === -16 && tf.first === 62 + 2 + 12 && tf.vel === 84 && /↑1 \+2 8va\+1 v−16 ×2/.test(tf.msg) && /↑1 \+2 8va\+1 v−16 ×2/.test(tf.status), JSON.stringify(tf));
+  await page.keyboard.press('Comma'); await page.keyboard.press('Shift+Minus'); await page.keyboard.press('Shift+Period'); await page.keyboard.press('Shift+Period'); await page.waitForTimeout(40);
+  await page.evaluate(() => { state.song.key = null; tutti.syncKeyUI(); });
   // copy the placement and paste it further down
   await page.evaluate(() => { state.cursor.row = 0; state.sel = null; }); await page.keyboard.press('Shift+ArrowDown'); await page.keyboard.press('Meta+c'); await page.evaluate(() => { deselect(); state.cursor.row = 32; }); await page.keyboard.press('Meta+v'); await page.waitForTimeout(40);
   check('pattern: copy and paste carry the placement', await page.evaluate(() => { const ps = curPhrase().material[curTrack().id].placements; return ps.length === 2 && ps[1].row === 32 && ps[1].transpose === 2 && ps[1].repeat === 2; }));
@@ -381,31 +413,42 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   await page.locator('#selbar button[data-op="detach"]').dispatchEvent('pointerdown'); await page.waitForTimeout(40);
   const det = await page.evaluate(() => { const m = curPhrase().material[curTrack().id]; state.selectMode = false; return { placements: m.placements.length, loose: m.notes.length, first: m.notes.find(n => n.tick === 32 * 240) && m.notes.find(n => n.tick === 32 * 240).pitch }; });
   check('pattern: Detach turns the placement under the cursor into loose, transposed notes', det.placements === 1 && det.loose === 8 && det.first === 69, JSON.stringify(det));
-  await page.evaluate(() => tutti.setPanel('compose'));
-  await page.click('#patternsBody tr:first-child button[data-act="remove"]'); await page.waitForTimeout(40);
-  check('pattern: Remove detaches the last use and empties the list', await page.evaluate(() => state.song.patterns.length === 0 && curPhrase().material[curTrack().id].placements.length === 0 && curPhrase().material[curTrack().id].notes.length === 16 && document.querySelector('.patterngrp').hidden));
+  // the Song view lists the song's patterns; a pattern opens from there and Remove detaches every use
+  await page.evaluate(() => tutti.openSong()); await page.waitForTimeout(80);
+  const lib = await page.evaluate(() => ({ cards: document.querySelectorAll('#songBody .ptnCard').length, chip: (document.querySelector('#songBody .svCell .ptn') || {}).textContent, uses: (document.querySelector('#songBody .ptnCard .dim') || {}).textContent }));
+  check('song view: the pattern is listed with its uses and shown as a chip in its cell', lib.cards === 1 && /×2/.test(lib.chip || '') && /1 use/.test(lib.uses || ''), JSON.stringify(lib));
+  await page.click('#songBody .svCell .ptn'); await page.waitForTimeout(80);
+  check('drill in: a pattern chip opens that pattern from the Song view', await page.evaluate(() => state.level === 'grid' && !!state.patternEdit && document.querySelector('#map .crumb.on').dataset.level === 'pattern'));
+  await page.keyboard.press('Backquote'); await page.waitForTimeout(40); await page.keyboard.press('Backquote'); await page.waitForTimeout(60);
+  check('drill out: backquote twice goes pattern, phrase, song', await page.evaluate(() => state.level === 'song' && !state.patternEdit));
+  await page.click('#songBody .ptnCard button[data-act="ptnRemove"]'); await page.waitForTimeout(60);
+  check('pattern: Remove detaches the last use and empties the list', await page.evaluate(() => state.song.patterns.length === 0 && state.song.phrases[0].material[state.song.tracks[0].id].placements.length === 0 && state.song.phrases[0].material[state.song.tracks[0].id].notes.length === 16 && document.querySelectorAll('#songBody .ptnCard').length === 0));
+  await page.evaluate(() => tutti.openPhrase(0, 0, 0));
   await page.evaluate(() => { tutti.setPanel(null); deselect(); });
-  // the reel showcase: patterns drawn as tags, follows in the arrangement
+  // the showcases: the reel places patterns, Night drive shifts one riff through the chords
   await page.evaluate(() => { tutti.selectSong(state.songs.findIndex(s => s.title.startsWith('Crossroads'))); }); await page.waitForTimeout(300);
-  const reel = await page.evaluate(() => ({ patterns: state.song.patterns.map(p => p.name).join(','), banjo: curPhrase().material.bj.placements.length, listed: document.querySelectorAll('#patternsBody tr').length, drive: state.songs.find(s => s.title.startsWith('Night')).arrangement.every(e => e.follows.sb === 2) }));
-  check('showcases: the reel places patterns and Night drive follows a phrase of placements', reel.patterns === 'Roll D,Roll G,Roll A,Reel A,Reel B' && reel.banjo === 4 && reel.listed === 5 && reel.drive, JSON.stringify(reel));
+  const reel = await page.evaluate(() => ({ patterns: state.song.patterns.map(p => p.name).join(','), banjo: curPhrase().material.bj.placements.length, form: tutti.arrangementText(state.song), drive: (() => { const d = state.songs.find(s => s.title.startsWith('Night')); return tutti.arrangementText(d) + '|' + d.phrases[0].material.sb.placements.map(p => p.shift || 0).join(','); })() }));
+  check('showcases: the reel places patterns in A×2 B×2, Night drive shifts its riff under Verse Drop Verse', reel.patterns === 'Roll D,Roll G,Roll A,Reel A,Reel B' && reel.banjo === 4 && reel.form === 'A×2 B×2' && reel.drive === 'Verse Drop Verse|0,-2,2,-1', JSON.stringify(reel));
   await page.screenshot({ path: 'test/out/patterns.png' });
   await page.evaluate(() => { tutti.selectSong(0); });
   await page.waitForTimeout(200);
-  // --- phrase key ---
-  await page.evaluate(() => { if (state.song.phrases.length < 2) document.getElementById('addPhrase').click(); state.phr = 1; tutti.syncPhraseUI(); });
+  // --- keys nest: the song's, a section's, a phrase's own ---
+  await page.evaluate(() => { if (state.song.phrases.length < 2) { tutti.setPanel('compose'); document.getElementById('addPhrase').click(); } state.phr = 1; tutti.syncPhraseUI(); });
   await page.evaluate(() => tutti.setPanel('compose'));
-  await page.selectOption('#keyRoot', '9'); await page.selectOption('#keyScale', 'natural-minor'); await page.waitForTimeout(30);
-  await page.check('#keyPhrase'); await page.selectOption('#keyRoot', '0'); await page.selectOption('#keyScale', 'major'); await page.waitForTimeout(30);
+  await page.selectOption('#keyScope', 'song'); await page.selectOption('#keyRoot', '9'); await page.selectOption('#keyScale', 'natural-minor'); await page.waitForTimeout(30);
+  await page.selectOption('#keyScope', 'phrase'); await page.selectOption('#keyRoot', '0'); await page.selectOption('#keyScale', 'major'); await page.waitForTimeout(30);
   const pk = await page.evaluate(() => ({ song: state.song.key, phr: curPhrase().key, active: tutti.activeKey(), status: document.getElementById('status').textContent }));
-  check('phrase key: override set without touching the song key', pk.song.root === 9 && pk.phr.root === 0 && pk.active.root === 0 && pk.status.includes('(phrase)'), JSON.stringify(pk));
+  check('key: a phrase override is set without touching the song key', pk.song.root === 9 && pk.phr.root === 0 && pk.active.root === 0 && pk.status.includes('(phrase)'), JSON.stringify(pk));
   await page.evaluate(() => { state.phr = 0; tutti.syncPhraseUI(); });
-  check('phrase key: other phrase keeps the song key', await page.evaluate(() => tutti.activeKey().root === 9 && !document.getElementById('keyPhrase').checked));
+  check('key: the other phrase keeps the song key', await page.evaluate(() => tutti.activeKey().root === 9 && document.getElementById('keyRoot').value === ''));
+  await page.selectOption('#keyScope', 'section'); await page.selectOption('#keyRoot', '7'); await page.waitForTimeout(30);
+  const sk = await page.evaluate(() => ({ sec: state.song.sections[0].key, active: tutti.activeKey().root, status: document.getElementById('status').textContent }));
+  check('key: a section key sits between the song and the phrase', sk.sec && sk.sec.root === 7 && sk.active === 7 && sk.status.includes('(section)'), JSON.stringify(sk));
   await page.evaluate(() => { state.phr = 1; tutti.syncPhraseUI(); });
-  await page.uncheck('#keyPhrase'); await page.waitForTimeout(30);
-  await page.evaluate(() => tutti.setPanel(null));
-  check('phrase key: untick removes the override', await page.evaluate(() => curPhrase().key === null && tutti.activeKey().root === 9));
-  await page.evaluate(() => { state.song.key = null; state.phr = 0; tutti.syncPhraseUI(); });
+  check('key: the phrase with its own key still wins', (await page.evaluate(() => tutti.activeKey().root)) === 0);
+  await page.selectOption('#keyScope', 'phrase'); await page.selectOption('#keyRoot', ''); await page.waitForTimeout(30);
+  check('key: "as above" hands the phrase back to its section', await page.evaluate(() => curPhrase().key === null && tutti.activeKey().root === 7));
+  await page.evaluate(() => { tutti.setPanel(null); state.song.key = null; state.song.sections[0].key = null; state.phr = 0; tutti.syncPhraseUI(); });
   // --- song-level undo ---
   const nT = await page.evaluate(() => state.song.tracks.length);
   await page.click('#composeBtn'); await page.click('#tracksBody tr:nth-child(2) button[data-act="remove"]'); await page.click('#composePanel [data-close]'); await page.waitForTimeout(30);
@@ -597,10 +640,10 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   const overflow = await page.evaluate(() => ({ sh: document.documentElement.scrollHeight, ih: innerHeight }));
   check('phone: page does not scroll', overflow.sh <= overflow.ih, JSON.stringify(overflow));
   await page.screenshot({ path: 'test/out/phone.png' });
-  await page.tap('#tabs button[data-view="song"]'); await page.waitForTimeout(100);
-  check('phone: Song tab fills the screen', await page.isVisible('#song') && (await page.evaluate(() => getComputedStyle(document.getElementById('workspace')).display)) === 'none');
+  await page.tap('#tabs button[data-view="files"]'); await page.waitForTimeout(100);
+  check('phone: Files tab fills the screen', await page.isVisible('#song') && (await page.evaluate(() => getComputedStyle(document.getElementById('workspace')).display)) === 'none');
   await page.screenshot({ path: 'test/out/phone-menu.png' });
-  await page.tap('#tabs button[data-view="phrase"]'); await page.waitForTimeout(60);
+  await page.tap('#tabs button[data-view="song"]'); await page.waitForTimeout(60);
   // tap a cell on the grid, then a pad key
   const box = await page.locator('#grid').boundingBox();
   const y3 = await page.evaluate(() => lastDraw.headerH + (3 - lastDraw.top) * ROW_H + 15);
@@ -629,13 +672,13 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   check('phone: mixer overlays the grid and closed the sheet', await page.isVisible('#mixer') && (await page.evaluate(() => getComputedStyle(document.getElementById('mixer')).position)) === 'absolute' && (await page.evaluate(() => state.panel)) === null);
   await page.tap('#mixerClose'); await page.waitForTimeout(60);
   await page.tap('#tabs button[data-view="compose"]'); await page.waitForTimeout(80);
-  const cv = await page.evaluate(() => ({ panel: state.panel, chips: !!document.querySelector('#composePanel #arranger .chip'), rows: !!document.querySelector('#composePanel #rows'), key: !!document.querySelector('#composePanel #keyRoot'), tracks: document.querySelectorAll('#composePanel #tracksBody tr').length === state.song.tracks.length, main: getComputedStyle(document.getElementById('workspace')).display, tab: document.querySelector('#tabs button.on').dataset.view }));
-  check('phone: Compose screen holds the order, phrase settings, key and tracks', cv.panel === 'compose' && cv.chips && cv.rows && cv.key && cv.tracks && cv.main === 'none' && cv.tab === 'compose', JSON.stringify(cv));
+  const cv = await page.evaluate(() => ({ panel: state.panel, name: !!document.querySelector('#composePanel #blockName'), rows: !!document.querySelector('#composePanel #rows'), key: !!document.querySelector('#composePanel #keyRoot'), tracks: document.querySelectorAll('#composePanel #tracksBody tr').length === state.song.tracks.length, main: getComputedStyle(document.getElementById('workspace')).display, tab: document.querySelector('#tabs button.on').dataset.view }));
+  check('phone: Compose screen holds the phrase settings, key and tracks', cv.panel === 'compose' && cv.name && cv.rows && cv.key && cv.tracks && cv.main === 'none' && cv.tab === 'compose', JSON.stringify(cv));
   await page.tap('#tabs button[data-view="sounds"]'); await page.waitForTimeout(300);
   check('phone: Sounds screen shows the banks and instruments', await page.evaluate(() => state.panel === 'sounds' && document.querySelectorAll('#soundsBody tr').length > 5 && !!document.querySelector('#soundsPanel #preview')));
-  await page.tap('#tabs button[data-view="phrase"]'); await page.waitForTimeout(80);
+  await page.tap('#tabs button[data-view="song"]'); await page.waitForTimeout(80);
   const back = await page.evaluate(() => ({ panel: state.panel, grid: document.getElementById('grid').clientWidth > 0, sounds: document.getElementById('soundsPanel').hidden }));
-  check('phone: Phrase tab restores the grid', back.panel === null && back.grid && back.sounds, JSON.stringify(back));
+  check('phone: Song tab restores the workspace', back.panel === null && back.grid && back.sounds, JSON.stringify(back));
   await page.tap('#padNav button:text-is("sel")'); await page.waitForTimeout(80);
   check('phone: sel mode shows toolbar', (await page.evaluate(() => state.selectMode)) && await page.isVisible('#selbar'));
   const selDrag = await page.evaluate(async () => {
@@ -647,6 +690,8 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
     return state.sel;
   });
   check('phone: touch drag in sel mode selects rows', selDrag && selDrag.r0 === 3 && selDrag.r1 === 6, JSON.stringify(selDrag));
+  const room = await page.evaluate(() => ({ selbar: document.getElementById('selbar').offsetHeight, grid: document.getElementById('grid').clientHeight, header: tutti.view.lastDraw.headerH }));
+  check('phone: the selection toolbar is one scrolling row and the grid keeps rows in view', room.selbar < 60 && room.grid - room.header > 100, JSON.stringify(room));
   await page.tap('#padNav button:text-is("sel")'); await page.evaluate(() => deselect());
   // long press clears: synthetic touch pointer events
   await page.evaluate(() => { state.cursor.track = 0; state.cursor.cell = 0; state.cursor.row = 3; state.dirty = true; });
@@ -661,6 +706,29 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
     return noteAt(curPhrase(), curTrack().id, 0, 3) === null;
   });
   check('phone: long press cleared the cell', cleared);
+  // the map and the Song view on a phone: crumbs switch levels, a second tap on a cell drills in
+  const mapP = await page.evaluate(() => ({ h: document.getElementById('map').offsetHeight, crumbs: [...document.querySelectorAll('#map .crumb')].map(c => c.dataset.level).join(','), on: document.querySelector('#map .crumb.on').dataset.level }));
+  check('phone: the map shows the four levels in one slim row', mapP.h <= 36 && mapP.crumbs === 'song,section,phrase,pattern' && mapP.on === 'phrase', JSON.stringify(mapP));
+  await page.tap('#map button[data-level="song"]'); await page.waitForTimeout(120);
+  const svP = await page.evaluate(() => ({ level: state.level, pad: getComputedStyle(document.getElementById('pad')).display, rows: document.querySelectorAll('#songBody .svPhrase').length, sw: document.documentElement.scrollWidth <= innerWidth }));
+  check('phone: the Song crumb opens the overview in place of the grid and pad', svP.level === 'song' && svP.pad === 'none' && svP.rows >= 1 && svP.sw, JSON.stringify(svP));
+  await page.tap('#songBody .svPhrase .svCell[data-t="1"]'); await page.waitForTimeout(80);
+  check('phone: one tap moves the Song view cursor', await page.evaluate(() => state.level === 'song' && state.songCursor.track === 1));
+  await page.tap('#songBody .svPhrase .svCell[data-t="1"]'); await page.waitForTimeout(120);
+  check('phone: a second tap opens the phrase on that track', await page.evaluate(() => state.level === 'grid' && state.cursor.track === 1 && document.getElementById('grid').clientHeight > 0));
+  // on a placement the pad's key row becomes the placement's transformations
+  await page.evaluate(() => { const phr = curPhrase(), t = curTrack(); phr.material[t.id] = { notes: [{ tick: 0, len: 480, pitch: 72, vel: 100, col: 0, art: null }, { tick: 480, len: 480, pitch: 74, vel: 100, col: 0, art: null }], dyn: [], expr: [], fx: [], placements: [] }; tutti.makePattern(state.song, phr, t.id, 0, 7, 'Tune'); state.song.key = { root: 0, scale: 'major' }; state.cursor.row = 0; state.cursor.cell = 0; state.rev++; state.dirty = true; });
+  await page.waitForTimeout(100);
+  const padT = await page.$$eval('#padKeys button', bs => bs.map(b => b.textContent).join(' '));
+  check('phone: the pad offers open, transpose, shift, octave, dynamics, repeat and detach on a placement', /^open −1 \+1 deg↓ deg↑ detach 8va− 8va\+ soft loud rep− rep\+$/.test(padT), padT);
+  await page.tap('#padKeys button:text-is("deg↑")'); await page.tap('#padKeys button:text-is("soft")'); await page.tap('#padKeys button:text-is("rep+")'); await page.waitForTimeout(80);
+  const padR = await page.evaluate(() => { const p = curPhrase().material[curTrack().id].placements[0]; return { shift: p.shift, dynamics: p.dynamics, repeat: p.repeat, crumb: document.querySelector('#map .crumb[data-level="pattern"] b').textContent }; });
+  check('phone: pad buttons transform the placement and the map names it', padR.shift === 1 && padR.dynamics === -8 && padR.repeat === 2 && /Tune ↑1 v−8 ×2/.test(padR.crumb), JSON.stringify(padR));
+  await page.tap('#padKeys button:text-is("open")'); await page.waitForTimeout(100);
+  check('phone: open drills into the pattern; the Phrase crumb comes back out', await page.evaluate(() => !!state.patternEdit && document.querySelector('#map .crumb.on').dataset.level === 'pattern'));
+  await page.tap('#map button[data-level="phrase"]'); await page.waitForTimeout(80);
+  check('phone: back at the phrase', await page.evaluate(() => !state.patternEdit && state.level === 'grid'));
+  await page.evaluate(() => { tutti.selectSong(tutti.deleteCurrentSong()); });
   await page.screenshot({ path: 'test/out/phone-after.png' });
   check('phone: no errors after interaction', errors.length === 0, errors.join(' | '));
   await ctx.close();

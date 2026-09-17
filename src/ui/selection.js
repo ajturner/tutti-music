@@ -5,7 +5,6 @@ import { laneRemove, laneSet, laneValueAt, materialOf, makePattern, detachPlacem
 import { activeKey, curPhrase, curTrack, state, tracksShown } from './state.js';
 import { currentCell, cellKinds } from './layout.js';
 import { audition, noteAt, noteCovering, notesStartingAt, withUndo, withSongUndo } from './edit.js';
-import { syncPatterns } from './sync.js';
 import { notesIn, putNote, resizeNote, setFx, fxAtRow } from '../core/edit.js';
 import { transposeDiatonic, inScale } from '../core/scales.js';
 
@@ -213,8 +212,8 @@ export function makePatternSel() {
   let ptn = null;
   withSongUndo(() => { ptn = makePattern(state.song, phr, tr.id, rect.r0, rect.r1, name); });
   state.sel = null; state.selAnchor = null; state.cursor.row = rect.r0; state.cursor.track = tracks[0]; state.cursor.cell = 0;
-  state.message = 'Made pattern ' + ptn.name + ' from rows ' + rect.r0 + '–' + rect.r1 + ' · rename it in Compose, Enter edits it';
-  syncPatterns(); state.dirty = true;
+  state.message = 'Made pattern ' + ptn.name + ' from rows ' + rect.r0 + '–' + rect.r1 + ' · Enter edits it, the Song view lists it';
+  state.dirty = true;
   return ptn;
 }
 // Turn the placements under the cursor or in the selection back into loose notes.
@@ -223,16 +222,16 @@ export function detachSel() {
   const rect = selRect(), phr = curPhrase();
   const targets = state.sel ? selPlacements(rect, phr) : (() => { const tr = curTrack(), p = tr && placementAt(state.song, phr, tr.id, state.cursor.row); return p ? [{ p: p.placement, tr }] : []; })();
   if (!targets.length) { state.message = 'No pattern here to detach'; state.dirty = true; return; }
-  withSongUndo(() => { for (const { p, tr } of targets) { const m = phr.material[tr.id], i = m.placements.indexOf(p); if (i >= 0) detachPlacement(state.song, phr, tr.id, i, tr.columns); } });
+  withSongUndo(() => { for (const { p, tr } of targets) { const m = phr.material[tr.id], i = m.placements.indexOf(p); if (i >= 0) detachPlacement(state.song, phr, tr.id, i, tr.columns, activeKey()); } });
   state.message = 'Detached ' + targets.length + ' placement' + (targets.length > 1 ? 's' : '') + ' into loose notes';
-  syncPatterns(); state.dirty = true;
+  state.dirty = true;
 }
 // Move selected notes by scale degrees in the song's key (semitones when there is no key).
 export function transposeSelDiatonic(d) {
-  const phr = curPhrase(), notes = selNotes(selRect(), phr), key = activeKey();
-  if (!notes.length) { state.message = 'No notes in the selection'; state.dirty = true; return; }
-  withUndo(() => notes.forEach(({ ev }) => { ev.pitch = transposeDiatonic(key, ev.pitch, d); }));
-  const first = notes[0]; audition(first.tr, first.ev.pitch, first.ev.art);
+  const phr = curPhrase(), notes = selNotes(selRect(), phr), key = activeKey(), placed = state.patternEdit ? [] : selPlacements(selRect(), phr);
+  if (!notes.length && !placed.length) { state.message = 'No notes in the selection'; state.dirty = true; return; }
+  withUndo(() => { notes.forEach(({ ev }) => { ev.pitch = transposeDiatonic(key, ev.pitch, d); }); placed.forEach(({ p }) => { p.shift = clamp((p.shift | 0) + d, -28, 28); }); });
+  if (notes.length) { const first = notes[0]; audition(first.tr, first.ev.pitch, first.ev.art); }
 }
 export function velocitySel(d) {
   const notes = selNotes(selRect(), curPhrase());

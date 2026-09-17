@@ -1,7 +1,7 @@
 // Render a song to a flat, absolute-tick event list and map ticks to milliseconds under a changing tempo.
 import { PPQ, clamp } from './constants.js';
 import { INST } from './instruments.js';
-import { laneValueAt, normalizeArrangement, entryOf, materialFor } from './song.js';
+import { laneValueAt, expandMaterial, keyFor, playOrder } from './song.js';
 
 // ---- Render: song -> flat, absolute-tick event list --------------------------
 // Event types: 'ks' keyswitch, 'cc' controller, 'off' note off, 'on' note on. Order at equal tick matters:
@@ -112,17 +112,18 @@ export function applyFx(note, fx, transpose, tpr, random) {
   return [{ tick: start, end, pitch, vel: note.vel }];
 }
 
+// opts.phrases: phrase indices to play once each (the loop of the open phrase); opts.section: one section's
+// phrases with their repeats; neither: the whole arrangement. Each start records where it sits in the song.
 export function renderSong(song, opts = {}) {
-  const entries = opts.phrases ? opts.phrases.map(entryOf) : normalizeArrangement(song);
+  const plays = opts.phrases ? opts.phrases.filter(i => song.phrases[i]).map(i => ({ item: -1, sectionRepeat: 0, section: opts.sectionRef || null, slot: -1, repeat: 0, phrase: i }))
+    : playOrder(song, opts.section);
   const random = opts.random || Math.random;
   const events = [], tempo = [{ tick: 0, bpm: song.bpm }], starts = [];
   let offset = 0;
-  const plays = [];
-  entries.forEach((e, ei) => { if (song.phrases[e.phrase]) for (let k = 0; k < e.repeat; k++) plays.push({ e, ei, k }); });
-  for (const { e, ei, k } of plays) {
-    const pi = e.phrase, phr = song.phrases[pi];
+  for (const play of plays) {
+    const pi = play.phrase, phr = song.phrases[pi], key = keyFor(song, phr, play.section);
     const len = phr.rows * phr.ticksPerRow, tpr = phr.ticksPerRow, map = tickMapper(phr);
-    starts.push({ phrase: pi, tick: offset, rows: phr.rows, ticksPerRow: tpr, groove: !!grooveOf(phr), entry: ei, repeat: k, follows: e.follows });
+    starts.push({ phrase: pi, tick: offset, rows: phr.rows, ticksPerRow: tpr, groove: !!grooveOf(phr), item: play.item, section: play.section ? play.section.id : null, sectionRepeat: play.sectionRepeat, slot: play.slot, repeat: play.repeat });
     renderLane(phr.tempo, len, offset, (t, v) => tempo.push({ tick: offset + map(t - offset), bpm: v }), fmtBpm);
     for (const tr of song.tracks) {
       const ins = INST[tr.instrument];
@@ -130,7 +131,7 @@ export function renderSong(song, opts = {}) {
         events.push({ tick: 0, type: 'cc', track: tr.id, cc: 7, value: fmtCC(tr.volume == null ? 100 : tr.volume) });
         events.push({ tick: 0, type: 'cc', track: tr.id, cc: 10, value: fmtCC(tr.pan == null ? 64 : tr.pan) });
       }
-      const pt = materialFor(song, e, tr.id, tr.columns || 1);
+      const pt = expandMaterial(song, phr, tr.id, tr.columns || 1, key);
       if (!pt) continue;
       const evs = pt.notes.slice().sort((a, b) => a.tick - b.tick || a.col - b.col);
       const fx = (pt.fx || []).slice().sort((a, b) => a.tick - b.tick);

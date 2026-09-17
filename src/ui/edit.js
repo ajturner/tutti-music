@@ -1,7 +1,7 @@
 // Editing primitives: note lookup, undo, cell entry and nudging, clearing, note length and columns, cursor movement.
 import { clamp, noteName } from '../core/constants.js';
 import { INST } from '../core/instruments.js';
-import { laneRemove, laneSet, materialOf, placementAt, patternUses } from '../core/song.js';
+import { laneRemove, laneSet, materialOf, placementAt, placementLabel, patternUses } from '../core/song.js';
 import { setNote as coreSetNote, noteAt, noteCovering, notesStartingAt, removeNotesAt, resizeNote, fxAtRow, setFx, removeFx } from '../core/edit.js';
 import { FX_COMMANDS, FX_DEFAULTS } from '../core/render.js';
 import { transposeDiatonic } from '../core/scales.js';
@@ -56,7 +56,7 @@ export function swapHistory(from, to) {
   }
   to.push({ phr: h.phr, json: JSON.stringify(state.song.phrases[h.phr]) });
   state.song.phrases[h.phr] = JSON.parse(h.json);
-  state.phr = h.phr; syncPhraseUI(); state.typing = null; state.dirty = true;
+  state.phr = h.phr; syncPhraseUI(); state.typing = null; markEdited(); state.dirty = true;
 }
 
 // ---- Editing --------------------------------------------------------------------------
@@ -98,23 +98,28 @@ export function guardPlacement(kind) {
   state.dirty = true;
   return true;
 }
-const placementLabel = p => p.pattern.name + (p.placement.transpose ? (p.placement.transpose > 0 ? ' +' : ' ') + p.placement.transpose : '') + (p.placement.repeat > 1 ? ' ×' + p.placement.repeat : '');
-export function transposePlacement(d) {
+const labelOf = p => placementLabel(p.placement, p.pattern.name);
+// A placement's transformations change what the pattern sounds like here; the pattern itself is untouched.
+function transform(field, d, lo, hi) {
   const p = placementHere(); if (!p) return false;
-  withUndo(() => { p.placement.transpose = clamp(p.placement.transpose + d, -48, 48); });
-  state.message = 'Placement ' + placementLabel(p);
+  withUndo(() => { p.placement[field] = clamp((p.placement[field] | 0) + d, lo, hi); });
+  state.message = 'Placement ' + labelOf(p);
   return true;
 }
+export const transposePlacement = d => transform('transpose', d, -48, 48);   // semitones
+export const shiftPlacement = d => transform('shift', d, -28, 28);           // scale degrees in the key in force
+export const octavePlacement = d => transform('octave', d, -4, 4);
+export const dynamicsPlacement = d => transform('dynamics', d, -96, 96);     // velocity offset: negative is softer
 export function repeatPlacement(d) {
   const p = placementHere(); if (!p) return false;
-  withUndo(() => { p.placement.repeat = clamp(p.placement.repeat + d, 1, 64); });
-  state.message = 'Placement ' + placementLabel(p);
+  withUndo(() => { p.placement.repeat = clamp((p.placement.repeat || 1) + d, 1, 64); });
+  state.message = 'Placement ' + labelOf(p);
   return true;
 }
 export function removePlacementHere() {
   const p = placementHere(), tr = curTrack(); if (!p) return false;
   withUndo(() => { curPhrase().material[tr.id].placements.splice(p.index, 1); });
-  state.message = 'Removed the placement of ' + p.pattern.name + ' (the pattern is still in Compose)';
+  state.message = 'Removed the placement of ' + p.pattern.name + ' (the pattern is still in the song)';
   return true;
 }
 // Open a pattern in the grid on a track; Escape (leavePattern) returns to the phrase.
@@ -138,7 +143,7 @@ export function leavePattern() {
   state.message = ''; state.ensureVisible = true; syncPhraseUI(); state.dirty = true;
   return true;
 }
-export const patternStatus = () => { const p = placementHere(); return p ? 'pattern <b>' + placementLabel(p) + '</b> used ' + patternUses(state.song, p.pattern.id) + '× · Enter edits' : ''; };
+export const patternStatus = () => { const p = placementHere(); return p ? 'pattern <b>' + labelOf(p) + '</b> used ' + patternUses(state.song, p.pattern.id) + '× · Enter edits' : ''; };
 
 export function typeIntoCell(k) {
   const phr = curPhrase(), tr = curTrack(), cell = currentCell(), row = state.cursor.row, tick = row * phr.ticksPerRow;

@@ -5,6 +5,8 @@ import { audition, moveCell, moveRow, moveTrack, noteCovering, nudgeArticulation
 import { clearSel, copySel, cutSel, duplicateSel, pasteSel, selExtend } from './selection.js';
 import { clearCell } from './edit.js';
 import { playPhrase, playSong, stopAll } from './transport.js';
+import { levelDown, levelUp } from './map.js';
+import { setSongCursor, songKey } from './songview.js';
 
 // ---- Game controller ------------------------------------------------------------------------
 // The Gamepad API is polled, so this runs every frame. Standard-mapping indices (Xbox layout):
@@ -36,6 +38,20 @@ export function pollGamepad(now) {
   if (fire.a) gamepad.aUsed = false;
   if (fire.b) gamepad.bUsed = false;
   if (fire.back) gamepad.backUsed = false;
+  // Back + LB goes out a level (pattern → phrase → song), Back + RB goes in; both work on every level.
+  if (fire.lb && held.back) { gamepad.backUsed = true; levelUp(); return; }
+  if (fire.rb && held.back) { gamepad.backUsed = true; if (state.level === 'song') songKey({ key: 'Enter' }); else levelDown(); return; }
+  if (state.level === 'song') {   // the overview: the d-pad moves the cell cursor, A opens, Start plays from here
+    const c = state.songCursor;
+    if (fire.up) setSongCursor(c.row - 1, c.track, true);
+    if (fire.down) setSongCursor(c.row + 1, c.track, true);
+    if (fire.left || fire.lb) setSongCursor(c.row, c.track - 1, true);
+    if (fire.right || fire.rb) setSongCursor(c.row, c.track + 1, true);
+    if (fire.aUp) songKey({ key: 'Enter' });
+    if (fire.start) { if (held.back) { gamepad.backUsed = true; playSong(); } else songKey({ key: ' ' }); }
+    if (fire.backUp && !gamepad.backUsed) undo();
+    return;
+  }
   const edit = d => { gamepad.aUsed = true; nudgeCell(d); };
   const grow = (dr, dc) => { gamepad.bUsed = true; selExtend(dr, dc); };
   const big = () => { const k = currentCell().kind; return k === 'note' ? 12 : k === 'tempo' ? 10 : 16; };

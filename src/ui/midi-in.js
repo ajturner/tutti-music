@@ -16,7 +16,8 @@ export const midiRec = { timer: 0, n: 0 };
 // Live record: notes land on the row the loop is passing (nearest row), note-off sets the length.
 const live = new Map();   // pitch -> { ev, row, trackId }
 function liveRow() {
-  const phr = curPhrase(), t = sched.positionTick(); if (t == null) return 0;
+  const phr = curPhrase(); let t = sched.positionTick(); if (t == null) return 0;
+  const st = sched.rendered && sched.rendered.starts.find(s => t >= s.tick && t < s.tick + s.rows * s.ticksPerRow); if (st) t -= st.tick;   // a looping section holds several phrase plays
   const tpr = phr.ticksPerRow, rt = rowTicks(phr);
   let r = rowAtTick(phr, t); if (t - rt[r] > (rt[r + 1] - rt[r]) / 2) r++;
   return r % phr.rows;
