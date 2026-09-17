@@ -1,5 +1,5 @@
 // Workflow panels. The header keeps identity and transport; everything else lives in one of five panels
-// opened from the menu bar: Song (files), Compose (pattern, key, arrangement, tracks), Sounds (preview,
+// opened from the menu bar: Song (files), Compose (phrase, key, arrangement, tracks), Sounds (preview,
 // banks, instruments), Connect (MIDI, controller) and View (follow, pad, mixer, columns). One panel is
 // open at a time. On a wide screen it drops below the header as a sheet and the grid stays editable;
 // below 760 px it replaces the grid and the tab bar drives it. Every control has one home in the DOM.
@@ -22,7 +22,7 @@ export function setPanel(name) {
   document.body.dataset.panel = name || '';
   for (const sec of document.querySelectorAll('#panels .panel')) sec.hidden = sec.dataset.panel !== name;
   for (const b of document.querySelectorAll('header button[data-panel]')) { const on = b.dataset.panel === name; b.classList.toggle('on', on); b.setAttribute('aria-expanded', String(on)); }
-  for (const b of document.querySelectorAll('#tabs button[data-view]')) b.classList.toggle('on', b.dataset.view === (name || 'pattern'));
+  for (const b of document.querySelectorAll('#tabs button[data-view]')) b.classList.toggle('on', b.dataset.view === (name || 'phrase'));
   if (name && onOpen[name]) onOpen[name]();
   state.dirty = true;
   if (!name) $('grid').focus();
@@ -36,7 +36,7 @@ export function wirePanels() {
     const b = e.target.closest('button[data-panel]'); if (!b) return;
     togglePanel(b.dataset.panel);
   });
-  $('tabs').addEventListener('click', e => { const b = e.target.closest('button[data-view]'); if (b) setPanel(b.dataset.view === 'pattern' ? null : b.dataset.view); });
+  $('tabs').addEventListener('click', e => { const b = e.target.closest('button[data-view]'); if (b) setPanel(b.dataset.view === 'phrase' ? null : b.dataset.view); });
   $('panels').addEventListener('click', e => { if (e.target.closest('button[data-close]')) closePanel(); });
   // Typing in a panel must not edit the grid; Escape closes the panel.
   $('panels').addEventListener('keydown', e => {

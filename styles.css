@@ -87,13 +87,13 @@
   .panelBody .group { flex-wrap: wrap; }
   .panelBody p.dim { flex-basis: 100%; margin: 0; font-size: 12px; }
   .trackgrp { flex-basis: 100%; flex-direction: column; align-items: flex-start; }
-  .phrasegrp { flex-direction: column; align-items: flex-start; }
-  .phrasegrp .dim { font-size: 11px; max-width: 40em; }
-  #phrasesTable { border-collapse: collapse; }
-  #phrasesTable th { color: var(--dim); font-weight: normal; text-align: left; padding: 2px 6px; }
-  #phrasesTable td { padding: 2px 6px; white-space: nowrap; }
-  #phrasesTable tr.cur td { color: var(--accent); }
-  #phrasesTable button { padding: 1px 6px; margin-left: 4px; }
+  .patterngrp { flex-direction: column; align-items: flex-start; }
+  .patterngrp .dim { font-size: 11px; max-width: 40em; }
+  #patternsTable { border-collapse: collapse; }
+  #patternsTable th { color: var(--dim); font-weight: normal; text-align: left; padding: 2px 6px; }
+  #patternsTable td { padding: 2px 6px; white-space: nowrap; }
+  #patternsTable tr.cur td { color: var(--accent); }
+  #patternsTable button { padding: 1px 6px; margin-left: 4px; }
   .listen { margin-bottom: 6px; }
   .short { display: none; }
   #rec.on { background: #B23A3A; border-color: #B23A3A; color: #fff; }
@@ -130,8 +130,8 @@
     .tools { margin-left: auto; }
     .primary { padding-top: 0; }
     .primary::before { display: none; }
-    .patsel { padding-top: 0; }
-    .patsel::before { display: none; }
+    .phrasesel { padding-top: 0; }
+    .phrasesel::before { display: none; }
     .primary label[title] { display: none; }
     /* An open panel replaces the grid, except View which stays a sheet over it */
     #panels { display: contents; }
@@ -146,7 +146,7 @@
     #transportbar label[for="bpm"] { display: none; }
     #transportbar #bpm { width: 3.2em; padding-left: 6px; padding-right: 4px; }
     #transportbar button { padding-left: 8px; padding-right: 8px; }
-    .patsel { margin-left: auto; }
+    .phrasesel { margin-left: auto; }
     #mixer { position: absolute; right: 0; top: 0; bottom: 0; width: min(82vw, 320px); z-index: 5; box-shadow: -6px 0 18px rgba(0,0,0,.5); }
     footer { padding: 4px 8px calc(4px + env(safe-area-inset-bottom)); }
     body.padon footer { padding-bottom: 4px; }

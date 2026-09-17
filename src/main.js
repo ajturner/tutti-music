@@ -26,7 +26,7 @@ import * as ui_pad from './ui/pad.js';
 import * as ui_midi_in from './ui/midi-in.js';
 import * as ui_toolbar from './ui/toolbar.js';
 import { canvas, coarsePointer } from './ui/state.js';
-import { syncSongUI, syncPatternUI } from './ui/sync.js';
+import { syncSongUI, syncPhraseUI } from './ui/sync.js';
 import { setPad } from './ui/pad.js';
 import * as ui_storage from './ui/storage.js';
 import { restoreSongs } from './ui/storage.js';
@@ -50,15 +50,15 @@ document.querySelectorAll('select, input').forEach(el => el.addEventListener('ch
 document.querySelectorAll('button').forEach(b => b.addEventListener('click', () => b.blur()));
 restoreSongs();
 const loc = restoreLocation();
-if (loc) { state.songIndex = loc.index; state.song = state.songs[loc.index]; state.pat = loc.pat; }
+if (loc) { state.songIndex = loc.index; state.song = state.songs[loc.index]; state.phr = loc.phr; }
 document.getElementById('version').textContent = 'v' + VERSION;
 syncSongUI();
-syncPatternUI();
-// Back/forward or a hand-edited hash: open that song and pattern.
+syncPhraseUI();
+// Back/forward or a hand-edited hash: open that song and phrase.
 window.addEventListener('hashchange', () => {
   const target = restoreLocation(); if (!target) return;
   if (target.index !== state.songIndex) selectSong(target.index);
-  if (target.pat !== state.pat) { state.pat = target.pat; syncPatternUI(); state.dirty = true; }
+  if (target.phr !== state.phr) { state.phr = target.phr; syncPhraseUI(); state.dirty = true; }
 });
 setPad(coarsePointer());
 wireMixer();

@@ -70,10 +70,10 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   check('desktop: wheel scrolls horizontally', c.scrollX > 0, 'scrollX=' + c.scrollX);
   // keyboard entry still works
   await page.keyboard.press('Home'); await page.keyboard.press('z'); await page.waitForTimeout(50);
-  const n = await page.evaluate(() => { const t = curTrack(); return noteAt(curPat(), t.id, 0, 0); });
+  const n = await page.evaluate(() => { const t = curTrack(); return noteAt(curPhrase(), t.id, 0, 0); });
   check('desktop: keyboard note entry', !!n && n.pitch === 60, JSON.stringify(n));
   // --- selection and batch operations (track 0, col 0) ---
-  await page.evaluate(() => { deselect(); state.cursor.track = 0; state.cursor.cell = 0; state.cursor.row = 0; const t = curTrack(); const pat = curPat(); pat.material[t.id].notes = []; state.dirty = true; });
+  await page.evaluate(() => { deselect(); state.cursor.track = 0; state.cursor.cell = 0; state.cursor.row = 0; const t = curTrack(); const phr = curPhrase(); phr.material[t.id].notes = []; state.dirty = true; });
   await page.evaluate(() => { const t = curTrack(); [[0, 60, 40], [2, 64, 100], [4, 67, 120]].forEach(([r, p, v]) => { state.cursor.row = r; enterPitch(p, v, 0); }); state.cursor.row = 0; state.dirty = true; });
   await page.keyboard.press('Shift+ArrowDown'); await page.keyboard.press('Shift+ArrowDown'); await page.keyboard.press('Shift+ArrowDown'); await page.keyboard.press('Shift+ArrowDown');
   await page.keyboard.press('Shift+ArrowRight'); await page.waitForTimeout(50);
@@ -85,35 +85,35 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   check('sel: copy captured notes and velocities', clip && clip.rows === 5 && clip.cells.length === 2 && clip.cells[0].items.length === 3 && clip.cells[1].items.length === 3, JSON.stringify(clip && clip.cells.map(c => c.items.length)));
   await page.evaluate(() => { deselect(); state.cursor.row = 16; state.cursor.cell = 0; });
   await page.keyboard.press('Meta+v'); await page.waitForTimeout(30);
-  const pasted = await page.evaluate(() => { const t = curTrack(); return [16, 18, 20].map(r => noteAt(curPat(), t.id, 0, r)).map(e => e && [e.pitch, e.vel]); });
+  const pasted = await page.evaluate(() => { const t = curTrack(); return [16, 18, 20].map(r => noteAt(curPhrase(), t.id, 0, r)).map(e => e && [e.pitch, e.vel]); });
   check('sel: paste at cursor', JSON.stringify(pasted) === '[[60,40],[64,100],[67,120]]', JSON.stringify(pasted));
   // transpose the pasted block with = and shift+=
   await page.keyboard.press('Shift+ArrowDown'); await page.keyboard.press('Shift+ArrowDown'); await page.keyboard.press('Shift+ArrowDown'); await page.keyboard.press('Shift+ArrowDown');
   await page.keyboard.press('='); await page.keyboard.press('Shift+='); await page.waitForTimeout(30);
-  const tr = await page.evaluate(() => { const t = curTrack(); return [16, 18, 20].map(r => noteAt(curPat(), t.id, 0, r).pitch); });
+  const tr = await page.evaluate(() => { const t = curTrack(); return [16, 18, 20].map(r => noteAt(curPhrase(), t.id, 0, r).pitch); });
   check('sel: = and shift+= transpose +13', JSON.stringify(tr) === '[73,77,80]', JSON.stringify(tr));
   // interpolate velocities via the toolbar: set middle to 0-ish then ramp 40..120 -> 80
-  await page.evaluate(() => { const t = curTrack(); noteAt(curPat(), t.id, 0, 18).vel = 1; });
+  await page.evaluate(() => { const t = curTrack(); noteAt(curPhrase(), t.id, 0, 18).vel = 1; });
   await page.locator('#selbar button[data-op="interp"]').dispatchEvent('pointerdown'); await page.waitForTimeout(30);
-  const mid = await page.evaluate(() => { const t = curTrack(); return noteAt(curPat(), t.id, 0, 18).vel; });
+  const mid = await page.evaluate(() => { const t = curTrack(); return noteAt(curPhrase(), t.id, 0, 18).vel; });
   check('sel: toolbar interpolate ramps velocity', mid === 80, 'mid=' + mid);
   // articulation via the toolbar select
   await page.selectOption('#selArt', 'stc'); await page.waitForTimeout(30);
-  const arts = await page.evaluate(() => { const t = curTrack(); return [16, 18, 20].map(r => noteAt(curPat(), t.id, 0, r).art); });
+  const arts = await page.evaluate(() => { const t = curTrack(); return [16, 18, 20].map(r => noteAt(curPhrase(), t.id, 0, r).art); });
   check('sel: toolbar articulation applies', JSON.stringify(arts) === '["stc","stc","stc"]', JSON.stringify(arts));
   // duplicate: selection (rows 16-20) copies to 21-25 and selection moves there
   await page.keyboard.press('Meta+d'); await page.waitForTimeout(30);
-  const dup = await page.evaluate(() => { const t = curTrack(); return { n: [21, 23, 25].map(r => (noteAt(curPat(), t.id, 0, r) || {}).pitch), sel: state.sel, row: state.cursor.row }; });
+  const dup = await page.evaluate(() => { const t = curTrack(); return { n: [21, 23, 25].map(r => (noteAt(curPhrase(), t.id, 0, r) || {}).pitch), sel: state.sel, row: state.cursor.row }; });
   check('sel: duplicate pastes below and moves selection', JSON.stringify(dup.n) === '[73,77,80]' && dup.sel.r0 === 21 && dup.row === 21, JSON.stringify(dup));
   // delete clears the selection block only
   await page.keyboard.press('Delete'); await page.waitForTimeout(30);
-  const after = await page.evaluate(() => { const t = curTrack(); return { gone: [21, 23, 25].every(r => !noteAt(curPat(), t.id, 0, r)), kept: !!noteAt(curPat(), t.id, 0, 16) }; });
+  const after = await page.evaluate(() => { const t = curTrack(); return { gone: [21, 23, 25].every(r => !noteAt(curPhrase(), t.id, 0, r)), kept: !!noteAt(curPhrase(), t.id, 0, 16) }; });
   check('sel: Delete clears only the selection', after.gone && after.kept, JSON.stringify(after));
   await page.keyboard.press('Meta+z'); await page.waitForTimeout(30);
-  check('sel: undo restores', await page.evaluate(() => !!noteAt(curPat(), curTrack().id, 0, 21)));
-  // select all: track then pattern
+  check('sel: undo restores', await page.evaluate(() => !!noteAt(curPhrase(), curTrack().id, 0, 21)));
+  // select all: track then phrase
   await page.keyboard.press('Meta+a'); await page.waitForTimeout(30);
-  let all = await page.evaluate(() => ({ sel: state.sel, n: allCells().length, rows: curPat().rows }));
+  let all = await page.evaluate(() => ({ sel: state.sel, n: allCells().length, rows: curPhrase().rows }));
   check('sel: cmd+A selects the track', all.sel.r0 === 0 && all.sel.r1 === all.rows - 1 && all.sel.g0 === 1 && all.sel.g1 === 5, JSON.stringify(all.sel));
   await page.keyboard.press('Meta+a'); await page.waitForTimeout(30);
   all = await page.evaluate(() => ({ sel: state.sel, n: allCells().length }));
@@ -129,18 +129,18 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   // MIDI in step recording (chord of two notes)
   await page.evaluate(() => { state.cursor.row = 8; state.cursor.cell = 0; onMidiMessage({ data: [0x90, 67, 90] }); onMidiMessage({ data: [0x90, 71, 80] }); });
   await page.waitForTimeout(200);
-  const rec = await page.evaluate(() => { const t = curTrack(); return { a: noteAt(curPat(), t.id, 0, 8), b: noteAt(curPat(), t.id, 1, 8), row: state.cursor.row, cols: t.columns }; });
+  const rec = await page.evaluate(() => { const t = curTrack(); return { a: noteAt(curPhrase(), t.id, 0, 8), b: noteAt(curPhrase(), t.id, 1, 8), row: state.cursor.row, cols: t.columns }; });
   check('midi in: chord recorded across columns and advanced', rec.a && rec.a.pitch === 67 && rec.a.vel === 90 && rec.b && rec.b.pitch === 71 && rec.row === 12 && rec.cols >= 2, JSON.stringify(rec));
   // --- key and diatonic transpose ---
   await page.evaluate(() => tutti.setPanel('compose'));
   await page.selectOption('#keyRoot', '0'); await page.selectOption('#keyScale', 'major'); await page.waitForTimeout(30);
   await page.evaluate(() => tutti.setPanel(null));
   check('key: song key set from the menu', await page.evaluate(() => state.song.key && state.song.key.root === 0 && state.song.key.scale === 'major'));
-  await page.evaluate(() => { deselect(); const t = curTrack(); curPat().material[t.id].notes = []; state.cursor.track = 0; state.cursor.cell = 0; state.cursor.row = 0; enterPitch(64, null, 0); state.cursor.row = 0; state.dirty = true; });
+  await page.evaluate(() => { deselect(); const t = curTrack(); curPhrase().material[t.id].notes = []; state.cursor.track = 0; state.cursor.cell = 0; state.cursor.row = 0; enterPitch(64, null, 0); state.cursor.row = 0; state.dirty = true; });
   await page.keyboard.press('Shift+ArrowDown'); await page.keyboard.press('.'); await page.waitForTimeout(30);
-  check('key: . moves a selection up a scale degree (E to F)', (await page.evaluate(() => noteAt(curPat(), curTrack().id, 0, 0).pitch)) === 65);
+  check('key: . moves a selection up a scale degree (E to F)', (await page.evaluate(() => noteAt(curPhrase(), curTrack().id, 0, 0).pitch)) === 65);
   await page.locator('#selbar button[data-op="deg:1"]').dispatchEvent('pointerdown'); await page.waitForTimeout(30);
-  check('key: +deg button (F to G)', (await page.evaluate(() => noteAt(curPat(), curTrack().id, 0, 0).pitch)) === 67);
+  check('key: +deg button (F to G)', (await page.evaluate(() => noteAt(curPhrase(), curTrack().id, 0, 0).pitch)) === 67);
   await page.keyboard.press('Escape');
   const outKeys = await page.evaluate(() => { state.pad = true; document.body.classList.add('padon'); tutti.padSigReset(); state.dirty = true; return new Promise(r => requestAnimationFrame(() => r([...document.querySelectorAll('#padKeys button.out')].map(b => b.textContent)))); });
   check('key: pad dims out-of-scale keys', outKeys.length === 5 && outKeys[0].startsWith('C'), outKeys.join(','));
@@ -149,24 +149,24 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   await page.evaluate(() => { state.cursor.track = 0; state.cursor.cell = state.song.tracks[0].columns * 2 + 2; state.cursor.row = 0; state.dirty = true; });
   check('fx: cursor lands on the fx cell', (await page.evaluate(() => currentCell().kind)) === 'fx');
   await page.keyboard.press('r'); await page.waitForTimeout(20);
-  let fx = await page.evaluate(() => fxAtRow(curPat(), curTrack().id, 0));
+  let fx = await page.evaluate(() => fxAtRow(curPhrase(), curTrack().id, 0));
   check('fx: R creates RET with its default', fx && fx.cmd === 'RET' && fx.value === 2, JSON.stringify(fx));
   await page.keyboard.press('0'); await page.keyboard.press('4'); await page.waitForTimeout(20);
-  fx = await page.evaluate(() => fxAtRow(curPat(), curTrack().id, 0));
+  fx = await page.evaluate(() => fxAtRow(curPhrase(), curTrack().id, 0));
   check('fx: hex digits set the value', fx && fx.cmd === 'RET' && fx.value === 4, JSON.stringify(fx));
-  const retOns = await page.evaluate(() => renderSong(state.song, { patterns: [state.pat] }).events.filter(e => e.track === curTrack().id && e.type === 'on').length);
+  const retOns = await page.evaluate(() => renderSong(state.song, { phrases: [state.phr] }).events.filter(e => e.track === curTrack().id && e.type === 'on').length);
   check('fx: RET 04 renders four onsets', retOns === 4, 'ons=' + retOns);
   await page.keyboard.press('Delete'); await page.waitForTimeout(20);
-  check('fx: Delete clears the command', (await page.evaluate(() => fxAtRow(curPat(), curTrack().id, 0))) === null);
+  check('fx: Delete clears the command', (await page.evaluate(() => fxAtRow(curPhrase(), curTrack().id, 0))) === null);
   check('fx: status explains the cell', (await page.textContent('#status')).includes('pick a command'));
   // --- groove ---
   await page.evaluate(() => tutti.setPanel('compose'));
   await page.selectOption('#groove', 'swing 16ths'); await page.waitForTimeout(30);
-  const gr = await page.evaluate(() => ({ g: curPat().groove, custom: document.getElementById('grooveList').hidden }));
-  check('groove: preset applies to the pattern', gr.g && gr.g.length === 2 && gr.g[0] > 1 && gr.custom, JSON.stringify(gr));
+  const gr = await page.evaluate(() => ({ g: curPhrase().groove, custom: document.getElementById('grooveList').hidden }));
+  check('groove: preset applies to the phrase', gr.g && gr.g.length === 2 && gr.g[0] > 1 && gr.custom, JSON.stringify(gr));
   await page.selectOption('#groove', 'straight'); await page.waitForTimeout(30);
   await page.evaluate(() => tutti.setPanel(null));
-  check('groove: straight clears', (await page.evaluate(() => curPat().groove.length)) === 0);
+  check('groove: straight clears', (await page.evaluate(() => curPhrase().groove.length)) === 0);
   // --- solo via shift-click on the header ---
   await page.keyboard.down('Shift'); await page.mouse.click(box.x + 130, box.y + 30); await page.keyboard.up('Shift'); await page.waitForTimeout(30);
   check('solo: shift-click header solos the track', await page.evaluate(() => state.song.tracks[0].solo === true));
@@ -175,18 +175,18 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   // --- live queue ---
   await page.evaluate(() => { state.preview = false; });
   await page.keyboard.press(' '); await page.waitForTimeout(50);
-  await page.evaluate(() => { if (state.song.patterns.length < 2) document.getElementById('addPattern').click(); });
+  await page.evaluate(() => { if (state.song.phrases.length < 2) document.getElementById('addPhrase').click(); });
   await page.waitForTimeout(50);
-  await page.evaluate(() => { state.pat = 0; tutti.syncPatternUI(); });
+  await page.evaluate(() => { state.phr = 0; tutti.syncPhraseUI(); });
   await page.keyboard.press(' '); await page.waitForTimeout(30); await page.keyboard.press(' '); await page.waitForTimeout(50);
-  await page.selectOption('#pattern', '1'); await page.waitForTimeout(30);
-  const q = await page.evaluate(() => ({ queued: state.queued, pat: state.pat, playing: sched.playing, sel: document.getElementById('pattern').value }));
-  check('live: choosing a pattern while looping queues it', q.playing && q.queued === 1 && q.pat === 0 && q.sel === '0', JSON.stringify(q));
+  await page.selectOption('#phrase', '1'); await page.waitForTimeout(30);
+  const q = await page.evaluate(() => ({ queued: state.queued, phr: state.phr, playing: sched.playing, sel: document.getElementById('phrase').value }));
+  check('live: choosing a phrase while looping queues it', q.playing && q.queued === 1 && q.phr === 0 && q.sel === '0', JSON.stringify(q));
   check('live: status shows next', (await page.textContent('#status')).includes('next'));
   await page.evaluate(() => { sched.swapToQueued(); });
   await page.waitForTimeout(30);
-  check('live: swap adopts the queued pattern', await page.evaluate(() => state.pat === 1 && state.queued === null));
-  await page.keyboard.press('Escape'); await page.evaluate(() => { state.pat = 0; tutti.syncPatternUI(); state.preview = true; });
+  check('live: swap adopts the queued phrase', await page.evaluate(() => state.phr === 1 && state.queued === null));
+  await page.keyboard.press('Escape'); await page.evaluate(() => { state.phr = 0; tutti.syncPhraseUI(); state.preview = true; });
   // --- autosave ---
   await page.evaluate(() => { state.cursor.track = 0; state.cursor.cell = 0; state.cursor.row = 40; });
   await page.keyboard.press('z'); await page.waitForTimeout(600);
@@ -194,14 +194,14 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   check('autosave: edit is written to localStorage', stored.length >= 1 && stored.some(s => s.uid === 'example:sketch-in-c'), 'n=' + stored.length);
   await page.reload(); await page.waitForTimeout(400);
   await page.evaluate(() => { for (const k of Object.keys(tutti)) if (!(k in window)) Object.defineProperty(window, k, { get: () => tutti[k], configurable: true }); });
-  const back = await page.evaluate(() => JSON.stringify(state.songs[0].patterns[0].material.fl.notes) !== JSON.stringify(EXAMPLES[0].build().patterns[0].material.fl.notes) && !!noteAt(state.songs[0].patterns[0], 'fl', 0, 40));
+  const back = await page.evaluate(() => JSON.stringify(state.songs[0].phrases[0].material.fl.notes) !== JSON.stringify(EXAMPLES[0].build().phrases[0].material.fl.notes) && !!noteAt(state.songs[0].phrases[0], 'fl', 0, 40));
   check('autosave: edit survives a reload', back);
   await page.evaluate(() => tutti.setPanel('song'));
   await page.click('#deleteSong'); await page.waitForTimeout(300);
-  const reset = await page.evaluate(() => ({ same: JSON.stringify(state.songs[0].patterns[0].material.fl.notes) === JSON.stringify(EXAMPLES[0].build().patterns[0].material.fl.notes), stored: JSON.parse(localStorage.getItem('tutti.songs.v1') || '[]').length }));
+  const reset = await page.evaluate(() => ({ same: JSON.stringify(state.songs[0].phrases[0].material.fl.notes) === JSON.stringify(EXAMPLES[0].build().phrases[0].material.fl.notes), stored: JSON.parse(localStorage.getItem('tutti.songs.v1') || '[]').length }));
   check('autosave: delete resets the example and clears storage', reset.same && reset.stored === 0, JSON.stringify(reset));
   await page.evaluate(() => { for (const k of ['lastDraw', 'ROW_H']) Object.defineProperty(window, k, { get: () => tutti.view[k], configurable: true }); });
-  // --- session URL: new song, edit, refresh lands on the same song and pattern ---
+  // --- session URL: new song, edit, refresh lands on the same song and phrase ---
   await page.click('#newSong'); await page.waitForTimeout(50);
   await page.evaluate(() => tutti.setPanel(null));
   const newUid = await page.evaluate(() => state.song.uid);
@@ -209,13 +209,13 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   await page.evaluate(() => { state.cursor.track = 0; state.cursor.cell = 0; state.cursor.row = 3; });
   await page.keyboard.press('x'); await page.waitForTimeout(50);
   await page.evaluate(() => tutti.setPanel('compose'));
-  await page.click('#addPattern'); await page.waitForTimeout(600);
+  await page.click('#addPhrase'); await page.waitForTimeout(600);
   await page.evaluate(() => tutti.setPanel(null));
-  check('session: URL carries the pattern', (await page.evaluate(() => location.hash)).endsWith('&pat=1'));
+  check('session: URL carries the phrase', (await page.evaluate(() => location.hash)).endsWith('&phr=1'));
   await page.reload(); await page.waitForTimeout(400);
   await page.evaluate(() => { for (const k of Object.keys(tutti)) if (!(k in window)) Object.defineProperty(window, k, { get: () => tutti[k], configurable: true }); for (const k of ['lastDraw', 'ROW_H']) Object.defineProperty(window, k, { get: () => tutti.view[k], configurable: true }); });
-  const reopened = await page.evaluate(() => ({ uid: state.song.uid, pat: state.pat, note: !!noteAt(state.song.patterns[0], 'fl', 0, 3), title: state.song.title }));
-  check('session: refresh reopens the new song on its pattern with the edit', reopened.uid === newUid && reopened.pat === 1 && reopened.note, JSON.stringify(reopened));
+  const reopened = await page.evaluate(() => ({ uid: state.song.uid, phr: state.phr, note: !!noteAt(state.song.phrases[0], 'fl', 0, 3), title: state.song.title }));
+  check('session: refresh reopens the new song on its phrase with the edit', reopened.uid === newUid && reopened.phr === 1 && reopened.note, JSON.stringify(reopened));
   await page.goto(URL); await page.waitForTimeout(400);
   await page.evaluate(() => { for (const k of Object.keys(tutti)) if (!(k in window)) Object.defineProperty(window, k, { get: () => tutti[k], configurable: true }); for (const k of ['lastDraw', 'ROW_H']) Object.defineProperty(window, k, { get: () => tutti.view[k], configurable: true }); });
   check('session: bare URL reopens the last song', (await page.evaluate(() => state.song.uid)) === newUid);
@@ -223,24 +223,24 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   check('session: hash change switches song', (await page.evaluate(() => state.song.uid)) === 'example:sketch-in-c');
   await page.evaluate(() => { localStorage.clear(); });
   // --- fill, randomize, humanize ---
-  await page.evaluate(() => { deselect(); const t = curTrack(); const pat = curPat(); pat.material[t.id].notes = []; pat.material[t.id].fx = []; state.step = 4; state.cursor.track = 0; state.cursor.cell = 0; state.cursor.row = 0; enterPitch(60, 90, 0); state.cursor.row = 0; state.selAnchor = { row: 0, g: cursorIndex() }; state.cursor.row = 15; selUpdate(); });
+  await page.evaluate(() => { deselect(); const t = curTrack(); const phr = curPhrase(); phr.material[t.id].notes = []; phr.material[t.id].fx = []; state.step = 4; state.cursor.track = 0; state.cursor.cell = 0; state.cursor.row = 0; enterPitch(60, 90, 0); state.cursor.row = 0; state.selAnchor = { row: 0, g: cursorIndex() }; state.cursor.row = 15; selUpdate(); });
   await page.locator('#selbar button[data-op="fill"]').dispatchEvent('pointerdown'); await page.waitForTimeout(30);
-  const filled = await page.evaluate(() => [0, 4, 8, 12].map(r => (noteAt(curPat(), curTrack().id, 0, r) || {}).pitch));
+  const filled = await page.evaluate(() => [0, 4, 8, 12].map(r => (noteAt(curPhrase(), curTrack().id, 0, r) || {}).pitch));
   check('fill: stamps the first row every step rows', JSON.stringify(filled) === '[60,60,60,60]', JSON.stringify(filled));
   await page.evaluate(() => { state.random = () => 0.99; });
   await page.locator('#selbar button[data-op="rndvel"]').dispatchEvent('pointerdown'); await page.waitForTimeout(30);
-  const vels = await page.evaluate(() => [0, 4].map(r => noteAt(curPat(), curTrack().id, 0, r).vel));
+  const vels = await page.evaluate(() => [0, 4].map(r => noteAt(curPhrase(), curTrack().id, 0, r).vel));
   check('rnd vel: velocities move within the range', vels.every(v => v === 102), JSON.stringify(vels));
   await page.evaluate(() => tutti.setPanel('compose'));
   await page.selectOption('#keyRoot', '0'); await page.selectOption('#keyScale', 'major');
   await page.evaluate(() => tutti.setPanel(null));
   await page.evaluate(() => { state.random = () => 0.5; });
   await page.locator('#selbar button[data-op="rndpitch"]').dispatchEvent('pointerdown'); await page.waitForTimeout(30);
-  const pitches = await page.evaluate(() => [0, 4].map(r => noteAt(curPat(), curTrack().id, 0, r).pitch));
+  const pitches = await page.evaluate(() => [0, 4].map(r => noteAt(curPhrase(), curTrack().id, 0, r).pitch));
   check('rnd pitch: in-key pitches within a fifth of a unison selection', pitches.every(p => p >= 53 && p <= 67 && [0, 2, 4, 5, 7, 9, 11].includes(p % 12)), JSON.stringify(pitches));
   await page.evaluate(() => { state.random = () => 0.25; });
   await page.locator('#selbar button[data-op="humanize"]').dispatchEvent('pointerdown'); await page.waitForTimeout(30);
-  const hum = await page.evaluate(() => [0, 4, 1].map(r => fxAtRow(curPat(), curTrack().id, r)));
+  const hum = await page.evaluate(() => [0, 4, 1].map(r => fxAtRow(curPhrase(), curTrack().id, r)));
   check('humanize: DEL on rows with notes only', hum[0] && hum[0].cmd === 'DEL' && hum[0].value === 8 && hum[1] && hum[1].cmd === 'DEL' && hum[2] === null, JSON.stringify(hum));
   await page.evaluate(() => { state.random = null; deselect(); });
   // --- tracks and mixer panel ---
@@ -261,13 +261,13 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   check('tracks: remove', (await page.evaluate(() => state.song.tracks.length)) === nTracks && !(await page.evaluate(() => state.song.tracks.some(t => t.name === 'Lead'))));
   await page.click('#composePanel [data-close]'); await page.waitForTimeout(30);
   // --- arranger ---
-  await page.evaluate(() => { if (state.song.patterns.length < 2) document.getElementById('addPattern').click(); state.pat = 0; state.song.arrangement = tutti.entries(0, 1, 0); tutti.syncPatternUI(); });
+  await page.evaluate(() => { if (state.song.phrases.length < 2) document.getElementById('addPhrase').click(); state.phr = 0; state.song.arrangement = tutti.entries(0, 1, 0); tutti.syncPhraseUI(); });
   await page.evaluate(() => tutti.setPanel('compose'));
   check('arranger: one chip per order entry', (await page.$$eval('#arranger .chip', c => c.length)) === 3);
   await page.click('#arranger .chip:nth-child(2)', { position: { x: 6, y: 6 } }); await page.waitForTimeout(30);
-  check('arranger: click opens the pattern', (await page.evaluate(() => state.pat)) === 1);
+  check('arranger: click opens the phrase', (await page.evaluate(() => state.phr)) === 1);
   await page.click('#arranger #arrAdd'); await page.waitForTimeout(30);
-  check('arranger: + appends the current pattern', (await page.evaluate(() => tutti.arrangementText(state.song))) === '0 1 0 1' && (await page.inputValue('#order')) === '0 1 0 1');
+  check('arranger: + appends the current phrase', (await page.evaluate(() => tutti.arrangementText(state.song))) === '0 1 0 1' && (await page.inputValue('#order')) === '0 1 0 1');
   await page.click('#arranger .chip:nth-child(3) button[data-x]'); await page.waitForTimeout(30);
   check('arranger: × removes an entry', (await page.evaluate(() => tutti.arrangementText(state.song))) === '0 1 1');
   await page.click('#arranger .chip:nth-child(1) button[data-edit]'); await page.waitForTimeout(50);
@@ -277,17 +277,17 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   await page.fill('#order', '0x3 1'); await page.dispatchEvent('#order', 'change'); await page.waitForTimeout(30);
   await page.evaluate(() => tutti.setPanel(null));
   check('arranger: order text with repeats keeps the chain', await page.evaluate(() => state.song.arrangement.length === 2 && state.song.arrangement[0].repeat === 3 && state.song.arrangement[0].follows.cb === 1));
-  await page.evaluate(() => { state.song.arrangement = [0]; tutti.normalizeArrangement(state.song); state.pat = 0; tutti.syncPatternUI(); });
+  await page.evaluate(() => { state.song.arrangement = [0]; tutti.normalizeArrangement(state.song); state.phr = 0; tutti.syncPhraseUI(); });
   check('version: footer shows semver', /^v\d+\.\d+\.\d+$/.test(await page.textContent('#version')));
   // --- header, panels and mixer sidebar ---
   const hdr = await page.evaluate(() => ({ labels: [...document.querySelectorAll('header .group[data-label]')].map(x => x.dataset.label), menus: [...document.querySelectorAll('#menus button')].map(b => b.dataset.panel), rows: document.getElementById('transportbar').getBoundingClientRect().top > document.getElementById('topbar').getBoundingClientRect().top, h: document.querySelector('header').offsetHeight, octave: !!document.getElementById('octave') }));
-  check('header: two rows, transport and pattern only, five panels', hdr.labels.join(',') === 'transport,pattern' && hdr.menus.join(',') === 'song,compose,sounds,connect' && hdr.rows && hdr.h < 90 && !hdr.octave, JSON.stringify(hdr));
+  check('header: two rows, transport and phrase only, five panels', hdr.labels.join(',') === 'transport,phrase' && hdr.menus.join(',') === 'song,compose,sounds,connect' && hdr.rows && hdr.h < 90 && !hdr.octave, JSON.stringify(hdr));
   await page.click('#songBtn'); await page.waitForTimeout(40);
   const songP = await page.evaluate(() => ({ panel: state.panel, open: !document.getElementById('songPanel').hidden, save: !!document.querySelector('#songPanel #save'), exp: !!document.querySelector('#songPanel #exportMidi'), grid: document.getElementById('grid').clientHeight > 100, on: document.getElementById('songBtn').classList.contains('on') }));
   check('panels: Song holds the list and file actions with the grid still below', songP.panel === 'song' && songP.open && songP.save && songP.exp && songP.grid && songP.on, JSON.stringify(songP));
   await page.click('#composeBtn'); await page.waitForTimeout(40);
-  const compP = await page.evaluate(() => ({ panel: state.panel, song: document.getElementById('songPanel').hidden, rows: !!document.querySelector('#composePanel #rows'), key: !!document.querySelector('#composePanel #keyRoot'), chips: !!document.querySelector('#composePanel #arranger .chip'), tracks: document.querySelectorAll('#composePanel #tracksBody tr').length === state.song.tracks.length, cap: document.querySelector('.patset').dataset.label }));
-  check('panels: Compose replaces Song and holds pattern, key, arrangement, tracks', compP.panel === 'compose' && compP.song && compP.rows && compP.key && compP.chips && compP.tracks && /^pattern 0 /.test(compP.cap), JSON.stringify(compP));
+  const compP = await page.evaluate(() => ({ panel: state.panel, song: document.getElementById('songPanel').hidden, rows: !!document.querySelector('#composePanel #rows'), key: !!document.querySelector('#composePanel #keyRoot'), chips: !!document.querySelector('#composePanel #arranger .chip'), tracks: document.querySelectorAll('#composePanel #tracksBody tr').length === state.song.tracks.length, cap: document.querySelector('.phraseset').dataset.label }));
+  check('panels: Compose replaces Song and holds phrase, key, arrangement, tracks', compP.panel === 'compose' && compP.song && compP.rows && compP.key && compP.chips && compP.tracks && /^phrase 0 /.test(compP.cap), JSON.stringify(compP));
   await page.click('#composePanel #rows'); await page.keyboard.press('Escape'); await page.waitForTimeout(40);
   check('panels: Escape in a panel closes it and focuses the grid', (await page.evaluate(() => state.panel === null && document.activeElement === document.getElementById('grid'))));
   await page.click('#connectBtn'); await page.waitForTimeout(40);
@@ -346,66 +346,66 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
     check('help: guide links back to the app', (await tab.$eval('nav .back', a => a.getAttribute('href'))) === './');
     await tab.close();
   }
-  // --- phrases and placements ---
-  await page.evaluate(() => { tutti.setPanel(null); deselect(); state.pat = 0; tutti.syncPatternUI(); state.cursor.track = 0; state.cursor.cell = 0; state.cursor.row = 0; const pat = curPat(), t = curTrack(); pat.material[t.id].notes = []; pat.material[t.id].fx = []; pat.material[t.id].placements = []; state.song.phrases = []; state.step = 2; state.dirty = true; });
+  // --- patterns and placements ---
+  await page.evaluate(() => { tutti.setPanel(null); deselect(); state.phr = 0; tutti.syncPhraseUI(); state.cursor.track = 0; state.cursor.cell = 0; state.cursor.row = 0; const phr = curPhrase(), t = curTrack(); phr.material[t.id].notes = []; phr.material[t.id].fx = []; phr.material[t.id].placements = []; state.song.patterns = []; state.step = 2; state.dirty = true; });
   await page.evaluate(() => document.getElementById('grid').focus());
   for (const key of ['z', 'x', 'c', 'v']) await page.keyboard.press(key);   // C D E F on rows 0,2,4,6
   await page.evaluate(() => { state.cursor.row = 0; state.sel = null; }); await page.keyboard.press('Shift+ArrowDown'); for (let i = 0; i < 6; i++) await page.keyboard.press('Shift+ArrowDown');
   await page.waitForTimeout(40);
-  check('phrase: selection toolbar offers Make phrase', await page.isVisible('#selbar button[data-op="phrase"]'));
-  await page.locator('#selbar button[data-op="phrase"]').dispatchEvent('pointerdown'); await page.waitForTimeout(60);
-  const made = await page.evaluate(() => { const t = curTrack(), m = curPat().material[t.id]; return { phrases: state.song.phrases.length, name: state.song.phrases[0] && state.song.phrases[0].name, rows: state.song.phrases[0] && state.song.phrases[0].rows, loose: m.notes.length, placements: m.placements.length, row: m.placements[0] && m.placements[0].row, group: !document.querySelector('.phrasegrp').hidden, listed: document.querySelectorAll('#phrasesBody tr').length, status: document.getElementById('status').textContent }; });
-  check('phrase: Make phrase moves the rows into a phrase placed at the selection', made.phrases === 1 && made.rows === 8 && made.loose === 0 && made.placements === 1 && made.row === 0 && made.group && made.listed === 1 && /phrase .* used 1/.test(made.status), JSON.stringify(made));
+  check('pattern: selection toolbar offers Make pattern', await page.isVisible('#selbar button[data-op="pattern"]'));
+  await page.locator('#selbar button[data-op="pattern"]').dispatchEvent('pointerdown'); await page.waitForTimeout(60);
+  const made = await page.evaluate(() => { const t = curTrack(), m = curPhrase().material[t.id]; return { patterns: state.song.patterns.length, name: state.song.patterns[0] && state.song.patterns[0].name, rows: state.song.patterns[0] && state.song.patterns[0].rows, loose: m.notes.length, placements: m.placements.length, row: m.placements[0] && m.placements[0].row, group: !document.querySelector('.patterngrp').hidden, listed: document.querySelectorAll('#patternsBody tr').length, status: document.getElementById('status').textContent }; });
+  check('pattern: Make pattern moves the rows into a pattern placed at the selection', made.patterns === 1 && made.rows === 8 && made.loose === 0 && made.placements === 1 && made.row === 0 && made.group && made.listed === 1 && /pattern .* used 1/.test(made.status), JSON.stringify(made));
   await page.evaluate(() => { state.cursor.row = 3; state.dirty = true; }); await page.keyboard.press('z'); await page.waitForTimeout(40);
-  check('phrase: typing inside a placement is refused with a hint', await page.evaluate(() => curPat().material[curTrack().id].notes.length === 0 && /Inside phrase/.test(state.message)));
+  check('pattern: typing inside a placement is refused with a hint', await page.evaluate(() => curPhrase().material[curTrack().id].notes.length === 0 && /Inside pattern/.test(state.message)));
   await page.evaluate(() => { state.cursor.row = 0; }); await page.keyboard.press('Equal'); await page.keyboard.press('Equal'); await page.keyboard.press('BracketRight'); await page.waitForTimeout(40);
-  const plc = await page.evaluate(() => { const p = curPat().material[curTrack().id].placements[0]; return { t: p.transpose, r: p.repeat, rendered: renderSong(state.song, { patterns: [0] }).events.filter(e => e.track === curTrack().id && e.type === 'on').map(e => e.pitch + '@' + e.tick / 240).join(' ') }; });
-  check('phrase: = transposes and ] repeats the placement, and the render follows', plc.t === 2 && plc.r === 2 && plc.rendered === '62@0 64@2 66@4 67@6 62@8 64@10 66@12 67@14', JSON.stringify(plc));
+  const plc = await page.evaluate(() => { const p = curPhrase().material[curTrack().id].placements[0]; return { t: p.transpose, r: p.repeat, rendered: renderSong(state.song, { phrases: [0] }).events.filter(e => e.track === curTrack().id && e.type === 'on').map(e => e.pitch + '@' + e.tick / 240).join(' ') }; });
+  check('pattern: = transposes and ] repeats the placement, and the render follows', plc.t === 2 && plc.r === 2 && plc.rendered === '62@0 64@2 66@4 67@6 62@8 64@10 66@12 67@14', JSON.stringify(plc));
   // copy the placement and paste it further down
   await page.evaluate(() => { state.cursor.row = 0; state.sel = null; }); await page.keyboard.press('Shift+ArrowDown'); await page.keyboard.press('Meta+c'); await page.evaluate(() => { deselect(); state.cursor.row = 32; }); await page.keyboard.press('Meta+v'); await page.waitForTimeout(40);
-  check('phrase: copy and paste carry the placement', await page.evaluate(() => { const ps = curPat().material[curTrack().id].placements; return ps.length === 2 && ps[1].row === 32 && ps[1].transpose === 2 && ps[1].repeat === 2; }));
-  // enter the phrase, edit it, leave, and see both placements follow
+  check('pattern: copy and paste carry the placement', await page.evaluate(() => { const ps = curPhrase().material[curTrack().id].placements; return ps.length === 2 && ps[1].row === 32 && ps[1].transpose === 2 && ps[1].repeat === 2; }));
+  // enter the pattern, edit it, leave, and see both placements follow
   await page.evaluate(() => { state.cursor.row = 32; state.dirty = true; }); await page.keyboard.press('Enter'); await page.waitForTimeout(60);
-  const inside = await page.evaluate(() => ({ editing: !!state.phraseEdit, rows: curPat().rows, tracks: tutti.tracksShown().length, cap: document.querySelector('.patset').dataset.label, status: document.getElementById('status').textContent }));
-  check('phrase: Enter opens the phrase alone in the grid', inside.editing && inside.rows === 8 && inside.tracks === 1 && /^phrase /.test(inside.cap) && /Esc returns/.test(inside.status), JSON.stringify(inside));
-  await page.evaluate(() => { state.cursor.row = 0; state.cursor.track = 0; state.cursor.cell = 0; }); await page.keyboard.press('b'); await page.waitForTimeout(40);   // C -> G on the phrase's first row
-  check('phrase: edits go to the phrase and undo works there', await page.evaluate(() => state.song.phrases[0].material.notes.find(n => n.tick === 0).pitch === 67 && state.undo[state.undo.length - 1].phrase === state.song.phrases[0].id));
+  const inside = await page.evaluate(() => ({ editing: !!state.patternEdit, rows: curPhrase().rows, tracks: tutti.tracksShown().length, cap: document.querySelector('.phraseset').dataset.label, status: document.getElementById('status').textContent }));
+  check('pattern: Enter opens the pattern alone in the grid', inside.editing && inside.rows === 8 && inside.tracks === 1 && /^pattern /.test(inside.cap) && /Esc returns/.test(inside.status), JSON.stringify(inside));
+  await page.evaluate(() => { state.cursor.row = 0; state.cursor.track = 0; state.cursor.cell = 0; }); await page.keyboard.press('b'); await page.waitForTimeout(40);   // C -> G on the pattern's first row
+  check('pattern: edits go to the pattern and undo works there', await page.evaluate(() => state.song.patterns[0].material.notes.find(n => n.tick === 0).pitch === 67 && state.undo[state.undo.length - 1].pattern === state.song.patterns[0].id));
   await page.keyboard.press('Meta+z'); await page.waitForTimeout(30);
-  check('phrase: undo inside the phrase restores the note', await page.evaluate(() => state.song.phrases[0].material.notes.find(n => n.tick === 0).pitch === 60));
+  check('pattern: undo inside the pattern restores the note', await page.evaluate(() => state.song.patterns[0].material.notes.find(n => n.tick === 0).pitch === 60));
   await page.keyboard.press('Meta+Shift+z'); await page.keyboard.press('Escape'); await page.waitForTimeout(40);
-  const outAgain = await page.evaluate(() => ({ editing: !!state.phraseEdit, row: state.cursor.row, tracks: tutti.tracksShown().length, pitches: renderSong(state.song, { patterns: [0] }).events.filter(e => e.track === curTrack().id && e.type === 'on' && (e.tick === 0 || e.tick === 32 * 240)).map(e => e.pitch).join(' ') }));
-  check('phrase: Esc returns to the pattern and every placement plays the edit', !outAgain.editing && outAgain.row === 32 && outAgain.tracks > 1 && outAgain.pitches === '69 69', JSON.stringify(outAgain));
-  // detach the second placement, then remove the phrase from Compose
+  const outAgain = await page.evaluate(() => ({ editing: !!state.patternEdit, row: state.cursor.row, tracks: tutti.tracksShown().length, pitches: renderSong(state.song, { phrases: [0] }).events.filter(e => e.track === curTrack().id && e.type === 'on' && (e.tick === 0 || e.tick === 32 * 240)).map(e => e.pitch).join(' ') }));
+  check('pattern: Esc returns to the phrase and every placement plays the edit', !outAgain.editing && outAgain.row === 32 && outAgain.tracks > 1 && outAgain.pitches === '69 69', JSON.stringify(outAgain));
+  // detach the second placement, then remove the pattern from Compose
   await page.locator('#selbar button[data-op="detach"]').count();
   await page.evaluate(() => { state.selectMode = true; state.dirty = true; }); await page.waitForTimeout(40);
   await page.locator('#selbar button[data-op="detach"]').dispatchEvent('pointerdown'); await page.waitForTimeout(40);
-  const det = await page.evaluate(() => { const m = curPat().material[curTrack().id]; state.selectMode = false; return { placements: m.placements.length, loose: m.notes.length, first: m.notes.find(n => n.tick === 32 * 240) && m.notes.find(n => n.tick === 32 * 240).pitch }; });
-  check('phrase: Detach turns the placement under the cursor into loose, transposed notes', det.placements === 1 && det.loose === 8 && det.first === 69, JSON.stringify(det));
+  const det = await page.evaluate(() => { const m = curPhrase().material[curTrack().id]; state.selectMode = false; return { placements: m.placements.length, loose: m.notes.length, first: m.notes.find(n => n.tick === 32 * 240) && m.notes.find(n => n.tick === 32 * 240).pitch }; });
+  check('pattern: Detach turns the placement under the cursor into loose, transposed notes', det.placements === 1 && det.loose === 8 && det.first === 69, JSON.stringify(det));
   await page.evaluate(() => tutti.setPanel('compose'));
-  await page.click('#phrasesBody tr:first-child button[data-act="remove"]'); await page.waitForTimeout(40);
-  check('phrase: Remove detaches the last use and empties the list', await page.evaluate(() => state.song.phrases.length === 0 && curPat().material[curTrack().id].placements.length === 0 && curPat().material[curTrack().id].notes.length === 16 && document.querySelector('.phrasegrp').hidden));
+  await page.click('#patternsBody tr:first-child button[data-act="remove"]'); await page.waitForTimeout(40);
+  check('pattern: Remove detaches the last use and empties the list', await page.evaluate(() => state.song.patterns.length === 0 && curPhrase().material[curTrack().id].placements.length === 0 && curPhrase().material[curTrack().id].notes.length === 16 && document.querySelector('.patterngrp').hidden));
   await page.evaluate(() => { tutti.setPanel(null); deselect(); });
-  // the reel showcase: phrases drawn as tags, follows in the arrangement
+  // the reel showcase: patterns drawn as tags, follows in the arrangement
   await page.evaluate(() => { tutti.selectSong(state.songs.findIndex(s => s.title.startsWith('Crossroads'))); }); await page.waitForTimeout(300);
-  const reel = await page.evaluate(() => ({ phrases: state.song.phrases.map(p => p.name).join(','), banjo: curPat().material.bj.placements.length, listed: document.querySelectorAll('#phrasesBody tr').length, drive: state.songs.find(s => s.title.startsWith('Night')).arrangement.every(e => e.follows.sb === 2) }));
-  check('showcases: the reel places phrases and Night drive follows a pattern of placements', reel.phrases === 'Roll D,Roll G,Roll A,Reel A,Reel B' && reel.banjo === 4 && reel.listed === 5 && reel.drive, JSON.stringify(reel));
-  await page.screenshot({ path: 'test/out/phrases.png' });
+  const reel = await page.evaluate(() => ({ patterns: state.song.patterns.map(p => p.name).join(','), banjo: curPhrase().material.bj.placements.length, listed: document.querySelectorAll('#patternsBody tr').length, drive: state.songs.find(s => s.title.startsWith('Night')).arrangement.every(e => e.follows.sb === 2) }));
+  check('showcases: the reel places patterns and Night drive follows a phrase of placements', reel.patterns === 'Roll D,Roll G,Roll A,Reel A,Reel B' && reel.banjo === 4 && reel.listed === 5 && reel.drive, JSON.stringify(reel));
+  await page.screenshot({ path: 'test/out/patterns.png' });
   await page.evaluate(() => { tutti.selectSong(0); });
   await page.waitForTimeout(200);
-  // --- pattern key ---
-  await page.evaluate(() => { if (state.song.patterns.length < 2) document.getElementById('addPattern').click(); state.pat = 1; tutti.syncPatternUI(); });
+  // --- phrase key ---
+  await page.evaluate(() => { if (state.song.phrases.length < 2) document.getElementById('addPhrase').click(); state.phr = 1; tutti.syncPhraseUI(); });
   await page.evaluate(() => tutti.setPanel('compose'));
   await page.selectOption('#keyRoot', '9'); await page.selectOption('#keyScale', 'natural-minor'); await page.waitForTimeout(30);
-  await page.check('#keyPattern'); await page.selectOption('#keyRoot', '0'); await page.selectOption('#keyScale', 'major'); await page.waitForTimeout(30);
-  const pk = await page.evaluate(() => ({ song: state.song.key, pat: curPat().key, active: tutti.activeKey(), status: document.getElementById('status').textContent }));
-  check('pattern key: override set without touching the song key', pk.song.root === 9 && pk.pat.root === 0 && pk.active.root === 0 && pk.status.includes('(pattern)'), JSON.stringify(pk));
-  await page.evaluate(() => { state.pat = 0; tutti.syncPatternUI(); });
-  check('pattern key: other pattern keeps the song key', await page.evaluate(() => tutti.activeKey().root === 9 && !document.getElementById('keyPattern').checked));
-  await page.evaluate(() => { state.pat = 1; tutti.syncPatternUI(); });
-  await page.uncheck('#keyPattern'); await page.waitForTimeout(30);
+  await page.check('#keyPhrase'); await page.selectOption('#keyRoot', '0'); await page.selectOption('#keyScale', 'major'); await page.waitForTimeout(30);
+  const pk = await page.evaluate(() => ({ song: state.song.key, phr: curPhrase().key, active: tutti.activeKey(), status: document.getElementById('status').textContent }));
+  check('phrase key: override set without touching the song key', pk.song.root === 9 && pk.phr.root === 0 && pk.active.root === 0 && pk.status.includes('(phrase)'), JSON.stringify(pk));
+  await page.evaluate(() => { state.phr = 0; tutti.syncPhraseUI(); });
+  check('phrase key: other phrase keeps the song key', await page.evaluate(() => tutti.activeKey().root === 9 && !document.getElementById('keyPhrase').checked));
+  await page.evaluate(() => { state.phr = 1; tutti.syncPhraseUI(); });
+  await page.uncheck('#keyPhrase'); await page.waitForTimeout(30);
   await page.evaluate(() => tutti.setPanel(null));
-  check('pattern key: untick removes the override', await page.evaluate(() => curPat().key === null && tutti.activeKey().root === 9));
-  await page.evaluate(() => { state.song.key = null; state.pat = 0; tutti.syncPatternUI(); });
+  check('phrase key: untick removes the override', await page.evaluate(() => curPhrase().key === null && tutti.activeKey().root === 9));
+  await page.evaluate(() => { state.song.key = null; state.phr = 0; tutti.syncPhraseUI(); });
   // --- song-level undo ---
   const nT = await page.evaluate(() => state.song.tracks.length);
   await page.click('#composeBtn'); await page.click('#tracksBody tr:nth-child(2) button[data-act="remove"]'); await page.click('#composePanel [data-close]'); await page.waitForTimeout(30);
@@ -420,22 +420,22 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   await page.keyboard.press('Meta+z'); await page.waitForTimeout(30);
   check('song undo: a slider drag is one step', await page.evaluate(() => state.song.tracks[0].volume == null || state.song.tracks[0].volume === 100));
   // --- real-time record ---
-  await page.evaluate(() => { state.preview = false; state.cursor.track = 0; state.cursor.cell = 0; const pat = curPat(); pat.material.fl.notes = []; state.song.tracks[0].columns = 1; });
+  await page.evaluate(() => { state.preview = false; state.cursor.track = 0; state.cursor.cell = 0; const phr = curPhrase(); phr.material.fl.notes = []; state.song.tracks[0].columns = 1; });
   await page.keyboard.press('Shift+Enter'); await page.waitForTimeout(80);
   check('record: shift+return arms and loops', await page.evaluate(() => state.record && sched.playing && sched.loop) && (await page.$eval('#rec', b => b.classList.contains('on'))));
   const recd = await page.evaluate(async () => {
-    const row0 = tutti.rowAtTick(curPat(), sched.positionTick());
+    const row0 = tutti.rowAtTick(curPhrase(), sched.positionTick());
     onMidiMessage({ data: [0x90, 67, 88] }); onMidiMessage({ data: [0x90, 71, 80] });
     await new Promise(r => setTimeout(r, 120));
     onMidiMessage({ data: [0x80, 67, 0] }); onMidiMessage({ data: [0x90, 71, 0] });
-    const evs = curPat().material.fl.notes.map(e => ({ row: Math.round(e.tick / curPat().ticksPerRow), pitch: e.pitch, vel: e.vel, col: e.col, len: e.len }));
+    const evs = curPhrase().material.fl.notes.map(e => ({ row: Math.round(e.tick / curPhrase().ticksPerRow), pitch: e.pitch, vel: e.vel, col: e.col, len: e.len }));
     return { row0, evs, cols: state.song.tracks[0].columns };
   });
   const rows = recd.evs.map(e => e.row);
   check('record: chord lands on the passing row across columns', recd.evs.length === 2 && recd.cols === 2 && recd.evs[0].vel === 88 && rows.every(r => Math.abs(r - recd.row0) <= 1 || Math.abs(r - recd.row0) >= 62) && recd.evs.every(e => e.len >= 240), JSON.stringify(recd));
   await page.keyboard.press('Escape'); await page.waitForTimeout(30);
   check('record: stop disarms', await page.evaluate(() => !state.record && !sched.playing));
-  await page.evaluate(() => { state.preview = true; curPat().material.fl.notes = []; state.song.tracks[0].columns = 1; });
+  await page.evaluate(() => { state.preview = true; curPhrase().material.fl.notes = []; state.song.tracks[0].columns = 1; });
   // --- sampled orchestra ---
   check('samples: sound selector defaults to samples', (await page.inputValue('#sound')) === 'samples' && (await page.evaluate(() => state.sound)) === 'samples');
   const loaded = await page.evaluate(async () => { await tutti.sampler.load('violins-1'); await tutti.sampler.load('synth-arp'); return { v1: tutti.sampler.has('violins-1'), zones: (tutti.sampler.maps.get('violins-1') || {}).zones?.length || 0, arp: tutti.sampler.has('synth-arp'), known: tutti.sampler.known('synth-arp') }; });
@@ -504,7 +504,7 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   const bankAdd = await page.evaluate(() => ({ banks: state.song.banks, inst: state.song.tracks[state.song.tracks.length - 1].instrument, status: document.getElementById('status').textContent }));
   check('banks: adding a bank track records the bank and shows kit pieces', bankAdd.banks.includes('jazz') && bankAdd.inst === 'drum-kit' && bankAdd.status.includes('kick'), JSON.stringify(bankAdd));
   await page.click('#composePanel [data-close]');
-  await page.evaluate(() => { const t = curTrack(); const pat = curPat(); state.cursor.cell = 0; state.cursor.row = 0; enterPitch(36, 100, 0); state.dirty = true; });
+  await page.evaluate(() => { const t = curTrack(); const phr = curPhrase(); state.cursor.cell = 0; state.cursor.row = 0; enterPitch(36, 100, 0); state.dirty = true; });
   await page.waitForTimeout(40);
   check('banks: kit note names in the status', (await page.textContent('#status')).includes('kick'));
   await page.waitForTimeout(600);
@@ -553,19 +553,19 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
     navigator.getGamepads = () => [window.__gp];
   });
   const press = async (i, ms = 40) => { await page.evaluate(i => { __gp.buttons[i] = { pressed: true, value: 1 }; }, i); await page.waitForTimeout(ms); await page.evaluate(i => { __gp.buttons[i] = { pressed: false, value: 0 }; }, i); await page.waitForTimeout(40); };
-  await page.evaluate(() => { deselect(); state.song.key = null; tutti.syncKeyUI(); state.cursor.track = 0; state.cursor.cell = 0; state.cursor.row = 20; state.lastPitch = 62; curPat().material[curTrack().id].notes = []; state.dirty = true; });
+  await page.evaluate(() => { deselect(); state.song.key = null; tutti.syncKeyUI(); state.cursor.track = 0; state.cursor.cell = 0; state.cursor.row = 20; state.lastPitch = 62; curPhrase().material[curTrack().id].notes = []; state.dirty = true; });
   await press(13); // d-pad down
   c = await cur(page);
   check('gamepad: down moved a row', c.row === 21, 'row=' + c.row);
   await press(0); // A tap → enter lastPitch
-  const g = await page.evaluate(() => { const t = curTrack(); return { n: noteAt(curPat(), t.id, 0, 21), row: state.cursor.row }; });
+  const g = await page.evaluate(() => { const t = curTrack(); return { n: noteAt(curPhrase(), t.id, 0, 21), row: state.cursor.row }; });
   check('gamepad: A tap entered note and advanced', g.n && g.n.pitch === 62 && g.row === 25, JSON.stringify(g));
   // A held + up nudges the note under the cursor
   await page.evaluate(() => { state.cursor.row = 21; });
   await page.evaluate(() => { __gp.buttons[0] = { pressed: true, value: 1 }; }); await page.waitForTimeout(40);
   await press(12); // up while A held
   await page.evaluate(() => { __gp.buttons[0] = { pressed: false, value: 0 }; }); await page.waitForTimeout(40);
-  const g2 = await page.evaluate(() => { const t = curTrack(); return { n: noteAt(curPat(), t.id, 0, 21), row: state.cursor.row }; });
+  const g2 = await page.evaluate(() => { const t = curTrack(); return { n: noteAt(curPhrase(), t.id, 0, 21), row: state.cursor.row }; });
   check('gamepad: A+up nudged semitone without moving', g2.n && g2.n.pitch === 63 && g2.row === 21, JSON.stringify(g2));
   await press(9); // start → play
   const playing = await page.evaluate(() => sched.playing);
@@ -600,7 +600,7 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   await page.tap('#tabs button[data-view="song"]'); await page.waitForTimeout(100);
   check('phone: Song tab fills the screen', await page.isVisible('#song') && (await page.evaluate(() => getComputedStyle(document.getElementById('workspace')).display)) === 'none');
   await page.screenshot({ path: 'test/out/phone-menu.png' });
-  await page.tap('#tabs button[data-view="pattern"]'); await page.waitForTimeout(60);
+  await page.tap('#tabs button[data-view="phrase"]'); await page.waitForTimeout(60);
   // tap a cell on the grid, then a pad key
   const box = await page.locator('#grid').boundingBox();
   const y3 = await page.evaluate(() => lastDraw.headerH + (3 - lastDraw.top) * ROW_H + 15);
@@ -611,7 +611,7 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   const keyLabels = await page.$$eval('#padKeys button', bs => bs.map(b => b.textContent));
   check('phone: pad shows piano keys', keyLabels.includes('C') && keyLabels.includes('F♯') && keyLabels.length === 13, keyLabels.join(','));
   await page.tap('#padKeys button:text-is("E")'); await page.waitForTimeout(50);
-  const n = await page.evaluate(() => { const t = curTrack(); return { n: noteAt(curPat(), t.id, 0, 3), row: state.cursor.row }; });
+  const n = await page.evaluate(() => { const t = curTrack(); return { n: noteAt(curPhrase(), t.id, 0, 3), row: state.cursor.row }; });
   check('phone: pad key entered E4 and advanced', n.n && n.n.pitch === 64 && n.row === 7, JSON.stringify(n));
   const fit = await page.evaluate(() => ({ show: Object.values(state.show).every(v => !v), tracksVisible: tutti.computeLayout().tracks.filter(t => t.x - state.scrollX >= 0 && t.x + t.w - state.scrollX <= document.getElementById('grid').clientWidth).length }));
   check('phone: note columns only by default, so most tracks fit across', fit.show && fit.tracksVisible >= 8, JSON.stringify(fit));
@@ -630,12 +630,12 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   await page.tap('#mixerClose'); await page.waitForTimeout(60);
   await page.tap('#tabs button[data-view="compose"]'); await page.waitForTimeout(80);
   const cv = await page.evaluate(() => ({ panel: state.panel, chips: !!document.querySelector('#composePanel #arranger .chip'), rows: !!document.querySelector('#composePanel #rows'), key: !!document.querySelector('#composePanel #keyRoot'), tracks: document.querySelectorAll('#composePanel #tracksBody tr').length === state.song.tracks.length, main: getComputedStyle(document.getElementById('workspace')).display, tab: document.querySelector('#tabs button.on').dataset.view }));
-  check('phone: Compose screen holds the order, pattern settings, key and tracks', cv.panel === 'compose' && cv.chips && cv.rows && cv.key && cv.tracks && cv.main === 'none' && cv.tab === 'compose', JSON.stringify(cv));
+  check('phone: Compose screen holds the order, phrase settings, key and tracks', cv.panel === 'compose' && cv.chips && cv.rows && cv.key && cv.tracks && cv.main === 'none' && cv.tab === 'compose', JSON.stringify(cv));
   await page.tap('#tabs button[data-view="sounds"]'); await page.waitForTimeout(300);
   check('phone: Sounds screen shows the banks and instruments', await page.evaluate(() => state.panel === 'sounds' && document.querySelectorAll('#soundsBody tr').length > 5 && !!document.querySelector('#soundsPanel #preview')));
-  await page.tap('#tabs button[data-view="pattern"]'); await page.waitForTimeout(80);
+  await page.tap('#tabs button[data-view="phrase"]'); await page.waitForTimeout(80);
   const back = await page.evaluate(() => ({ panel: state.panel, grid: document.getElementById('grid').clientWidth > 0, sounds: document.getElementById('soundsPanel').hidden }));
-  check('phone: Pattern tab restores the grid', back.panel === null && back.grid && back.sounds, JSON.stringify(back));
+  check('phone: Phrase tab restores the grid', back.panel === null && back.grid && back.sounds, JSON.stringify(back));
   await page.tap('#padNav button:text-is("sel")'); await page.waitForTimeout(80);
   check('phone: sel mode shows toolbar', (await page.evaluate(() => state.selectMode)) && await page.isVisible('#selbar'));
   const selDrag = await page.evaluate(async () => {
@@ -658,7 +658,7 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
     cv.dispatchEvent(ev('pointerdown'));
     await new Promise(r => setTimeout(r, 650));
     cv.dispatchEvent(ev('pointerup'));
-    return noteAt(curPat(), curTrack().id, 0, 3) === null;
+    return noteAt(curPhrase(), curTrack().id, 0, 3) === null;
   });
   check('phone: long press cleared the cell', cleared);
   await page.screenshot({ path: 'test/out/phone-after.png' });

@@ -1,5 +1,5 @@
 // Sounds panel: what each instrument plays (samples, synth, loading), which articulations are real
-// recordings, an audition phrase, and per-instrument tune, trim and release kept in this browser.
+// recordings, a short audition, and per-instrument tune, trim and release kept in this browser.
 // Two scopes at the top: the live preview output, and the waveform of the zone that last played.
 import { INSTRUMENTS, INST } from '../core/instruments.js';
 import { FAMILIES, ART } from '../core/constants.js';
@@ -17,10 +17,10 @@ export function loadSoundSettings() {
 }
 function saveSoundSettings() { try { localStorage.setItem(KEY, JSON.stringify(sampler.settings)); } catch { /* no storage */ } }
 
-const PHRASES = { strings: [55, 62, 67, 74], brass: [48, 55, 60, 67], woodwind: [67, 71, 74, 79], percussion: [43, 43, 50, 43], electronic: [48, 55, 60, 63] };
-function phraseFor(ins) {
-  if (ins.kit) { const notes = Object.keys(ins.kit).map(Number).sort((a, b) => a - b); return [notes[0], notes[Math.min(2, notes.length - 1)], notes[Math.min(1, notes.length - 1)], notes[Math.min(4, notes.length - 1)]]; }   // kit: a little pattern on its first pieces
-  const base = PHRASES[ins.family] || [60, 64, 67, 72];
+const DEMOS = { strings: [55, 62, 67, 74], brass: [48, 55, 60, 67], woodwind: [67, 71, 74, 79], percussion: [43, 43, 50, 43], electronic: [48, 55, 60, 63] };
+function demoFor(ins) {
+  if (ins.kit) { const notes = Object.keys(ins.kit).map(Number).sort((a, b) => a - b); return [notes[0], notes[Math.min(2, notes.length - 1)], notes[Math.min(1, notes.length - 1)], notes[Math.min(4, notes.length - 1)]]; }   // kit: a little phrase on its first pieces
+  const base = DEMOS[ins.family] || [60, 64, 67, 72];
   return base.map(p => { let q = p; while (q < ins.range[0]) q += 12; while (q > ins.range[1]) q -= 12; return q; });
 }
 
@@ -40,7 +40,7 @@ export function renderSounds() {
       <td class="bankcell">${(banks.get(ins.bank) || {}).name || ins.bank}</td>
       <td class="status">${status}</td>
       <td class="arts">${arts}</td>
-      <td><button data-act="play" class="play" title="Audition a phrase">▶</button></td>
+      <td><button data-act="play" class="play" title="Audition a few notes">▶</button></td>
       <td class="num"><input data-f="tune" type="number" min="-24" max="24" step="1" value="${st.tune}" title="Tune, semitones"></td>
       <td class="num"><input data-f="cents" type="number" min="-100" max="100" step="5" value="${st.cents}" title="Fine tune, cents"></td>
       <td class="num"><input data-f="trim" type="number" min="-24" max="24" step="0.5" value="${st.trim}" title="Level trim, dB"></td>
@@ -141,8 +141,8 @@ export function wireSounds() {
   body.addEventListener('click', e => {
     const row = e.target.closest('tr'); if (!row) return; const id = row.dataset.id, ins = INST[id];
     const art = e.target.closest('button[data-art]'), act = e.target.closest('button[data-act]');
-    if (art) { synth.ensure(); sampler.phrase(id, phraseFor(ins).slice(0, 3), art.dataset.art); return; }
-    if (act && act.dataset.act === 'play') { synth.ensure(); sampler.phrase(id, phraseFor(ins), null); return; }
+    if (art) { synth.ensure(); sampler.demo(id, demoFor(ins).slice(0, 3), art.dataset.art); return; }
+    if (act && act.dataset.act === 'play') { synth.ensure(); sampler.demo(id, demoFor(ins), null); return; }
     if (act && act.dataset.act === 'reset') { delete sampler.settings[id]; saveSoundSettings(); renderSounds(); }
   });
   body.addEventListener('change', e => {

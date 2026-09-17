@@ -4,7 +4,7 @@ import { INST } from '../core/instruments.js';
 import { $, state } from './state.js';
 import { sendControl, openTracks } from './tracks.js';
 import { markEdited } from './storage.js';
-import { withSongUndo, leavePhrase } from './edit.js';
+import { withSongUndo, leavePattern } from './edit.js';
 import { closePanel } from './panels.js';
 
 
@@ -58,7 +58,7 @@ export function wireMixer() {
   box.addEventListener('click', e => {
     const b = e.target.closest('button[data-act]'); if (!b) return;
     const i = parseInt(b.closest('.strip').dataset.i, 10), t = state.song.tracks[i];
-    if (b.dataset.act === 'go') { leavePhrase(); state.cursor.track = i; state.cursor.cell = 0; state.ensureVisible = true; $('grid').focus(); }
+    if (b.dataset.act === 'go') { leavePattern(); state.cursor.track = i; state.cursor.cell = 0; state.ensureVisible = true; $('grid').focus(); }
     else if (b.dataset.act === 'mute') withSongUndo(() => { t.mute = !t.mute; });
     else if (b.dataset.act === 'solo') withSongUndo(() => { t.solo = !t.solo; });
     state.dirty = true;

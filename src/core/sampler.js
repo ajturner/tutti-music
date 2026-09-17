@@ -91,8 +91,8 @@ export class SamplerSink {
     for (const a of ins.articulations) if (!sampled.includes(a)) { const chain = [...(ART_FALLBACK[a] || []), 'sus']; fallback[a] = chain.find(c => sampled.includes(c)) || null; }
     return { sampled, fallback, zones: map && map.zones ? map.zones.length : 0, state: map && map.zones ? 'samples' : this.loading.has(instrumentId) ? 'loading' : map === null ? 'synth' : 'unloaded' };
   }
-  // Short phrase through one instrument, for the Sounds panel.
-  phrase(instrumentId, pitches, art, gap = 0.4) {
+  // A few notes through one instrument, for the Sounds panel.
+  demo(instrumentId, pitches, art, gap = 0.4) {
     this.ensure(); const t0 = this.ctx.currentTime + 0.02, ins = INST[instrumentId];
     const a = art || (ins ? ins.articulations[0] : 'sus');
     pitches.forEach((p, i) => {

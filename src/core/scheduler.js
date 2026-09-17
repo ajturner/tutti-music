@@ -21,7 +21,7 @@ export class Scheduler {
     const startMs = tm.msAt(startTick);
     const now = performance.now();
     this.origin = now + 60 - startMs;               // absolute time = origin + ev.ms
-    // Catch up controller and keyswitch state for events we skip when starting mid-pattern.
+    // Catch up controller and keyswitch state for events we skip when starting mid-phrase.
     const carry = new Map();
     let i = 0;
     while (i < list.length && list[i].ms < startMs) {

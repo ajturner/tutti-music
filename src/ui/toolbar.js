@@ -1,83 +1,83 @@
-// Header and panel controls: songs, patterns, meter, order, files, key, groove, view options.
+// Header and panel controls: songs, phrases, meter, order, files, key, groove, view options.
 import { markEdited, deleteCurrentSong } from './storage.js';
 import { placeholdersFor } from '../core/banks.js';
 import { arranger, syncArranger, wireArranger } from './arranger.js';
 import { wireTracks } from './tracks.js';
-import { queuePattern, toggleRecord } from './transport.js';
+import { queuePhrase, toggleRecord } from './transport.js';
 import { GROOVES, syncKeyUI, syncGrooveUI } from './sync.js';
 import { padSigReset } from './pad.js';
 import { clamp } from '../core/constants.js';
-import { newPattern, newSong, normalizeSong, entryOf, arrangementText, parseArrangementText, patMeter, removePhrase } from '../core/song.js';
+import { newPhrase, newSong, normalizeSong, entryOf, arrangementText, parseArrangementText, phraseMeter, removePattern } from '../core/song.js';
 import { midiFileBytes } from '../core/midifile.js';
-import { $, curPat, curPhrase, curTrack, preloadSamples, sampler, state, synth } from './state.js';
-import { withSongUndo, withUndo, editPhrase, leavePhrase } from './edit.js';
+import { $, curPhrase, curPattern, curTrack, preloadSamples, sampler, state, synth } from './state.js';
+import { withSongUndo, withUndo, editPattern, leavePattern } from './edit.js';
 import { articulationSel, batchOp, deselect } from './selection.js';
 import { cellKinds } from './layout.js';
-import { playPattern, playSong, stopAll } from './transport.js';
+import { playPhrase, playSong, stopAll } from './transport.js';
 import { setPad } from './pad.js';
 import { setPanel } from './panels.js';
-import { syncPatternUI, syncSongUI, syncPhrases } from './sync.js';
+import { syncPhraseUI, syncSongUI, syncPatterns } from './sync.js';
 
 export function selectSong(i) {
   stopAll();
-  state.songIndex = i; state.song = state.songs[i]; state.pat = 0;
+  state.songIndex = i; state.song = state.songs[i]; state.phr = 0;
   placeholdersFor(state.song);
   state.undo.length = 0; state.redo.length = 0;
   state.cursor = { row: 0, track: 0, cell: 0 }; state.scrollX = 0; state.typing = null; state.message = '';
-  syncSongUI(); syncPatternUI(); state.dirty = true;
+  syncSongUI(); syncPhraseUI(); state.dirty = true;
   preloadSamples();
 }
 export function addSong(song) { state.songs.push(song); selectSong(state.songs.length - 1); markEdited(song); }
 $('song').onchange = e => selectSong(parseInt(e.target.value, 10));
 $('newSong').onclick = () => addSong(Object.assign(newSong(), { title: 'Untitled ' + (state.songs.length + 1) }));
 $('title').onchange = e => { withSongUndo(() => { state.song.title = e.target.value.trim() || 'Untitled'; }); syncSongUI(); };
-$('playPat').onclick = () => playPattern(false);
+$('playPhrase').onclick = () => playPhrase(false);
 $('playSong').onclick = () => playSong();
 $('stop').onclick = () => stopAll();
 $('rec').onclick = () => toggleRecord();
 $('bpm').onchange = e => { withSongUndo(() => { state.song.bpm = clamp(parseInt(e.target.value, 10) || 100, 20, 300); }); };
-export function choosePattern(i) {
-  if (!state.song.patterns[i]) return;
-  if (queuePattern(i)) { $('pattern').value = state.pat; syncArranger(); return; }   // live: takes over when the loop ends
-  state.pat = i; syncPatternUI(); state.dirty = true;
+export function choosePhrase(i) {
+  if (!state.song.phrases[i]) return;
+  if (queuePhrase(i)) { $('phrase').value = state.phr; syncArranger(); return; }   // live: takes over when the loop ends
+  state.phr = i; syncPhraseUI(); state.dirty = true;
 }
-$('pattern').onchange = e => { leavePhrase(); choosePattern(parseInt(e.target.value, 10)); };
-arranger.onPick = choosePattern;
+$('phrase').onchange = e => { leavePattern(); choosePhrase(parseInt(e.target.value, 10)); };
+arranger.onPick = choosePhrase;
 arranger.onChange = () => { $('order').value = arrangementText(state.song); };
 wireArranger();
 wireTracks();
-// The key selects edit the pattern's key when "this pattern" is ticked, else the song's.
+// The key selects edit the phrase's key when "this phrase" is ticked, else the song's.
 $('keyRoot').onchange = $('keyScale').onchange = () => {
   const r = $('keyRoot').value, key = r === '' ? null : { root: parseInt(r, 10), scale: $('keyScale').value };
-  if ($('keyPattern').checked) withUndo(() => { curPat().key = key || { root: 0, scale: 'major' }; });
+  if ($('keyPhrase').checked) withUndo(() => { curPhrase().key = key || { root: 0, scale: 'major' }; });
   else withSongUndo(() => { state.song.key = key; });
   syncKeyUI(); padSigReset(); state.dirty = true;
 };
-$('keyPattern').onchange = e => {
-  if (e.target.checked) withUndo(() => { curPat().key = Object.assign({}, state.song.key || { root: 0, scale: 'major' }); });
-  else withUndo(() => { curPat().key = null; });
+$('keyPhrase').onchange = e => {
+  if (e.target.checked) withUndo(() => { curPhrase().key = Object.assign({}, state.song.key || { root: 0, scale: 'major' }); });
+  else withUndo(() => { curPhrase().key = null; });
   syncKeyUI(); padSigReset(); state.dirty = true;
 };
 $('groove').onchange = e => {
   const preset = GROOVES.find(([n]) => n === e.target.value);
-  if (preset && preset[1]) { withUndo(() => { curPat().groove = preset[1].slice(); }); markEdited(); }
+  if (preset && preset[1]) { withUndo(() => { curPhrase().groove = preset[1].slice(); }); markEdited(); }
   syncGrooveUI();
   if (e.target.value === 'custom') $('grooveList').focus();
 };
 $('grooveList').onchange = e => {
   const g = e.target.value.split(/[\s,]+/).map(Number).filter(x => x > 0).slice(0, 16);
-  withUndo(() => { curPat().groove = g.length ? g : []; }); markEdited(); syncGrooveUI();
+  withUndo(() => { curPhrase().groove = g.length ? g : []; }); markEdited(); syncGrooveUI();
 };
 $('deleteSong').onclick = () => { stopAll(); selectSong(deleteCurrentSong()); };
-$('addPattern').onclick = () => {
-  const p = state.song.patterns;
-  p.push(newPattern(String.fromCharCode(65 + (p.length % 26)), curPat().rows, curPat().ticksPerRow, patMeter(curPat())));
-  state.song.arrangement.push(entryOf(p.length - 1)); state.pat = p.length - 1; syncPatternUI(); state.dirty = true;
+$('addPhrase').onclick = () => {
+  const p = state.song.phrases;
+  p.push(newPhrase(String.fromCharCode(65 + (p.length % 26)), curPhrase().rows, curPhrase().ticksPerRow, phraseMeter(curPhrase())));
+  state.song.arrangement.push(entryOf(p.length - 1)); state.phr = p.length - 1; syncPhraseUI(); state.dirty = true;
 };
-$('rows').onchange = e => { const n = clamp(parseInt(e.target.value, 10) || 64, 1, 512); const ph = curPhrase(); withUndo(() => { if (ph) ph.rows = n; else curPat().rows = n; }); syncPatternUI(); };
-$('tpr').onchange = e => { const n = parseInt(e.target.value, 10); withUndo(() => { curPat().ticksPerRow = n; }); };
-$('meterNum').onchange = e => { const n = clamp(parseInt(e.target.value, 10) || 4, 1, 16); withUndo(() => { curPat().meter = [n, patMeter(curPat())[1]]; }); syncPatternUI(); };
-$('meterDen').onchange = e => { const n = parseInt(e.target.value, 10); withUndo(() => { curPat().meter = [patMeter(curPat())[0], n]; }); };
+$('rows').onchange = e => { const n = clamp(parseInt(e.target.value, 10) || 64, 1, 512); const ptn = curPattern(); withUndo(() => { if (ptn) ptn.rows = n; else curPhrase().rows = n; }); syncPhraseUI(); };
+$('tpr').onchange = e => { const n = parseInt(e.target.value, 10); withUndo(() => { curPhrase().ticksPerRow = n; }); };
+$('meterNum').onchange = e => { const n = clamp(parseInt(e.target.value, 10) || 4, 1, 16); withUndo(() => { curPhrase().meter = [n, phraseMeter(curPhrase())[1]]; }); syncPhraseUI(); };
+$('meterDen').onchange = e => { const n = parseInt(e.target.value, 10); withUndo(() => { curPhrase().meter = [phraseMeter(curPhrase())[0], n]; }); };
 $('order').onchange = e => {
   const o = parseArrangementText(e.target.value, state.song);
   withSongUndo(() => { state.song.arrangement = o; }); e.target.value = arrangementText(state.song); syncArranger();
@@ -102,21 +102,21 @@ for (const box of document.querySelectorAll('input[data-show]')) {
 }
 $('selbar').addEventListener('pointerdown', e => { const b = e.target.closest('button[data-op]'); if (!b) return; e.preventDefault(); batchOp(b.dataset.op); });
 $('selbar').addEventListener('click', e => { if (e.target.closest('button')) e.preventDefault(); });
-// Compose → phrases: rename, open in the grid, remove.
-$('phrasesBody').addEventListener('change', e => {
+// Compose → patterns: rename, open in the grid, remove.
+$('patternsBody').addEventListener('change', e => {
   const row = e.target.closest('tr'); if (!row || e.target.dataset.f !== 'name') return;
-  const ph = (state.song.phrases || []).find(p => p.id === row.dataset.id); if (!ph) return;
-  withSongUndo(() => { ph.name = e.target.value.trim() || ph.id; }); $('phrasesBody').dataset.sig = ''; syncPhrases(); state.dirty = true;
+  const ptn = (state.song.patterns || []).find(p => p.id === row.dataset.id); if (!ptn) return;
+  withSongUndo(() => { ptn.name = e.target.value.trim() || ptn.id; }); $('patternsBody').dataset.sig = ''; syncPatterns(); state.dirty = true;
 });
-$('phrasesBody').addEventListener('click', e => {
+$('patternsBody').addEventListener('click', e => {
   const b = e.target.closest('button[data-act]'); if (!b) return;
   const id = b.closest('tr').dataset.id;
   if (b.dataset.act === 'edit') {
     // open it on a track that places it, else the cursor's track
     let trackId = null;
-    for (const pat of state.song.patterns) for (const [tid, m] of Object.entries(pat.material)) if (!trackId && (m.placements || []).some(p => p.phrase === id)) trackId = tid;
-    editPhrase(id, trackId); setPanel(null);
-  } else if (b.dataset.act === 'remove') { if (state.phraseEdit && state.phraseEdit.id === id) leavePhrase(); withSongUndo(() => removePhrase(state.song, id)); $('phrasesBody').dataset.sig = ''; syncPhrases(); state.dirty = true; }
+    for (const phr of state.song.phrases) for (const [tid, m] of Object.entries(phr.material)) if (!trackId && (m.placements || []).some(p => p.pattern === id)) trackId = tid;
+    editPattern(id, trackId); setPanel(null);
+  } else if (b.dataset.act === 'remove') { if (state.patternEdit && state.patternEdit.id === id) leavePattern(); withSongUndo(() => removePattern(state.song, id)); $('patternsBody').dataset.sig = ''; syncPatterns(); state.dirty = true; }
 });
 $('selArt').onchange = e => { if (e.target.value) articulationSel(e.target.value); e.target.value = ''; state.dirty = true; };
 export function download(name, blob) {

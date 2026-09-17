@@ -33,14 +33,14 @@ for (const ins of INSTRUMENTS) check('schema: instrument validates: ' + ins.id, 
     check('schema: bank validates: ' + d.name, validBank(b), errs(validBank));
   }
 }
-const bad = newSong(); bad.patterns[0].material.fl = { notes: [{ tick: 0, len: 0, pitch: 60, vel: 100, col: 0, art: null }], dyn: [], expr: [] };
+const bad = newSong(); bad.phrases[0].material.fl = { notes: [{ tick: 0, len: 0, pitch: 60, vel: 100, col: 0, art: null }], dyn: [], expr: [] };
 check('schema: rejects zero-length note', !validSong(bad));
 const old = JSON.parse(JSON.stringify(newSong())); old.version = 2; old.order = old.arrangement; delete old.arrangement;
 check('schema: rejects a version 2 file', !validSong(old));
-const withPhrase = newSong(); withPhrase.phrases.push({ id: 'p', name: 'P', rows: 8, ticksPerRow: 240, columns: 1, material: { notes: [{ tick: 0, len: 240, pitch: 60, vel: 100, col: 0, art: null }], dyn: [], expr: [], fx: [], placements: [] } });
-withPhrase.patterns[0].material.fl = { notes: [], dyn: [], expr: [], fx: [], placements: [{ phrase: 'p', row: 4, transpose: 5, repeat: 2 }] };
-check('schema: phrase and placement validate', validSong(withPhrase), errs(validSong));
-withPhrase.patterns[0].material.fl.placements[0].chain = 'x';
-check('schema: placement rejects unknown fields', !validSong(withPhrase));
+const withPattern = newSong(); withPattern.patterns.push({ id: 'p', name: 'P', rows: 8, ticksPerRow: 240, columns: 1, material: { notes: [{ tick: 0, len: 240, pitch: 60, vel: 100, col: 0, art: null }], dyn: [], expr: [], fx: [], placements: [] } });
+withPattern.phrases[0].material.fl = { notes: [], dyn: [], expr: [], fx: [], placements: [{ pattern: 'p', row: 4, transpose: 5, repeat: 2 }] };
+check('schema: pattern and placement validate', validSong(withPattern), errs(validSong));
+withPattern.phrases[0].material.fl.placements[0].chain = 'x';
+check('schema: placement rejects unknown fields', !validSong(withPattern));
 console.log(fails.length ? `\n${fails.length} FAILED` : '\nALL PASSED');
 process.exit(fails.length ? 1 : 0);

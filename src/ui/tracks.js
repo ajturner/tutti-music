@@ -1,5 +1,5 @@
 // Tracks and mixer panel: add, remove, reorder, rename and re-instrument tracks; channel, columns,
-// volume, pan, mute and solo. Track changes are song-level and are not in the pattern undo history.
+// volume, pan, mute and solo. Track changes are song-level and are not in the phrase undo history.
 import { INSTRUMENTS, INST } from '../core/instruments.js';
 import { FAMILIES } from '../core/constants.js';
 import { addTrack, removeTrack, moveTrack, setTrackInstrument } from '../core/song.js';

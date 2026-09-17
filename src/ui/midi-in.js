@@ -4,7 +4,7 @@ import { putNote, noteAt, maxLength } from '../core/edit.js';
 import { markEdited } from './storage.js';
 import { INST } from '../core/instruments.js';
 import { laneSet, materialOf } from '../core/song.js';
-import { $, auditionPreview, curPat, curTrack, midi, sched, state } from './state.js';
+import { $, auditionPreview, curPhrase, curTrack, midi, sched, state } from './state.js';
 import { currentCell } from './layout.js';
 import { enterPitch, moveRow } from './edit.js';
 import { esc } from './sync.js';
@@ -16,25 +16,25 @@ export const midiRec = { timer: 0, n: 0 };
 // Live record: notes land on the row the loop is passing (nearest row), note-off sets the length.
 const live = new Map();   // pitch -> { ev, row, trackId }
 function liveRow() {
-  const pat = curPat(), t = sched.positionTick(); if (t == null) return 0;
-  const tpr = pat.ticksPerRow, rt = rowTicks(pat);
-  let r = rowAtTick(pat, t); if (t - rt[r] > (rt[r + 1] - rt[r]) / 2) r++;
-  return r % pat.rows;
+  const phr = curPhrase(), t = sched.positionTick(); if (t == null) return 0;
+  const tpr = phr.ticksPerRow, rt = rowTicks(phr);
+  let r = rowAtTick(phr, t); if (t - rt[r] > (rt[r + 1] - rt[r]) / 2) r++;
+  return r % phr.rows;
 }
 function liveNoteOn(pitch, vel) {
   const tr = curTrack(); if (!tr) return;
-  const pat = curPat(), row = liveRow(), tick = row * pat.ticksPerRow;
-  let col = [...Array(tr.columns).keys()].find(c => !noteAt(pat, tr.id, c, row));
+  const phr = curPhrase(), row = liveRow(), tick = row * phr.ticksPerRow;
+  let col = [...Array(tr.columns).keys()].find(c => !noteAt(phr, tr.id, c, row));
   if (col == null) { if (tr.columns < 4) { tr.columns++; col = tr.columns - 1; } else col = currentCell().col | 0; }
-  const ev = putNote(pat, tr.id, col, tick, { pitch, len: pat.ticksPerRow, vel });
+  const ev = putNote(phr, tr.id, col, tick, { pitch, len: phr.ticksPerRow, vel });
   live.set(pitch, { ev, row, trackId: tr.id });
   state.lastPitch = pitch; markEdited(); state.dirty = true;
 }
 function liveNoteOff(pitch) {
   const l = live.get(pitch); if (!l) return; live.delete(pitch);
-  const pat = curPat(); let end = liveRow(); if (end <= l.row) end += pat.rows;
+  const phr = curPhrase(); let end = liveRow(); if (end <= l.row) end += phr.rows;
   const rows = Math.max(1, end - l.row);
-  l.ev.len = Math.min(rows * pat.ticksPerRow, maxLength(pat, l.trackId, l.ev.col, l.ev.tick));
+  l.ev.len = Math.min(rows * phr.ticksPerRow, maxLength(phr, l.trackId, l.ev.col, l.ev.tick));
   markEdited(); state.dirty = true;
 }
 export function onMidiMessage(e) {
@@ -46,7 +46,7 @@ export function onMidiMessage(e) {
   else if (type === 0xB0 && d1 === 64 && d2 >= 64) moveRow(Math.max(1, state.step));
   else if (type === 0xB0 && d1 === 1) {
     const tr = curTrack(); if (!tr) return;
-    const pat = curPat(); laneSet(materialOf(pat, tr.id).dyn, state.cursor.row * pat.ticksPerRow, d2); state.dirty = true;
+    const phr = curPhrase(); laneSet(materialOf(phr, tr.id).dyn, state.cursor.row * phr.ticksPerRow, d2); state.dirty = true;
   }
 }
 export function recordPitch(pitch, vel) {

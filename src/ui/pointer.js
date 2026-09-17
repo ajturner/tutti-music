@@ -1,6 +1,6 @@
 // Mouse and touch on the grid: tap, drag to scroll or select, long-press to clear, wheel.
 import { clamp } from '../core/constants.js';
-import { canvas, curPat, state, view, tracksShown } from './state.js';
+import { canvas, curPhrase, state, view, tracksShown } from './state.js';
 import { moveRow } from './edit.js';
 import { cellIndex, cursorIndex, deselect, selUpdate } from './selection.js';
 import { clearCell } from './edit.js';
@@ -14,7 +14,7 @@ export function hitTest(x, y) {
   const ti = L.tracks.findIndex(t => gx >= t.x && gx < t.x + t.w);
   if (y < headerH) return { header: true, track: x >= L.gutter.w ? ti : -1 };
   const row = top + Math.floor((y - headerH) / view.ROW_H);
-  if (row < 0 || row >= curPat().rows) return null;
+  if (row < 0 || row >= curPhrase().rows) return null;
   if (x < L.gutter.w) return { row, track: -1, cell: 0 };
   if (ti < 0) return null;
   const lay = L.tracks[ti];
@@ -57,7 +57,7 @@ canvas.addEventListener('pointermove', e => {
     if (!drag.hit) return;
     if (state.topLock == null) state.topLock = view.lastDraw.top;
     // Past the top or bottom edge: creep the view one row per move so long selections are possible.
-    const H = canvas.clientHeight, rows = curPat().rows;
+    const H = canvas.clientHeight, rows = curPhrase().rows;
     if (e.offsetY > H - view.ROW_H) state.topLock = Math.min(state.topLock + 1, rows - 1);
     else if (e.offsetY < view.lastDraw.headerH + view.ROW_H) state.topLock = Math.max(state.topLock - 1, -Math.floor((H - view.lastDraw.headerH) / view.ROW_H) + 1);
     const hit = hitTest(clamp(e.offsetX, 0, canvas.clientWidth - 1), clamp(e.offsetY, view.lastDraw.headerH, H - 1));
@@ -66,7 +66,7 @@ canvas.addEventListener('pointermove', e => {
     return;
   }
   state.scrollX = Math.max(0, drag.scrollX0 - dx);
-  const r = clamp(drag.row0 - Math.round(dy / view.ROW_H), 0, curPat().rows - 1);
+  const r = clamp(drag.row0 - Math.round(dy / view.ROW_H), 0, curPhrase().rows - 1);
   if (r !== state.cursor.row) { state.cursor.row = r; state.typing = null; }
   state.dirty = true;
 });

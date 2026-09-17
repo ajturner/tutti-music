@@ -1,10 +1,10 @@
 // Game controller bindings (LSDJ-style), polled every frame.
-import { curPat, curTrack, rowsPerBar, sched, state } from './state.js';
+import { curPhrase, curTrack, rowsPerBar, sched, state } from './state.js';
 import { currentCell } from './layout.js';
 import { audition, moveCell, moveRow, moveTrack, noteCovering, nudgeArticulation, nudgeCell, tapCell, undo } from './edit.js';
 import { clearSel, copySel, cutSel, duplicateSel, pasteSel, selExtend } from './selection.js';
 import { clearCell } from './edit.js';
-import { playPattern, playSong, stopAll } from './transport.js';
+import { playPhrase, playSong, stopAll } from './transport.js';
 
 // ---- Game controller ------------------------------------------------------------------------
 // The Gamepad API is polled, so this runs every frame. Standard-mapping indices (Xbox layout):
@@ -45,13 +45,13 @@ export function pollGamepad(now) {
   if (fire.right) held.b ? grow(0, 1) : held.a ? edit(big()) : moveCell(1);
   if (fire.aUp && !gamepad.aUsed) { if (held.back) { gamepad.backUsed = true; pasteSel(); } else tapCell(); }
   if (fire.bUp && !gamepad.bUsed) { if (held.back) { gamepad.backUsed = true; copySel(); } else if (state.sel) clearSel(); else clearCell(); }
-  if (fire.x) { if (held.back) { gamepad.backUsed = true; cutSel(); } else { const tr = curTrack(); if (tr) { const ev = noteCovering(curPat(), tr.id, currentCell().col | 0, state.cursor.row); if (ev) audition(tr, ev.pitch, ev.art); } } }
+  if (fire.x) { if (held.back) { gamepad.backUsed = true; cutSel(); } else { const tr = curTrack(); if (tr) { const ev = noteCovering(curPhrase(), tr.id, currentCell().col | 0, state.cursor.row); if (ev) audition(tr, ev.pitch, ev.art); } } }
   if (fire.y) { if (held.back) { gamepad.backUsed = true; duplicateSel(); } else nudgeArticulation(1); }
   if (fire.lb) moveTrack(-1);
   if (fire.rb) moveTrack(1);
   if (fire.lt) moveRow(-rowsPerBar());
   if (fire.rt) moveRow(rowsPerBar());
-  if (fire.start) { if (held.back) { gamepad.backUsed = true; playSong(); } else if (sched.playing) stopAll(); else playPattern(false); }
+  if (fire.start) { if (held.back) { gamepad.backUsed = true; playSong(); } else if (sched.playing) stopAll(); else playPhrase(false); }
   if (fire.backUp && !gamepad.backUsed) undo();
 }
 window.addEventListener('gamepadconnected', e => { state.message = 'Controller connected: ' + e.gamepad.id; state.dirty = true; });

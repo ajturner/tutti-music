@@ -1,7 +1,7 @@
 // Standard MIDI File (type 1) writer.
 import { PPQ, clamp } from './constants.js';
 import { INST } from './instruments.js';
-import { patMeter } from './song.js';
+import { phraseMeter } from './song.js';
 import { renderSong } from './render.js';
 
 // ---- Standard MIDI File writer (type 1, one track per instrument) ----------------
@@ -27,7 +27,7 @@ export function midiFileBytes(song) {
   t0.meta(0, 0x03, strBytes(song.title));
   let lastMeter = '';
   for (const st of r.starts) {
-    const [beats, unit] = patMeter(song.patterns[st.pattern]), key = beats + '/' + unit;
+    const [beats, unit] = phraseMeter(song.phrases[st.phrase]), key = beats + '/' + unit;
     if (key === lastMeter) continue;
     lastMeter = key;
     t0.meta(st.tick, 0x58, [beats, Math.round(Math.log2(unit)), 24, 8]);

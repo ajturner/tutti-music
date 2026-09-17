@@ -1,10 +1,10 @@
 // Keyboard bindings. See the help panel for the scheme and its macOS constraints.
-import { curPat, rowsPerBar, sched, state } from './state.js';
-import { moveCell, moveRow, moveTrack, redo, setOctave, setRow, setStep, typeIntoCell, undo, placementHere, transposePlacement, editPhraseHere, leavePhrase } from './edit.js';
+import { curPhrase, rowsPerBar, sched, state } from './state.js';
+import { moveCell, moveRow, moveTrack, redo, setOctave, setRow, setStep, typeIntoCell, undo, placementHere, transposePlacement, editPatternHere, leavePattern } from './edit.js';
 import { clearSel, copySel, cutSel, deselect, duplicateSel, lengthSel, pasteSel, selExtend, selectTrackOrAll, transposeSel, transposeSelDiatonic } from './selection.js';
 import { changeColumns, changeLength, clearCell } from './edit.js';
 import { currentCell } from './layout.js';
-import { playPattern, playSong, stopAll, toggleRecord } from './transport.js';
+import { playPhrase, playSong, stopAll, toggleRecord } from './transport.js';
 
 // ---- Keyboard -----------------------------------------------------------------------------
 // macOS constraints this scheme is built around:
@@ -38,7 +38,7 @@ export function handleKey(e) {
     if (lower === 'v') { pasteSel(); return true; }
     if (lower === 'd') { duplicateSel(); return true; }
     if (k === 'ArrowUp') { sh ? moveRow(-rowsPerBar()) : setRow(0); return true; }                    // ⌘↑ top, ⌘⇧↑ bar
-    if (k === 'ArrowDown') { sh ? moveRow(rowsPerBar()) : setRow(curPat().rows - 1); return true; }  // ⌘↓ end, ⌘⇧↓ bar
+    if (k === 'ArrowDown') { sh ? moveRow(rowsPerBar()) : setRow(curPhrase().rows - 1); return true; }  // ⌘↓ end, ⌘⇧↓ bar
     return false;                                              // let the browser have the rest
   }
   if (k === '?' || (code === 'Slash' && sh)) { toggleQuickKeys(); return true; }   // ? quick keys in the footer
@@ -78,11 +78,11 @@ export function handleKey(e) {
     case 'PageUp': moveRow(-rowsPerBar()); return true;
     case 'PageDown': moveRow(rowsPerBar()); return true;
     case 'Home': setRow(0); return true;
-    case 'End': setRow(curPat().rows - 1); return true;
+    case 'End': setRow(curPhrase().rows - 1); return true;
     case 'Tab': moveTrack(sh ? -1 : 1); return true;
-    case ' ': if (sched.playing) stopAll(); else playPattern(sh); return true;
-    case 'Enter': if (sh) toggleRecord(); else if (!editPhraseHere()) playSong(); return true;
-    case 'Escape': if (state.sel) deselect(); else if (sched.playing) stopAll(); else if (!leavePhrase()) stopAll(); return true;
+    case ' ': if (sched.playing) stopAll(); else playPhrase(sh); return true;
+    case 'Enter': if (sh) toggleRecord(); else if (!editPatternHere()) playSong(); return true;
+    case 'Escape': if (state.sel) deselect(); else if (sched.playing) stopAll(); else if (!leavePattern()) stopAll(); return true;
     case 'Delete': case 'Backspace': state.sel ? clearSel() : clearCell(); return true;
   }
   if (k.length === 1) return typeIntoCell(k);

@@ -8,7 +8,7 @@ import { currentCell } from './layout.js';
 import { moveCell, moveRow, moveTrack, setOctave, setStep, typeIntoCell, undo } from './edit.js';
 import { clearSel, selCells, selRect } from './selection.js';
 import { changeLength, clearCell } from './edit.js';
-import { playPattern, stopAll } from './transport.js';
+import { playPhrase, stopAll } from './transport.js';
 
 // ---- Touch pad ------------------------------------------------------------------------------
 // Buttons feed the same key handlers as the keyboard, so entry behaves identically. The key row
@@ -65,7 +65,7 @@ export function syncPad() {
   [['oct\u2212', () => setOctave(state.octave - 1), 'Octave down'], ['oct' + state.octave + '+', () => setOctave(state.octave + 1), 'Octave up'],
    ['stp\u2212', () => setStep(state.step - 1), 'Step down'], ['stp' + state.step + '+', () => setStep(state.step + 1), 'Step up'],
    ['len\u2212', () => changeLength(-1), 'Shorter note'], ['len+', () => changeLength(1), 'Longer note'],
-   [sched.playing ? '\u25a0' : '\u25b6', () => sched.playing ? stopAll() : playPattern(false), 'Play or stop the pattern']]
+   [sched.playing ? '\u25a0' : '\u25b6', () => sched.playing ? stopAll() : playPhrase(false), 'Play or stop the phrase']]
     .forEach(([l, f, t]) => ctl.appendChild(padButton(l, /^[\u25a0\u25b6]$/.test(l) ? 'act' : 'small', f, t)));
 }
 export let selBarSig = '';

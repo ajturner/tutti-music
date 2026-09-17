@@ -10,7 +10,7 @@
     "title",
     "bpm",
     "tracks",
-    "patterns",
+    "phrases",
     "arrangement"
   ],
   "properties": {
@@ -24,7 +24,7 @@
     },
     "version": {
       "const": 3,
-      "description": "Format version. 3: arrangement, follows, material, notes, phrases, placements. Versions 1 and 2 are not read."
+      "description": "Format version. 3: arrangement, follows, material, notes, patterns, placements. Versions 1 and 2 are not read."
     },
     "uid": {
       "type": "string",
@@ -41,7 +41,7 @@
       "type": "number",
       "minimum": 20,
       "maximum": 300,
-      "description": "Base tempo; the tempo lane of each pattern overrides it while that pattern plays."
+      "description": "Base tempo; the tempo lane of each phrase overrides it while that phrase plays."
     },
     "key": {
       "oneOf": [
@@ -68,18 +68,18 @@
         "$ref": "#/$defs/track"
       }
     },
-    "phrases": {
+    "patterns": {
       "type": "array",
       "items": {
-        "$ref": "#/$defs/phrase"
+        "$ref": "#/$defs/pattern"
       },
       "description": "Reusable single-track material, placed by placements; never arranged."
     },
-    "patterns": {
+    "phrases": {
       "type": "array",
       "minItems": 1,
       "items": {
-        "$ref": "#/$defs/pattern"
+        "$ref": "#/$defs/phrase"
       }
     },
     "arrangement": {
@@ -95,7 +95,7 @@
     "tick": {
       "type": "integer",
       "minimum": 0,
-      "description": "Ticks from the start of the pattern at 960 PPQ."
+      "description": "Ticks from the start of the phrase at 960 PPQ."
     },
     "midiValue": {
       "type": "integer",
@@ -148,7 +148,7 @@
       },
       "description": "Points sorted by tick; at most one point per tick."
     },
-    "pattern": {
+    "phrase": {
       "type": "object",
       "required": [
         "name",
@@ -196,7 +196,7 @@
         },
         "tempo": {
           "$ref": "#/$defs/lane",
-          "description": "Tempo lane in bpm (20-300). Only a pattern has one."
+          "description": "Tempo lane in bpm (20-300). Only a phrase has one."
         },
         "groove": {
           "type": "array",
@@ -206,7 +206,7 @@
             "type": "number",
             "exclusiveMinimum": 0
           },
-          "description": "Row-length multipliers applied cyclically and normalised to keep the pattern length; [1.33, 0.67] swings pairs of rows. Absent or all 1 means straight."
+          "description": "Row-length multipliers applied cyclically and normalised to keep the phrase length; [1.33, 0.67] swings pairs of rows. Absent or all 1 means straight."
         },
         "key": {
           "oneOf": [
@@ -217,7 +217,7 @@
               "$ref": "#/$defs/key"
             }
           ],
-          "description": "Key override for this pattern; null or absent inherits the song key."
+          "description": "Key override for this phrase; null or absent inherits the song key."
         },
         "material": {
           "type": "object",
@@ -240,7 +240,7 @@
         "id": {
           "type": "string",
           "pattern": "^[a-z0-9-]+$",
-          "description": "Stable key used by pattern.tracks."
+          "description": "Stable key used by phrase.tracks."
         },
         "name": {
           "type": "string"
@@ -428,45 +428,45 @@
           "items": {
             "$ref": "#/$defs/placement"
           },
-          "description": "Phrases played inside this material."
+          "description": "Patterns played inside this material."
         }
       },
-      "description": "Notes, lanes, fx and placements for one track over some rows. The one shape a pattern (per track) and a phrase hold."
+      "description": "Notes, lanes, fx and placements for one track over some rows. The one shape a phrase (per track) and a pattern hold."
     },
     "placement": {
       "type": "object",
       "required": [
-        "phrase",
+        "pattern",
         "row"
       ],
       "additionalProperties": false,
       "properties": {
-        "phrase": {
+        "pattern": {
           "type": "string",
-          "description": "Id of a phrase in the song."
+          "description": "Id of a pattern in the song."
         },
         "row": {
           "type": "integer",
           "minimum": 0,
-          "description": "Row of the pattern where the phrase starts."
+          "description": "Row of the phrase where the pattern starts."
         },
         "transpose": {
           "type": "integer",
           "minimum": -48,
           "maximum": 48,
           "default": 0,
-          "description": "Semitones added to every note of the phrase."
+          "description": "Semitones added to every note of the pattern."
         },
         "repeat": {
           "type": "integer",
           "minimum": 1,
           "maximum": 64,
           "default": 1,
-          "description": "How many times the phrase plays back to back from the row."
+          "description": "How many times the pattern plays back to back from the row."
         }
       }
     },
-    "phrase": {
+    "pattern": {
       "type": "object",
       "required": [
         "id",
@@ -491,14 +491,14 @@
           "type": "integer",
           "minimum": 1,
           "default": 240,
-          "description": "Row size the phrase was written at; ticks scale when placed in a pattern with another row size."
+          "description": "Row size the pattern was written at; ticks scale when placed in a phrase with another row size."
         },
         "columns": {
           "type": "integer",
           "minimum": 1,
           "maximum": 4,
           "default": 1,
-          "description": "Note columns the phrase uses. Columns beyond the placing track's are dropped at render time."
+          "description": "Note columns the pattern uses. Columns beyond the placing track's are dropped at render time."
         },
         "material": {
           "$ref": "#/$defs/material"
@@ -508,14 +508,14 @@
     "entry": {
       "type": "object",
       "required": [
-        "pattern"
+        "phrase"
       ],
       "additionalProperties": false,
       "properties": {
-        "pattern": {
+        "phrase": {
           "type": "integer",
           "minimum": 0,
-          "description": "Pattern that sets the entry's length, tempo lane and groove, and plays on every track not overridden."
+          "description": "Phrase that sets the entry's length, tempo lane and groove, and plays on every track not overridden."
         },
         "repeat": {
           "type": "integer",
@@ -529,7 +529,7 @@
             "type": "integer",
             "minimum": 0
           },
-          "description": "Track id to pattern index: that track plays the other pattern's material, looped or clipped to the entry's length."
+          "description": "Track id to phrase index: that track plays the other phrase's material, looped or clipped to the entry's length."
         }
       }
     }
