@@ -49,5 +49,13 @@ check('schema: a pattern cannot place a pattern', !validSong(withPattern));
 withPattern.patterns[0].material.placements = [];
 withPattern.arrangement[0].follows = { fl: 1 };
 check('schema: follows is gone', !validSong(withPattern));
+{
+  const { normalizeSong, arrangementText } = await import('../src/core/song.js');
+  const md = await readFile(new URL('../docs/domain.md', import.meta.url), 'utf8');
+  const example = JSON.parse(md.match(/```json\n([\s\S]*?)```/)[1].replace('"c1f0…"', '"c1f0"'));
+  check('docs: the domain model example validates', validSong(example), errs(validSong));
+  let text = ''; try { text = arrangementText(normalizeSong(example)); } catch (e) { text = e.message; }
+  check('docs: the domain model example loads as A×2 Bridge A', text === 'A×2 Bridge A', text);
+}
 console.log(fails.length ? `\n${fails.length} FAILED` : '\nALL PASSED');
 process.exit(fails.length ? 1 : 0);

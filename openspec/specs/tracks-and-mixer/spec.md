@@ -6,7 +6,7 @@ Lets a song define its own orchestra: which instruments, in what order, on which
 ## Requirements
 
 ### Requirement: Track panel
-The Compose panel SHALL contain a tracks table listing every track with name, instrument, channel, note columns, volume, pan, mute and solo, and SHALL allow adding a track for any instrument, reordering, and removing. The mixer's Tracks… button SHALL open Compose. A song SHALL keep at least one track. Removing a track SHALL remove its notes and lanes from every pattern. Changing a track's instrument SHALL reset articulations the new instrument does not support.
+The Compose panel SHALL contain a tracks table listing every track with name, instrument, channel, note columns, volume, pan, mute and solo, and SHALL allow adding a track for any instrument, reordering, and removing. The mixer's Tracks… button SHALL open Compose. A song SHALL keep at least one track. Removing a track SHALL remove its notes and lanes from every phrase. Changing a track's instrument SHALL reset articulations the new instrument does not support.
 
 #### Scenario: Add a harp-like track
 - **WHEN** the user adds a Synth arp track
@@ -14,7 +14,7 @@ The Compose panel SHALL contain a tracks table listing every track with name, in
 
 #### Scenario: Remove a track
 - **WHEN** the user removes a track that has notes
-- **THEN** the track and its notes are gone from every pattern
+- **THEN** the track and its notes are gone from every phrase
 
 ### Requirement: Mixer
 Each track SHALL have a volume (0 to 127, default 100) and pan (0 to 127, default 64) sent as CC7 and CC10 at the start of playback and export, applied by the preview synth, and sent immediately when changed while playing.

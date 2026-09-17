@@ -6,7 +6,7 @@ Documentation the composer can read beside the app: a complete guide in its own 
 ## Requirements
 
 ### Requirement: Standalone guide
-A guide page SHALL be served beside the app with a table of contents whose entries link to sections covering getting started, the grid, keyboard, selection, phrases, key and scale, the FX column, groove, arrangement and live, mixer and tracks, touch, game controller, MIDI and export, files, and a first phrase, and SHALL link to the domain model. It SHALL open from the footer in a new tab and link back to the app.
+A guide page SHALL be served beside the app with a table of contents whose entries link to sections covering getting started, how a song is built (sections, phrases, patterns, placements, the Song view and the map, with the words musicians use for each), the grid, keyboard, selection, patterns and their transformations, key and scale, the FX column, groove, sections and arrangement and live play, mixer and tracks, touch, game controller, MIDI and export, files, and a first phrase, and SHALL link to the domain model. It SHALL open from the footer in a new tab and link back to the app.
 
 #### Scenario: Open beside the app
 - **WHEN** the user clicks "full guide" in the footer

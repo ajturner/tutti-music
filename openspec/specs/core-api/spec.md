@@ -45,7 +45,7 @@ The app SHALL run from any static HTTP server with correct JavaScript MIME types
 - **THEN** the app loads and works
 
 ### Requirement: Editing primitives in the core
-The core SHALL provide the note editing primitives (write a note, replace a note, resize a note, remove notes on a row, and the lookups by row and column) as pure functions over pattern data, with every length passed explicitly. The UI SHALL NOT reimplement the overlap or clamping rules.
+The core SHALL provide the note editing primitives (write a note, replace a note, resize a note, remove notes on a row, and the lookups by row and column) as pure functions over phrase data, with every length passed explicitly. The UI SHALL NOT reimplement the overlap or clamping rules.
 
 #### Scenario: Script writes overlapping notes
 - **WHEN** a Node script writes a 4-row note at row 0 and then a note at row 2 in the same column
@@ -55,9 +55,9 @@ The core SHALL provide the note editing primitives (write a note, replace a note
 - **WHEN** a script grows a note by 10 rows and the next note in its column starts 3 rows later
 - **THEN** the note becomes 3 rows long
 
-### Requirement: Phrase and arrangement functions
-The core SHALL export pure functions named after the vocabulary: `newMaterial`, `materialOf`, `newPhrase`, `makePhrase`, `detachPlacement`, `removePhrase`, `placementAt`, `placementRows`, `phraseUses`, `expandPlacement`, `expandPlacements`, `expandMaterial`, `materialFor`, `entryOf`, `entries`, `normalizeArrangement`, `arrangementText` and `parseArrangementText`. Names using order, chain or event for stored notes SHALL NOT exist.
+### Requirement: Pattern and arrangement functions
+The core SHALL export pure functions named after the vocabulary: for material and patterns `newMaterial`, `materialOf`, `newPattern`, `makePattern`, `detachPlacement`, `removePattern`, `placementOf`, `placementLabel`, `placementAt`, `placementRows`, `patternUses`, `expandPlacement`, `expandPlacements` and `expandMaterial`; for structure `newPhrase`, `phraseById`, `phraseIndex`, `sectionById`, `sectionsOfPhrase`, `sectionsNotArranged`, `keyFor`, `ensureStructure`, `playOrder`, `arrangementText` and `sectionText`; and for edits `addPhrase`, `copyPhrase`, `addSlot`, `removeSlot`, `addSection`, `removeItem`, `deleteSection`, `moveIn`, `nextPhraseName` and `nextSectionName`. Names using order, entry, follows, chain, or event for stored notes SHALL NOT exist.
 
 #### Scenario: Headless use
-- **WHEN** a Node script makes a phrase from a pattern and renders the song
-- **THEN** it needs no DOM and the rendered events include the placement's notes
+- **WHEN** a Node script makes a pattern from a phrase, adds a section and renders the song
+- **THEN** it needs no DOM and the rendered events include the placement's notes in the section's key

@@ -1,90 +1,61 @@
 # Tutti domain model
 
-> **A revision is proposed in [domain-4.md](domain-4.md):** sections arranged into a song, phrases as the multi-track block, patterns as the reusable line, and no follows. This document describes what 3.0.x implements.
+The vocabulary the app, the specs, the file format and the guide all use. One word per concept, one home per concept, and the JSON field is the same word as the label on screen. Format version 4 is the first to follow this document; earlier files are not read.
 
-The vocabulary the app, the specs, the file format and the guide all use. One word per concept, one home per concept, and the JSON field is the same word as the label on screen. Format version 3 is the first to follow this document; earlier files are not read (no songs were saved with them).
+The aim is a song you can read top to bottom in the words musicians already use: a song is arranged from sections, a section is made of phrases, a phrase is a few bars for every instrument, and the ideas inside it are patterns placed on tracks.
 
-## Ubiquitous language
+## Vocabulary
 
-| Term | Meaning | Lives in | Identity |
+| Term | Meaning | What musicians call it | Lives in |
 |---|---|---|---|
-| **Song** | The whole piece: tracks, patterns, phrases, arrangement, tempo, key, banks. The aggregate root; every edit goes through it. | file | title + `uid` |
-| **Track** | One instrument voice with a MIDI channel and 1 to 4 note columns. Tracks are the columns of every pattern. | song.tracks | `id` |
-| **Pattern** | A block of rows across *all* tracks with its own length, row size, meter, tempo lane, groove and optional key. The unit the grid shows, the arrangement plays, and a track can follow. | song.patterns | index + name (`0 A`) |
-| **Material** | Notes, lanes and fx for one track over some rows. The one shape both a pattern (per track) and a phrase hold. | pattern.material[track], phrase.material | none (value) |
-| **Note** | A pitch at a tick in a note column with velocity, length and articulation. | material.notes | none (value) |
-| **Lane** | A stepped or ramped controller line: dynamics (`dyn`) and expression (`expr`) per track, `tempo` per pattern. | material, pattern | none (value) |
-| **Phrase** | Reusable material for one track, a fixed number of rows and columns, kept once in the song. Never arranged, only placed. | song.phrases | `id` + name |
-| **Placement** | "Play phrase P here": a reference from a track's material to a phrase at a row, with a transpose and a repeat count. Editing the phrase changes every placement. | material.placements | none (value) |
-| **Arrangement** | The list of entries that make the song from start to end. | song.arrangement | none |
-| **Entry** | One step of the arrangement: a pattern, a repeat count, and per-track *follows*. | arrangement | position |
-| **Follows** | An entry's override for one track: the track takes its material from another pattern instead of the entry's, looped or clipped to the entry's length. | entry.follows[track] | none (value) |
-| **Bank** | A set of sampled or synthesised instruments a song can name and load. | song.banks | `id` |
-| **Render** | Turning the arrangement into timed events (notes, controllers, keyswitches) for playback, MIDI out and file export. | core | none (pure) |
+| **Song** | The whole piece: tracks, patterns, phrases, sections, arrangement, tempo, key, banks. The aggregate root. | work, tune, song | file |
+| **Track** | One instrument with a MIDI channel and 1 to 4 note columns. Constant across the song. | instrument, player, staff | song.tracks |
+| **Arrangement** | The sections in playing order, each with a repeat. | form: AABA, verse and chorus, sonata | song.arrangement |
+| **Section** | A named span of the song made of phrases in order, each with a repeat; may carry its own key. | intro, verse, chorus, bridge, outro; A section, B section, head; exposition, development, coda; a movement | song.sections |
+| **Phrase** | A few bars for every track: rows, row size, meter, tempo lane, groove, and material per track. The unit the grid shows. | phrase; a line of the verse; four or eight bars | song.phrases |
+| **Material** | What one track holds inside a phrase: loose notes, lanes, fx and placements. Also the shape a pattern holds, without placements. | the instrument's part for those bars | phrase.material[track], pattern.material |
+| **Pattern** | A reusable line of notes for one voice, written once: notes, articulation, its own lanes and fx. | motif, riff, lick, figure, ostinato, hook, fill | song.patterns |
+| **Placement** | One use of a pattern: on a track of a phrase, at a row, with its transformations. Editing the pattern changes every placement. | a statement of the motif; the riff again, a fourth up | material.placements |
+| **Transformation** | How a placement changes the pattern it plays: transpose (semitones), shift (scale degrees in the key in force), octave, dynamics (a velocity offset), repeat. | transposition, sequence, octave displacement, dynamic marking | placement fields |
+| **Modulation** | A section or phrase taking its own key. Never a property of a placement. A key does not move typed notes; it decides what is in scale and where a shift lands. | modulation | section.key, phrase.key |
+| **Note** | A pitch at a tick in a note column with velocity, length and articulation. "Notes" is the field; "events" is what the renderer emits. | note | material.notes |
+| **Lane** | A stepped or ramped controller line: dynamics (`dyn`) and expression (`expr`) per track, `tempo` per phrase. | hairpins, tempo marks | material, phrase |
+| **Bank** | A set of sampled or synthesised instruments a song can name and load. | ensemble | song.banks |
+| **Render** | Turning the arrangement into timed events for playback, MIDI out and file export. | performance | core |
 
-Verbs, used the same way everywhere: **place** a phrase, **detach** a placement into loose notes, **transpose** a placement, a track **follows** a pattern, an entry or placement **repeats**, a song **renders**.
+Verbs: **place** a pattern, **detach** a placement, **transform** a placement, **arrange** sections, a section or phrase **repeats**, a section **modulates**, a song **renders**.
 
-Words not used: *chain*, *clip*, *block*, *sequence*, *scene*, *part*, *order*, *event* (for stored notes). If one of these appears in a spec, a label or a field name, it is a mistake to correct. What the M8 calls a chain is, in Tutti, a pattern whose track holds placements in sequence and that another entry's track follows; it needs no word of its own.
+Words not used: *follows*, *chain*, *entry*, *motif* on any label (the guide may gloss it), *clip*, *block*, *scene*, *part*, *order*, *event* for stored notes. If one appears in a spec, a label or a field name, it is a mistake to correct.
 
-## Why these and not more
+## In the app: levels and the map
 
-- **Pattern and phrase are not the same thing.** They share the Material shape and nothing else. A pattern is multi-track, owns time (meter, tempo lane, groove) and is what the grid shows and the arrangement plays. A phrase is single-track, owns no time, and only exists inside placements. Merging them would put every eight-row snippet into the header's pattern selector and give phrases a meter they cannot use.
-- **There is no chain.** A sequence of phrases with transposes and repeats for one track is a pattern with placements on that track, and "follows" already loops or clips a pattern to an entry. So the bass in an electronica song follows pattern *Bass walk*, and *Bass walk* is edited in the same grid as everything else. One less noun, one less editor.
-- **Follows only names a pattern.** A track never follows a phrase directly; it follows a pattern that places the phrase. This keeps one rule for the renderer and one place to look for what a track is doing.
-- **Transpose and repeat sit on the reference, never on the thing.** A placement transposes and repeats; an entry repeats. A phrase and a pattern are what they are.
+A song has four levels, and the **map** bar under the header shows them with the current one lit: **Song › Section › Phrase › Pattern**. Every crumb is a button.
 
-## File format, version 3
+| Level | What you see | In | Out |
+|---|---|---|---|
+| Song | the **Song view**: sections in playing order, their phrases, and for every phrase what each track plays (a thumbnail and a chip per placed pattern); the arrangement is edited here and the patterns are listed underneath | Enter, a double click or a second tap opens that phrase on that track; a pattern chip opens that pattern | — |
+| Section | the same view, on that section | | |
+| Phrase | the grid: every track, the phrase's rows | Enter on a pattern tag opens the pattern | the backquote key, or a crumb |
+| Pattern | the same grid with one track and the pattern's rows | | the backquote key, Esc, or a crumb |
 
-One JSON document per song. Field names are the vocabulary above. Phrases have an `id` because placements name them; tracks have an `id` because material, follows and channels are keyed by track; everything else is addressed by position.
+The **track monitor** shows the note each track is sounding while the song plays: beside the track name in the grid header, in the Song view's track headers, and on the mixer strips. The map also says where the playhead is, in the song's own words: `▶ Bridge › B1`.
 
-```json
-{
-  "$schema": "https://ajturner.github.io/tutti-music/schema/tutti-song.schema.json",
-  "format": "tutti-song", "version": 3, "uid": "c1f0…",
-  "title": "Crossroads reel", "notes": "", "bpm": 112, "key": { "root": 7, "scale": "major" },
-  "banks": ["folk"],
-  "tracks": [
-    { "id": "fid", "name": "Fiddle", "instrument": "fiddle", "channel": 1, "columns": 1, "mute": false, "volume": 100, "pan": 64 },
-    { "id": "bjo", "name": "Banjo", "instrument": "banjo", "channel": 2, "columns": 2, "mute": false, "volume": 90, "pan": 40 },
-    { "id": "drm", "name": "Frame drum", "instrument": "frame-drum", "channel": 3, "columns": 1, "mute": false }
-  ],
-  "phrases": [
-    { "id": "reelA", "name": "Reel A", "rows": 32, "ticksPerRow": 240, "columns": 1,
-      "material": { "notes": [{ "col": 0, "tick": 0, "pitch": 74, "vel": 96, "len": 240, "art": "sus" }], "dyn": [], "expr": [], "fx": [] } },
-    { "id": "vamp", "name": "Vamp", "rows": 8, "ticksPerRow": 240, "columns": 2,
-      "material": { "notes": [{ "col": 0, "tick": 0, "pitch": 43, "vel": 80, "len": 480, "art": "sus" }, { "col": 1, "tick": 480, "pitch": 55, "vel": 70, "len": 480, "art": "sus" }], "dyn": [], "expr": [], "fx": [] } }
-  ],
-  "patterns": [
-    { "name": "A", "rows": 64, "ticksPerRow": 240, "meter": [4, 4], "groove": [], "key": null, "tempo": [],
-      "material": {
-        "fid": { "notes": [{ "col": 0, "tick": 0, "pitch": 67, "vel": 90, "len": 240, "art": "sus" }], "dyn": [{ "tick": 0, "value": 48 }], "expr": [], "fx": [],
-                 "placements": [{ "phrase": "reelA", "row": 4, "transpose": 0, "repeat": 1 }, { "phrase": "reelA", "row": 36, "transpose": 0, "repeat": 1 }] },
-        "bjo": { "notes": [], "dyn": [], "expr": [], "fx": [],
-                 "placements": [{ "phrase": "vamp", "row": 0, "transpose": 0, "repeat": 4 }, { "phrase": "vamp", "row": 32, "transpose": 5, "repeat": 4 }] }
-      } },
-    { "name": "Drum loop", "rows": 16, "ticksPerRow": 240, "meter": [4, 4], "groove": [], "key": null, "tempo": [],
-      "material": {
-        "drm": { "notes": [{ "col": 0, "tick": 0, "pitch": 60, "vel": 100, "len": 240, "art": "hit" }, { "col": 0, "tick": 1920, "pitch": 60, "vel": 80, "len": 240, "art": "hit" }], "dyn": [], "expr": [], "fx": [], "placements": [] }
-      } }
-  ],
-  "arrangement": [
-    { "pattern": 0, "repeat": 4, "follows": { "drm": 1 } }
-  ]
-}
-```
+## For M8 users
 
-Reading it back: the Fiddle plays a pickup note, then *Reel A* twice; the Banjo plays *Vamp* four times and then four times a fourth up; the Frame drum follows pattern 1 *Drum loop*, which repeats sixteen times across the entry's 256 rows. Everything named exists.
+| M8 | Tutti |
+|---|---|
+| song row | a phrase, in the order its section lists it |
+| section (consecutive rows) | **section** |
+| cell: the chain a track plays on a row | the track's column of placements inside that phrase |
+| chain | the placements of one track in one phrase, read top to bottom |
+| chain step: phrase + transpose | **placement**: pattern + transformations |
+| phrase | **pattern** |
+| instrument per step | the track's instrument |
+| the song screen | the **Song view** |
+| the SCPIT map | the **map**: Song › Section › Phrase › Pattern |
+| the track readout | the **track monitor** |
 
-Rules the loader enforces, in this order:
-
-1. A song needs `tracks`, `patterns` and `arrangement`; each pattern's `material` and each phrase's `material` are filled with empty lists where absent.
-2. An entry naming a missing pattern is dropped; an arrangement left empty gets entry `{ pattern: 0 }`.
-3. A follows naming the entry's own pattern or a missing pattern is removed. A follows names a pattern index and nothing else.
-4. A placement naming a missing phrase is removed. `transpose` defaults to 0 and `repeat` to 1.
-5. A placement whose phrase has more columns than the track keeps its data; the extra columns are dropped at render time with a status warning. Fewer columns leave the track's other columns free for loose notes.
-6. A phrase's `ticksPerRow` may differ from the placing pattern's; ticks are scaled, as they are for a followed pattern.
-
-What changes from version 2, all deliberate: `order` → `arrangement`, entry `tracks` → `follows` (values are pattern indices), pattern `tracks` → `material`, `events` → `notes`, plus the new `phrases` and `placements`. Version 1 and 2 files are refused with a message naming the version; the built-in examples are code and move with the app.
+A placement is one **step** of a chain, not the chain. The chain itself has no word in Tutti because it is not an object: it is what you see when you read one track down one phrase. Three differences follow. It is not reusable on its own; you reuse patterns, phrases and sections instead. Its steps sit at rows, so they may leave gaps and share the track with loose notes. And every track in a phrase has the same length, so tracks cannot drift against each other.
 
 ## Structure
 
@@ -104,7 +75,13 @@ classDiagram
     channel
     columns
   }
-  class Pattern {
+  class Section {
+    id
+    name
+    key?
+  }
+  class Phrase {
+    id
     name
     rows
     ticksPerRow
@@ -122,299 +99,182 @@ classDiagram
   class Placement {
     row
     transpose
+    shift
+    octave
+    dynamics
     repeat
   }
-  class Phrase {
+  class Pattern {
     id
     name
     rows
     columns
     ticksPerRow
   }
-  class Entry {
-    repeat
-  }
   Song "1" *-- "1..*" Track
-  Song "1" *-- "1..*" Pattern
-  Song "1" *-- "0..*" Phrase
-  Song "1" *-- "1..*" Entry : arrangement
-  Pattern "1" *-- "1 per track" Material
-  Phrase "1" *-- "1" Material
+  Song "1" *-- "0..*" Pattern
+  Song "1" *-- "1..*" Phrase
+  Song "1" *-- "1..*" Section
+  Song "1" --> "1..* in order, each ×repeat" Section : arrangement
+  Section "1" --> "1..* in order, each ×repeat" Phrase
+  Phrase "1" *-- "1 per track" Material
+  Pattern "1" *-- "1" Material
   Material "1" *-- "0..*" Placement
-  Placement "*" --> "1" Phrase : plays
-  Entry "*" --> "1" Pattern : plays
-  Entry "*" --> "0..1 per track" Pattern : follows
+  Placement "*" --> "1" Pattern : plays
   Material ..> Track : keyed by id
 ```
 
-Three rules keep the model consistent:
+Rules that keep it consistent:
 
-1. **A phrase belongs to a track kind, not a track.** It carries material for one voice; any track can place it. Articulations the placing track's instrument lacks fall back at render time, exactly as when a track changes instrument.
-2. **A placement never copies.** Detaching is the only way to turn a placement into loose notes, and it is explicit.
-3. **Follows is the only cross-pattern reference in the arrangement, and it only names a pattern.** Phrases are reached through placements, never from an entry.
+1. **Reuse happens at three levels and nowhere else.** A pattern is placed many times. A phrase may appear in more than one section. A section may appear more than once in the arrangement.
+2. **A placement never copies.** Detach is the only way to get loose notes out of a pattern, and it bakes the transformations in.
+3. **A pattern belongs to a kind of voice, not a track.** Any track can place it; columns beyond the track's are dropped at render time. A pattern never places another pattern.
+4. **Only a phrase owns time.** Rows, meter, tempo lane and groove. Patterns inherit them where they are placed.
+5. **Keys nest.** Phrase over section over song. A placement's shift uses the key in force where it sounds, so a phrase reused in a section with another key sounds its shifted patterns in that key.
+6. **Everything a track plays in a phrase is visible in that phrase.** There is no reference from one phrase to another.
+7. **The song is always showable.** A section keeps at least one phrase and the arrangement at least one section. A section taken out of the arrangement stays in the song, not arranged, until it is deleted; a phrase that loses its last section goes with it.
 
-## Three songs
+## File format, version 4
 
-### Level 1: Sketch in C, patterns only
+One JSON document per song. Patterns, phrases and sections have an `id` because something names them; tracks have an `id` because material and channels are keyed by track; everything else is addressed by position.
 
-Two patterns, every track written in each. The arrangement plays them. No phrase, no follows, and neither word appears in the UI.
-
-```mermaid
-flowchart LR
-  subgraph Arrangement
-    direction LR
-    e0[Entry 1: A] --> e1[Entry 2: A] --> e2[Entry 3: B ×2]
-  end
-  subgraph PatternA["Pattern 0 A · 64 rows · 4/4"]
-    a1[Violins I: notes]
-    a2[Cellos: notes]
-    a3[Horns: notes]
-  end
-  subgraph PatternB["Pattern 1 B · 64 rows · 4/4"]
-    b1[Violins I: notes]
-    b2[Cellos: notes]
-    b3[Horns: notes]
-  end
-  e0 -.plays.-> PatternA
-  e2 -.plays.-> PatternB
+```json
+{
+  "$schema": "https://ajturner.github.io/tutti-music/schema/tutti-song.schema.json",
+  "format": "tutti-song", "version": 4, "uid": "c1f0…",
+  "title": "Blue room", "notes": "", "bpm": 132, "key": { "root": 5, "scale": "major" },
+  "banks": ["jazz"],
+  "tracks": [
+    { "id": "sax", "name": "Tenor sax", "instrument": "tenor-sax", "channel": 1, "columns": 1, "mute": false },
+    { "id": "bass", "name": "Upright bass", "instrument": "upright-bass", "channel": 2, "columns": 1, "mute": false },
+    { "id": "kit", "name": "Drum kit", "instrument": "drum-kit", "channel": 10, "columns": 2, "mute": false }
+  ],
+  "patterns": [
+    { "id": "riff", "name": "Riff", "rows": 16, "ticksPerRow": 240, "columns": 1,
+      "material": { "notes": [{ "col": 0, "tick": 0, "pitch": 65, "vel": 96, "len": 480, "art": "sus" }], "dyn": [], "expr": [], "fx": [] } },
+    { "id": "walk", "name": "Walk", "rows": 16, "ticksPerRow": 240, "columns": 1,
+      "material": { "notes": [{ "col": 0, "tick": 0, "pitch": 41, "vel": 90, "len": 960, "art": "sus" }], "dyn": [], "expr": [], "fx": [] } },
+    { "id": "ride", "name": "Ride", "rows": 16, "ticksPerRow": 240, "columns": 2,
+      "material": { "notes": [{ "col": 0, "tick": 0, "pitch": 51, "vel": 80, "len": 240, "art": null }], "dyn": [], "expr": [], "fx": [] } }
+  ],
+  "phrases": [
+    { "id": "a1", "name": "A", "rows": 64, "ticksPerRow": 240, "meter": [4, 4], "groove": [1.33, 0.67], "key": null, "tempo": [],
+      "material": {
+        "sax":  { "notes": [], "dyn": [], "expr": [], "fx": [], "placements": [{ "pattern": "riff", "row": 0, "repeat": 2 }, { "pattern": "riff", "row": 32, "shift": 3, "repeat": 2 }] },
+        "bass": { "notes": [], "dyn": [], "expr": [], "fx": [], "placements": [{ "pattern": "walk", "row": 0, "repeat": 2 }, { "pattern": "walk", "row": 32, "transpose": 5, "repeat": 2 }] },
+        "kit":  { "notes": [], "dyn": [], "expr": [], "fx": [], "placements": [{ "pattern": "ride", "row": 0, "repeat": 4 }] }
+      } },
+    { "id": "b1", "name": "Bridge", "rows": 64, "ticksPerRow": 240, "meter": [4, 4], "groove": [1.33, 0.67], "key": null, "tempo": [],
+      "material": {
+        "sax":  { "notes": [{ "col": 0, "tick": 0, "pitch": 70, "vel": 100, "len": 1920, "art": "sus" }], "dyn": [], "expr": [], "fx": [], "placements": [] },
+        "bass": { "notes": [], "dyn": [], "expr": [], "fx": [], "placements": [{ "pattern": "walk", "row": 0, "transpose": 5, "repeat": 4 }] },
+        "kit":  { "notes": [], "dyn": [], "expr": [], "fx": [], "placements": [{ "pattern": "ride", "row": 0, "dynamics": -16, "repeat": 4 }] }
+      } }
+  ],
+  "sections": [
+    { "id": "a", "name": "A", "key": null, "phrases": [{ "phrase": "a1", "repeat": 2 }] },
+    { "id": "bridge", "name": "Bridge", "key": { "root": 10, "scale": "major" }, "phrases": [{ "phrase": "b1", "repeat": 2 }] }
+  ],
+  "arrangement": [
+    { "section": "a", "repeat": 2 }, { "section": "bridge", "repeat": 1 }, { "section": "a", "repeat": 1 }
+  ]
+}
 ```
 
-### Level 2: Crossroads reel, phrases inside a pattern
+Reading it back: the tune is A A B A. Each A is the eight-bar phrase twice. In it the sax states the riff twice, then twice more three scale steps up; the bass walks under it and moves up a fourth for the second half; the ride pattern runs four times. The bridge section is in B♭, the sax plays loose long notes, and the ride is placed softer. Everything a track plays is in the phrase you are looking at.
 
-The JSON above. The fiddle's tune is one phrase placed twice; the banjo vamp is an 8-row phrase placed with repeat 4, then again a fourth up. Loose notes still exist: the fiddle's pickup is typed directly. The frame drum follows a 16-row pattern.
+Rules the loader enforces, in this order:
 
-```mermaid
-flowchart TB
-  subgraph Phrases["Phrases (song)"]
-    p1[["Reel A · 32 rows · 1 column"]]
-    p2[["Vamp · 8 rows · 2 columns"]]
-  end
-  subgraph Pattern0["Pattern 0 A · 64 rows · 4/4"]
-    direction TB
-    f[Fiddle material]
-    f1(pickup: loose notes)
-    f2(place Reel A @ 4)
-    f3(place Reel A @ 36)
-    f --> f1 & f2 & f3
-    bj[Banjo material]
-    v1(place Vamp @ 0 ×4)
-    v2(place Vamp @ 32 ×4 · +5)
-    bj --> v1 & v2
-    dr[Frame drum material: empty]
-  end
-  subgraph Pattern1["Pattern 1 Drum loop · 16 rows"]
-    d1[Frame drum: notes]
-  end
-  f2 -.-> p1
-  f3 -.-> p1
-  v1 -.-> p2
-  v2 -.-> p2
-  subgraph Arrangement
-    a0["Entry 1: A ×4 · Frame drum follows 1 Drum loop"]
-  end
-  a0 -.plays.-> Pattern0
-  a0 -.follows.-> Pattern1
-```
+1. A song needs `tracks` and `phrases`. A `version` below 4, or none, is refused with a message naming it; a newer one too.
+2. Every phrase gets a unique `id` (from its name when missing or duplicated); materials are filled with empty lists; a pattern's `placements` are emptied.
+3. A placement naming a missing pattern is removed; `transpose`, `shift`, `octave`, `dynamics` and `repeat` take their defaults (0, 0, 0, 0, 1) and are clamped.
+4. A section's slots naming a missing phrase are dropped, and a section left empty is dropped. With no section left, one section **A** holds every phrase in order.
+5. Phrases in no section are gathered into a section **Spare** that is not arranged, so nothing is lost and nothing plays that was not asked for.
+6. Arrangement items naming a missing section are dropped. An empty arrangement plays every section once.
 
-What the user sees: a tag at rows 4 and 36 of the Fiddle track reading `Reel A`, one tag on the Banjo at row 0 reading `Vamp ×4` and one at row 32 reading `Vamp +5 ×4`, and a **phrases** group in Compose listing `Reel A (2 uses)` and `Vamp (2 uses)`. Enter on a tag opens the phrase; changing one note of the vamp changes all eight bars.
-
-### Level 3: Night drive, a track follows a pattern of placements
-
-Pads and lead sit in one long pattern. The bass has its own life: it follows pattern 2 *Bass walk*, a pattern whose only material is four placements on the Bass track. The drums follow a 16-row pattern. Only the tracks that need independence leave pattern A.
-
-```mermaid
-flowchart LR
-  subgraph Phrases
-    r[["Riff · 16 rows · bass"]]
-    d[["Drop · 16 rows · bass"]]
-  end
-  subgraph Patterns
-    A["Pattern 0 A · 64 rows<br/>Pad, Lead: notes"]
-    B["Pattern 1 Drums · 16 rows<br/>Drums: notes"]
-    W["Pattern 2 Bass walk · 80 rows<br/>Bass: place Riff @0 ×2 · Riff +5 @32 · Riff @48 · Drop +7 @64"]
-    C["Pattern 3 C · 64 rows<br/>all tracks: notes"]
-  end
-  W -.-> r
-  W -.-> d
-  subgraph Arrangement
-    e1["Entry 1: A ×4<br/>Bass follows 2 Bass walk<br/>Drums follow 1 Drums"]
-    e2["Entry 2: C"]
-    e1 --> e2
-  end
-  e1 -.plays.-> A
-  e1 -.follows.-> W
-  e1 -.follows.-> B
-  e2 -.plays.-> C
-```
-
-The rows the renderer produces for entry 1 (256 rows). Each track fills them independently:
-
-| rows | Pad, Lead (pattern A) | Bass (follows Bass walk) | Drums (follows Drums) |
-|---|---|---|---|
-| 0–15 | A, rows 0–15 | Riff | Drums |
-| 16–31 | A, rows 16–31 | Riff | Drums |
-| 32–47 | A, rows 32–47 | Riff +5 | Drums |
-| 48–63 | A, rows 48–63 | Riff | Drums |
-| 64–79 | A again, rows 0–15 | Drop +7 | Drums |
-| 80–95 | A, rows 16–31 | Riff (Bass walk loops) | Drums |
-| … | … | … | … |
-| 240–255 | A, rows 48–63 | Drop +7 | Drums |
-
-A followed pattern shorter than the entry loops; longer is clipped. That is the rule follows has always had, so *Bass walk* is nothing special to the renderer: a pattern with placements, looped.
-
-## Rendering
-
-Every playback path goes through the same expansion, so MIDI export, the sampler and the synth cannot disagree.
-
-```mermaid
-flowchart LR
-  S[Song] --> E[for each entry × repeat]
-  E --> T[for each track: follows?]
-  T -->|no| M[material in the entry's pattern]
-  T -->|yes| M2[material in the followed pattern, looped or clipped]
-  M --> X[expand placements: phrase material × repeat, transposed, at row]
-  M2 --> X
-  X --> G[apply groove, tempo lane, key]
-  G --> R[timed events: notes, CC, keyswitches]
-  R --> P1[preview]
-  R --> P2[MIDI out]
-  R --> P3[.mid file]
-```
-
-## How the levels unfold in the UI
-
-```mermaid
-stateDiagram-v2
-  [*] --> Patterns
-  Patterns: Level 1 · patterns and arrangement
-  Patterns --> Phrases: select one track's rows → "Make phrase"
-  Phrases: Level 2 · phrase tags in the grid, phrases group in Compose
-  Phrases --> Follows: an entry chip's … → a track "follows pattern…"
-  Follows: Level 3 · tracks follow patterns of placements
-  note right of Patterns
-    No phrase or follows words on screen
-  end note
-  note right of Phrases
-    Phrases group appears once the song has a phrase
-  end note
-  note right of Follows
-    Same grid, same tags; only the arrangement changes
-  end note
-```
+What changed from version 3, all deliberate: the words pattern and phrase swapped (a phrase is the multi-track block, a pattern the reusable line); `sections` and an arrangement of sections replaced the arrangement of entries; `follows` is gone, because a looping part is a placement with a repeat in plain sight; placements gained `shift`, `octave` and `dynamics`; a section may carry a `key`. The exported .mid carries a marker at every section.
 
 ## Workflows
 
-Each workflow is written in the vocabulary above, as the guide will describe it. Steps name the panel or key; the last line says what the song contains afterwards.
+Each is written as the guide describes it. The last line says what the song contains afterwards.
 
-### 1. A string quartet sketch (patterns only)
+### 1. A string quartet sketch (one phrase, then two)
 
-Goal: an eight-bar idea with two sections, written straight into the grid.
+1. **Files → New.** Rename it in the header. Compose → tracks: keep Violins I, Violins II, Violas, Cellos. Key C major.
+2. Type the cello line with step 16, the inner voices, then the melody on Violins I. A dynamics ramp from 30 to 60 across the four bars.
+3. Map → **Song**. On section A choose **+ phrase… → copy of the phrase under the cursor**, open it and change the last two chords. Section A is now an eight-bar period: A1 then A2.
+4. **Files → Export .mid**, or **Save JSON**.
 
-1. **Song → New.** Rename it in the header title. Compose → tracks: remove everything but Violins I, Violins II, Violas, Cellos.
-2. **Compose → pattern.** Rows 64, row 1/16, meter 4/4. Key C major so scale-degree keys and in-key colouring work.
-3. Type the cello line on the grid with step 16 (`⇧=` raises the step), then the inner voices, then the melody on Violins I. Dynamics lane: a ramp from 30 to 60 across the four bars.
-4. **Compose → pattern → +** adds pattern 1 B the same size. Change the last two chords.
-5. **Compose → arrangement:** `0 0 1 1`, or drag the chips. Play song.
-6. **Song → Export .mid** to continue in a DAW, or **Save JSON**.
+Afterwards: 4 tracks, 1 section, 2 phrases, no patterns. The words section and pattern were never needed.
 
-Afterwards: 4 tracks, 2 patterns, arrangement of 4 entries, no phrases, no follows. Neither word appeared.
+### 2. A folk reel (patterns inside phrases, AABB)
 
-### 2. A folk reel (phrases inside a pattern)
+1. A song from the folk bank: Fiddle, Banjo, Frame drum. Type the fiddle's A tune in phrase A1.
+2. Song view: **+ section… → new section** makes B with phrase B1; type the B tune. Set both arrangement items to **×2**: the form reads `A×2 B×2`.
+3. Banjo in A1: type an 8-row vamp, select it, **Make pattern**, name it *Vamp* in Compose. On the tag press <kbd>]</kbd> three times: `▸Vamp ×4`. ⌘D, then <kbd>=</kbd> five times on the copy: `▸Vamp +5 ×4`.
+4. In B1 paste the same two placements. Fix a wrong note once: Enter on a tag, edit, backquote. All four follow.
+5. The second time through B should end differently: in the Song view **+ phrase… → copy** on B, set B1 to ×1, and detach the fiddle's last bar in the copy.
 
-Goal: the A part of a reel repeated with a different ending, a banjo vamp underneath, and the ending varied without retyping.
+Afterwards: 2 sections, 3 phrases, 1 pattern with 4 placements, arrangement `A×2 B`, where B is B1 then B1 copy.
 
-1. Song from the folk bank (Sounds → banks → Folk group, or open the Crossroads reel showcase). Tracks: Fiddle, Banjo (2 columns), Frame drum.
-2. Type the fiddle's first 32 rows of tune after a 4-row pickup. Select rows 4 to 35 on Fiddle, **Make phrase** on the selection toolbar, name it *Reel A*. The notes become a placement tagged `Reel A` at row 4.
-3. Cursor at row 36, `⌘V`: a second placement of *Reel A*. The status line reads `phrase Reel A, used 2×, Enter edits`.
-4. Banjo: type an 8-row vamp, select it, **Make phrase** → *Vamp*. On the tag, `⇧=` raises its repeat to 4: `Vamp ×4` fills rows 0 to 31. `⌘D` duplicates the placement after itself, then `=` five times on the copy: `Vamp +5 ×4`.
-5. The ending should differ: cursor on the second *Reel A* tag, **Detach** (selection toolbar). Its rows are loose notes now; change the last four.
-6. Fix a wrong note in the tune: Enter on the first tag opens *Reel A* in the grid, edit, Esc. The first placement follows; the detached copy does not, which is what was wanted.
-7. Drums: pattern 1 *Drum loop*, 16 rows, typed. Compose → arrangement: chip `0 A` → `…`: repeat 4, Frame drum *follows pattern 1 Drum loop*.
-8. Compose → phrases lists *Reel A (1 use)* and *Vamp (2 uses)* with audition and rename.
+### 3. An electronica track (a riff that stays in the key)
 
-Afterwards: 2 patterns, 2 phrases, 3 placements, loose notes for the pickup and the ending, one follows.
+1. Electronica bank: Pad, Lead, Bass, Drum machine. Key A natural minor.
+2. Phrase Verse 1: pads and lead as loose notes, drums typed. Bass: type one bar of riff, **Make pattern** → *Riff*. Place it on every bar and press <kbd>,</kbd> or <kbd>.</kbd> on each tag: `▸Riff`, `▸Riff ↓2`, `▸Riff ↑2`, `▸Riff ↓1` follow A, F, C, G and stay in the key.
+3. Song view: a section **Drop** with a copy of the phrase, the lead added, ×2. Then **+ section… → play a section again → Verse**: `Verse Drop Verse`.
+4. Change the bass everywhere: open *Riff* from its card in the Song view. Make the drop hit harder: on the Drop's drum placement press <kbd>&gt;</kbd>.
 
-### 3. An electronica track (a track follows a pattern of placements)
+Afterwards: 2 sections, 2 phrases, 1 pattern with 8 placements, arrangement of 3 items.
 
-Goal: pads and lead in one 64-row pattern, a bass line that walks through transpositions, drums from a short loop, and a breakdown.
+### 4. A film cue (a changing meter and a modulation)
 
-1. Song from the Electronica bank. Tracks: Pad, Lead, Bass, Drum machine.
-2. Pattern 0 A, 64 rows: pads and lead. Leave Bass and Drums empty here.
-3. Pattern 1 *Drums*, 16 rows: drums only.
-4. Pattern 2 *Bass walk*, 80 rows: on the Bass track type 16 rows of riff, **Make phrase** → *Riff*; type 16 rows of drop at row 64, **Make phrase** → *Drop*. Set the first tag's repeat to 2, place *Riff* at 32 with `+5`, place *Riff* at 48, set the *Drop* tag to `+7`.
-5. **Compose → arrangement:** chip `0 A` → `…`: repeat 4, Bass *follows pattern 2 Bass walk*, Drums *follows pattern 1 Drums*. Play song. The chip shows `0 A ×4 ⛓`; the grid header marks Bass with `Bass walk` and Drums with `Drums`.
-6. Breakdown: pattern 3 C, 64 rows, every track typed. Arrangement `0x4 3`.
-7. Change the bass everywhere at once: edit *Riff* from Compose → phrases. Change only bar three: in *Bass walk*, detach the third placement, or place a new phrase there.
+1. Orchestra. Phrase A1 in 4/4: an ostinato on Violas, **Make pattern** → *Ostinato*. Place it on Cellos, and on Violins II with <kbd>⇧=</kbd>: `8va+1`.
+2. Section **B**: its phrase in 7/8, 56 rows. In the Song view give B the key D minor: the modulation lives on the section.
+3. In B place *Ostinato* with a shift: it lands on D minor's degrees without retyping.
+4. Arrangement `A×2 B A`. Export .mid: markers A, A, B, A, and the meter change on the conductor track.
 
-Afterwards: 4 patterns, 2 phrases, 4 placements, arrangement of 2 entries, the first with two follows.
+Afterwards: 2 sections with different keys and meters, 1 pattern placed in both.
 
-### 4. A film cue (tutti, divisi and a changing meter)
+### 5. A jazz head (AABA, a bridge in another key)
 
-Goal: an orchestral cue that moves from 4/4 to 7/8, with an ostinato shared by three sections.
+The file above. Sections A and Bridge; the arrangement `A×2 Bridge A`; the riff stated and then sequenced up three degrees; the ride softer in the bridge; **Play section** loops the bridge while you write it.
 
-1. Orchestra song, full roster. Compose → tracks: Violins I and Violas to 2 columns for divisi.
-2. Pattern 0 A, 4/4, 64 rows: the ostinato on Violas. Select it, **Make phrase** → *Ostinato* (2 columns).
-3. Place *Ostinato* on Cellos at row 0 and on Violins II at row 32 with `+12`. A phrase belongs to a track kind, so any string track can place it; Violins II has one column, so the phrase's second column is dropped and the status line says so.
-4. Pattern 1 B, meter 7/8, row 1/16, 56 rows, pattern key D minor. Brass chorale typed in; dynamics ramps on each brass track; timpani roll with the `T` fx.
-5. Arrangement `0x2 1 0`. The pattern's meter drives the bar lines and the exported time signature.
-6. Compose → tracks or the mixer: balance, pan the horns left. Export .mid: one MIDI track per Tutti track, meter changes on the conductor track.
+Afterwards: 2 sections, 2 phrases, 3 patterns, 7 placements.
 
-Afterwards: 2 patterns with different meters and keys, 1 phrase with 3 placements, no follows.
+### 6. A live set
 
-### 5. A jazz head (AABA with repeats, walking bass by follows)
+1. **Play phrase** loops the open phrase. Choose another in the selector: it is queued and takes over when the loop ends.
+2. **Play section** loops a whole section; the map follows the playing phrase.
+3. The mixer's M and S by touch; the track monitor shows who is sounding.
 
-Goal: a 32-bar AABA head where A is written once, the bridge is different, and the bass walks under everything.
+Afterwards: nothing new in the song.
 
-1. Jazz combo song: Piano (2 columns), Tenor sax, Upright bass, Drum kit.
-2. Pattern 0 A, 128 rows (8 bars of 1/16): head on sax, comping on piano, ride on drums. Leave the bass empty.
-3. Pattern 1 B, 128 rows: the bridge, all but the bass.
-4. Pattern 2 *A bass*, 128 rows: on Upright bass type a 32-row walk over the I chord, **Make phrase** → *Walk*; place it at 32 with `+5`, at 64 with `+2`, at 96 with `+7`. Pattern 3 *B bass*, 128 rows: two 64-row phrases *Bridge 1*, *Bridge 2* placed in turn.
-5. Arrangement `0x2 1 0`, then each entry's `…`: Upright bass *follows pattern 2 A bass* in the A entries and *3 B bass* in the bridge.
-6. Solos: pattern 4 S, 128 rows, drums and piano comping only, sax empty. Arrangement `0x2 1 0 4x8 0x2 1 0`, bass following *A bass* or *B bass* as before. Sax solos live over MIDI in with **● Rec** on the solo entry.
+## Deliberately left out
 
-Afterwards: 5 patterns, 3 phrases, 6 placements, arrangement of 10 entries with a follows on every one.
-
-### 6. A live set (queueing and switching follows)
-
-Goal: perform rather than arrange, from the phone.
-
-1. Open a song with several patterns and a couple of follows. Play pattern to start the loop.
-2. Tap another pattern in the header selector: it is queued and takes over when the loop ends; the status shows `next 1 B`.
-3. Compose → arrangement on the phone: a chip's `…` and switch Bass from *follows pattern 2 A bass* to *follows pattern 4 S*; the change applies at the next repeat.
-4. View → mixer to mute and solo by touch. Sounds → banks to hide an unused bank so the track picker stays short.
-5. Stop with Esc or the pad's ■.
-
-Afterwards: nothing new in the song; entries and follows were only played.
+- **A chain object.** Reuse of one track's run of placements across phrases is a copy and paste. If it proves painful, the fix is a pattern that may place patterns, not a new noun.
+- **Transposing a section in the arrangement** (the last chorus up a tone). A key does not move notes; this would be a transformation on an arrangement item and can be added without a format break.
+- **Tempo on a section.** The phrase's tempo lane is the one owner of time.
 
 ## Planned terms
 
-Words the roadmap (docs/roadmap.md) will add, fixed now so specs and labels agree when they arrive. None changes the file format version; every field is optional.
+Words the roadmap (docs/roadmap.md) will add, fixed now so specs and labels agree when they arrive. Every field is optional; none needs a format break.
 
-| Term | Meaning | Lives in | Phase |
-|---|---|---|---|
-| **Chord** | A symbol (root, quality, extensions) at a row of a pattern's chord lane, held until the next. Describes; never sounds. | pattern.chords | 3.1 |
-| **Role** | What a note is against the chord on its row: root, third, fifth, seventh, extension, in scale, outside. | derived | 3.1 |
-| **Shift** | A placement's move in scale degrees of the active key, beside its chromatic transpose. | placement.shift | 3.2 |
-| **Modulation** | An entry's own key, overriding the pattern's and the song's while it plays. | entry.key | 3.2 |
-| **Check** | A rule evaluated over expanded material, reported as findings; informs, never blocks. | core | 3.3 |
-| **Finding** | One result of a check: row, tracks, reason. | derived | 3.3 |
-| **Exercise** | A prompt with the checks that apply and the rows it covers, attached to a song or a phrase. | song.exercise, phrase.prompt | 3.3 |
-| **Scratch** | The pattern Capture records into; a pattern like any other once placed in the arrangement. | song.scratch | 3.4 |
-| **Variation** | A phrase derived from another by an operation (invert, retrograde, displace, thin, augment, diminish, shuffle). | phrase.from | 3.4 |
-| **Loop selection**, **Slow**, **Interval** | Listening controls: play the selected rows, scale the tempo, name the distance to the bass. | UI only | 3.5 |
-
-Words not used for these: *progression* (say chords), *degree shift* (say shift), *lint* or *error* (say check and finding), *clip* for a capture (say scratch), *mutation* (say variation).
+| Term | Meaning | Lives in |
+|---|---|---|
+| **Chord** | A symbol (root, quality, extensions) at a row of a phrase's chord lane, held until the next. Describes; never sounds. | phrase.chords |
+| **Role** | What a note is against the chord on its row: root, third, fifth, seventh, extension, in scale, outside. | derived |
+| **Check** | A rule evaluated over expanded material, reported as findings; informs, never blocks. | core |
+| **Finding** | One result of a check: row, tracks, reason. | derived |
+| **Exercise** | A prompt with the checks that apply and the rows it covers, attached to a song or a phrase. | song.exercise, phrase.prompt |
+| **Scratch** | The phrase Capture records into. | song.scratch |
+| **Variation** | A pattern derived from another by an operation (invert, retrograde, displace, thin, augment, diminish, shuffle). | pattern.from |
+| **Loop selection**, **Slow**, **Interval** | Listening controls: play the selected rows, scale the tempo, name the distance to the bass. | UI only |
 
 ## Consistency checklist for specs and UI
 
-- Phrases are the song's; there is no store across songs (save a song to share phrases).
-- A pattern is the only thing that has a tempo lane, groove and meter. A phrase inherits them from the pattern it is placed in.
-- Transpose is a property of a placement, never of a phrase.
-- Repeat is a property of an entry or a placement, never of a phrase or pattern.
-- "Follows" always reads *follows pattern N name* and never names a phrase.
-- The status line names things exactly as Compose does: `phrase Reel A +5 ×4, used 2×`.
-- A JSON field is spelled exactly like the term: `arrangement`, `follows`, `material`, `placements`, `phrases`, `notes`. New fields join the table above first.
-
-## Compatibility
-
-Format version 3 is a clean break. Version 1 and 2 files are refused on load with a message naming the version; no user songs exist in those formats. Built-in examples are written in code and follow the app. From version 3 on, changes to the file format add optional fields and bump the version, and the loader keeps reading older version-3-and-later files.
+- A JSON field is spelled exactly like the term: `arrangement`, `sections`, `phrases`, `patterns`, `material`, `placements`, `notes`. New fields join the vocabulary table first.
+- Transpose, shift, octave, dynamics and repeat are properties of a placement, never of a pattern. Repeat is also a property of a section's phrase slot and of an arrangement item, never of a phrase or section itself.
+- Only a phrase has a tempo lane, groove and meter.
+- A tag, the status line, the map and the Song view name a placement the same way: `Riff ↑3 +5 8va+1 v−16 ×2`.
+- The map's levels are always Song, Section, Phrase, Pattern, in that order.
+- Patterns are the song's; there is no store across songs.

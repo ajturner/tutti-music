@@ -68,18 +68,18 @@ Delete and Backspace SHALL clear the cell under the cursor: the note in that col
 - **THEN** that note is removed and other columns are untouched
 
 ### Requirement: Cursor movement
-Arrow keys SHALL move by row and by cell, wrapping across tracks and the tempo column. Tab and Shift+Tab SHALL move by track. PageUp/PageDown and Cmd+Shift+Up/Down SHALL move by a bar. Home/End and Cmd+Up/Down SHALL jump to the first and last row. Rows wrap around the pattern.
+Arrow keys SHALL move by row and by cell, wrapping across tracks and the tempo column. Tab and Shift+Tab SHALL move by track. PageUp/PageDown and Cmd+Shift+Up/Down SHALL move by a bar. Home/End and Cmd+Up/Down SHALL jump to the first and last row. Rows wrap around the phrase.
 
 #### Scenario: Move past the last cell
 - **WHEN** the cursor is on the last cell of the last track and the user presses Right
 - **THEN** the cursor lands on the tempo column
 
 ### Requirement: Undo and redo
-Every edit SHALL be undoable with Cmd+Z and redoable with Cmd+Shift+Z or Cmd+Y, up to 200 steps. Pattern edits restore the pattern being edited; song-level edits (adding, removing, reordering or changing tracks, mixer volume, pan, mute and solo, key, song order, tempo and title) restore the whole song. A slider drag SHALL be one step. On Windows and Linux Ctrl replaces Cmd. Control and Option/Alt SHALL never be required as modifiers.
+Every edit SHALL be undoable with Cmd+Z and redoable with Cmd+Shift+Z or Cmd+Y, up to 200 steps. Phrase edits restore the phrase being edited; song-level edits (adding, removing, reordering or changing tracks, mixer volume, pan, mute and solo, key, song order, tempo and title) restore the whole song. A slider drag SHALL be one step. On Windows and Linux Ctrl replaces Cmd. Control and Option/Alt SHALL never be required as modifiers.
 
 #### Scenario: Undo a note
 - **WHEN** the user enters a note and presses Cmd+Z
-- **THEN** the note is gone and the pattern matches its prior state
+- **THEN** the note is gone and the phrase matches its prior state
 
 #### Scenario: Undo a removed track
 - **WHEN** the user removes the Oboe track and presses Cmd+Z

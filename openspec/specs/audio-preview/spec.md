@@ -14,7 +14,7 @@ Audio preview SHALL be on by default and switchable off from the Sounds panel. W
 - **THEN** the synth and sampler are silent and MIDI output, if enabled, still receives events
 
 #### Scenario: Preview off
-- **WHEN** preview is off and the user plays the pattern
+- **WHEN** preview is off and the user plays the phrase
 - **THEN** the synth and sampler are silent and MIDI output, if enabled, still receives events
 
 ### Requirement: Family voices
