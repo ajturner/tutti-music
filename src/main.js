@@ -56,6 +56,15 @@ restoreSongs();
 const loc = restoreLocation();
 if (loc) { state.songIndex = loc.index; state.song = state.songs[loc.index]; state.phr = loc.phr; }
 document.getElementById('version').textContent = 'v' + VERSION;
+// The deployed site lists its builds (main, and a preview of every open pull request), and its build marks
+// the live page with where. No marker when running locally or inside a preview, which has its own bar.
+{
+  const builds = document.querySelector('meta[name="tutti-builds"]'), a = document.getElementById('buildsLink');
+  if (builds && a) {
+    const n = parseInt(builds.dataset.previews, 10) || 0;
+    a.href = builds.content; a.textContent = 'builds' + (n ? ' · ' + n + ' preview' + (n > 1 ? 's' : '') : '') + ' ↗'; a.hidden = false;
+  }
+}
 syncSongUI();
 syncPhraseUI();
 // Back/forward or a hand-edited hash: open that song and phrase.

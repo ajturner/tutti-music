@@ -1,0 +1,9 @@
+# Site builds: pull request previews and a listing
+## Why
+Format 4 arrived as a pull request, and the only way to try it was to check the branch out and serve it locally, which rules out a phone or a tablet, where much of the composing happens. A change to how a song is composed has to be played with before it is merged. The Pages workflow published `main` and nothing else, so there was nowhere to look at a change, no page saying what was being tried and why, and nothing to send someone for an opinion.
+## What changes
+The Pages workflow builds one site from `main` and every open pull request: the live app stays at the root exactly where it was, each pull request gets a preview under `pr/<number>/`, and a listing at `builds/` shows main and every open pull request with what the change is for (taken from its description), a link to view the build and a link to the pull request. A preview runs on the same origin as the live app, so it keeps its saved songs and settings under its own prefix, never registers a service worker, carries a bar naming the pull request with the way back, and plays the live site's samples unless the pull request changes them. The live app's footer links to the listing. The workflow runs from `main` on pull request events and never installs, builds or runs anything from a pull request; forks are listed without a preview.
+## Capabilities
+- **New:** `site-builds` (site layout, listing, purpose summary, preview lifecycle, preview isolation, shared samples, what the workflow may run, footer link, data file)
+## Non-goals
+Previews of pull requests from forks (they would run on the live app's origin). Keeping previews of closed pull requests. Comments posted on the pull request with the preview link: the workflow has read-only access to pull requests on purpose, and GitHub already shows the deployment with its link on the pull request.

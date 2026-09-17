@@ -67,6 +67,9 @@
   #version { float: right; color: var(--dim); font-size: 11px; }
   #helpLink { margin-left: 10px; color: var(--accent); text-decoration: none; }
   #helpLink:hover { text-decoration: underline; }
+  #buildsLink { margin-left: 10px; color: var(--dim); text-decoration: none; }
+  #buildsLink:hover { color: var(--text); text-decoration: underline; }
+  #buildsLink[hidden] { display: none; }
   #help { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 4px 28px; margin-top: 8px; color: var(--dim); }
   #help p { margin: 2px 0; }
   #help kbd { color: var(--text); background: var(--field); border: 1px solid var(--line); border-radius: 3px; padding: 0 4px; }
