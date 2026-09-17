@@ -78,10 +78,10 @@ export const DEFAULT_TRACKS = [
   ['va', 'Violas',     'violas',    12, 1],
   ['vc', 'Cellos',     'cellos',    13, 1],
   ['cb', 'Basses',     'basses',    14, 1],
-].map(([id, name, instrument, channel, columns]) => ({ id, name, instrument, channel, columns, mute: false }));
+].map(([id, name, sound, channel, columns]) => ({ id, name, sound, channel, columns, mute: false }));
 // Extra tracks a song can add (see addTracks below). Channels 15 and 16.
 export const SYNTH_TRACKS = [
   ['sb', 'Synth bass', 'synth-bass', 15, 1],
   ['sa', 'Synth arp',  'synth-arp',  16, 1],
-].map(([id, name, instrument, channel, columns]) => ({ id, name, instrument, channel, columns, mute: false }));
-export function addTracks(song, tracks) { for (const t of tracks) if (!song.tracks.some(x => x.id === t.id)) song.tracks.push(Object.assign({}, t)); return song; }
+].map(([id, name, sound, channel, columns]) => ({ id, name, sound, channel, columns, mute: false }));
+export function addTracks(song, tracks) { for (const t of tracks) if (!song.instruments.some(x => x.id === t.id)) song.instruments.push(Object.assign({}, t)); return song; }

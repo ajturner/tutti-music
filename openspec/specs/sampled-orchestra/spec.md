@@ -13,18 +13,18 @@ The app SHALL ship a CC0 sample set with, for every default orchestral instrumen
 - **THEN** every zone's file exists and every orchestral instrument has a sustain articulation
 
 ### Requirement: Sampler playback
-With the samples sound selected, notes SHALL play the zone whose articulation matches the note (falling back through legato→sustain, marcato→staccato→sustain, tremolo and roll→sustain, pizzicato→staccato→sustain, muted→sustain), whose root is nearest the pitch, pitch-shifted to the note, blending the softest and loudest layers by the dynamics lane for sustained articulations or by velocity for short ones. Expression, volume and pan SHALL apply per track. Instruments without samples, or whose samples are still loading, SHALL play through the synth.
+With the samples sound selected, notes SHALL play the zone whose articulation matches the note (falling back through legato→sustain, marcato→staccato→sustain, tremolo and roll→sustain, pizzicato→staccato→sustain, muted→sustain), whose root is nearest the pitch, pitch-shifted to the note, blending the softest and loudest layers by the dynamics lane for sustained articulations or by velocity for short ones. Expression, volume and pan SHALL apply per instrument. Instruments without samples, or whose samples are still loading, SHALL play through the synth.
 
 #### Scenario: Dynamics choose the layer
 - **WHEN** a sustained violin note plays with dynamics at 0 and again at 127
 - **THEN** the first uses the soft layer alone and the second the loud layer alone
 
-#### Scenario: Synth track
-- **WHEN** a Synth arp track plays with samples selected
+#### Scenario: Synth instrument
+- **WHEN** a Synth arp instrument plays with samples selected
 - **THEN** it sounds through the sketch synth
 
 ### Requirement: Sound selection and loading
-The Sounds panel SHALL offer samples or synth, remembered per browser, defaulting to samples. Selecting a song, changing the sound, starting playback or adding a track SHALL preload the instruments the song uses, and the status line SHALL show loading progress until decoding completes.
+The Sounds panel SHALL offer samples or synth, remembered per browser, defaulting to samples. Selecting a song, changing the sound, starting playback or adding a instrument SHALL preload the instruments the song uses, and the status line SHALL show loading progress until decoding completes.
 
 #### Scenario: Switch to the synth
 - **WHEN** the user picks synth in the Sounds panel

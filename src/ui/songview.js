@@ -40,7 +40,7 @@ function thumb(notes, len) {
 function cellHtml(song, row, tr, ti) {
   const phr = song.phrases[row.pi], key = keyFor(song, phr, row.block.sec), m = phr.material[tr.id];
   const mat = expandMaterial(song, phr, tr.id, tr.columns || 1, key);
-  const fam = (FAMILIES[(INST[tr.instrument] || {}).family] || FAMILIES.electronic).color;
+  const fam = (FAMILIES[(INST[tr.sound] || {}).family] || FAMILIES.electronic).color;
   const chips = ((m && m.placements) || []).map(pl => { const ptn = patternById(song, pl.pattern); return ptn ? `<button class="ptn" data-act="ptn" data-pattern="${esc(ptn.id)}" data-prow="${pl.row}" title="Open pattern ${esc(ptn.name)} as placed here">${esc(placementLabel(pl, ptn.name))}</button>` : ''; });
   const shown = chips.slice(0, 2).join('') + (chips.length > 2 ? `<span class="more">+${chips.length - 2}</span>` : '');
   const loose = m ? m.notes.length : 0;
@@ -62,10 +62,10 @@ function render() {
   // A field being typed in commits before the rebuild, not during it (its change event would rebuild inside this one).
   if (el.contains(document.activeElement) && document.activeElement.matches('input')) document.activeElement.blur();
   const song = state.song; model = songRows(song);
-  const tracks = song.tracks;
+  const tracks = song.instruments;
   const form = song.arrangement.map((it, ai) => { const sec = sectionById(song, it.section); return sec ? `<button class="formChip" data-act="goItem" data-ai="${ai}" style="--sec:${secColor(song.sections.indexOf(sec))}" title="Go to this section">${esc(sec.name)}${times(it.repeat)}</button>` : ''; }).join('');
   let html = `<div class="svGrid" style="--n:${tracks.length}"><div class="svRow svTracks"><div class="svLeft"><span class="svFormLabel">arrangement</span><span class="svForm">${form}</span></div>` +
-    tracks.map((tr, ti) => { const fam = (FAMILIES[(INST[tr.instrument] || {}).family] || FAMILIES.electronic).color; return `<div class="svTrack" data-t="${ti}" style="--fam:${fam}" title="${esc(tr.name)}"><b>${esc(tr.name)}</b><span class="live" data-live="${esc(tr.id)}"></span></div>`; }).join('') + '</div>';
+    tracks.map((tr, ti) => { const fam = (FAMILIES[(INST[tr.sound] || {}).family] || FAMILIES.electronic).color; return `<div class="svTrack" data-t="${ti}" style="--fam:${fam}" title="${esc(tr.name)}"><b>${esc(tr.name)}</b><span class="live" data-live="${esc(tr.id)}"></span></div>`; }).join('') + '</div>';
   for (const b of model.blocks) {
     const sec = b.sec;
     const others = song.phrases.filter(p => !sec.phrases.some(sl => sl.phrase === p.id));
@@ -107,7 +107,7 @@ function paintCursor() {
 // the Play and Loop section buttons all follow it.
 export function setSongCursor(row, track, reveal) {
   state.songCursor.row = Math.max(0, Math.min(model.rows.length - 1, row));
-  state.songCursor.track = Math.max(0, Math.min(state.song.tracks.length - 1, track));
+  state.songCursor.track = Math.max(0, Math.min(state.song.instruments.length - 1, track));
   const r = model.rows[state.songCursor.row];
   if (r && (state.phr !== r.pi || state.section !== r.block.si) && !(sched.playing && state.follow)) { state.phr = r.pi; state.section = r.block.si; syncPhraseUI(); }
   paintCursor(); state.dirty = true;
@@ -128,7 +128,7 @@ export function syncSongView(force) {
   if (lastLevel !== 'song') {   // just came up from the grid: land on the phrase that was open, in its section
     lastLevel = 'song';
     const r = model.rows.find(x => x.pi === state.phr && x.block.si === state.section) || model.rows.find(x => x.pi === state.phr);
-    if (r) setSongCursor(r.index, Math.max(0, Math.min(state.cursor.track, state.song.tracks.length - 1)), true);
+    if (r) setSongCursor(r.index, Math.max(0, Math.min(state.cursor.track, state.song.instruments.length - 1)), true);
   }
   const cur = state.songCursor.row + ':' + state.songCursor.track; if (cur !== lastCur) { lastCur = cur; paintCursor(); }
   const w = $('songView').clientWidth; if (w !== lastW) { lastW = w; $('songView').style.setProperty('--svW', w + 'px'); }
@@ -202,7 +202,7 @@ function onClick(e) {
   if (act) {
     const a = act.dataset.act, b = blockOf(act), r = rowOf(act);
     if (a === 'goItem') { const row = model.rows.find(x => x.block.ai === parseInt(act.dataset.ai, 10)); if (row) setSongCursor(row.index, state.songCursor.track, true); }
-    else if (a === 'ptn' && r) { const ti = parseInt(act.closest('.svCell').dataset.t, 10); openRow(r, ti); state.cursor.row = Math.min(parseInt(act.dataset.prow, 10) || 0, song.phrases[r.pi].rows - 1); editPattern(act.dataset.pattern, song.tracks[ti].id); }
+    else if (a === 'ptn' && r) { const ti = parseInt(act.closest('.svCell').dataset.t, 10); openRow(r, ti); state.cursor.row = Math.min(parseInt(act.dataset.prow, 10) || 0, song.phrases[r.pi].rows - 1); editPattern(act.dataset.pattern, song.instruments[ti].id); }
     else if (a === 'open' && r) openRow(r);
     else if (a === 'playSec' && b) { if (r) state.phr = r.pi; state.section = b.si; playSection(b.sec); }
     else if (a === 'slotUp' && r) changed(() => moveIn(r.block.sec.phrases, r.slotIndex, -1));
@@ -213,7 +213,7 @@ function onClick(e) {
     else if (a === 'itemRemove' && b) { let ok; changed(() => { ok = removeItem(state.song, b.ai); }); state.message = ok ? (sectionsNotArranged(state.song).some(x => x.id === b.sec.id) ? b.sec.name + ' is out of the arrangement; it waits at the bottom until you add it back or delete it' : '') : 'The arrangement keeps at least one section'; }
     else if (a === 'arrange' && b) changed(() => { state.song.arrangement.push({ section: b.sec.id, repeat: 1 }); });
     else if (a === 'secDelete' && b) { let ok; changed(() => { ok = deleteSection(state.song, b.sec.id); }); state.message = ok ? 'Deleted section ' + b.sec.name + ' · ⌘Z brings it back' : 'The song keeps at least one arranged section'; }
-    else if (a === 'ptnOpen') { const id = act.closest('.ptnCard').dataset.id; let trackId = null, pi = state.phr; song.phrases.forEach((p, i) => { for (const [tid, m] of Object.entries(p.material)) if (!trackId && (m.placements || []).some(x => x.pattern === id)) { trackId = tid; pi = i; } }); openPhrase(pi, null, trackId ? song.tracks.findIndex(t => t.id === trackId) : null); editPattern(id, trackId); }
+    else if (a === 'ptnOpen') { const id = act.closest('.ptnCard').dataset.id; let trackId = null, pi = state.phr; song.phrases.forEach((p, i) => { for (const [tid, m] of Object.entries(p.material)) if (!trackId && (m.placements || []).some(x => x.pattern === id)) { trackId = tid; pi = i; } }); openPhrase(pi, null, trackId ? song.instruments.findIndex(t => t.id === trackId) : null); editPattern(id, trackId); }
     else if (a === 'ptnRemove') { const id = act.closest('.ptnCard').dataset.id; changed(() => removePattern(state.song, id), 'Removed the pattern; its placements are loose notes now'); }
     state.dirty = true; return;
   }
@@ -278,7 +278,7 @@ export function songKey(e) {
 }
 export function songStatus() {
   const row = model.rows[state.songCursor.row], song = state.song; if (!row) return '';
-  const phr = song.phrases[row.pi], tr = song.tracks[state.songCursor.track], m = tr && phr.material[tr.id], pm = phraseMeter(phr);
+  const phr = song.phrases[row.pi], tr = song.instruments[state.songCursor.track], m = tr && phr.material[tr.id], pm = phraseMeter(phr);
   const names = ((m && m.placements) || []).map(pl => { const p = patternById(song, pl.pattern); return p ? placementLabel(pl, p.name) : ''; }).filter(Boolean);
   return '<b>' + esc(row.block.sec.name) + '</b> › <b>' + esc(phr.name) + '</b> ' + phr.rows + ' rows ' + pm.join('/') + ' · key <b>' + esc(keyName(keyFor(song, phr, row.block.sec))) + '</b>' +
     (tr ? ' · <b>' + esc(tr.name) + '</b> ' + (names.length ? esc(names.join(', ')) : 'no patterns') + ', ' + (m ? m.notes.length : 0) + ' loose' : '');

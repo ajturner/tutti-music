@@ -89,7 +89,7 @@ export function draw() {
   for (let ti = 0; ti < L.tracks.length; ti++) {
     const lay = L.tracks[ti];
     if (lay.x + lay.w < state.scrollX || lay.x > state.scrollX + W) continue;
-    const tr = lay.track, ins = INST[tr.instrument], fam = FAMILIES[ins.family];
+    const tr = lay.track, ins = INST[tr.sound], fam = FAMILIES[ins.family];
     const idx = indexTrack(phr, tr.id);
     // Placements: the pattern's notes drawn dimmed under the track, a band over the rows, a tag on the first row.
     const mat = phr.material[tr.id], placements = state.patternEdit ? [] : (mat && mat.placements || []).map(pl => { const ptn = patternById(song, pl.pattern); return ptn ? Object.assign(placementRows(phr, pl, ptn), { pl, ptn }) : null; }).filter(Boolean);
@@ -179,8 +179,8 @@ export function draw() {
   const labelEnd = new Map();          // first track of each family group -> where its label ends
   let i = 0;
   while (i < L.tracks.length) {
-    const fam = INST[L.tracks[i].track.instrument].family;
-    let j = i; while (j + 1 < L.tracks.length && INST[L.tracks[j + 1].track.instrument].family === fam) j++;
+    const fam = INST[L.tracks[i].track.sound].family;
+    let j = i; while (j + 1 < L.tracks.length && INST[L.tracks[j + 1].track.sound].family === fam) j++;
     const x0 = L.tracks[i].x, x1 = L.tracks[j].x + L.tracks[j].w - view.charW;
     ctx.fillStyle = FAMILIES[fam].color; ctx.fillRect(x0, 4, x1 - x0, 2);
     const famLabel = fitText(FAMILIES[fam].label, Math.max(view.charW * 2, x1 - x0));
@@ -190,7 +190,7 @@ export function draw() {
   }
   const anySolo = tracksShown().some(t => t.solo), sounding = soundingNow();
   L.tracks.forEach((lay, ti) => {
-    const tr = lay.track, fam = FAMILIES[INST[tr.instrument].family];
+    const tr = lay.track, fam = FAMILIES[INST[tr.sound].family];
     const silent = tr.mute || (anySolo && !tr.solo);
     ctx.fillStyle = silent ? COLORS.num : fam.color;
     const nameFull = state.patternEdit ? tr.name + ' \u00b7 pattern ' + (curPattern() || {}).name : tr.name, name = fitText(nameFull, lay.w - view.charW * (tr.solo ? 2 : 0.75));
@@ -232,7 +232,7 @@ export function updateStatus(playRow) {
   if (state.patternEdit) parts.push('<b class="warn">pattern ' + esc((curPattern() || {}).name || '') + '</b> Esc returns to phrase ' + state.phr);
   const ps = patternStatus(); if (ps) parts.push(ps);
   if (tr) {
-    const ins = INST[tr.instrument];
+    const ins = INST[tr.sound];
     let s = '<b>' + tr.name + '</b> col ' + ((cell.col | 0) + 1) + ' row ' + row;
     const ev = noteCovering(phr, tr.id, cell.col | 0, row);
     if (ev) s += ' <b>' + noteName(ev.pitch) + '</b>' + (ins.kit && ins.kit[ev.pitch] ? ' ' + esc(ins.kit[ev.pitch]) : '') + ' vel ' + ev.vel + ' len ' + (ev.len / phr.ticksPerRow) + ' rows ' + (ev.art || ins.articulations[0]);
@@ -245,7 +245,7 @@ export function updateStatus(playRow) {
   parts.push('octave <b>' + state.octave + '</b> step <b>' + state.step + '</b>');
   parts.push('key <b>' + keyName(activeKey()) + '</b>' + (phr.key ? ' (phrase)' : (curSection() && curSection().key) ? ' (section)' : '') + (grooveOf(phr) ? ' | groove <b>on</b>' : ''));
   if (state.queued != null) parts.push('next <b>' + state.queued + ' ' + (state.song.phrases[state.queued] || {}).name + '</b>');
-  parts.push('<a data-panel="sounds" title="Open Sounds">preview ' + (state.preview ? (state.sound === 'samples' ? 'samples' : 'synth') + (state.loadingSamples ? ' <span class="warn">loading ' + esc(state.loadingSamples) + '</span>' : '') : 'off') + '</a> | <a data-panel="connect" title="Open Connect">MIDI ' + (midi.out ? '<b>' + esc(midi.out.name) + '</b>' : 'off') + '</a>');
+  parts.push('<a data-panel="view" title="Open View: preview and sound">preview ' + (state.preview ? (state.sound === 'samples' ? 'samples' : 'synth') + (state.loadingSamples ? ' <span class="warn">loading ' + esc(state.loadingSamples) + '</span>' : '') : 'off') + '</a> | <a data-panel="connect" title="Open Connect">MIDI ' + (midi.out ? '<b>' + esc(midi.out.name) + '</b>' : 'off') + '</a>');
   if (state.sel) parts.push('selected <b>' + (state.sel.r1 - state.sel.r0 + 1) + '</b> rows × <b>' + (state.sel.g1 - state.sel.g0 + 1) + '</b> cells');
   if (midi.in) parts.push('MIDI in <b>' + esc(midi.in.name) + '</b>');
   if (gamepad.name) parts.push('\u{1F3AE} <b>' + esc(gamepad.name.replace(/\s*\(.*$/, '')) + '</b>');

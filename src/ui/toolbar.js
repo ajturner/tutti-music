@@ -1,7 +1,6 @@
 // Header and panel controls: songs, the open phrase or pattern, meter, files, key, groove, view options.
 import { markEdited, deleteCurrentSong } from './storage.js';
 import { placeholdersFor } from '../core/banks.js';
-import { wireTracks } from './tracks.js';
 import { queuePhrase, toggleRecord } from './transport.js';
 import { GROOVES, syncKeyUI, syncGrooveUI } from './sync.js';
 import { padSigReset } from './pad.js';
@@ -48,7 +47,6 @@ export function choosePhrase(i, sectionIndex) {
 }
 // Option values are "section:phrase" so a phrase that sits in two sections opens in the one that was picked.
 $('phrase').onchange = e => { leavePattern(); const [si, pi] = e.target.value.split(':').map(n => parseInt(n, 10)); if (queuePhrase(pi)) syncPhraseUI(); else openPhrase(pi, si); };
-wireTracks();
 // Keys nest: a phrase's key over its section's over the song's. The scope select says which one the two key
 // selects are showing and editing; "none" at a narrower scope hands the decision back to the wider one.
 $('keyRoot').onchange = $('keyScale').onchange = () => {

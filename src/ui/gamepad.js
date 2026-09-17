@@ -1,7 +1,7 @@
 // Game controller bindings (LSDJ-style), polled every frame.
 import { curPhrase, curTrack, rowsPerBar, sched, state } from './state.js';
 import { currentCell } from './layout.js';
-import { audition, moveCell, moveRow, moveTrack, noteCovering, nudgeArticulation, nudgeCell, tapCell, undo } from './edit.js';
+import { audition, moveCell, moveRow, cursorToInstrument, noteCovering, nudgeArticulation, nudgeCell, tapCell, undo } from './edit.js';
 import { clearSel, copySel, cutSel, duplicateSel, pasteSel, selExtend } from './selection.js';
 import { clearCell } from './edit.js';
 import { playPhrase, playSong, stopAll } from './transport.js';
@@ -63,8 +63,8 @@ export function pollGamepad(now) {
   if (fire.bUp && !gamepad.bUsed) { if (held.back) { gamepad.backUsed = true; copySel(); } else if (state.sel) clearSel(); else clearCell(); }
   if (fire.x) { if (held.back) { gamepad.backUsed = true; cutSel(); } else { const tr = curTrack(); if (tr) { const ev = noteCovering(curPhrase(), tr.id, currentCell().col | 0, state.cursor.row); if (ev) audition(tr, ev.pitch, ev.art); } } }
   if (fire.y) { if (held.back) { gamepad.backUsed = true; duplicateSel(); } else nudgeArticulation(1); }
-  if (fire.lb) moveTrack(-1);
-  if (fire.rb) moveTrack(1);
+  if (fire.lb) cursorToInstrument(-1);
+  if (fire.rb) cursorToInstrument(1);
   if (fire.lt) moveRow(-rowsPerBar());
   if (fire.rt) moveRow(rowsPerBar());
   if (fire.start) { if (held.back) { gamepad.backUsed = true; playSong(); } else if (sched.playing) stopAll(); else playPhrase(false); }

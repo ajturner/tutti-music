@@ -81,7 +81,6 @@
   /* Panels: one open at a time, a sheet under the header on wide screens */
   #panels { flex: none; }
   .panel { border-bottom: 1px solid var(--line); background: var(--panel); padding: 6px 14px 10px; max-height: 60vh; overflow: auto; min-width: 0; box-sizing: border-box; }
-  .trackgrp { max-width: 100%; overflow-x: auto; }
   .panel[hidden] { display: none; }
   .panelHead { display: flex; gap: 10px; align-items: center; margin-bottom: 4px; }
   .panelHead h2 { font: 500 12px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin: 0; }
@@ -90,7 +89,6 @@
   .panelBody { display: flex; flex-wrap: wrap; gap: 8px 28px; align-items: flex-start; }
   .panelBody .group { flex-wrap: wrap; }
   .panelBody p.dim { flex-basis: 100%; margin: 0; font-size: 12px; }
-  .trackgrp { flex-basis: 100%; flex-direction: column; align-items: flex-start; }
   .patterngrp { flex-direction: column; align-items: flex-start; }
   .patterngrp .dim { font-size: 11px; max-width: 40em; }
   #patternsTable { border-collapse: collapse; }
@@ -141,8 +139,8 @@
     #panels { display: contents; }
     .panel { padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); max-height: none; }
     .panel:not([data-panel="view"]) { flex: 1; min-height: 0; border-bottom: 0; }
-    body[data-panel="files"] #workspace, body[data-panel="compose"] #workspace, body[data-panel="sounds"] #workspace, body[data-panel="connect"] #workspace { display: none; }
-    body[data-panel="files"] #pad, body[data-panel="compose"] #pad, body[data-panel="sounds"] #pad, body[data-panel="connect"] #pad, body[data-panel="files"] #selbar, body[data-panel="compose"] #selbar, body[data-panel="sounds"] #selbar, body[data-panel="connect"] #selbar { display: none !important; }
+    body[data-panel="files"] #workspace, body[data-panel="instruments"] #workspace, body[data-panel="level"] #workspace, body[data-panel="connect"] #workspace { display: none; }
+    body[data-panel="files"] #pad, body[data-panel="instruments"] #pad, body[data-panel="level"] #pad, body[data-panel="connect"] #pad, body[data-panel="files"] #selbar, body[data-panel="instruments"] #selbar, body[data-panel="level"] #selbar, body[data-panel="connect"] #selbar { display: none !important; }
     .panelBody { flex-direction: column; gap: 12px; }
     .panelBody .group { width: 100%; }
     .panel { width: 100%; }
@@ -169,11 +167,6 @@
 .dim { color: var(--dim); max-width: 46em; }
 .dlgHead, .dlgFoot { display: flex; gap: 8px; align-items: center; margin: 2px 0 8px; }
 .dlgFoot { margin: 8px 0 0; }
-#tracksTable { border-collapse: collapse; }
-#tracksTable th { color: var(--dim); font-weight: normal; text-align: left; padding: 2px 6px; }
-#tracksTable td { padding: 2px 6px; white-space: nowrap; }
-#tracksTable input[type=range] { width: 80px; vertical-align: middle; }
-#tracksTable td:first-child button { padding: 2px 5px; }
 
 /* Sounds panel: dense, monospace, M8-flavoured */
 .m8 { font-family: var(--mono); font-size: 12px; background: #0E1226; }
@@ -193,18 +186,18 @@
 #soundsTable .name { color: var(--text); }
 #soundsTable .name small { display: block; color: #6C7597; font-size: 10px; }
 #soundsTable .swatch { display: inline-block; width: 6px; height: 22px; background: var(--fam); margin-right: 8px; vertical-align: middle; border-radius: 1px; }
-#soundsTable .status b { font-weight: 600; letter-spacing: .08em; }
-#soundsTable .status .ok { color: #86B58F; } #soundsTable .status .warn { color: #E9A26B; } #soundsTable .status .dim { color: #6C7597; }
-#soundsTable .arts { display: flex; gap: 4px; flex-wrap: wrap; }
-#soundsTable .art { padding: 1px 6px; min-height: 0; line-height: 1.6; font-size: 11px; color: #6C7597; border-color: #1F2647; background: #0A0D1C; }
-#soundsTable .art.real { color: var(--fam); border-color: var(--fam); }
-#soundsTable .art i { font-style: normal; opacity: .7; margin-left: 2px; }
-#soundsTable .art:hover { color: var(--accent); border-color: var(--accent); }
-#soundsTable .play { padding: 1px 8px; min-height: 0; color: var(--accent); border-color: var(--accent); }
+.status b { font-weight: 600; letter-spacing: .08em; font-size: 11px; font-family: var(--mono); }
+.status .ok { color: #86B58F; } .status .warn { color: #E9A26B; } .status .dim { color: #6C7597; }
+#soundsTable .arts, .inst .arts { display: flex; gap: 4px; flex-wrap: wrap; }
+#soundsTable .art, .inst .art { padding: 1px 6px; min-height: 0; line-height: 1.6; font-size: 11px; color: #6C7597; border-color: #1F2647; background: #0A0D1C; }
+#soundsTable .art.real, .inst .art.real { color: var(--fam); border-color: var(--fam); }
+#soundsTable .art i, .inst .art i { font-style: normal; opacity: .7; margin-left: 2px; }
+#soundsTable .art:hover, .inst .art:hover { color: var(--accent); border-color: var(--accent); }
+#soundsTable .play, .inst .play { padding: 1px 8px; min-height: 0; color: var(--accent); border-color: var(--accent); }
 #soundsTable .num input { width: 4.2em; padding: 2px 4px; font-size: 12px; min-height: 0; text-align: right; }
 #soundsTable .reset { padding: 1px 6px; min-height: 0; }
 #soundsTable .reset:disabled { opacity: .3; }
-@media (max-width: 760px) { .scopes { grid-template-columns: 1fr; } .scope { height: 70px; } #soundsTable th:nth-child(6), #soundsTable td:nth-child(6), #soundsTable th:nth-child(8), #soundsTable td:nth-child(8) { display: none; } }
+@media (max-width: 760px) { .scopes { grid-template-columns: 1fr; } .scope { height: 70px; } #soundsTable th:nth-child(4), #soundsTable td:nth-child(4) { display: none; } }
 
 /* Phone screens: a tab bar switches between the grid and the panels */
 #tabs { display: none; }
@@ -213,16 +206,7 @@
   body.padon #tabs { padding-bottom: 4px; }
   #tabs button { flex: 1; min-height: 38px; color: var(--dim); border-color: transparent; background: none; font-size: 12px; padding: 4px 2px; }
   #tabs button.on { color: var(--accent); background: var(--field); border-color: var(--line); }
-  #tracksTable { width: 100%; }
-  #tracksTable input[type=range] { width: 60px; }
-  #tracksTable td:nth-child(6), #tracksTable th:nth-child(6), #tracksTable td:nth-child(7), #tracksTable th:nth-child(7) { display: none; }
-  #tracksTable td { padding: 3px 4px; }
-  #tracksTable td:first-child button { padding: 2px 6px; min-height: 30px; }
-  #tracksTable input[type=text] { width: 6.5em; }
-  #tracksTable select { max-width: 8.5em; }
-  #tracksTable input[type=number] { width: 3em !important; padding: 4px 4px; }
-  #tracksTable input, #tracksTable select { min-height: 32px; font-size: 13px; }
-}
+                  }
 
 /* Banks in the Sounds panel */
 #bankBar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 2px 0 8px; }
@@ -348,5 +332,49 @@ body[data-level="song"] #pad, body[data-level="song"] #selbar { display: none !i
   #songBody .ptn { min-height: 0; font-size: 10px; }
   .svCell { min-height: 44px; }
   .wide { display: none; }
-  body[data-panel="files"] #workspace, body[data-panel="files"] #map, body[data-panel="compose"] #map, body[data-panel="sounds"] #map, body[data-panel="connect"] #map { display: none; }
+  body[data-panel="files"] #workspace, body[data-panel="files"] #map, body[data-panel="instruments"] #map, body[data-panel="level"] #map, body[data-panel="connect"] #map { display: none; }
+}
+
+/* ---- Instruments panel: one row per player, details on demand; the sound browser below ---- */
+#instList { display: flex; flex-direction: column; gap: 2px; width: 100%; }
+.inst { border-left: 3px solid var(--fam); background: #141934; border-radius: 0 3px 3px 0; }
+.inst.open { background: #181E3D; }
+.instMain, .instMore { display: flex; align-items: center; gap: 8px; padding: 4px 8px; flex-wrap: wrap; }
+.instMore { padding: 2px 8px 8px 14px; color: var(--dim); font-size: 12px; }
+.inst .swatch { display: none; }
+.inst input[data-f="name"] { width: 9.5em; font-weight: 500; background: none; border-color: transparent; }
+.inst input[data-f="name"]:hover, .inst input[data-f="name"]:focus { border-color: var(--line); background: var(--field); }
+.inst select[data-f="sound"] { max-width: 13em; }
+.inst input[type=range] { width: 84px; }
+.inst .slide { display: inline-flex; align-items: center; gap: 4px; color: var(--dim); font-size: 11px; }
+.inst .ms { display: inline-flex; align-items: center; gap: 2px; color: var(--dim); font-size: 12px; }
+.inst button { padding: 2px 8px; min-height: 0; }
+.inst .status { min-width: 2.6em; }
+.inst [data-act="more"] { margin-left: auto; display: inline-flex; gap: 6px; align-items: center; }
+.inst .shape { color: var(--fam); font-family: var(--mono); font-size: 11px; }
+.instMore label { display: inline-flex; align-items: center; gap: 4px; }
+.instMore input[type=number] { width: 4.4em; padding: 2px 4px; text-align: right; }
+.instMore .spacer { flex: 1; }
+.instMore button:disabled { opacity: .3; }
+.instAdd { display: flex; gap: 8px; align-items: center; margin: 8px 0 4px; }
+#soundBrowser { width: 100%; margin-top: 6px; font-family: var(--mono); font-size: 12px; }
+#soundBrowser > summary { cursor: pointer; color: var(--dim); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; padding: 4px 0; }
+#soundBrowser[open] > summary { color: var(--text); }
+#soundsTable [data-act="add"] { padding: 1px 8px; min-height: 0; }
+#soundsTable [data-act="add"] i { font-style: normal; color: var(--dim); }
+#instrumentsPanel .panelBody { flex-direction: column; align-items: stretch; }
+#levelPanel[data-scope="song"] .phraseset, #levelPanel[data-scope="section"] .phraseset, #levelPanel[data-scope="pattern"] .keygrp { display: none; }
+#map .crumbWrap { display: inline-flex; align-items: stretch; }
+#map .crumbSet { padding: 0 5px; min-height: 0; background: none; border-color: transparent; color: var(--dim); font-size: 10px; margin-left: -4px; }
+#map .crumbSet:hover { color: var(--text); border-color: var(--line); }
+@media (max-width: 760px) {
+  .instMain { gap: 4px 5px; padding: 4px 6px; }
+  .inst .slide { font-size: 10px; gap: 2px; }
+  .inst .ms { gap: 0; }
+  .inst button { padding: 2px 7px; }
+  .inst input[data-f="name"] { width: 7em; }
+  .inst select[data-f="sound"] { max-width: 9em; }
+  .inst input[type=range] { width: 46px; }
+  .inst input, .inst select, .inst button { min-height: 32px; font-size: 13px; }
+  #map .crumbSet { padding: 0 8px; font-size: 12px; }
 }

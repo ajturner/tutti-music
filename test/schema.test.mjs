@@ -22,7 +22,7 @@ check('schema: new song validates', validSong(newSong()), errs(validSong));
 for (const ex of EXAMPLES) {
   const s = JSON.parse(JSON.stringify(ex.build()));
   check('schema: example validates: ' + ex.title, validSong(s), errs(validSong));
-  for (const tr of s.tracks) if (!INSTRUMENTS.some(i => i.id === tr.instrument)) fails.push('unknown instrument ' + tr.instrument);
+  for (const tr of s.instruments) if (!INSTRUMENTS.some(i => i.id === tr.sound)) fails.push('unknown instrument ' + tr.sound);
 }
 for (const ins of INSTRUMENTS) check('schema: instrument validates: ' + ins.id, validInst(ins), errs(validInst));
 {

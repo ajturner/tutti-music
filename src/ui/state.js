@@ -50,7 +50,7 @@ export const state = {
   queued: null,
   mixer: false,          // mixer sidebar shown
   patternEdit: null,      // { id, trackId, back:{ phr, row, track, cell, scrollX } } while a pattern is open in the grid
-  panel: null,           // open workflow panel: 'files' | 'compose' | 'sounds' | 'connect' | 'view' | null
+  panel: null,           // open workflow panel: 'files' | 'instruments' | 'level' | 'connect' | 'view' | null
   record: false,         // real-time MIDI record while the phrase loops
   show: { vel: true, art: true, dyn: true, fx: true },   // grid columns shown per track (note columns always)
   sound: 'samples',      // preview sound: 'samples' (bundled orchestra, synth fallback) or 'synth'
@@ -65,10 +65,10 @@ export const midi = new MidiSink();
 setCatalogUrl(new URL('../../banks/index.json', import.meta.url).href);
 export const previewSink = () => (state.sound === 'samples' ? sampler : synth);
 // Audition one note through whichever preview sound is active.
-export function auditionPreview(ins, pitch, art) {
+export function auditionPreview(ins, pitch, art, shaped) {
   if (!state.preview) return;
   const a = art || ins.articulations[0];
-  if (state.sound === 'samples') sampler.audition(ins.id, ins.family, pitch, a); else synth.audition(ins.family, pitch, a);
+  if (state.sound === 'samples') sampler.audition(ins.id, ins.family, pitch, a, shaped); else synth.audition(ins.family, pitch, a, ins.id, shaped);
 }
 // Fetch and decode the samples every track of the song needs; progress goes to the status line.
 export async function preloadSamples(song = state.song) {
@@ -76,7 +76,7 @@ export async function preloadSamples(song = state.song) {
   if (missing.length) { state.message = 'Missing sound bank or instrument: ' + missing.join(', ') + ' (playing through the synth)'; }
   state.dirty = true;
   if (state.sound !== 'samples') return;
-  const ids = [...new Set(song.tracks.map(t => t.instrument))];
+  const ids = [...new Set(song.instruments.map(t => t.sound))];
   await sampler.preload(ids); state.loadingSamples = null; state.dirty = true;
 }
 export const sched = new Scheduler(() => {
@@ -103,7 +103,7 @@ export function curPhrase() {
   return patternStandIn;
 }
 // The tracks the grid shows: every track, or only the pattern's track while a pattern is open.
-export const tracksShown = () => state.patternEdit ? state.song.tracks.filter(t => t.id === state.patternEdit.trackId) : state.song.tracks;
+export const tracksShown = () => state.patternEdit ? state.song.instruments.filter(t => t.id === state.patternEdit.trackId) : state.song.instruments;
 export const curTrack = () => state.cursor.track >= 0 ? tracksShown()[state.cursor.track] || null : null;
 // The section the open phrase is seen in. A phrase may sit in several sections; the one it was opened from
 // decides its key and what Loop section loops. Falls back to the first section that holds the phrase.

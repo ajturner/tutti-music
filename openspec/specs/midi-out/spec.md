@@ -29,7 +29,7 @@ The output list SHALL be rebuilt whenever ports change, keeping the selected por
 - **THEN** the selection falls back to off
 
 ### Requirement: Message mapping
-Each track SHALL send on its own channel (1-based in the UI, 0-based on the wire). Note on uses velocity 1 to 127; note off uses velocity 0; controllers use the instrument's dynamics and expression CC numbers; a keyswitch is a note on at velocity 100 followed by its off 8 ms later. Messages SHALL carry the scheduled timestamp.
+Each instrument SHALL send on its own channel (1-based in the UI, 0-based on the wire). Note on uses velocity 1 to 127; note off uses velocity 0; controllers use the instrument's dynamics and expression CC numbers; a keyswitch is a note on at velocity 100 followed by its off 8 ms later. Messages SHALL carry the scheduled timestamp.
 
 #### Scenario: Horns on channel 5
 - **WHEN** a Horns note plays

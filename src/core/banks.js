@@ -47,14 +47,14 @@ export function unloadBank(id, inUse = () => false) {
 // Synchronous part: stand-ins for unknown instruments so the UI can draw the song immediately.
 export function placeholdersFor(song) {
   const made = [];
-  for (const tr of song.tracks) if (!INST[tr.instrument]) { placeholderInstrument(tr.instrument); made.push(tr.instrument); }
+  for (const tr of song.instruments) if (!INST[tr.sound]) { placeholderInstrument(tr.sound); made.push(tr.sound); }
   return made;
 }
 // Make sure every instrument a song uses exists: load its banks, and stand in for anything still missing.
 export async function ensureSongBanks(song) {
   const missing = [];
   for (const id of song.banks || []) { try { await loadBank(id); } catch { missing.push(id); } }
-  for (const tr of song.tracks) if (!INST[tr.instrument] || INST[tr.instrument].bank === 'missing') { if (!INST[tr.instrument]) placeholderInstrument(tr.instrument); missing.push(tr.instrument); }
+  for (const tr of song.instruments) if (!INST[tr.sound] || INST[tr.sound].bank === 'missing') { if (!INST[tr.sound]) placeholderInstrument(tr.sound); missing.push(tr.sound); }
   return missing;
 }
 export const bankOf = instrumentId => (INST[instrumentId] || {}).bank || null;

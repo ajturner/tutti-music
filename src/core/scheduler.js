@@ -37,9 +37,9 @@ export class Scheduler {
     this.tick();
   }
   buildList(rendered) {
-    const tm = this.tm, byId = Object.fromEntries(this.song.tracks.map(t => [t.id, t]));
+    const tm = this.tm, byId = Object.fromEntries(this.song.instruments.map(t => [t.id, t]));
     return rendered.events.map(ev => {
-      const tr = byId[ev.track], ins = INST[tr.instrument];
+      const tr = byId[ev.track], ins = INST[tr.sound];
       const delay = (ev.type === 'on' || ev.type === 'off') ? (ins.speakDelayMs || 0) : 0;
       return Object.assign({ ms: tm.msAt(ev.tick) + delay, channel: tr.channel - 1, family: ins.family, trackRef: tr }, ev);
     }).sort((a, b) => a.ms - b.ms || TYPE_ORDER[a.type] - TYPE_ORDER[b.type]);
@@ -69,7 +69,7 @@ export class Scheduler {
     }
     for (const s of this.getSinks()) s.send(ev, at);
   }
-  anySolo() { return this.song && this.song.tracks.some(t => t.solo); }
+  anySolo() { return this.song && this.song.instruments.some(t => t.solo); }
   // Live mode: play `rendered` (looping) when the current loop ends, instead of repeating.
   queue(rendered) { this.next = rendered; }
   swapToQueued() {

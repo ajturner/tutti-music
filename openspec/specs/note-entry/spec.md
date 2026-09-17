@@ -54,7 +54,7 @@ On dynamics and tempo cells the L key SHALL set the point on that row to ramp an
 - **THEN** the value ramps linearly between the two rows
 
 ### Requirement: Length and columns
-The bracket keys SHALL shorten and lengthen the note under the cursor by one row, never below one row nor past the next note in the column. With Shift they SHALL remove and add note columns on the track (1 to 4).
+The bracket keys SHALL shorten and lengthen the note under the cursor by one row, never below one row nor past the next note in the column. With Shift they SHALL remove and add note columns on the instrument (1 to 4).
 
 #### Scenario: Lengthen into the next note
 - **WHEN** a note at row 0 is 2 rows long and another note starts at row 4
@@ -68,19 +68,19 @@ Delete and Backspace SHALL clear the cell under the cursor: the note in that col
 - **THEN** that note is removed and other columns are untouched
 
 ### Requirement: Cursor movement
-Arrow keys SHALL move by row and by cell, wrapping across tracks and the tempo column. Tab and Shift+Tab SHALL move by track. PageUp/PageDown and Cmd+Shift+Up/Down SHALL move by a bar. Home/End and Cmd+Up/Down SHALL jump to the first and last row. Rows wrap around the phrase.
+Arrow keys SHALL move by row and by cell, wrapping across instruments and the tempo column. Tab and Shift+Tab SHALL move by instrument. PageUp/PageDown and Cmd+Shift+Up/Down SHALL move by a bar. Home/End and Cmd+Up/Down SHALL jump to the first and last row. Rows wrap around the phrase.
 
 #### Scenario: Move past the last cell
-- **WHEN** the cursor is on the last cell of the last track and the user presses Right
+- **WHEN** the cursor is on the last cell of the last instrument and the user presses Right
 - **THEN** the cursor lands on the tempo column
 
 ### Requirement: Undo and redo
-Every edit SHALL be undoable with Cmd+Z and redoable with Cmd+Shift+Z or Cmd+Y, up to 200 steps. Phrase edits restore the phrase being edited; song-level edits (adding, removing, reordering or changing tracks, mixer volume, pan, mute and solo, key, song order, tempo and title) restore the whole song. A slider drag SHALL be one step. On Windows and Linux Ctrl replaces Cmd. Control and Option/Alt SHALL never be required as modifiers.
+Every edit SHALL be undoable with Cmd+Z and redoable with Cmd+Shift+Z or Cmd+Y, up to 200 steps. Phrase edits restore the phrase being edited; song-level edits (adding, removing, reordering or changing instruments, mixer volume, pan, mute and solo, key, song order, tempo and title) restore the whole song. A slider drag SHALL be one step. On Windows and Linux Ctrl replaces Cmd. Control and Option/Alt SHALL never be required as modifiers.
 
 #### Scenario: Undo a note
 - **WHEN** the user enters a note and presses Cmd+Z
 - **THEN** the note is gone and the phrase matches its prior state
 
-#### Scenario: Undo a removed track
-- **WHEN** the user removes the Oboe track and presses Cmd+Z
-- **THEN** the Oboe track and its notes are back
+#### Scenario: Undo a removed instrument
+- **WHEN** the user removes the Oboe instrument and presses Cmd+Z
+- **THEN** the Oboe instrument and its notes are back

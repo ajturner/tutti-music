@@ -52,13 +52,13 @@ export function onMidiMessage(e) {
 }
 export function recordPitch(pitch, vel) {
   const tr = curTrack();
-  if (!tr) { state.message = 'Move the cursor onto an instrument track to record'; state.dirty = true; return; }
+  if (!tr) { state.message = 'Move the cursor onto an instrument to record'; state.dirty = true; return; }
   if (midiRec.timer) { clearTimeout(midiRec.timer); midiRec.n++; } else midiRec.n = 0;
   const col = Math.min((currentCell().col | 0) + midiRec.n, 3);
   if (col >= tr.columns) tr.columns = col + 1;
   enterPitch(pitch, vel, col);
-  const ins = INST[tr.instrument];
-  auditionPreview(ins, pitch, null);
+  const ins = INST[tr.sound];
+  auditionPreview(ins, pitch, null, tr);
   midiRec.timer = setTimeout(() => { midiRec.timer = 0; moveRow(state.step); }, 80);
   state.dirty = true;
 }

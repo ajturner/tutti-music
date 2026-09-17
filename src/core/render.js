@@ -125,8 +125,8 @@ export function renderSong(song, opts = {}) {
     const len = phr.rows * phr.ticksPerRow, tpr = phr.ticksPerRow, map = tickMapper(phr);
     starts.push({ phrase: pi, tick: offset, rows: phr.rows, ticksPerRow: tpr, groove: !!grooveOf(phr), item: play.item, section: play.section ? play.section.id : null, sectionRepeat: play.sectionRepeat, slot: play.slot, repeat: play.repeat });
     renderLane(phr.tempo, len, offset, (t, v) => tempo.push({ tick: offset + map(t - offset), bpm: v }), fmtBpm);
-    for (const tr of song.tracks) {
-      const ins = INST[tr.instrument];
+    for (const tr of song.instruments) {
+      const ins = INST[tr.sound];
       if (offset === 0) {   // mixer state once at the start: CC7 volume, CC10 pan
         events.push({ tick: 0, type: 'cc', track: tr.id, cc: 7, value: fmtCC(tr.volume == null ? 100 : tr.volume) });
         events.push({ tick: 0, type: 'cc', track: tr.id, cc: 10, value: fmtCC(tr.pan == null ? 64 : tr.pan) });

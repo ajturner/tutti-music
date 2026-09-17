@@ -20,10 +20,10 @@ Note starts and ends, dynamics, expression and tempo points SHALL be mapped thro
 - **THEN** their onsets are 0, 360, 480 and 840 ticks
 
 ### Requirement: Groove controls
-The Compose panel SHALL offer presets (straight, swing 8ths, light swing 8ths, hard swing 8ths, swing 16ths) and a custom list of multipliers. The status line SHALL show when a groove is active.
+The phrase's settings, opened from the map, SHALL offer presets (straight, swing 8ths, light swing 8ths, hard swing 8ths, swing 16ths) and a custom list of multipliers. The status line SHALL show when a groove is active.
 
 #### Scenario: Pick swing
-- **WHEN** the user picks swing 16ths in Compose
+- **WHEN** the user picks swing 16ths in the phrase's settings
 - **THEN** the phrase's groove is the preset's multipliers and the status shows groove on
 
 #### Scenario: Preset

@@ -4,7 +4,7 @@ import { DEFAULT_TRACKS, INST } from './instruments.js';
 import { effectiveKey, transposeDiatonic } from './scales.js';
 
 // ---- Song model ------------------------------------------------------------
-// song        { title, bpm, key, banks, tracks:[track], patterns:[pattern], phrases:[phrase], sections:[section], arrangement:[item] }
+// song        { title, bpm, key, banks, instruments:[instrument], patterns:[pattern], phrases:[phrase], sections:[section], arrangement:[item] }
 // arrangement [{ section: id, repeat }]            the sections in playing order
 // section     { id, name, key, phrases:[{ phrase: id, repeat }] }   a named span: intro, verse, A, bridge, coda
 // phrase      { id, name, rows, ticksPerRow, meter:[beats, unit], groove, key, tempo:[point], material:{ trackId: material } }
@@ -25,7 +25,7 @@ export const SONG_FORMAT = 'tutti-song';
 export const SONG_VERSION = 4;   // 4: sections arranged into a song, phrases as the multi-track block, patterns placed with transformations
 export const newUid = () => (globalThis.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 export function newSong() {
-  const song = { $schema: SONG_SCHEMA, format: SONG_FORMAT, version: SONG_VERSION, uid: newUid(), title: 'Untitled', notes: '', bpm: 100, key: null, banks: ['orchestra'], tracks: DEFAULT_TRACKS.map(t => Object.assign({}, t)), patterns: [], phrases: [newPhrase('A1')], sections: [], arrangement: [] };
+  const song = { $schema: SONG_SCHEMA, format: SONG_FORMAT, version: SONG_VERSION, uid: newUid(), title: 'Untitled', notes: '', bpm: 100, key: null, banks: ['orchestra'], instruments: DEFAULT_TRACKS.map(t => instrumentDefaults(Object.assign({}, t))), patterns: [], phrases: [newPhrase('A1')], sections: [], arrangement: [] };
   return ensureStructure(song);
 }
 const fillMaterial = m => { m.notes = m.notes || []; m.dyn = m.dyn || []; m.expr = m.expr || []; m.fx = m.fx || []; m.placements = m.placements || []; return m; };
@@ -36,13 +36,15 @@ const uniqueId = (list, base, self) => { let id = base, n = 2; while (list.some(
 // Accept a parsed JSON object as a song. Files older than format 4 are refused (docs/domain.md, Compatibility);
 // missing optional fields are filled in the order the loader rules list.
 export function normalizeSong(s, fallbackTitle) {
-  if (!s || typeof s !== 'object' || !Array.isArray(s.phrases) || !Array.isArray(s.tracks) || !s.phrases.length || !s.tracks.length) throw new Error('not a Tutti song');
+  // Drafts of format 4 made before instruments had their own settings called them tracks: read them once, save them new.
+  if (s && typeof s === 'object' && !Array.isArray(s.instruments) && Array.isArray(s.tracks)) { const { tracks, ...rest } = s; s = Object.assign(rest, { instruments: tracks.map(({ instrument, ...t }) => Object.assign({ sound: instrument }, t)) }); }
+  if (!s || typeof s !== 'object' || !Array.isArray(s.phrases) || !Array.isArray(s.instruments) || !s.phrases.length || !s.instruments.length) throw new Error('not a Tutti song');
   if (s.format != null && s.format !== SONG_FORMAT) throw new Error('unknown format ' + s.format);
   if (s.version == null || s.version < SONG_VERSION) throw new Error('song version ' + (s.version == null ? 1 : s.version) + ' is older than this app reads (format ' + SONG_VERSION + ')');
   if (s.version > SONG_VERSION) throw new Error('song version ' + s.version + ' is newer than this app');
   const out = Object.assign({ $schema: SONG_SCHEMA, format: SONG_FORMAT, notes: '', bpm: 100, key: null, banks: [], patterns: [], sections: [], arrangement: [] }, s, { version: SONG_VERSION });
   if (!Array.isArray(out.banks)) out.banks = [];
-  if (!out.banks.includes('orchestra') && out.tracks.some(t => INST[t.instrument] && INST[t.instrument].bank === 'orchestra')) out.banks.unshift('orchestra');
+  if (!out.banks.includes('orchestra') && out.instruments.some(t => INST[t.sound] && INST[t.sound].bank === 'orchestra')) out.banks.unshift('orchestra');
   if (!out.uid) out.uid = newUid();
   if (!out.title) out.title = fallbackTitle || 'Untitled';
   if (!Array.isArray(out.patterns)) out.patterns = [];
@@ -55,7 +57,7 @@ export function normalizeSong(s, fallbackTitle) {
     for (const m of Object.values(phr.material)) { fillMaterial(m); normalizePlacements(out, m); }
   }
   ensureStructure(out);
-  for (const tr of out.tracks) { if (tr.columns == null) tr.columns = 1; if (tr.mute == null) tr.mute = false; }
+  out.instruments = out.instruments.map(instrumentDefaults);
   return out;
 }
 export function materialOf(phr, trackId) {
@@ -86,37 +88,59 @@ export function laneRemove(points, tick) {
 // ---- Track operations ---------------------------------------------------------------------------
 // Tracks are song-level: phrases key their material by track id, so removing a track drops that material.
 export function freeChannel(song) {
-  const used = new Set(song.tracks.map(t => t.channel));
+  const used = new Set(song.instruments.map(t => t.channel));
   for (let c = 1; c <= 16; c++) if (c !== 10 && !used.has(c)) return c;
   for (let c = 1; c <= 16; c++) if (!used.has(c)) return c;
   return 1;
 }
-export function addTrack(song, instrumentId, opts = {}) {
-  const ins = INST[instrumentId]; if (!ins) throw new Error('unknown instrument ' + instrumentId);
-  if (ins.bank && ins.bank !== 'missing') { song.banks = song.banks || []; if (!song.banks.includes(ins.bank)) song.banks.push(ins.bank); }
-  let id = instrumentId, n = 2;
-  while (song.tracks.some(t => t.id === id)) id = instrumentId + '-' + n++;
-  const tr = { id, name: opts.name || ins.name, instrument: instrumentId, channel: opts.channel || freeChannel(song), columns: 1, mute: false, volume: 100, pan: 64 };
-  const at = opts.index == null ? song.tracks.length : opts.index;
-  song.tracks.splice(at, 0, tr);
+// ---- Instruments ---------------------------------------------------------------------------------
+// An instrument is a player in this song, made from a sound: its name, its place in the mix (volume, pan, mute,
+// solo), how the sound is shaped for it (tune in semitones, cents, trim in dB, release scale), its MIDI channel and
+// its note columns. Any number of instruments may use one sound; the samples load once.
+export const INSTRUMENT_SETTINGS = { tune: [-24, 24, 0], cents: [-100, 100, 0], trim: [-24, 24, 0], release: [0.25, 4, 1] };
+export function instrumentDefaults(tr) {
+  if (tr.columns == null) tr.columns = 1; if (tr.mute == null) tr.mute = false;
+  if (tr.volume == null) tr.volume = 100; if (tr.pan == null) tr.pan = 64;
+  for (const [f, [lo, hi, d]] of Object.entries(INSTRUMENT_SETTINGS)) { const v = Number(tr[f]); tr[f] = Number.isFinite(v) && tr[f] != null ? Math.min(hi, Math.max(lo, f === 'tune' ? Math.round(v) : v)) : d; }
   return tr;
 }
-export function removeTrack(song, id) {
-  const i = song.tracks.findIndex(t => t.id === id); if (i < 0) return false;
-  song.tracks.splice(i, 1);
+export const isShaped = tr => Object.entries(INSTRUMENT_SETTINGS).some(([f, [, , d]]) => tr[f] !== d);
+export function addInstrument(song, instrumentId, opts = {}) {
+  const ins = INST[instrumentId]; if (!ins) throw new Error('unknown sound ' + instrumentId);
+  if (ins.bank && ins.bank !== 'missing') { song.banks = song.banks || []; if (!song.banks.includes(ins.bank)) song.banks.push(ins.bank); }
+  let id = instrumentId, n = 2;
+  while (song.instruments.some(t => t.id === id)) id = instrumentId + '-' + n++;
+  const tr = instrumentDefaults({ id, name: opts.name || ins.name, sound: instrumentId, channel: opts.channel || freeChannel(song), columns: 1, mute: false, volume: 100, pan: 64 });
+  const at = opts.index == null ? song.instruments.length : opts.index;
+  song.instruments.splice(at, 0, tr);
+  return tr;
+}
+// Another player from the same sound with the same settings and no notes: "Fiddle" becomes "Fiddle 2", on a free
+// channel, right after the one it came from. Change its pan, tuning or name from there.
+export function duplicateInstrument(song, id) {
+  const i = song.instruments.findIndex(t => t.id === id); if (i < 0) return null;
+  const src = song.instruments[i], base = src.name.replace(/\s+\d+$/, '');
+  let n = 2; while (song.instruments.some(t => t.name === base + ' ' + n)) n++;
+  const copy = addInstrument(song, src.sound, { name: base + ' ' + n, index: i + 1 });
+  for (const f of ['columns', 'volume', 'pan', ...Object.keys(INSTRUMENT_SETTINGS)]) copy[f] = src[f];
+  return copy;
+}
+export function removeInstrument(song, id) {
+  const i = song.instruments.findIndex(t => t.id === id); if (i < 0) return false;
+  song.instruments.splice(i, 1);
   for (const p of song.phrases) delete p.material[id];
   return true;
 }
-export function moveTrack(song, index, d) {
-  const j = index + d; if (index < 0 || index >= song.tracks.length || j < 0 || j >= song.tracks.length) return false;
-  const [t] = song.tracks.splice(index, 1); song.tracks.splice(j, 0, t);
+export function moveInstrument(song, index, d) {
+  const j = index + d; if (index < 0 || index >= song.instruments.length || j < 0 || j >= song.instruments.length) return false;
+  const [t] = song.instruments.splice(index, 1); song.instruments.splice(j, 0, t);
   return true;
 }
-// Change a track's instrument; articulations the new instrument lacks fall back to its default.
-export function setTrackInstrument(song, id, instrumentId) {
-  const ins = INST[instrumentId], tr = song.tracks.find(t => t.id === id); if (!ins || !tr) return false;
+// Give an instrument another sound; articulations the new sound lacks fall back to its default.
+export function setInstrumentSound(song, id, instrumentId) {
+  const ins = INST[instrumentId], tr = song.instruments.find(t => t.id === id); if (!ins || !tr) return false;
   if (ins.bank && ins.bank !== 'missing') { song.banks = song.banks || []; if (!song.banks.includes(ins.bank)) song.banks.push(ins.bank); }
-  tr.instrument = instrumentId;
+  tr.sound = instrumentId;
   for (const p of song.phrases) { const m = p.material[id]; if (m) for (const n of m.notes) if (n.art && !ins.articulations.includes(n.art)) n.art = null; }
   return true;
 }

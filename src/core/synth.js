@@ -75,7 +75,7 @@ export class SynthSink {
     if (!this.enabled) return;
     this.ensure();
     const t = this.when(atMs);
-    if (ev.type === 'on') this.noteOn(ev.track, ev.family, ev.pitch, ev.vel, ev.art, t, ev.trackRef ? ev.trackRef.instrument : null);
+    if (ev.type === 'on') this.noteOn(ev.track, ev.family, ev.pitch, ev.vel, ev.art, t, ev.trackRef ? ev.trackRef.sound : null, ev.trackRef);
     else if (ev.type === 'off') this.noteOff(ev.track, ev.pitch, t);
     else if (ev.type === 'cc') this.control(ev.track, ev.cc, ev.value, t);
   }
@@ -135,13 +135,13 @@ export class SynthSink {
     this.ksCache.set(key, out);
     return out;
   }
-  noteOn(track, family, pitch, vel, art, t, instId) {
+  noteOn(track, family, pitch, vel, art, t, instId, shaped) {
     const ctx = this.ctx, b = this.bus(track), key = track + ':' + pitch;
     if (this.active.has(key)) this.release(this.active.get(key), t, 0.05);
     const ins = instId ? INST[instId] : null;
     if (ins && ins.kit && !ins.samples) { if (ins.kit[pitch]) this.drum(b, pitch, vel, t); return; }
     const P = voiceParams(family, art, ins ? ins.patch : null);
-    const f = 440 * Math.pow(2, (pitch - 69) / 12);
+    const f = 440 * Math.pow(2, (pitch - 69 + (shaped ? (shaped.tune || 0) + (shaped.cents || 0) / 100 : 0)) / 12);   // the instrument's tuning
     if (P.ks) {   // plucked string: one buffer source, velocity sets level, release stops it
       const src = ctx.createBufferSource(); src.buffer = this.ksBuffer(f, P.ks);
       const g = ctx.createGain(); g.gain.setValueAtTime((P.level || 0.3) * (0.4 + 0.6 * vel / 127), t);
@@ -278,9 +278,9 @@ export class SynthSink {
     const v = this.active.get(track + ':' + pitch);
     if (v) this.release(v, t);
   }
-  audition(family, pitch, art, instId) {
+  audition(family, pitch, art, instId, shaped) {
     const t = this.ensure().currentTime + 0.01;
-    this.noteOn('_audition', family, pitch, 100, art, t, instId);
+    this.noteOn('_audition', family, pitch, 100, art, t, instId, shaped);
     this.noteOff('_audition', pitch, t + 0.35);
   }
   allOff() {

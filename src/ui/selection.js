@@ -50,7 +50,7 @@ export function selectTrackOrAll() {
   const whole = state.sel && state.sel.r0 === 0 && state.sel.r1 === rows - 1 && state.sel.g0 === g0 && state.sel.g1 === g1;
   state.sel = whole ? { r0: 0, r1: rows - 1, g0: 0, g1: cells.length - 1 } : { r0: 0, r1: rows - 1, g0, g1 };
   state.selAnchor = { row: state.sel.r0, g: state.sel.g0 };
-  state.message = whole ? 'Selected the whole phrase' : 'Selected the track; ⌘A again for the whole phrase';
+  state.message = whole ? 'Selected the whole phrase' : 'Selected the instrument; ⌘A again for the whole phrase';
   state.dirty = true;
 }
 export function deselect() { state.sel = null; state.selAnchor = null; state.dirty = true; }
@@ -125,7 +125,7 @@ function pasteInto(row, g, clip) {
       else if (cc.kind === 'fx') setFx(phr, tr.id, tick, it.cmd, it.value);
       else if (cc.kind === 'note') putNote(phr, tr.id, c.col, tick, { pitch: it.pitch, len: Math.round(it.len * scale), vel: it.vel, art: it.art });
       else if (cc.kind === 'vel') { const ev = noteAt(phr, tr.id, c.col, Math.floor(tick / tpr)); if (ev) ev.vel = it.vel; }
-      else if (cc.kind === 'art') notesStartingAt(phr, tr.id, Math.floor(tick / tpr)).forEach(e => { if (INST[tr.instrument].articulations.includes(it.art)) e.art = it.art; });
+      else if (cc.kind === 'art') notesStartingAt(phr, tr.id, Math.floor(tick / tpr)).forEach(e => { if (INST[tr.sound].articulations.includes(it.art)) e.art = it.art; });
     }
   });
   return { r0: row, r1: Math.min(phr.rows - 1, row + clip.rows - 1), g0: g, g1: Math.min(cells.length - 1, g + clip.cells.length - 1) };
@@ -205,7 +205,7 @@ export function makePatternSel() {
   if (state.patternEdit) { state.message = 'Finish this pattern first (Esc), then make another'; state.dirty = true; return null; }
   const rect = selRect(), phr = curPhrase();
   const tracks = [...new Set(selCells(rect).map(c => c.track).filter(t => t >= 0))];
-  if (tracks.length !== 1) { state.message = 'Select rows on one track to make a pattern'; state.dirty = true; return null; }
+  if (tracks.length !== 1) { state.message = 'Select rows on one instrument to make a pattern'; state.dirty = true; return null; }
   const tr = tracksShown()[tracks[0]];
   for (let r = rect.r0; r <= rect.r1; r++) if (placementAt(state.song, phr, tr.id, r)) { state.message = 'These rows already hold a pattern; detach it first'; state.dirty = true; return null; }
   const n = (state.song.patterns || []).length + 1, name = tr.name + ' ' + n;
@@ -244,7 +244,7 @@ export function lengthSel(d) {
   withUndo(() => notes.forEach(({ ev, tr }) => resizeNote(phr, tr.id, ev, d)));
 }
 export function articulationSel(art) {
-  const notes = selNotes(selRect(), curPhrase()).filter(({ tr }) => INST[tr.instrument].articulations.includes(art));
+  const notes = selNotes(selRect(), curPhrase()).filter(({ tr }) => INST[tr.sound].articulations.includes(art));
   if (!notes.length) { state.message = 'No notes in the selection take ' + art; state.dirty = true; return; }
   withUndo(() => notes.forEach(({ ev }) => { ev.art = art; }));
 }

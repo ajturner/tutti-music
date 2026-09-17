@@ -1,6 +1,6 @@
 // Keyboard bindings. See the help panel for the scheme and its macOS constraints.
 import { curPhrase, rowsPerBar, sched, state } from './state.js';
-import { moveCell, moveRow, moveTrack, redo, setOctave, setRow, setStep, typeIntoCell, undo, placementHere, transposePlacement, shiftPlacement, octavePlacement, dynamicsPlacement, editPatternHere, leavePattern } from './edit.js';
+import { moveCell, moveRow, cursorToInstrument, redo, setOctave, setRow, setStep, typeIntoCell, undo, placementHere, transposePlacement, shiftPlacement, octavePlacement, dynamicsPlacement, editPatternHere, leavePattern } from './edit.js';
 import { levelUp } from './map.js';
 import { songKey } from './songview.js';
 import { clearSel, copySel, cutSel, deselect, duplicateSel, lengthSel, pasteSel, selExtend, selectTrackOrAll, transposeSel, transposeSelDiatonic } from './selection.js';
@@ -90,7 +90,7 @@ export function handleKey(e) {
     case 'PageDown': moveRow(rowsPerBar()); return true;
     case 'Home': setRow(0); return true;
     case 'End': setRow(curPhrase().rows - 1); return true;
-    case 'Tab': moveTrack(sh ? -1 : 1); return true;
+    case 'Tab': cursorToInstrument(sh ? -1 : 1); return true;
     case ' ': if (sched.playing) stopAll(); else playPhrase(sh); return true;
     case 'Enter': if (sh) toggleRecord(); else if (!editPatternHere()) playSong(); return true;
     case 'Escape': if (state.sel) deselect(); else if (sched.playing) stopAll(); else if (!leavePattern()) stopAll(); return true;

@@ -42,8 +42,8 @@ export function midiFileBytes(song) {
     t0.meta(p.tick, 0x51, [(us >> 16) & 255, (us >> 8) & 255, us & 255]);
   }
   tracks.push(t0.bytes(r.lengthTicks));
-  for (const tr of song.tracks) {
-    const ins = INST[tr.instrument], ch = (tr.channel - 1) & 15;
+  for (const tr of song.instruments) {
+    const ins = INST[tr.sound], ch = (tr.channel - 1) & 15;
     const w = new TrackWriter();
     w.meta(0, 0x03, strBytes(tr.name));
     w.event(0, [0xC0 | ch, ins.program & 127]);

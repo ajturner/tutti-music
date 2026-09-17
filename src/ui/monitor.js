@@ -7,7 +7,7 @@ let cacheFor = null, byTrack = null;
 // Per track: note intervals sorted by start, and dynamics-controller points, built once per rendered loop.
 function build(rendered) {
   const out = new Map(), open = new Map();
-  for (const tr of state.song.tracks) out.set(tr.id, { notes: [], dyn: [], dynCC: (INST[tr.instrument] || {}).dynCC });
+  for (const tr of state.song.instruments) out.set(tr.id, { notes: [], dyn: [], dynCC: (INST[tr.sound] || {}).dynCC });
   for (const ev of rendered.events) {
     const t = out.get(ev.track); if (!t) continue;
     if (ev.type === 'on') { const n = { tick: ev.tick, end: rendered.lengthTicks, pitch: ev.pitch, vel: ev.vel }; t.notes.push(n); open.set(ev.track + ':' + ev.pitch, n); }
@@ -21,8 +21,8 @@ export function soundingNow() {
   const tick = sched.positionTick(), rendered = sched.rendered, out = {};
   if (tick == null || !rendered) return out;
   if (cacheFor !== rendered) { cacheFor = rendered; byTrack = build(rendered); }
-  const anySolo = state.song.tracks.some(t => t.solo);
-  for (const tr of state.song.tracks) {
+  const anySolo = state.song.instruments.some(t => t.solo);
+  for (const tr of state.song.instruments) {
     if (tr.mute || (anySolo && !tr.solo)) continue;
     const t = byTrack.get(tr.id); if (!t) continue;
     let best = null;   // the highest note sounding: the line the ear follows

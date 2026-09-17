@@ -3,10 +3,10 @@ import { PPQ, noteName, clamp, GM_DRUMS } from '../src/core/constants.js';
 import { INSTRUMENTS, INST } from '../src/core/instruments.js';
 import { newSong, newPhrase, materialOf, laneSet, laneValueAt, normalizeSong, SONG_FORMAT, SONG_VERSION, newPattern, makePattern, detachPlacement, expandMaterial, expandPlacement, placementAt, placementLabel, patternUses, removePattern } from '../src/core/song.js';
 import { renderSong, TimeMap, TYPE_ORDER, rowTicks, tickMapper, rowAtTick, applyFx, expShape } from '../src/core/render.js';
-import { addTrack, removeTrack, moveTrack, setTrackInstrument, freeChannel, arrangementText, sectionText, playOrder, keyFor, addPhrase, copyPhrase, addSlot, removeSlot, addSection, removeItem, deleteSection, moveIn, nextPhraseName, phraseById, sectionById, sectionsNotArranged } from '../src/core/song.js';
+import { addInstrument, duplicateInstrument, isShaped, removeInstrument, moveInstrument, setInstrumentSound, freeChannel, arrangementText, sectionText, playOrder, keyFor, addPhrase, copyPhrase, addSlot, removeSlot, addSection, removeItem, deleteSection, moveIn, nextPhraseName, phraseById, sectionById, sectionsNotArranged } from '../src/core/song.js';
 import { inScale, transposeDiatonic, snapToScale, degreeOf, effectiveKey } from '../src/core/scales.js';
 import { Scheduler } from '../src/core/scheduler.js';
-import { pickZones } from '../src/core/sampler.js';
+import { pickZones, SamplerSink } from '../src/core/sampler.js';
 import { installBank, banks, unloadBank, ensureSongBanks, hiddenBanks, isHidden } from '../src/core/banks.js';
 import { registerInstrument, unregisterInstrument } from '../src/core/instruments.js';
 import { readdir } from 'node:fs/promises';
@@ -78,7 +78,7 @@ check('tempo: tickAt inverts msAt', Math.abs(tm.tickAt(tm.msAt(1234)) - 1234) < 
 const bytes = midiFileBytes(song);
 const str = (a, b) => String.fromCharCode(...bytes.slice(a, b));
 check('midi: header chunk', str(0, 4) === 'MThd' && bytes[9] === 1 && (bytes[12] << 8 | bytes[13]) === 960);
-check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[11]) === song.tracks.length + 1);
+check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[11]) === song.instruments.length + 1);
 
 // Editing primitives: overlap and clamping rules
 {
@@ -163,7 +163,7 @@ check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[1
   const r = renderSong(s);
   const cc11 = r.events.filter(e => e.track === 'vc' && e.type === 'cc' && e.cc === 11).map(e => e.value);
   check('exp: EXP renders an expression curve inside the note', cc11.length > 10 && cc11[0] < 40 && Math.max(...cc11) === 127 && cc11[cc11.length - 1] === 127, cc11.slice(0, 5).join(',') + ' ... n=' + cc11.length);
-  s.tracks.find(t => t.id === 'vc').volume = 90; s.tracks.find(t => t.id === 'vc').pan = 30;
+  s.instruments.find(t => t.id === 'vc').volume = 90; s.instruments.find(t => t.id === 'vc').pan = 30;
   const r2 = renderSong(s);
   const mix = r2.events.filter(e => e.track === 'vc' && e.type === 'cc' && e.tick === 0 && (e.cc === 7 || e.cc === 10)).map(e => e.cc + '=' + e.value).sort().join(' ');
   check('mixer: volume and pan controllers at the start', mix === '10=30 7=90', mix);
@@ -171,17 +171,17 @@ check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[1
 
 // Track operations
 {
-  const s = newSong(), n = s.tracks.length;
+  const s = newSong(), n = s.instruments.length;
   check('tracks: free channel skips used ones and 10', freeChannel(s) === 15);
-  const t = addTrack(s, 'flute');
-  check('tracks: add gives a unique id and free channel', t.id === 'flute' && addTrack(s, 'flute').id === 'flute-2' && t.channel === 15 && s.tracks.length === n + 2);
-  removeTrack(s, 'flute-2');
+  const t = addInstrument(s, 'flute');
+  check('tracks: add gives a unique id and free channel', t.id === 'flute' && addInstrument(s, 'flute').id === 'flute-2' && t.channel === 15 && s.instruments.length === n + 2);
+  removeInstrument(s, 'flute-2');
   line(s.phrases[0], t.id, 0, 0, 4, 'C5@stc');
-  check('tracks: set instrument drops unsupported articulations', setTrackInstrument(s, t.id, 'timpani') && s.phrases[0].material[t.id].notes[0].art === 'stc' && setTrackInstrument(s, t.id, 'synth-bass') && s.phrases[0].material[t.id].notes[0].art === 'stc');
-  setTrackInstrument(s, t.id, 'violins-1'); s.phrases[0].material[t.id].notes[0].art = 'piz'; setTrackInstrument(s, t.id, 'flute');
+  check('tracks: set instrument drops unsupported articulations', setInstrumentSound(s, t.id, 'timpani') && s.phrases[0].material[t.id].notes[0].art === 'stc' && setInstrumentSound(s, t.id, 'synth-bass') && s.phrases[0].material[t.id].notes[0].art === 'stc');
+  setInstrumentSound(s, t.id, 'violins-1'); s.phrases[0].material[t.id].notes[0].art = 'piz'; setInstrumentSound(s, t.id, 'flute');
   check('tracks: piz falls back on flute', s.phrases[0].material[t.id].notes[0].art === null);
-  check('tracks: move', moveTrack(s, n, -1) && s.tracks[n - 1].id === t.id && !moveTrack(s, 0, -1));
-  check('tracks: remove drops phrase material', removeTrack(s, t.id) && !s.tracks.some(x => x.id === t.id) && !s.phrases[0].material[t.id]);
+  check('tracks: move', moveInstrument(s, n, -1) && s.instruments[n - 1].id === t.id && !moveInstrument(s, 0, -1));
+  check('tracks: remove drops phrase material', removeInstrument(s, t.id) && !s.instruments.some(x => x.id === t.id) && !s.phrases[0].material[t.id]);
 }
 
 // Sections and the arrangement
@@ -282,7 +282,7 @@ check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[1
   const s = newSong(); line(s.phrases[0], 'fl', 0, 0, 4, 'C5'); line(s.phrases[0], 'ob', 0, 0, 4, 'E5');
   const sent = [];
   const sched = new Scheduler(() => [{ send: ev => sent.push(ev.track + ':' + ev.type), allOff() {} }]);
-  s.tracks.find(t => t.id === 'ob').solo = true;
+  s.instruments.find(t => t.id === 'ob').solo = true;
   const r = renderSong(s);
   sched.play(s, r, { loop: false });
   sched.tick(); sched.stop();
@@ -302,6 +302,33 @@ check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[1
   sched.play(s, r, { loop: true });
   check('scheduler: a loop started from the top reports the top, not the end, while it leads in', sched.positionTick() < r.lengthTicks / 2, String(sched.positionTick()));
   sched.stop();
+}
+
+// Instruments: players made from sounds, each with its own settings
+{
+  const s = newSong(), fl = s.instruments[0];
+  check('instrument: a new song\'s instruments name their sound and carry default shaping', fl.sound === 'flute' && fl.instrument === undefined && fl.tune === 0 && fl.cents === 0 && fl.trim === 0 && fl.release === 1 && fl.volume === 100 && fl.pan === 64 && !isShaped(fl));
+  line(s.phrases[0], fl.id, 0, 0, 4, 'C5 D5');
+  Object.assign(fl, { pan: 30, cents: -8, tune: 12, columns: 2 });
+  const two = duplicateInstrument(s, fl.id);
+  check('instrument: duplicate makes another player from the same sound with the same settings, no notes, its own id, name and channel',
+    two && s.instruments[1] === two && two.sound === 'flute' && two.id !== fl.id && two.name === 'Flute 2' && two.channel !== fl.channel && two.pan === 30 && two.cents === -8 && two.tune === 12 && two.columns === 2 && !s.phrases[0].material[two.id] && isShaped(two), JSON.stringify(two));
+  check('instrument: a third is numbered on', duplicateInstrument(s, two.id).name === 'Flute 3');
+  two.cents = 9; line(s.phrases[0], two.id, 0, 0, 4, 'E5');
+  const r = renderSong(s), ons = r.events.filter(e => e.type === 'on' && e.tick === 0).map(e => e.track).sort().join();
+  check('instrument: two instruments from one sound render as two voices', ons === [fl.id, two.id].sort().join(), ons);
+  const sink = new SamplerSink({ master: null }, 'x/');
+  check('sampler: shaping comes from the instrument, so two from one sound differ', sink.setting(fl).cents === -8 && sink.setting(two).cents === 9 && sink.setting(null).release === 1 && sink.setting('flute').tune === 0);
+  check('instrument: shaping is clamped on load', (() => { const x = normalizeSong(JSON.parse(JSON.stringify(Object.assign({}, s, { instruments: [Object.assign({}, fl, { tune: 99, cents: -400, trim: 'x', release: 0 })] })))).instruments[0]; return x.tune === 24 && x.cents === -100 && x.trim === 0 && x.release === 0.25; })());
+  check('midi export: tuning is for the preview only, the file keeps the written pitch', (() => { const a = newSong(); line(a.phrases[0], 'fl', 0, 0, 4, 'C5'); const plain = midiFileBytes(a); a.instruments[0].tune = 12; a.instruments[0].cents = 30; const tuned = midiFileBytes(a); return plain.length === tuned.length && plain.every((b, i) => b === tuned[i]); })());
+  // a draft of format 4 from before instruments: tracks with an instrument id
+  const draft = JSON.parse(JSON.stringify(s)); draft.tracks = draft.instruments.map(({ sound, tune, cents, trim, release, ...t }) => Object.assign({ instrument: sound }, t)); delete draft.instruments;
+  const up = normalizeSong(draft);
+  check('instrument: a format 4 draft that still says tracks is read once and comes out as instruments', up.tracks === undefined && up.instruments.length === s.instruments.length && up.instruments[0].sound === 'flute' && up.instruments[0].instrument === undefined && up.instruments[0].cents === 0);
+  check('instrument: removing one takes its notes with it', removeInstrument(s, two.id) && !s.phrases[0].material[two.id] && s.instruments.every(t => t.id !== two.id));
+  const reel = EXAMPLES.find(e => /Crossroads/.test(e.title)).build(), fiddles = reel.instruments.filter(t => t.sound === 'fiddle');
+  check('example: the Crossroads reel has two fiddles from one sound, panned and tuned apart, the second playing the first\'s patterns an octave down',
+    fiddles.length === 2 && fiddles[0].pan < 64 && fiddles[1].pan > 64 && fiddles[0].cents !== fiddles[1].cents && reel.phrases[0].material.fd2.placements[0].octave === -1 && expandMaterial(reel, reel.phrases[0], 'fd2', 1).notes[0].pitch === expandMaterial(reel, reel.phrases[0], 'fd', 1).notes[0].pitch - 12);
 }
 
 // Sampler zone selection (pure) and the bundled sample maps
@@ -342,12 +369,12 @@ check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[1
   const b = installBank(json, 'https://example.test/banks/test-bank/bank.json');
   check('banks: install registers instruments with resolved sample folders', b.instruments.length === 3 && INST.zither.bank === 'test-bank' && INST.zither.samples === 'https://example.test/banks/test-bank/zither/' && INST['box-kit'].kit[38] === 'slap' && INST.buzz.patch.waves[0][0] === 'square');
   const s = newSong();
-  const t = addTrack(s, 'zither');
-  check('banks: adding a bank instrument records the bank on the song', s.banks.includes('test-bank') && t.instrument === 'zither');
-  addTrack(s, 'flute');
+  const t = addInstrument(s, 'zither');
+  check('banks: adding a bank instrument records the bank on the song', s.banks.includes('test-bank') && t.sound === 'zither');
+  addInstrument(s, 'flute');
   check('banks: new songs record the orchestra like any bank', s.banks.includes('orchestra') && s.banks.length === 2);
   check('banks: unload keeps instruments in use', unloadBank('test-bank', id => id === 'zither') && !!INST.zither && !INST.buzz && !banks.has('test-bank'));
-  const s2 = newSong(); s2.tracks.push({ id: 'x', name: 'X', instrument: 'nope', channel: 15, columns: 1, mute: false }); s2.banks = ['no-such-bank'];
+  const s2 = newSong(); s2.instruments.push({ id: 'x', name: 'X', sound: 'nope', channel: 15, columns: 1, mute: false }); s2.banks = ['no-such-bank'];
   const missing = await ensureSongBanks(s2);
   check('banks: missing banks and instruments get placeholders and are reported', missing.includes('no-such-bank') && missing.includes('nope') && INST.nope && INST.nope.bank === 'missing');
   unregisterInstrument('zither'); unregisterInstrument('nope');
@@ -375,7 +402,7 @@ for (const b of ['jazz', 'folk', 'electronica']) installBank(JSON.parse(await re
 check('examples: one showcase per bundled bank', ['jazz', 'folk', 'electronica'].every(b => EXAMPLES.some(e => e.build().banks.includes(b) && e.title.toLowerCase().includes(b))));
 for (const ex of EXAMPLES) {
   const s0 = ex.build(); const problems = [];
-  for (const t of s0.tracks) { const ins = INST[t.instrument]; const evs = s0.phrases.flatMap(p => (expandMaterial(s0, p, t.id, 4) || { notes: [] }).notes); if (!ins || !evs.length) continue;
+  for (const t of s0.instruments) { const ins = INST[t.sound]; const evs = s0.phrases.flatMap(p => (expandMaterial(s0, p, t.id, 4) || { notes: [] }).notes); if (!ins || !evs.length) continue;
     for (const e of evs) { if (e.pitch < ins.range[0] || e.pitch > ins.range[1]) { problems.push(t.id + ' ' + e.pitch); break; } if (ins.kit && !ins.kit[e.pitch]) { problems.push(t.id + ' unmapped ' + e.pitch); break; } } }
   check('example in range: ' + ex.title, problems.length === 0, problems.join(', '));
 }

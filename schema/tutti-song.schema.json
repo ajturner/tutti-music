@@ -2,14 +2,14 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ajturner.github.io/tutti-music/schema/tutti-song.schema.json",
   "title": "Tutti song",
-  "description": "A Tutti symphonic-tracker song, format version 4. Vocabulary: docs/domain.md. A song is arranged from sections, a section is made of phrases, a phrase is a few bars for every track, and the ideas inside it are patterns placed on tracks. Timing is in ticks at 960 pulses per quarter note. Pitches are MIDI note numbers (60 = C4). Velocities and controller values follow MIDI (0-127).",
+  "description": "A Tutti symphonic-tracker song, format version 4. Vocabulary: docs/domain.md. A song is arranged from sections, a section is made of phrases, a phrase is a few bars for every instrument, and the ideas inside it are patterns placed on instruments. Timing is in ticks at 960 pulses per quarter note. Pitches are MIDI note numbers (60 = C4). Velocities and controller values follow MIDI (0-127).",
   "type": "object",
   "required": [
     "format",
     "version",
     "title",
     "bpm",
-    "tracks",
+    "instruments",
     "phrases",
     "sections",
     "arrangement"
@@ -25,7 +25,7 @@
     },
     "version": {
       "const": 4,
-      "description": "Format version. 4: sections arranged into a song, phrases as the multi-track block, patterns placed with transformations. Earlier versions are not read."
+      "description": "Format version. 4: sections arranged into a song, phrases as the block for every instrument, patterns placed with transformations. Earlier versions are not read."
     },
     "uid": {
       "type": "string",
@@ -60,14 +60,15 @@
       "items": {
         "type": "string"
       },
-      "description": "Sound banks the song's tracks need: bundled bank ids (jazz, folk, electronica) or URLs of bank.json files. Loaded before the song plays."
+      "description": "Sound banks the song's instruments need: bundled bank ids (jazz, folk, electronica) or URLs of bank.json files. Loaded before the song plays."
     },
-    "tracks": {
+    "instruments": {
       "type": "array",
       "minItems": 1,
       "items": {
-        "$ref": "#/$defs/track"
-      }
+        "$ref": "#/$defs/instrument"
+      },
+      "description": "The players of the song, in score order. Each is made from a sound and carries its own name, mix and shaping; several may use one sound."
     },
     "patterns": {
       "type": "array",
@@ -82,7 +83,7 @@
       "items": {
         "$ref": "#/$defs/phrase"
       },
-      "description": "A few bars for every track: the unit the grid shows and the only owner of time."
+      "description": "A few bars for every instrument: the unit the grid shows and the only owner of time."
     },
     "sections": {
       "type": "array",
@@ -236,35 +237,35 @@
         },
         "material": {
           "type": "object",
-          "description": "Material per track, keyed by track id.",
+          "description": "Material per instrument, keyed by instrument id.",
           "additionalProperties": {
             "$ref": "#/$defs/material"
           }
         }
       },
-      "description": "A few bars for every track, with its own length, row size, meter, tempo lane, groove and optional key."
+      "description": "A few bars for every instrument, with its own length, row size, meter, tempo lane, groove and optional key."
     },
-    "track": {
+    "instrument": {
       "type": "object",
       "required": [
         "id",
         "name",
-        "instrument",
+        "sound",
         "channel"
       ],
       "properties": {
         "id": {
           "type": "string",
           "pattern": "^[a-z0-9-]+$",
-          "description": "Stable key used by phrase.tracks."
+          "description": "Stable key used by phrase.material."
         },
         "name": {
           "type": "string"
         },
-        "instrument": {
+        "sound": {
           "type": "string",
           "pattern": "^[a-z0-9-]+$",
-          "description": "Instrument id; see tutti-instrument.schema.json."
+          "description": "Id of the sound this instrument is made from, provided by a bank; see tutti-instrument.schema.json."
         },
         "channel": {
           "type": "integer",
@@ -286,7 +287,7 @@
         "solo": {
           "type": "boolean",
           "default": false,
-          "description": "When any track is soloed, only soloed tracks play. Transient performance state; saved for convenience."
+          "description": "When any instrument is soloed, only soloed instruments play. Transient performance state; saved for convenience."
         },
         "volume": {
           "type": "integer",
@@ -301,8 +302,37 @@
           "maximum": 127,
           "default": 64,
           "description": "Mixer pan, sent as CC10 at the start; 64 is centre."
+        },
+        "tune": {
+          "type": "integer",
+          "minimum": -24,
+          "maximum": 24,
+          "default": 0,
+          "description": "Tuning of the preview sound in semitones. Audio only: exported MIDI carries the written pitch."
+        },
+        "cents": {
+          "type": "number",
+          "minimum": -100,
+          "maximum": 100,
+          "default": 0,
+          "description": "Fine tuning of the preview sound in cents. Audio only."
+        },
+        "trim": {
+          "type": "number",
+          "minimum": -24,
+          "maximum": 24,
+          "default": 0,
+          "description": "Level trim of the preview sound in dB, before the mixer volume. Audio only."
+        },
+        "release": {
+          "type": "number",
+          "minimum": 0.25,
+          "maximum": 4,
+          "default": 1,
+          "description": "Scale of the preview sound's release time. Audio only."
         }
-      }
+      },
+      "description": "A player in this song, made from a sound: name, MIDI channel, note columns, mix (volume, pan, mute, solo) and shaping of the sound (tune, cents, trim, release)."
     },
     "fx": {
       "type": "object",
@@ -399,7 +429,7 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 3,
-          "description": "Note column (divisi voice) on the track. Notes in one column never overlap."
+          "description": "Note column (divisi voice) on the instrument. Notes in one column never overlap."
         },
         "art": {
           "oneOf": [
@@ -447,7 +477,7 @@
           "description": "Patterns played inside this material."
         }
       },
-      "description": "Notes, lanes, fx and placements for one track over some rows. The one shape a phrase (per track) and a pattern hold."
+      "description": "Notes, lanes, fx and placements for one instrument over some rows. The one shape a phrase (per instrument) and a pattern hold."
     },
     "placement": {
       "type": "object",
@@ -456,7 +486,7 @@
         "row"
       ],
       "additionalProperties": false,
-      "description": "One use of a pattern on a track of a phrase, with its transformations.",
+      "description": "One use of a pattern on a instrument of a phrase, with its transformations.",
       "properties": {
         "pattern": {
           "type": "string",
@@ -537,7 +567,7 @@
           "minimum": 1,
           "maximum": 4,
           "default": 1,
-          "description": "Note columns the pattern uses. Columns beyond the placing track's are dropped at render time."
+          "description": "Note columns the pattern uses. Columns beyond the placing instrument's are dropped at render time."
         },
         "material": {
           "$ref": "#/$defs/lineMaterial"

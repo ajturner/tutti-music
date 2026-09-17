@@ -5,7 +5,8 @@ import { phraseMeter, placementLabel, sectionsOfPhrase } from '../core/song.js';
 import { keyName } from '../core/scales.js';
 import { $, curPattern, curPhrase, curSection, sched, state } from './state.js';
 import { editPatternHere, leavePattern, placementHere } from './edit.js';
-import { esc, syncPhraseUI } from './sync.js';
+import { esc, syncKeyUI, syncPhraseUI } from './sync.js';
+import { setPanel } from './panels.js';
 
 export function setLevel(level) {
   state.level = level === 'song' ? 'song' : 'grid';
@@ -29,7 +30,7 @@ export function openPhrase(phraseIndex, sectionIndex, trackIndex) {
   state.phr = phraseIndex;
   if (sectionIndex != null && song.sections[sectionIndex]) state.section = sectionIndex;
   else { const sec = sectionsOfPhrase(song, song.phrases[phraseIndex].id)[0]; if (sec && !curSection()) state.section = song.sections.indexOf(sec); }
-  if (trackIndex != null && trackIndex >= 0) { state.cursor.track = Math.min(trackIndex, song.tracks.length - 1); state.cursor.cell = 0; state.ensureVisible = true; }
+  if (trackIndex != null && trackIndex >= 0) { state.cursor.track = Math.min(trackIndex, song.instruments.length - 1); state.cursor.cell = 0; state.ensureVisible = true; }
   state.cursor.row = Math.min(state.cursor.row, curPhrase().rows - 1);
   state.sel = null; state.selAnchor = null; state.typing = null; state.message = '';
   setLevel('grid'); syncPhraseUI();
@@ -61,7 +62,8 @@ export function syncMap() {
   const parts = [level, song.title, sec ? sec.name + '|' + (item ? item.repeat : 0) + '|' + keyName(sec.key) : '', phr ? phr.name + '|' + phr.rows + '|' + pm.join('/') + '|' + (slot ? slot.repeat : 1) : '', ptn ? ptn.name + '|' + ptn.rows : here ? placementLabel(here.placement, here.pattern.name) : '', now, song.sections.length];
   const next = parts.join('~|~'); if (next === sig) return; sig = next;
   const times = n => n > 1 ? ' <i>×' + n + '</i>' : '';
-  const crumb = (lvl, label, name, detail, enabled, title) => `<button class="crumb${level === lvl ? ' on' : ''}" data-level="${lvl}"${enabled ? '' : ' disabled'} title="${esc(title)}"><small>${label}</small><b>${name}</b>${detail ? '<span>' + detail + '</span>' : ''}</button>`;
+  const SETS = { song: 'Song key', section: 'Section key', phrase: 'Phrase: name, rows, row size, meter, groove, key', pattern: 'Pattern: name and rows' };
+  const crumb = (lvl, label, name, detail, enabled, title) => `<span class="crumbWrap"><button class="crumb${level === lvl ? ' on' : ''}" data-level="${lvl}"${enabled ? '' : ' disabled'} title="${esc(title)}"><small>${label}</small><b>${name}</b>${detail ? '<span>' + detail + '</span>' : ''}</button>${enabled && (lvl !== 'pattern' || ptn) ? `<button class="crumbSet" data-set="${lvl}" title="${SETS[lvl]}" aria-label="${SETS[lvl]}">▾</button>` : ''}</span>`;
   el.innerHTML =
     crumb('song', 'Song', esc(song.title || 'Untitled'), song.sections.length + ' section' + (song.sections.length === 1 ? '' : 's'), true, 'The whole song: sections, phrases and patterns at a glance (` goes out a level)') + '<span class="sep">›</span>' +
     crumb('section', 'Section', sec ? esc(sec.name) + times(item ? item.repeat : 1) : '—', sec && sec.key ? esc(keyName(sec.key)) : '', !!sec, 'This section in the Song view') + '<span class="sep">›</span>' +
@@ -69,8 +71,21 @@ export function syncMap() {
     crumb('pattern', 'Pattern', ptn ? esc(ptn.name) : here ? esc(placementLabel(here.placement, here.pattern.name)) : '—', ptn ? ptn.rows + ' rows' : '', !!ptn || !!here, ptn ? 'The pattern open in the grid' : 'Open the pattern under the cursor (Enter)') +
     '<span class="spacer"></span>' + (now ? '<span class="now" title="Playing now">▶ ' + esc(now) + '</span>' : '');
 }
+// The settings of a level, in one sheet: the song's key, a section's key, or the open phrase (or pattern) with its
+// name, rows, row size, meter, groove and key. Opened from the ▾ beside each crumb.
+export function openLevel(scope) {
+  const el = $('levelPanel'), song = state.song, sec = curSection(), phr = curPhrase(), ptn = curPattern();
+  if (scope === 'pattern') scope = 'phrase';
+  if (scope === 'section' && !sec) scope = 'song';
+  $('keyScope').value = scope; syncKeyUI();
+  el.dataset.scope = ptn && scope === 'phrase' ? 'pattern' : scope;
+  $('levelTitle').textContent = scope === 'song' ? 'Song · ' + (song.title || 'Untitled') : scope === 'section' ? 'Section · ' + sec.name : ptn ? 'Pattern · ' + ptn.name : 'Phrase · ' + (phr ? phr.name : '');
+  if (state.panel !== 'level') setPanel('level');
+}
 export function wireMap({ focusSection } = {}) {
+  $('keyScope').addEventListener('change', () => { if (state.panel === 'level') openLevel($('keyScope').value); });
   $('map').addEventListener('click', e => {
+    const set = e.target.closest('button[data-set]'); if (set) { if (state.panel === 'level' && $('levelPanel').dataset.scope === set.dataset.set) setPanel(null); else openLevel(set.dataset.set); return; }
     const b = e.target.closest('button[data-level]'); if (!b || b.disabled) return;
     const lvl = b.dataset.level;
     if (lvl === 'song') openSong();

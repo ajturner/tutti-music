@@ -32,7 +32,7 @@ On narrow screens the song notes SHALL be a single truncated line and the status
 - **THEN** on a phone they occupy one line with an ellipsis
 
 ### Requirement: Grouped header
-Controls outside the transport SHALL be organised into workflow panels opened from the menu bar, one open at a time: **Files** (song list, New, Delete; Save JSON, Load JSON, Export .mid; an autosave note), **Compose** (the open phrase or pattern: name, add, rows, row length, meter, groove, captioned with its name; key with a scope of song, section or phrase; the tracks table), **Sounds** (preview on/off, samples or synth, banks, scopes, instruments), **Connect** (Enable MIDI, MIDI out, MIDI in, setup hints, controller status) and **View** (follow playback, mixer, entry pad, vel/art/dyn/fx columns). The arrangement and the pattern list SHALL live in the Song view, not in a panel. Within a panel controls SHALL sit in captioned groups. On wide screens an open panel SHALL appear as a sheet under the header with the workspace still visible and usable below it; opening another panel SHALL replace it; the panel's button, its ✕ and Escape inside the panel SHALL close it and return focus to the workspace. Keys typed inside a panel SHALL NOT reach the grid.
+Controls outside the transport SHALL be organised into workflow panels opened from the menu bar, one open at a time: **Files** (song list, New, Delete; Save JSON, Load JSON, Export .mid; an autosave note), **Compose** (the open phrase or pattern: name, add, rows, row length, meter, groove, captioned with its name; key with a scope of song, section or phrase; the instruments table), **Sounds** (preview on/off, samples or synth, banks, scopes, instruments), **Connect** (Enable MIDI, MIDI out, MIDI in, setup hints, controller status) and **View** (follow playback, mixer, entry pad, vel/art/dyn/fx columns). The arrangement and the pattern list SHALL live in the Song view, not in a panel. Within a panel controls SHALL sit in captioned groups. On wide screens an open panel SHALL appear as a sheet under the header with the workspace still visible and usable below it; opening another panel SHALL replace it; the panel's button, its ✕ and Escape inside the panel SHALL close it and return focus to the workspace. Keys typed inside a panel SHALL NOT reach the grid.
 
 #### Scenario: Find the file actions
 - **WHEN** the user looks for Save
@@ -47,11 +47,11 @@ Controls outside the transport SHALL be organised into workflow panels opened fr
 - **THEN** the panel closes and the grid has focus
 
 ### Requirement: Phone screens
-Below 760 px a tab bar SHALL offer Song, Files, Compose, Sounds and Connect. Song shows the workspace: the map, then the Song view or the grid with the pad and selection toolbar, switched by the map's crumbs; each other tab shows that panel filling the screen in place of the workspace, using the same controls as on a wide screen. In the Song view one tap SHALL move the cursor and a second tap on the same cell SHALL open that phrase on that track; section controls SHALL show only for the section under the cursor, and cells SHALL show a count of placements instead of chips. The selection toolbar SHALL be one horizontally scrolling row so the grid keeps rows in view. The View button SHALL open View as a sheet over the workspace. Showing the mixer from View SHALL close the sheet so the overlay is visible.
+Below 760 px a tab bar SHALL offer Song, Files, Compose, Sounds and Connect. Song shows the workspace: the map, then the Song view or the grid with the pad and selection toolbar, switched by the map's crumbs; each other tab shows that panel filling the screen in place of the workspace, using the same controls as on a wide screen. In the Song view one tap SHALL move the cursor and a second tap on the same cell SHALL open that phrase on that instrument; section controls SHALL show only for the section under the cursor, and cells SHALL show a count of placements instead of chips. The selection toolbar SHALL be one horizontally scrolling row so the grid keeps rows in view. The View button SHALL open View as a sheet over the workspace. Showing the mixer from View SHALL close the sheet so the overlay is visible.
 
 #### Scenario: Compose on a phone
 - **WHEN** the user taps Compose on a phone
-- **THEN** the phrase settings, key and tracks table fill the screen and the workspace is hidden
+- **THEN** the phrase settings, key and instruments table fill the screen and the workspace is hidden
 
 #### Scenario: Back to the grid
 - **WHEN** the user taps Song
@@ -59,7 +59,7 @@ Below 760 px a tab bar SHALL offer Song, Files, Compose, Sounds and Connect. Son
 
 #### Scenario: Balance on a phone
 - **WHEN** the user ticks mixer in View on a phone
-- **THEN** the View sheet closes and the mixer overlays the grid with one strip per track
+- **THEN** the View sheet closes and the mixer overlays the grid with one strip per instrument
 
 #### Scenario: Selecting on a phone
 - **WHEN** select mode is on and the selection toolbar shows

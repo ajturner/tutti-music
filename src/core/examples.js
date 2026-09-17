@@ -1,5 +1,5 @@
 // Compact text notation for writing songs in code, and the built-in example songs.
-import { ensureStructure, makePattern, materialOf, patternById, slug } from './song.js';
+import { ensureStructure, instrumentDefaults, makePattern, materialOf, patternById, slug } from './song.js';
 import { FAMILIES, PPQ, noteName } from './constants.js';
 import { INST, SYNTH_TRACKS, addTracks } from './instruments.js';
 import { laneSet, laneValueAt, newPhrase, newSong, phraseMeter } from './song.js';
@@ -93,7 +93,7 @@ export function arrange(song, sections, order) {
   return ensureStructure(song);
 }
 export function fitColumns(song) {
-  for (const tr of song.tracks) {
+  for (const tr of song.instruments) {
     let max = tr.columns;
     for (const phr of song.phrases) { const pt = phr.material[tr.id]; if (!pt) continue; for (const e of pt.notes) max = Math.max(max, e.col + 1); for (const pl of pt.placements || []) { const ptn = patternById(song, pl.pattern); if (ptn) max = Math.max(max, ptn.columns); } }
     tr.columns = max;
@@ -341,10 +341,10 @@ export function exLament() {
 }
 
 // ---- Bank showcases: one song per bundled bank ---------------------------------------------------
-// Tracks are listed as [id, name, instrument, channel]; the song records its bank so it loads on open.
+// Instruments are listed as [id, name, sound, channel]; the song records its bank so it loads on open.
 function bankSong(title, bank, tracks) {
   const song = newSong(); song.title = title; song.banks = ['orchestra', bank].filter((b, i, a) => a.indexOf(b) === i);
-  song.tracks = tracks.map(([id, name, instrument, channel]) => ({ id, name, instrument, channel, columns: 1, mute: false }));
+  song.instruments = tracks.map(([id, name, sound, channel]) => instrumentDefaults({ id, name, sound, channel, columns: 1, mute: false }));
   return song;
 }
 // Kit pieces by name so the drum lines read as music, not MIDI numbers.
@@ -392,9 +392,9 @@ export function exBlueInF() {
 }
 
 export function exCrossroadsReel() {
-  const song = bankSong('Crossroads reel (folk)', 'folk', [['fd', 'Fiddle', 'fiddle', 1], ['if', 'Irish flute', 'irish-flute', 2], ['hm', 'Harmonica', 'harmonica', 3], ['bj', 'Banjo', 'banjo', 4], ['fh', 'Folk harp', 'folk-harp', 5], ['fdr', 'Frame drum', 'frame-drum', 9], ['wb', 'Washboard', 'washboard', 11], ['hp', 'Hand percussion', 'hand-percussion', 12]]);
+  const song = bankSong('Crossroads reel (folk)', 'folk', [['fd', 'Fiddle', 'fiddle', 1], ['fd2', 'Fiddle II', 'fiddle', 6], ['if', 'Irish flute', 'irish-flute', 2], ['hm', 'Harmonica', 'harmonica', 3], ['bj', 'Banjo', 'banjo', 4], ['fh', 'Folk harp', 'folk-harp', 5], ['fdr', 'Frame drum', 'frame-drum', 9], ['wb', 'Washboard', 'washboard', 11], ['hp', 'Hand percussion', 'hand-percussion', 12]]);
   song.bpm = 112; song.key = { root: 2, scale: 'major' };
-  song.notes = 'A reel in D: fiddle and Irish flute carry the tune in eighths, banjo rolls and harp arpeggios under it, harmonica holds the drone, frame drum plays the bodhrán part with washboard and shaker keeping time. Arrangement A×2 B×2. The banjo rolls and the fiddle tunes are patterns: open Compose to see them, Enter on a tag to edit one.';
+  song.notes = 'A reel in D: two fiddles made from one sound (the second an octave down, each with its own pan and tuning) and Irish flute carry the tune in eighths, banjo rolls and harp arpeggios under it, harmonica holds the drone, frame drum plays the bodhrán part with washboard and shaker keeping time. Arrangement A×2 B×2. The banjo rolls and the fiddle tunes are patterns: open Compose to see them, Enter on a tag to edit one.';
   const A = song.phrases[0], B = newPhrase('B'); song.phrases.push(B); arrange(song, [['A', [0]], ['B', [1]]], [['A', 2], ['B', 2]]);
   const tpr = A.ticksPerRow;
   const tuneA = 'D5 F#5 A5 F#5 D5 F#5 A5 B5 | A5 F#5 D5 F#5 E5 D5 C#5 E5 | D5 F#5 A5 F#5 D5 F#5 A5 B5 | A5 F#5 E5 C#5 D5:4 . D5:2';
@@ -425,8 +425,13 @@ export function exCrossroadsReel() {
   for (const [phr, chords] of [[A, ['D', 'G', 'D', 'A']], [B, ['D', 'G', 'A', 'D']]]) {
     const m = materialOf(phr, 'bj'); m.notes = []; m.placements = chords.map((ch, bar) => ({ pattern: rollOf[ch], row: bar * 16, transpose: 0, repeat: 1 }));
   }
-  makePattern(song, A, 'fd', 0, 63, 'Reel A'); makePattern(song, B, 'fd', 0, 63, 'Reel B');
-  for (const p of [A, B]) { lane(materialOf(p, 'fd').dyn, '0:96_', tpr); lane(materialOf(p, 'if').dyn, '0:80_', tpr); lane(materialOf(p, 'hm').dyn, '0:60_', tpr); lane(materialOf(p, 'bj').dyn, '0:90_', tpr); lane(materialOf(p, 'fh').dyn, '0:80_', tpr); lane(materialOf(p, 'fdr').dyn, '0:100_', tpr); lane(materialOf(p, 'wb').dyn, '0:80_', tpr); lane(materialOf(p, 'hp').dyn, '0:70_', tpr); }
+  const reelA = makePattern(song, A, 'fd', 0, 63, 'Reel A'), reelB = makePattern(song, B, 'fd', 0, 63, 'Reel B');
+  // Two instruments from one sound: a second fiddle states the same patterns an octave down and softer. Each keeps
+  // its own place in the mix and its own tuning, a few cents apart, as two players are.
+  const [fd, fd2] = [song.instruments.find(t => t.id === 'fd'), song.instruments.find(t => t.id === 'fd2')];
+  Object.assign(fd, { pan: 40, cents: -6 }); Object.assign(fd2, { pan: 88, cents: 7, trim: -2 });
+  for (const [phr, ptn] of [[A, reelA], [B, reelB]]) materialOf(phr, 'fd2').placements = [{ pattern: ptn.id, row: 0, transpose: 0, shift: 0, octave: -1, dynamics: -16, repeat: 1 }];
+  for (const p of [A, B]) { lane(materialOf(p, 'fd').dyn, '0:96_', tpr); lane(materialOf(p, 'fd2').dyn, '0:84_', tpr); lane(materialOf(p, 'if').dyn, '0:80_', tpr); lane(materialOf(p, 'hm').dyn, '0:60_', tpr); lane(materialOf(p, 'bj').dyn, '0:90_', tpr); lane(materialOf(p, 'fh').dyn, '0:80_', tpr); lane(materialOf(p, 'fdr').dyn, '0:100_', tpr); lane(materialOf(p, 'wb').dyn, '0:80_', tpr); lane(materialOf(p, 'hp').dyn, '0:70_', tpr); }
   return fitColumns(song);
 }
 
