@@ -1,4 +1,9 @@
-## ADDED Requirements
+# site-builds Specification
+
+## Purpose
+A change can be tried in a browser, on any device, before it is merged: the published site holds the live app, a preview of every open pull request, and a listing that says what each change is for with links to view it and to its pull request, without the previews touching the live app's saved songs, offline cache or address.
+
+## Requirements
 
 ### Requirement: One site with the live app, previews and a listing
 The published site SHALL hold the app as it is on `main` at the root, a preview of every open pull request from a branch of this repository under `pr/<number>/`, and a listing at `builds/`. The live app's address, files and offline behaviour SHALL NOT change because previews exist, except for one marker tag in its page saying where the listing is. Development files (tests, specs, scripts, workflow files, the lock file) SHALL NOT be published in any tree.
@@ -62,6 +67,17 @@ A preview runs on the live app's origin, so the build SHALL make it keep every l
 #### Scenario: Reload after a push
 - **WHEN** a preview is reloaded after a new commit was deployed
 - **THEN** the new commit's app loads, because nothing was cached offline
+
+### Requirement: The live app's offline cache leaves previews alone
+The live app's service worker has the whole site in its scope. It SHALL NOT handle requests under `pr/` or `builds/`: they SHALL go to the network, SHALL NOT be stored in the shell cache, and a preview's own samples SHALL NOT be served cache-first.
+
+#### Scenario: Preview opened on a device with the app installed
+- **WHEN** someone who has the live app installed opens `pr/1/` and then `builds/`
+- **THEN** both load from the network and the live app's caches hold nothing under `pr/` or `builds/`
+
+#### Scenario: A pull request changes a sample twice
+- **WHEN** a pull request that changes `banks/` replaces a sample file in a later push
+- **THEN** its preview plays the new file
 
 ### Requirement: Shared samples
 When a pull request's `banks/` is identical to main's, its preview SHALL be published without `banks/` and SHALL load samples from the live site. A pull request that changes `banks/` SHALL get its own copy.

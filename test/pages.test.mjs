@@ -70,6 +70,7 @@ const check = (name, ok, extra = '') => { console.log((ok ? 'PASS ' : 'FAIL ') +
   const requests = [];
   const server = http.createServer((req, res) => {
     let p = decodeURIComponent(req.url.split('?')[0].split('#')[0]); requests.push(p);
+    if (p === '/pr/7/banks/probe.json') { res.writeHead(200, { 'content-type': 'application/json' }); res.end('{}'); return; }   // stands in for a preview with its own samples
     if (p.endsWith('/')) p += 'index.html';
     const file = path.join(out, path.normalize(p)); if (!file.startsWith(out)) { res.writeHead(403); res.end(); return; }
     fs.readFile(file, (e, d) => { if (e) { res.writeHead(404); res.end(); return; } res.writeHead(200, { 'content-type': mime[path.extname(p)] || 'application/octet-stream' }); res.end(d); });
@@ -108,6 +109,20 @@ const check = (name, ok, extra = '') => { console.log((ok ? 'PASS ' : 'FAIL ') +
   const pb = await phone.evaluate(() => { const b = document.getElementById('previewBar'), r = b && b.getBoundingClientRect(), g = document.getElementById('grid').getBoundingClientRect(); return b ? { h: r.height, w: r.width, inside: b.scrollWidth <= b.clientWidth + 1, links: [...b.querySelectorAll('a')].map(a => a.textContent), pageFits: document.documentElement.scrollHeight <= innerHeight && document.documentElement.scrollWidth <= innerWidth, grid: g.height } : null; });
   check('preview on a phone: the bar is one line with both links, and the app fits the screen under it', pb && pb.h <= 24 && pb.inside && pb.links.join() === 'PR ↗,builds' && pb.pageFits && pb.grid > 200, JSON.stringify(pb));
   await phone.screenshot({ path: 'test/out/preview-phone.png' }); await phoneCtx.close();
+  // the live app's service worker: its scope covers the previews and the listing, and it leaves them alone
+  const swCtx = await browser.newContext({ viewport: { width: 1200, height: 800 } });
+  const sw = await swCtx.newPage(); sw.on('pageerror', e => errors.push('live with its service worker: ' + e.message));
+  await sw.goto(base + '/'); await sw.evaluate(() => navigator.serviceWorker.ready); await sw.waitForTimeout(600);
+  await sw.reload(); await sw.waitForTimeout(800);
+  const controlled = await sw.evaluate(() => !!navigator.serviceWorker.controller);
+  const swPre = await swCtx.newPage(); swPre.on('pageerror', e => errors.push('preview under the live service worker: ' + e.message));
+  await swPre.goto(base + '/pr/7/'); await swPre.waitForTimeout(900);
+  const swPreState = await swPre.evaluate(() => ({ controlled: !!navigator.serviceWorker.controller, app: !!window.tutti && document.getElementById('grid').clientHeight > 100, bar: !!document.getElementById('previewBar') }));
+  await swPre.goto(base + '/builds/'); await swPre.waitForTimeout(300);
+  await sw.evaluate(async () => { await (await fetch('/pr/7/banks/probe.json')).text(); await (await fetch('/help.html')).text(); }); await sw.waitForTimeout(300);
+  const cached = await sw.evaluate(async () => { const out = []; for (const k of await caches.keys()) for (const r of await (await caches.open(k)).keys()) out.push(new URL(r.url).pathname); return out; });
+  check('live service worker: it controls the preview\'s page, the preview works, and nothing under pr/ or builds/ is cached', controlled && swPreState.controlled && swPreState.app && swPreState.bar && cached.includes('/src/main.js') && cached.includes('/help.html') && !cached.some(p => p.startsWith('/pr/') || p.startsWith('/builds/')), JSON.stringify({ controlled, swPreState, n: cached.length, stray: cached.filter(p => p.startsWith('/pr/') || p.startsWith('/builds/')).slice(0, 5) }));
+  await swCtx.close();
   // the live app beside it
   const live = await ctx.newPage(); live.on('pageerror', e => errors.push('live: ' + e.message));
   await live.goto(base + '/?nosw'); await live.waitForTimeout(800);

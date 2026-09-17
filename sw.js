@@ -24,11 +24,15 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET' || url.origin !== location.origin) return;
+  // The deployed site keeps pull request previews (pr/<number>/) and the builds listing inside this scope.
+  // They are left to the network: never stored in the shell cache, and a preview's own samples never cache-first.
+  if (/^(pr|builds)\//.test(url.pathname.slice(new URL(self.registration.scope).pathname.length))) return;
   if (url.pathname.includes('/samples/') || url.pathname.includes('/banks/')) {
     // cache first; samples never change for a given file name
     e.respondWith(caches.open(SAMPLES).then(async c => { const hit = await c.match(e.request); if (hit) return hit; const res = await fetch(e.request); if (res.ok) c.put(e.request, res.clone()); return res; }));
     return;
   }
   // shell: network first so deploys show up, cache when offline
-  e.respondWith(fetch(e.request).then(res => { if (res.ok) caches.open(SHELL).then(c => c.put(e.request, res.clone())); return res; }).catch(() => caches.match(e.request, { ignoreSearch: true }).then(hit => hit || caches.match('index.html'))));
+  // (the copy is taken before the response is handed back: its body cannot be cloned once it is being read)
+  e.respondWith(fetch(e.request).then(res => { if (res.ok) { const copy = res.clone(); caches.open(SHELL).then(c => c.put(e.request, copy)); } return res; }).catch(() => caches.match(e.request, { ignoreSearch: true }).then(hit => hit || caches.match('index.html'))));
 });
