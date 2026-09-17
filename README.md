@@ -49,4 +49,20 @@ Then open http://localhost:3000/. The app is ES modules, so it needs a server; o
 ## Development
 
 - **Specs:** behaviour is documented with [OpenSpec](https://github.com/Fission-AI/OpenSpec) under `openspec/specs/`, one capability per folder. Propose changes with `/opsx:propose` in Claude Code, or run `openspec validate --all --strict`.
-- **Tests:** `npm install` once, then `npm test` runs the core and schema tests under Node and the Playwright browser tests (`test/ui.test.mjs`) at desktop and phone sizes, including mocked gamepad and MIDI input. Uses installed Google Chrome by default; set `TUTTI_BROWSER=chromium` to use Playwright's own build.
+- **Tests:** `npm install` once, then `npm test` runs the core and schema tests under Node, the site build tests (`test/pages.test.mjs`) and the Playwright browser tests (`test/ui.test.mjs`) at desktop and phone sizes, including mocked gamepad and MIDI input. Uses installed Google Chrome by default; set `TUTTI_BROWSER=chromium` to use Playwright's own build.
+
+## Builds and previews
+
+The Pages workflow (`.github/workflows/pages.yml`, `scripts/build-pages.mjs`) publishes three things on every push to `main` and every pull request event:
+
+- the live app from `main` at the site root, exactly as before;
+- a preview of every open pull request under `pr/<number>/`;
+- a listing at **[builds/](https://ajturner.github.io/tutti-music/builds/)**: main, then each open pull request with what the change is for (from its description), a link to view its build and a link to the pull request. The app's footer links to it.
+
+A preview runs on the same origin as the live app, so the build makes three preview-only changes: saved songs and settings are kept under a `pr<number>:` prefix, no service worker is registered so a reload always shows the latest push, and samples are fetched from the live site unless the pull request changes `banks/` (which keeps a preview at about 1 MB). A bar across the top names the pull request and links back to it and to the listing. Nothing from a pull request is executed by the workflow, and pull requests from forks are listed without a preview. Try it locally:
+
+```sh
+gh pr list --state open --json number,title,body,author,headRefName,headRefOid,baseRefName,isDraft,isCrossRepository,url,updatedAt,additions,deletions,changedFiles,reviewDecision,labels > /tmp/prs.json
+node scripts/build-pages.mjs --out /tmp/site --prs /tmp/prs.json --repo ajturner/tutti-music
+npx serve /tmp/site
+```
