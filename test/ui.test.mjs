@@ -302,6 +302,8 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
     await page.waitForTimeout(150);
     const labels = await page.evaluate(() => ({ play: document.querySelector('#playPhrase .full').textContent, title: document.getElementById('playPhrase').title, sec: document.getElementById('playSection').textContent, loop: document.querySelector('#songBody [data-act="playSec"]').textContent }));
     check('song view: the transport says Play goes forward from here and that sections loop', labels.play === 'Play from here' && /every repeat/.test(labels.title) && labels.sec === 'Loop section' && /loop/.test(labels.loop), JSON.stringify(labels));
+    const words = await page.evaluate(() => ({ patterns: !!document.querySelector('#songBody .svPatterns'), sentences: [...document.querySelectorAll('#songBody .dim, #songBody p')].map(x => x.textContent.trim()).filter(t => t.split(' ').length > 3), status: document.getElementById('status').textContent }));
+    check('song view: a new song shows no sentences, no empty patterns list and no key hints in the status', !words.patterns && words.sentences.length === 0 && !/Enter opens|Space plays/.test(words.status), JSON.stringify(words));
     await page.evaluate(() => tutti.setSongCursor(0, 0)); await page.click('#playPhrase');
     const seen = []; let stopped = false;
     for (let i = 0; i < 90 && !stopped; i++) {

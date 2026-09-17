@@ -5,7 +5,7 @@
 import { FAMILIES, noteName } from '../core/constants.js';
 import { INST } from '../core/instruments.js';
 import { KEY_ROOTS, SCALE_NAMES, keyName } from '../core/scales.js';
-import { addPhrase, addSection, addSlot, arrangementText, copyPhrase, deleteSection, expandMaterial, keyFor, moveIn, nextPhraseName, nextSectionName, patternById, patternUses, phraseIndex, phraseMeter, placementLabel, removeItem, removePattern, removeSlot, sectionById, sectionsNotArranged } from '../core/song.js';
+import { addPhrase, addSection, addSlot, copyPhrase, deleteSection, expandMaterial, keyFor, moveIn, nextPhraseName, nextSectionName, patternById, patternUses, phraseIndex, phraseMeter, placementLabel, removeItem, removePattern, removeSlot, sectionById, sectionsNotArranged } from '../core/song.js';
 import { renderSong } from '../core/render.js';
 import { $, sched, state } from './state.js';
 import { editPattern, redo, undo, withSongUndo } from './edit.js';
@@ -58,38 +58,40 @@ function barsOf(song, sec) {
   return Math.round(bars * 100) / 100;
 }
 function render() {
-  const song = state.song, el = $('songBody'); model = songRows(song);
+  const el = $('songBody');
+  // A field being typed in commits before the rebuild, not during it (its change event would rebuild inside this one).
+  if (el.contains(document.activeElement) && document.activeElement.matches('input')) document.activeElement.blur();
+  const song = state.song; model = songRows(song);
   const tracks = song.tracks;
   const form = song.arrangement.map((it, ai) => { const sec = sectionById(song, it.section); return sec ? `<button class="formChip" data-act="goItem" data-ai="${ai}" style="--sec:${secColor(song.sections.indexOf(sec))}" title="Go to this section">${esc(sec.name)}${times(it.repeat)}</button>` : ''; }).join('');
   let html = `<div class="svGrid" style="--n:${tracks.length}"><div class="svRow svTracks"><div class="svLeft"><span class="svFormLabel">arrangement</span><span class="svForm">${form}</span></div>` +
     tracks.map((tr, ti) => { const fam = (FAMILIES[(INST[tr.instrument] || {}).family] || FAMILIES.electronic).color; return `<div class="svTrack" data-t="${ti}" style="--fam:${fam}" title="${esc(tr.name)}"><b>${esc(tr.name)}</b><span class="live" data-live="${esc(tr.id)}"></span></div>`; }).join('') + '</div>';
   for (const b of model.blocks) {
-    const sec = b.sec, uses = song.arrangement.filter(it => it.section === sec.id).length;
+    const sec = b.sec;
     const others = song.phrases.filter(p => !sec.phrases.some(sl => sl.phrase === p.id));
     html += `<div class="svSec${b.ai < 0 ? ' spare' : ''}${b.first ? '' : ' again'}" data-ai="${b.ai}" data-sec="${esc(sec.id)}" style="--sec:${secColor(b.si)}"><div class="svSecIn">` +
       `<span class="swatch"></span><input data-f="secName" type="text" value="${esc(sec.name)}" size="9" title="Section name: Intro, Verse, Chorus, Bridge, A, B, Coda…" aria-label="Section name">` +
-      (b.ai >= 0 ? `<label title="Play this section this many times here">×<input data-f="itemRepeat" type="number" min="1" max="64" value="${b.item.repeat}"><span class="count"></span></label>` : '<span class="dim">not in the arrangement</span>') +
+      (b.ai >= 0 ? `<label title="Play this section this many times here">×<input data-f="itemRepeat" type="number" min="1" max="64" value="${b.item.repeat}"><span class="count"></span></label>` : '<span class="dim" title="This section is not in the arrangement: add it, or delete it">unused</span>') +
       (b.first ? keySelects(sec.key) : '') +
       `<span class="secActs"><button data-act="playSec" title="Loop this section on its own until you stop it (⇧Space). Play and Space play the arrangement forward instead.">⟳ loop</button>` +
       (!b.first ? '' : `<select data-f="addPhrase" title="Add a phrase to this section"><option value="">+ phrase…</option><option value="new">new empty phrase</option><option value="copy">copy of the phrase under the cursor</option>${others.length ? '<optgroup label="reuse a phrase">' + others.map(p => `<option value="id:${esc(p.id)}">${esc(p.name)}</option>`).join('') + '</optgroup>' : ''}</select>`) +
       (b.ai >= 0 ? `<button data-act="itemUp" title="Earlier in the arrangement">↑</button><button data-act="itemDown" title="Later in the arrangement">↓</button><button data-act="itemRemove" title="Take this occurrence out of the arrangement">remove</button>`
                  : `<button data-act="arrange" title="Play this section at the end of the arrangement">add to arrangement</button><button data-act="secDelete" title="Delete this section and the phrases only it uses">delete</button>`) + '</span>' +
-      `<span class="dim note">${barsOf(song, sec)} bar${barsOf(song, sec) === 1 ? '' : 's'}${b.first ? (uses > 1 ? ' · plays ' + uses + ' times in the arrangement' : '') : ' · same section as above: edits show in both'}</span></div></div>`;
+      `<span class="dim note"${b.first ? '' : ' title="The same section as above: edits show in both"'}>${b.first ? '' : '↺ '}${barsOf(song, sec)} bar${barsOf(song, sec) === 1 ? '' : 's'}</span></div></div>`;
     for (const r of b.rows) {
       const phr = song.phrases[r.pi], pm = phraseMeter(phr), shared = song.sections.filter(x => x !== sec && x.phrases.some(sl => sl.phrase === phr.id)).map(x => x.name);
       html += `<div class="svRow svPhrase" data-row="${r.index}" style="--sec:${secColor(b.si)}"><div class="svLeft"><input data-f="phrName" type="text" value="${esc(phr.name)}" size="7" aria-label="Phrase name" title="Phrase name">` +
         `<label title="Play this phrase this many times">×<input data-f="slotRepeat" type="number" min="1" max="64" value="${r.slot.repeat}"><span class="count"></span></label>` +
-        `<span class="dim meta">${phr.rows}r ${pm[0]}/${pm[1]}${shared.length ? ' · also in ' + esc(shared.join(', ')) : ''}</span>` +
+        `<span class="dim meta"${shared.length ? ` title="Also in ${esc(shared.join(', '))}: edits show there too"` : ''}>${phr.rows}r ${pm[0]}/${pm[1]}${shared.length ? ' ⇄' : ''}</span>` +
         `<span class="acts"><button data-act="open" title="Open this phrase in the grid (Enter)">open</button><button data-act="slotUp" title="Earlier in the section">↑</button><button data-act="slotDown" title="Later in the section">↓</button><button data-act="slotRemove" title="Take this phrase out of the section">×</button></span></div>` +
         tracks.map((tr, ti) => cellHtml(song, r, tr, ti)).join('') + '</div>';
     }
   }
-  html += `<div class="svRow svAdd"><div class="svLeft"><select data-f="addSection" title="Add to the end of the arrangement"><option value="">+ section…</option><option value="new">new section</option>${song.sections.length ? '<optgroup label="play a section again">' + song.sections.map(x => `<option value="id:${esc(x.id)}">${esc(x.name)}</option>`).join('') + '</optgroup>' : ''}</select><span class="dim">${esc(arrangementText(song))}</span></div></div></div>`;
+  html += `<div class="svRow svAdd"><div class="svLeft"><select data-f="addSection" title="Add to the end of the arrangement"><option value="">+ section…</option><option value="new">new section</option>${song.sections.length ? '<optgroup label="play a section again">' + song.sections.map(x => `<option value="id:${esc(x.id)}">${esc(x.name)}</option>`).join('') + '</optgroup>' : ''}</select></div></div></div>`;
   // The patterns of the song: the reusable lines every placement above points at.
   const pats = song.patterns || [];
-  html += '<div class="svPatterns"><h3>Patterns <span class="dim">reusable lines: what musicians call a motif, riff, lick or hook</span></h3>' +
-    (pats.length ? '<div class="ptnList">' + pats.map(p => `<div class="ptnCard" data-id="${esc(p.id)}">${thumb(p.material.notes, p.rows * p.ticksPerRow) || '<svg class="thumb"></svg>'}<input data-f="ptnName" type="text" value="${esc(p.name)}" size="10" aria-label="Pattern name"><span class="dim">${p.rows} rows · ${p.columns} col · ${patternUses(song, p.id)} use${patternUses(song, p.id) === 1 ? '' : 's'}</span><button data-act="ptnOpen" title="Open this pattern alone in the grid">open</button><button data-act="ptnRemove" title="Remove the pattern; every placement becomes loose notes">remove</button></div>`).join('') + '</div>'
-                 : '<p class="dim">None yet. In a phrase, select rows on one track and press Make pattern: the rows become a pattern you can place again, transposed, shifted in the key, an octave away, softer or repeated.</p>') + '</div>';
+  if (pats.length) html += '<div class="svPatterns"><h3 title="Reusable lines, placed in phrases: what musicians call a motif, riff, lick or hook">Patterns</h3>' +
+    ('<div class="ptnList">' + pats.map(p => `<div class="ptnCard" data-id="${esc(p.id)}">${thumb(p.material.notes, p.rows * p.ticksPerRow) || '<svg class="thumb"></svg>'}<input data-f="ptnName" type="text" value="${esc(p.name)}" size="10" aria-label="Pattern name"><span class="dim">${p.rows} rows · ${p.columns} col · ${patternUses(song, p.id)} use${patternUses(song, p.id) === 1 ? '' : 's'}</span><button data-act="ptnOpen" title="Open this pattern alone in the grid">open</button><button data-act="ptnRemove" title="Remove the pattern; every placement becomes loose notes">remove</button></div>`).join('') + '</div>') + '</div>';
   el.innerHTML = html;
   state.songCursor.row = Math.min(state.songCursor.row, Math.max(0, model.rows.length - 1));
   state.songCursor.track = Math.min(state.songCursor.track, Math.max(0, tracks.length - 1));
@@ -279,7 +281,7 @@ export function songStatus() {
   const phr = song.phrases[row.pi], tr = song.tracks[state.songCursor.track], m = tr && phr.material[tr.id], pm = phraseMeter(phr);
   const names = ((m && m.placements) || []).map(pl => { const p = patternById(song, pl.pattern); return p ? placementLabel(pl, p.name) : ''; }).filter(Boolean);
   return '<b>' + esc(row.block.sec.name) + '</b> › <b>' + esc(phr.name) + '</b> ' + phr.rows + ' rows ' + pm.join('/') + ' · key <b>' + esc(keyName(keyFor(song, phr, row.block.sec))) + '</b>' +
-    (tr ? ' · <b>' + esc(tr.name) + '</b> ' + (names.length ? esc(names.join(', ')) : 'no patterns') + ', ' + (m ? m.notes.length : 0) + ' loose' : '') + ' · Enter opens · Space plays from here · ⇧Space loops the section';
+    (tr ? ' · <b>' + esc(tr.name) + '</b> ' + (names.length ? esc(names.join(', ')) : 'no patterns') + ', ' + (m ? m.notes.length : 0) + ' loose' : '');
 }
 export function wireSongView() {
   const el = $('songBody');

@@ -249,7 +249,7 @@ export function updateStatus(playRow) {
   if (state.sel) parts.push('selected <b>' + (state.sel.r1 - state.sel.r0 + 1) + '</b> rows × <b>' + (state.sel.g1 - state.sel.g0 + 1) + '</b> cells');
   if (midi.in) parts.push('MIDI in <b>' + esc(midi.in.name) + '</b>');
   if (gamepad.name) parts.push('\u{1F3AE} <b>' + esc(gamepad.name.replace(/\s*\(.*$/, '')) + '</b>');
-  const cs = $('controllerStatus'); if (cs) { const t = gamepad.name ? 'Connected: ' + gamepad.name : 'No controller. Pair a Bluetooth gamepad and press any button.'; if (cs.textContent !== t) cs.textContent = t; }
+  const cs = $('controllerStatus'); if (cs) { const t = gamepad.name ? 'Connected: ' + gamepad.name : 'No controller'; if (cs.textContent !== t) cs.textContent = t; }
   if (state.record) parts.push('<b class="warn">REC</b> notes land on the passing row');
   if (sched.playing) parts.push('<b>playing</b>' + (sched.loop ? ' (loop)' : '') + (playRow != null ? ' row ' + playRow : ''));
   if (state.message) parts.push('<span class="warn">' + state.message + '</span>');

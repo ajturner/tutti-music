@@ -43,7 +43,7 @@
 </header>
 <div id="panels">
   <section class="panel" id="filesPanel" data-panel="files" hidden aria-label="Files">
-    <div class="panelHead"><h2>Files</h2><span class="dim">Autosaved in this browser a moment after each change; the address bar remembers the open song and phrase.</span><span class="spacer"></span><button data-close title="Close (Esc)">✕</button></div>
+    <div class="panelHead"><h2 title="Songs are saved in this browser a moment after each change">Files</h2><span class="spacer"></span><button data-close title="Close (Esc)">✕</button></div>
     <div class="panelBody">
       <div class="group songgrp" data-label="open">
         <select id="song"></select>
@@ -95,7 +95,7 @@
     </div>
   </section>
   <section class="panel m8" id="soundsPanel" data-panel="sounds" hidden aria-label="Sounds">
-    <div class="panelHead"><h2>SOUNDS</h2><span class="dim mono">settings stay in this browser</span><span class="spacer"></span><button id="soundsResetAll" title="All instruments back to defaults">reset all</button><button id="soundsClose" data-close title="Close (Esc)">✕</button></div>
+    <div class="panelHead"><h2>SOUNDS</h2><span class="spacer"></span><button id="soundsResetAll" title="All instruments back to defaults">reset all</button><button id="soundsClose" data-close title="Close (Esc)">✕</button></div>
     <div class="group listen" data-label="listen">
       <label title="Hear the preview while editing and playing"><input id="preview" type="checkbox" checked> preview</label>
       <select id="sound" title="Preview sound: sampled banks with synth fallback, or the sketch synth"><option value="samples">samples</option><option value="synth">synth</option></select>
@@ -122,9 +122,9 @@
         <select id="midiOut" hidden title="MIDI output"><option value="">MIDI out: off</option></select>
         <select id="midiIn" hidden title="MIDI input for step and real-time recording"><option value="">MIDI in: off</option></select>
       </div>
-      <p class="dim">Each track plays on its own channel, shown in the grid header. On macOS turn on the IAC Driver in Audio MIDI Setup; on Windows add a loopMIDI port. Choose an input to step-record from a keyboard or arm ● Rec. WebMIDI needs a Chromium browser.</p>
+      <p class="dim"><a href="help.html#midi" target="_blank" rel="noopener">MIDI setup ↗</a></p>
       <div class="group padgrp" data-label="controller">
-        <span id="controllerStatus" class="dim">No controller. Pair a Bluetooth gamepad and press any button.</span>
+        <span id="controllerStatus" class="dim">No controller</span>
       </div>
     </div>
   </section>

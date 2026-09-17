@@ -66,7 +66,7 @@ export function syncMap() {
     crumb('song', 'Song', esc(song.title || 'Untitled'), song.sections.length + ' section' + (song.sections.length === 1 ? '' : 's'), true, 'The whole song: sections, phrases and patterns at a glance (` goes out a level)') + '<span class="sep">›</span>' +
     crumb('section', 'Section', sec ? esc(sec.name) + times(item ? item.repeat : 1) : '—', sec && sec.key ? esc(keyName(sec.key)) : '', !!sec, 'This section in the Song view') + '<span class="sep">›</span>' +
     crumb('phrase', 'Phrase', phr ? esc(phr.name) + times(slot ? slot.repeat : 1) : '—', phr ? phr.rows + ' rows · ' + pm.join('/') : '', !!phr, 'This phrase in the grid') + '<span class="sep">›</span>' +
-    crumb('pattern', 'Pattern', ptn ? esc(ptn.name) : here ? esc(placementLabel(here.placement, here.pattern.name)) : '—', ptn ? ptn.rows + ' rows' : here ? 'Enter opens' : '', !!ptn || !!here, ptn ? 'The pattern open in the grid' : 'Open the pattern under the cursor (Enter)') +
+    crumb('pattern', 'Pattern', ptn ? esc(ptn.name) : here ? esc(placementLabel(here.placement, here.pattern.name)) : '—', ptn ? ptn.rows + ' rows' : '', !!ptn || !!here, ptn ? 'The pattern open in the grid' : 'Open the pattern under the cursor (Enter)') +
     '<span class="spacer"></span>' + (now ? '<span class="now" title="Playing now">▶ ' + esc(now) + '</span>' : '');
 }
 export function wireMap({ focusSection } = {}) {

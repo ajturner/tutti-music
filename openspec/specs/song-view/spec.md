@@ -50,11 +50,11 @@ Each section block SHALL offer its name, how many times it plays at that place, 
 - **THEN** nothing changes and the status says the arrangement keeps at least one section
 
 ### Requirement: Patterns in the Song view
-Below the arrangement the Song view SHALL list the song's patterns, each with a thumbnail, an editable name, rows, columns and use count, Open (the pattern alone in the grid, from a phrase that places it) and Remove (detaching every placement first). With no patterns it SHALL explain how to make one.
+Below the arrangement the Song view SHALL list the song's patterns, each with a thumbnail, an editable name, rows, columns and use count, Open (the pattern alone in the grid, from a phrase that places it) and Remove (detaching every placement first). With no patterns the list SHALL NOT appear at all, heading included.
 
 #### Scenario: Progressive disclosure
 - **WHEN** a song has no patterns
-- **THEN** the list is a one-sentence hint and no pattern control appears in the grid except Make pattern on the selection toolbar
+- **THEN** the Song view shows no patterns list and no text about patterns, and no pattern control appears in the grid except Make pattern on the selection toolbar
 
 ### Requirement: Playhead in the Song view
 While the song or a section plays, the playing phrase row SHALL be highlighted with a line moving across its cells, and the form chip of the playing occurrence SHALL be lit. When a phrase or a section plays more than once, the phrase's row and the section's bar SHALL show which time through is playing, as "2/3"; while a section loops on its own only the phrase's count SHALL be shown. Space and the header's Play button, which SHALL read "Play from here", SHALL play the arrangement on from the cursor row: the rest of that phrase's repeats, the section's repeats, then each following section, stopping at the end; if playing, Space SHALL stop. Play song SHALL start from the top. Shift+Space, Loop section and a section bar's loop button SHALL loop that section on its own until stopped, and a section that is not in the arrangement SHALL loop when played. With follow on, the cursor SHALL ride the playing row, so the map and the phrase selector name the playing section and phrase and the row stays on screen, except while a field in the view has focus.
