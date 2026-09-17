@@ -2,7 +2,7 @@
 import Ajv2020 from 'ajv/dist/2020.js';
 import { readFile } from 'node:fs/promises';
 import { EXAMPLES } from '../src/core/examples.js';
-import { newSong } from '../src/core/song.js';
+import { newSong, orchestraSong } from '../src/core/song.js';
 import { INSTRUMENTS } from '../src/core/instruments.js';
 import { installBank } from '../src/core/banks.js';
 for (const b of ['jazz', 'folk', 'electronica']) installBank(JSON.parse(await readFile(new URL('../banks/' + b + '/bank.json', import.meta.url))), 'file:///banks/' + b + '/bank.json');
@@ -18,7 +18,7 @@ const fails = [];
 const check = (name, ok, extra = '') => { console.log((ok ? 'PASS ' : 'FAIL ') + name + (extra ? '  ' + extra : '')); if (!ok) fails.push(name); };
 const errs = v => (v.errors || []).slice(0, 3).map(e => e.instancePath + ' ' + e.message).join('; ');
 
-check('schema: new song validates', validSong(newSong()), errs(validSong));
+check('schema: new song validates', validSong(orchestraSong()), errs(validSong));
 for (const ex of EXAMPLES) {
   const s = JSON.parse(JSON.stringify(ex.build()));
   check('schema: example validates: ' + ex.title, validSong(s), errs(validSong));
@@ -33,12 +33,12 @@ for (const ins of INSTRUMENTS) check('schema: instrument validates: ' + ins.id, 
     check('schema: bank validates: ' + d.name, validBank(b), errs(validBank));
   }
 }
-const bad = newSong(); bad.phrases[0].material.fl = { notes: [{ tick: 0, len: 0, pitch: 60, vel: 100, col: 0, art: null }], dyn: [], expr: [] };
+const bad = orchestraSong(); bad.phrases[0].material.fl = { notes: [{ tick: 0, len: 0, pitch: 60, vel: 100, col: 0, art: null }], dyn: [], expr: [] };
 check('schema: rejects zero-length note', !validSong(bad));
-for (const v of [2, 3]) { const old = JSON.parse(JSON.stringify(newSong())); old.version = v; check('schema: rejects a version ' + v + ' file', !validSong(old)); }
-const flat = JSON.parse(JSON.stringify(newSong())); delete flat.sections;
+for (const v of [2, 3]) { const old = JSON.parse(JSON.stringify(orchestraSong())); old.version = v; check('schema: rejects a version ' + v + ' file', !validSong(old)); }
+const flat = JSON.parse(JSON.stringify(orchestraSong())); delete flat.sections;
 check('schema: a saved song names its sections', !validSong(flat));
-const withPattern = newSong(); withPattern.patterns.push({ id: 'p', name: 'P', rows: 8, ticksPerRow: 240, columns: 1, material: { notes: [{ tick: 0, len: 240, pitch: 60, vel: 100, col: 0, art: null }], dyn: [], expr: [], fx: [], placements: [] } });
+const withPattern = orchestraSong(); withPattern.patterns.push({ id: 'p', name: 'P', rows: 8, ticksPerRow: 240, columns: 1, material: { notes: [{ tick: 0, len: 240, pitch: 60, vel: 100, col: 0, art: null }], dyn: [], expr: [], fx: [], placements: [] } });
 withPattern.phrases[0].material.fl = { notes: [], dyn: [], expr: [], fx: [], placements: [{ pattern: 'p', row: 4, transpose: 5, shift: -2, octave: 1, dynamics: -16, repeat: 2 }] };
 check('schema: pattern and placement validate', validSong(withPattern), errs(validSong));
 withPattern.phrases[0].material.fl.placements[0].chain = 'x';

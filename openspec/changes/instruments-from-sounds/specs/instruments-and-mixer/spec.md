@@ -7,7 +7,7 @@
 ## ADDED Requirements
 
 ### Requirement: Instruments panel
-The Instruments panel SHALL list every instrument of the song in score order, one row each, with its name, its sound (a picker grouped by bank), whether that sound is sampled, synthesised or loading, an audition button that plays the instrument as it is tuned, volume, pan, mute, solo, a duplicate button and a button that opens the rest. The rest SHALL hold tune, cents, trim and release with a reset, MIDI channel, note columns, the sound's articulations (each auditionable, marked sampled or showing its fallback), move earlier, move later and remove. Details SHALL be closed by default. A row whose tune, cents, trim or release differs from its sound's SHALL say so in a few characters beside that button. The panel SHALL allow adding an instrument from any sound. The mixer's Instruments… button SHALL open the panel. A song SHALL keep at least one instrument. Removing an instrument SHALL remove its notes and lanes from every phrase. Changing an instrument's sound SHALL reset articulations the new sound does not support. Every change SHALL be one undo step.
+The Instruments panel SHALL list every instrument of the song in score order, one row each, with its name, its sound (a picker grouped by bank), whether that sound is sampled, synthesised or loading, an audition button that plays the instrument as it is tuned, volume, pan, mute, solo, a duplicate button and a button that opens the rest. The rest SHALL hold tune, cents, trim and release with a reset, MIDI channel, note columns and the sound's articulations (each auditionable, marked sampled or showing its fallback). Move earlier, move later and remove SHALL sit in the row itself when the panel is wide enough to keep the row on one line, and with the rest when it is not. Details SHALL be closed by default. A row whose tune, cents, trim or release differs from its sound's SHALL say so in a few characters beside that button. The panel SHALL allow adding an instrument from any sound. The mixer's Instruments… button SHALL open the panel. A song MAY have no instruments: the last one can be removed. Removing an instrument SHALL remove its notes and lanes from every phrase. Changing an instrument's sound SHALL reset articulations the new sound does not support. Every change SHALL be one undo step.
 
 #### Scenario: Add a harp-like instrument
 - **WHEN** the user adds an instrument from Synth arp
@@ -16,6 +16,10 @@ The Instruments panel SHALL list every instrument of the song in score order, on
 #### Scenario: Remove an instrument
 - **WHEN** the user removes an instrument that has notes
 - **THEN** the instrument and its notes are gone from every phrase
+
+#### Scenario: Order and remove where there is room
+- **WHEN** the panel is open on a wide screen
+- **THEN** each row ends with ↑, ↓ and ×, on one line; on a phone they are behind ⋯ and the row stays two lines
 
 #### Scenario: Essentials first
 - **WHEN** the panel opens on a song with nine instruments
@@ -42,3 +46,14 @@ An instrument SHALL carry tune in whole semitones (−24 to 24), cents (−100 t
 #### Scenario: Export
 - **WHEN** a song whose flute is tuned +12 is exported
 - **THEN** the .mid is byte for byte what it is with the flute untuned
+
+### Requirement: A new song has no instruments
+A new song SHALL start with no instruments and no banks. Creating one SHALL open the Instruments panel with the sound browser showing, so the first act is choosing the players. While a song has no instruments the workspace SHALL offer a + instrument button that opens the panel, the grid SHALL show its tempo column alone with the cursor in it, and every key and transport control SHALL be harmless. The first instrument added SHALL take the cursor and record its sound's bank on the song. The orchestral examples SHALL keep their orchestra.
+
+#### Scenario: Start a song
+- **WHEN** the user presses New
+- **THEN** the song has no instruments, the Instruments panel is open with every sound listed, and pressing + on Cellos gives the song its first instrument on channel 1 with the cursor on it
+
+#### Scenario: Empty workspace
+- **WHEN** the panel is closed while the song still has no instruments
+- **THEN** the grid shows + instrument, and Space, Tab and note keys change nothing

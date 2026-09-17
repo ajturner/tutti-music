@@ -203,7 +203,7 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   await page.evaluate(() => { for (const k of ['lastDraw', 'ROW_H']) Object.defineProperty(window, k, { get: () => tutti.view[k], configurable: true }); });
   // --- session URL: new song, edit, refresh lands on the same song and phrase ---
   await page.click('#newSong'); await page.waitForTimeout(50);
-  await page.evaluate(() => tutti.setPanel(null));
+  await page.evaluate(() => { tutti.addInstrumentFromPanel('flute'); tutti.setPanel(null); document.getElementById('soundBrowser').open = false; });
   const newUid = await page.evaluate(() => state.song.uid);
   check('session: URL names the new song', (await page.evaluate(() => location.hash)) === '#song=' + encodeURIComponent(newUid));
   await page.evaluate(() => { state.cursor.track = 0; state.cursor.cell = 0; state.cursor.row = 3; });
@@ -214,7 +214,7 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   check('session: URL carries the phrase', (await page.evaluate(() => location.hash)).endsWith('&phrase=a2'));
   await page.reload(); await page.waitForTimeout(400);
   await page.evaluate(() => { for (const k of Object.keys(tutti)) if (!(k in window)) Object.defineProperty(window, k, { get: () => tutti[k], configurable: true }); for (const k of ['lastDraw', 'ROW_H']) Object.defineProperty(window, k, { get: () => tutti.view[k], configurable: true }); });
-  const reopened = await page.evaluate(() => ({ uid: state.song.uid, phr: state.phr, note: !!noteAt(state.song.phrases[0], 'fl', 0, 3), title: state.song.title }));
+  const reopened = await page.evaluate(() => ({ uid: state.song.uid, phr: state.phr, note: !!noteAt(state.song.phrases[0], state.song.instruments[0].id, 0, 3), title: state.song.title }));
   check('session: refresh reopens the new song on its phrase with the edit', reopened.uid === newUid && reopened.phr === 1 && reopened.note, JSON.stringify(reopened));
   await page.goto(URL); await page.waitForTimeout(400);
   await page.evaluate(() => { for (const k of Object.keys(tutti)) if (!(k in window)) Object.defineProperty(window, k, { get: () => tutti[k], configurable: true }); for (const k of ['lastDraw', 'ROW_H']) Object.defineProperty(window, k, { get: () => tutti.view[k], configurable: true }); });
@@ -271,7 +271,28 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   check('instruments: move up', (await page.evaluate(() => state.song.instruments[state.song.instruments.length - 2].name)) === 'Lead');
   await page.click('#instList .inst:nth-last-child(2) button[data-act="remove"]'); await page.waitForTimeout(30);
   check('instruments: remove', (await page.evaluate(() => state.song.instruments.length)) === nTracks && !(await page.evaluate(() => state.song.instruments.some(t => /^Lead/.test(t.name)))));
+  const roomy = await page.evaluate(() => { const r = document.querySelector('#instList .inst:nth-child(2)'), vis = b => b.offsetParent !== null; return { up: [...r.querySelectorAll('.instMain [data-act="up"]')].some(vis), remove: [...r.querySelectorAll('.instMain [data-act="remove"]')].some(vis), firstUp: document.querySelector('#instList .inst:first-child .instMain [data-act="up"]').disabled, oneLine: r.querySelector('.instMain').getBoundingClientRect().height < 48 }; });
+  check('instruments: with room, order and remove sit in the row itself, on one line', roomy.up && roomy.remove && roomy.firstUp && roomy.oneLine, JSON.stringify(roomy));
   await page.click('#instrumentsPanel [data-close]'); await page.waitForTimeout(30);
+  // a new song has no instruments: it opens on the Instruments panel with the sounds to choose from
+  {
+    const back = await page.evaluate(() => state.songIndex);
+    await page.click('#filesBtn'); await page.click('#newSong'); await page.waitForTimeout(500);
+    const blank = await page.evaluate(() => ({ n: state.song.instruments.length, panel: state.panel, rows: document.querySelectorAll('#instList .inst').length, browser: document.getElementById('soundBrowser').open, sounds: document.querySelectorAll('#soundsBody tr').length, track: state.cursor.track }));
+    check('new song: no instruments; the Instruments panel opens with the sound browser showing', blank.n === 0 && blank.panel === 'instruments' && blank.rows === 0 && blank.browser && blank.sounds > 5 && blank.track === -1, JSON.stringify(blank));
+    await page.click('#instrumentsPanel [data-close]'); await page.waitForTimeout(80);
+    for (const k of ['z', 'ArrowRight', 'Tab', 'ArrowDown']) await page.keyboard.press(k);
+    await page.keyboard.press(' '); await page.waitForTimeout(80); await page.keyboard.press('Escape');
+    check('new song: the empty grid offers + instrument, and keys do no harm', await page.evaluate(() => document.getElementById('emptyAdd').offsetParent !== null && state.song.instruments.length === 0 && !/error/i.test(document.getElementById('status').textContent)));
+    await page.click('#emptyAdd'); await page.waitForTimeout(200);
+    await page.click('#soundsBody tr[data-id="cellos"] [data-act="add"]'); await page.waitForTimeout(200);
+    const one = await page.evaluate(() => ({ panel: state.panel, n: state.song.instruments.length, sound: state.song.instruments[0].sound, banks: state.song.banks.join(), track: state.cursor.track, empty: document.getElementById('emptyAdd').hidden, rows: document.querySelectorAll('#instList .inst').length }));
+    check('new song: + instrument opens the panel, and the first instrument takes the cursor and brings its bank', one.panel === 'instruments' && one.n === 1 && one.sound === 'cellos' && one.banks === 'orchestra' && one.track === 0 && one.rows === 1, JSON.stringify(one));
+    await page.click('#instList .inst:first-child .instMain [data-act="remove"]'); await page.waitForTimeout(120);
+    check('instruments: the last one can be removed; the song is empty again', await page.evaluate(() => state.song.instruments.length === 0 && state.cursor.track === -1));
+    await page.evaluate(back => { tutti.setPanel(null); document.getElementById('soundBrowser').open = false; state.songs.splice(state.songIndex, 1); tutti.selectSong(back); tutti.syncSongUI(); }, back); await page.waitForTimeout(150);
+    check('new song: the + instrument button leaves with the empty song', await page.evaluate(() => document.getElementById('emptyAdd').hidden));
+  }
   // --- the Song view: sections, phrases and tracks at a glance; the arrangement is edited here ---
   await page.evaluate(() => { tutti.selectSong(0); tutti.setPanel(null); state.preview = false; });
   await page.click('#map button[data-level="song"]'); await page.waitForTimeout(80);
@@ -732,7 +753,7 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   const iv = await page.evaluate(() => { const rows = [...document.querySelectorAll('#instList .inst')], r0 = rows[0].getBoundingClientRect(); return { panel: state.panel, tabs: [...document.querySelectorAll('#tabs button')].map(b => b.dataset.view).join(), rows: rows.length === state.song.instruments.length, rowH: Math.round(r0.height), fits: document.documentElement.scrollWidth <= innerWidth && rows.every(r => r.scrollWidth <= r.clientWidth + 1), main: getComputedStyle(document.getElementById('workspace')).display, tab: document.querySelector('#tabs button.on').dataset.view }; });
   check('phone: the Instruments screen lists every instrument in two lines each, within the screen', iv.panel === 'instruments' && iv.tabs === 'song,files,instruments,connect' && iv.rows && iv.rowH < 110 && iv.fits && iv.main === 'none' && iv.tab === 'instruments', JSON.stringify(iv));
   await page.tap('#instList .inst:first-child [data-act="more"]'); await page.waitForTimeout(80);
-  check('phone: an instrument opens to its tuning, channel, columns and articulations', await page.evaluate(() => { const m = document.querySelector('#instList .inst:first-child .instMore'); return !!m && !!m.querySelector('[data-f="cents"]') && !!m.querySelector('[data-f="channel"]') && m.querySelectorAll('.art').length > 0 && m.scrollWidth <= m.clientWidth + 1; }));
+  check('phone: an instrument opens to its tuning, channel, columns, articulations, order and remove, which do not crowd the row', await page.evaluate(() => { const m = document.querySelector('#instList .inst:first-child .instMore'); const vis = b => b.offsetParent !== null; return !!m && !!m.querySelector('[data-f="cents"]') && !!m.querySelector('[data-f="channel"]') && m.querySelectorAll('.art').length > 0 && m.scrollWidth <= m.clientWidth + 1 && [...m.querySelectorAll('[data-act="remove"]')].some(vis) && ![...document.querySelectorAll('#instList .inst:first-child .instMain [data-act="remove"]')].some(vis); }));
   await page.tap('#instList .inst:first-child [data-act="more"]'); await page.waitForTimeout(60);
   await page.tap('#soundBrowser > summary'); await page.waitForTimeout(400);
   check('phone: the sound browser shows the banks and the sounds', await page.evaluate(() => document.querySelectorAll('#soundsBody tr').length > 5 && document.querySelectorAll('#bankList .bank').length > 2));

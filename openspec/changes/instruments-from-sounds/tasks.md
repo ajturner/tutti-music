@@ -5,4 +5,6 @@
 - [x] Level sheet from the map's ▾; listen settings in View; panels and phone tabs
 - [x] Crossroads reel: two fiddles from one sound
 - [x] Tests (core, schema, browser), guide, README, domain model, specs
+- [x] New songs start with no instruments: empty state, + instrument in the workspace, panel opens on New with the sounds showing; `orchestraSong()` for examples and tests
+- [x] Order and remove in the row when the panel is wide (container query), with the details otherwise
 - [ ] After approval: mechanical rename of code identifiers and the bank file key

@@ -40,6 +40,8 @@
   button.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 600; }
   .spacer { flex: 1; }
   #workspace { flex: 1; min-height: 0; display: flex; position: relative; }
+  #emptyAdd { position: absolute; left: 110px; top: 64px; z-index: 3; padding: 8px 16px; }
+  #emptyAdd[hidden] { display: none; }
   main { flex: 1; min-width: 0; min-height: 0; position: relative; }
   /* Mixer sidebar */
   #mixer { width: 250px; flex: none; border-left: 1px solid var(--line); background: var(--panel); overflow-y: auto; display: flex; flex-direction: column; }
@@ -356,6 +358,12 @@ body[data-level="song"] #pad, body[data-level="song"] #selbar { display: none !i
 .instMore input[type=number] { width: 4.4em; padding: 2px 4px; text-align: right; }
 .instMore .spacer { flex: 1; }
 .instMore button:disabled { opacity: .3; }
+/* order and remove sit in the row when the panel is wide enough for them, else with the details */
+#instList { container-type: inline-size; }
+.inst .roomy, .inst .tight { display: inline-flex; gap: 4px; align-items: center; }
+.inst .roomy { display: none; }
+.inst button:disabled { opacity: .3; }
+@container (min-width: 960px) { .inst .roomy { display: inline-flex; } .inst .tight { display: none; } .inst [data-act="more"] { margin-left: 0; } .inst .roomy { margin-left: auto; } }
 .instAdd { display: flex; gap: 8px; align-items: center; margin: 8px 0 4px; }
 #soundBrowser { width: 100%; margin-top: 6px; font-family: var(--mono); font-size: 12px; }
 #soundBrowser > summary { cursor: pointer; color: var(--dim); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; padding: 4px 0; }

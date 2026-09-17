@@ -78,7 +78,8 @@ export function renderInstruments() {
         <label class="slide">pan<input data-f="pan" type="range" min="0" max="127" value="${tr.pan}" title="Pan ${tr.pan}"></label>
         <label class="ms" title="Mute"><input data-f="mute" type="checkbox"${tr.mute ? ' checked' : ''}>M</label><label class="ms" title="Solo"><input data-f="solo" type="checkbox"${tr.solo ? ' checked' : ''}>S</label>
         <button data-act="duplicate" title="Another instrument from this sound with these settings, and no notes">⧉</button>
-        <button data-act="more" aria-expanded="${more}" title="Tuning, level, release, channel, columns, articulations, order, remove">${shape ? '<span class="shape">' + shape + '</span>' : ''}⋯</button>
+        <span class="roomy"><button data-act="up" title="Earlier in the score"${i === 0 ? ' disabled' : ''}>↑</button><button data-act="down" title="Later in the score"${i === state.song.instruments.length - 1 ? ' disabled' : ''}>↓</button><button data-act="remove" title="Remove this instrument and its notes">×</button></span>
+        <button data-act="more" aria-expanded="${more}" title="Tuning, level, release, channel, columns, articulations">${shape ? '<span class="shape">' + shape + '</span>' : ''}⋯</button>
       </div>${more ? `
       <div class="instMore">
         ${num('tune', 1, 'Tune, semitones. Preview only: exported MIDI keeps the written pitch')}${num('cents', 1, 'Fine tune, cents')}${num('trim', 0.5, 'Level trim in dB, before the volume')}${num('release', 0.25, 'Release scale')}
@@ -87,7 +88,7 @@ export function renderInstruments() {
         <label title="Note columns (divisi voices)">cols<input data-f="columns" type="number" min="1" max="4" value="${tr.columns}"></label>
         <span class="arts">${artButtons(ins, cov)}</span>
         <span class="spacer"></span>
-        <button data-act="up" title="Earlier in the score">↑</button><button data-act="down" title="Later in the score">↓</button><button data-act="remove" title="Remove this instrument and its notes">remove</button>
+        <span class="tight"><button data-act="up" title="Earlier in the score"${i === 0 ? ' disabled' : ''}>↑</button><button data-act="down" title="Later in the score"${i === state.song.instruments.length - 1 ? ' disabled' : ''}>↓</button><button data-act="remove" title="Remove this instrument and its notes">remove</button></span>
       </div>` : ''}
     </div>`;
   }).join('');
@@ -130,7 +131,6 @@ function onClick(e) {
   const act = b.dataset.act, i = state.song.instruments.indexOf(tr);
   if (act === 'play') { audition(tr); return; }
   if (act === 'more') { if (open.has(tr.id)) open.delete(tr.id); else open.add(tr.id); renderInstruments(); return; }
-  if (act === 'remove' && state.song.instruments.length <= 1) { state.message = 'A song needs at least one instrument'; state.dirty = true; return; }
   let made = null;
   withSongUndo(() => {
     if (act === 'up') moveInstrument(state.song, i, -1);
@@ -254,7 +254,7 @@ async function showBrowser() {
   sampler.preload(INSTRUMENTS.map(i => i.id)).then(() => { if ($('soundBrowser').open) renderSounds(); });   // load what is not loaded yet so the rows fill in
 }
 // Called by the panels module when the Instruments panel opens and closes.
-export function showInstruments() { renderInstruments(); if ($('soundBrowser').open) showBrowser(); }
+export function showInstruments() { if (!state.song.instruments.length) $('soundBrowser').open = true; renderInstruments(); if ($('soundBrowser').open) showBrowser(); }
 export function hideInstruments() { raf = 0; }
 export function wireInstruments() {
   const list = $('instList');

@@ -195,7 +195,7 @@ Reading it back: the tune is A A B A. Each A is the eight-bar phrase twice. In i
 
 Rules the loader enforces, in this order:
 
-1. A song needs `instruments` and `phrases`. An instrument's `volume`, `pan`, `tune`, `cents`, `trim` and `release` take their defaults (100, 64, 0, 0, 0, 1) and are clamped. A draft of format 4 that still says `instruments`, each with an `instrument`, is read as instruments with a `sound`. A `version` below 4, or none, is refused with a message naming it; a newer one too.
+1. A song needs `phrases` and a list of `instruments`, which may be empty: a new song has none until the composer chooses its players. An instrument's `volume`, `pan`, `tune`, `cents`, `trim` and `release` take their defaults (100, 64, 0, 0, 0, 1) and are clamped. A draft of format 4 that still says `instruments`, each with an `instrument`, is read as instruments with a `sound`. A `version` below 4, or none, is refused with a message naming it; a newer one too.
 2. Every phrase gets a unique `id` (from its name when missing or duplicated); materials are filled with empty lists; a pattern's `placements` are emptied.
 3. A placement naming a missing pattern is removed; `transpose`, `shift`, `octave`, `dynamics` and `repeat` take their defaults (0, 0, 0, 0, 1) and are clamped.
 4. A section's slots naming a missing phrase are dropped, and a section left empty is dropped. With no section left, one section **A** holds every phrase in order.
@@ -210,7 +210,7 @@ Each is written as the guide describes it. The last line says what the song cont
 
 ### 1. A string quartet sketch (one phrase, then two)
 
-1. **Files → New.** Rename it in the header. Instruments: keep Violins I, Violins II, Violas, Cellos. Key C major.
+1. **Files → New.** A new song has no instruments, so it opens on Instruments with the sounds showing: press **+** on Violins I, Violins II, Violas and Cellos. Rename the song in the header. Key C major, from the ▾ beside the song's name.
 2. Type the cello line with step 16, the inner voices, then the melody on Violins I. A dynamics ramp from 30 to 60 across the four bars.
 3. Map → **Song**. On section A choose **+ phrase… → copy of the phrase under the cursor**, open it and change the last two chords. Section A is now an eight-bar period: A1 then A2.
 4. **Files → Export .mid**, or **Save JSON**.

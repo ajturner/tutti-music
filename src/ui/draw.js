@@ -57,6 +57,7 @@ export function draw() {
   // While a drag selection is in progress the view stays put (state.topLock) so rows don't slide under the pointer.
   const top = state.topLock != null ? state.topLock : centerRow - Math.floor(visible / 2);
 
+  if (state.cursor.track >= L.tracks.length) state.cursor.track = L.tracks.length - 1;   // its instrument is gone: the last one, or the tempo column of a song with none
   // Bring the cursor's track on screen after the cursor moved, but leave a hand-scrolled view alone.
   if (state.cursor.track >= 0 && state.ensureVisible) {
     const lay = L.tracks[state.cursor.track];
@@ -261,7 +262,7 @@ let lastDrawError = '';
 export function frame(now) {
   try {
     pollGamepad(now || performance.now());
-    if (state.dirty || sched.playing) { state.dirty = false; draw(); }
+    if (state.dirty || sched.playing) { state.dirty = false; const none = $('emptyAdd'); if (none) none.hidden = state.song.instruments.length > 0; draw(); }
   } catch (e) {
     // never let one bad frame stop the loop; report once per distinct error
     if (e.message !== lastDrawError) { lastDrawError = e.message; console.error('draw:', e); state.message = 'Display error: ' + e.message; }

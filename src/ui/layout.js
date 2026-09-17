@@ -33,5 +33,6 @@ export function computeLayout() {
 export function currentCell(L) {
   if (state.cursor.track < 0) return { kind: 'tempo', col: 0 };
   const lay = (L || computeLayout()).tracks[state.cursor.track];
+  if (!lay) { state.cursor.track = (L || computeLayout()).tracks.length - 1; return currentCell(L); }   // the instrument under the cursor is gone: the last one, or the tempo column of a song with none
   return lay.cells[clamp(state.cursor.cell, 0, lay.cells.length - 1)];
 }

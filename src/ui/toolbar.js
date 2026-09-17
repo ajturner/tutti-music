@@ -15,6 +15,7 @@ import { playPhrase, playSection, playSong, stopAll } from './transport.js';
 import { setPad } from './pad.js';
 import { syncPhraseUI, syncSongUI } from './sync.js';
 import { openPhrase } from './map.js';
+import { setPanel } from './panels.js';
 import { playHere } from './songview.js';
 
 export function selectSong(i) {
@@ -22,13 +23,15 @@ export function selectSong(i) {
   state.songIndex = i; state.song = state.songs[i]; state.phr = 0; state.section = 0; state.patternEdit = null; state.songCursor = { row: 0, track: 0 }; state.rev++;
   placeholdersFor(state.song);
   state.undo.length = 0; state.redo.length = 0;
-  state.cursor = { row: 0, track: 0, cell: 0 }; state.scrollX = 0; state.typing = null; state.message = '';
+  state.cursor = { row: 0, track: state.song.instruments.length ? 0 : -1, cell: 0 }; state.scrollX = 0; state.typing = null; state.message = '';
   syncSongUI(); syncPhraseUI(); state.dirty = true;
   preloadSamples();
 }
 export function addSong(song) { state.songs.push(song); selectSong(state.songs.length - 1); markEdited(song); }
 $('song').onchange = e => selectSong(parseInt(e.target.value, 10));
-$('newSong').onclick = () => addSong(Object.assign(newSong(), { title: 'Untitled ' + (state.songs.length + 1) }));
+// A new song has no instruments: it opens on the Instruments panel, where its players are chosen.
+$('newSong').onclick = () => { addSong(Object.assign(newSong(), { title: 'Untitled ' + (state.songs.length + 1) })); setPanel('instruments'); };
+$('emptyAdd').onclick = () => setPanel('instruments');
 $('title').onchange = e => { withSongUndo(() => { state.song.title = e.target.value.trim() || 'Untitled'; }); syncSongUI(); };
 // Play acts on what is on screen: in the grid it loops the open phrase, in the Song view it plays the arrangement on
 // from the cursor. Play song starts where the open phrase first sounds, or at the top from the Song view.

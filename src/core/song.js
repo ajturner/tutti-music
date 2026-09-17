@@ -25,8 +25,14 @@ export const SONG_FORMAT = 'tutti-song';
 export const SONG_VERSION = 4;   // 4: sections arranged into a song, phrases as the multi-track block, patterns placed with transformations
 export const newUid = () => (globalThis.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 export function newSong() {
-  const song = { $schema: SONG_SCHEMA, format: SONG_FORMAT, version: SONG_VERSION, uid: newUid(), title: 'Untitled', notes: '', bpm: 100, key: null, banks: ['orchestra'], instruments: DEFAULT_TRACKS.map(t => instrumentDefaults(Object.assign({}, t))), patterns: [], phrases: [newPhrase('A1')], sections: [], arrangement: [] };
+  const song = { $schema: SONG_SCHEMA, format: SONG_FORMAT, version: SONG_VERSION, uid: newUid(), title: 'Untitled', notes: '', bpm: 100, key: null, banks: [], instruments: [], patterns: [], phrases: [newPhrase('A1')], sections: [], arrangement: [] };
   return ensureStructure(song);
+}
+// A new song starts with no instruments: the composer chooses the players. This one seats the standard orchestra,
+// for the orchestral examples and for tests.
+export function orchestraSong() {
+  const song = newSong(); song.banks = ['orchestra']; song.instruments = DEFAULT_TRACKS.map(t => instrumentDefaults(Object.assign({}, t)));
+  return song;
 }
 const fillMaterial = m => { m.notes = m.notes || []; m.dyn = m.dyn || []; m.expr = m.expr || []; m.fx = m.fx || []; m.placements = m.placements || []; return m; };
 const clampInt = (v, lo, hi, d) => { const n = Number.isFinite(+v) ? Math.round(+v) : d; return Math.min(hi, Math.max(lo, n)); };
@@ -38,7 +44,7 @@ const uniqueId = (list, base, self) => { let id = base, n = 2; while (list.some(
 export function normalizeSong(s, fallbackTitle) {
   // Drafts of format 4 made before instruments had their own settings called them tracks: read them once, save them new.
   if (s && typeof s === 'object' && !Array.isArray(s.instruments) && Array.isArray(s.tracks)) { const { tracks, ...rest } = s; s = Object.assign(rest, { instruments: tracks.map(({ instrument, ...t }) => Object.assign({ sound: instrument }, t)) }); }
-  if (!s || typeof s !== 'object' || !Array.isArray(s.phrases) || !Array.isArray(s.instruments) || !s.phrases.length || !s.instruments.length) throw new Error('not a Tutti song');
+  if (!s || typeof s !== 'object' || !Array.isArray(s.phrases) || !Array.isArray(s.instruments) || !s.phrases.length) throw new Error('not a Tutti song');
   if (s.format != null && s.format !== SONG_FORMAT) throw new Error('unknown format ' + s.format);
   if (s.version == null || s.version < SONG_VERSION) throw new Error('song version ' + (s.version == null ? 1 : s.version) + ' is older than this app reads (format ' + SONG_VERSION + ')');
   if (s.version > SONG_VERSION) throw new Error('song version ' + s.version + ' is newer than this app');

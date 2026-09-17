@@ -1,7 +1,7 @@
 // Headless tests of the core: it must import and run under Node with no DOM.
 import { PPQ, noteName, clamp, GM_DRUMS } from '../src/core/constants.js';
 import { INSTRUMENTS, INST } from '../src/core/instruments.js';
-import { newSong, newPhrase, materialOf, laneSet, laneValueAt, normalizeSong, SONG_FORMAT, SONG_VERSION, newPattern, makePattern, detachPlacement, expandMaterial, expandPlacement, placementAt, placementLabel, patternUses, removePattern } from '../src/core/song.js';
+import { newSong, orchestraSong, newPhrase, materialOf, laneSet, laneValueAt, normalizeSong, SONG_FORMAT, SONG_VERSION, newPattern, makePattern, detachPlacement, expandMaterial, expandPlacement, placementAt, placementLabel, patternUses, removePattern } from '../src/core/song.js';
 import { renderSong, TimeMap, TYPE_ORDER, rowTicks, tickMapper, rowAtTick, applyFx, expShape } from '../src/core/render.js';
 import { addInstrument, duplicateInstrument, isShaped, removeInstrument, moveInstrument, setInstrumentSound, freeChannel, arrangementText, sectionText, playOrder, keyFor, addPhrase, copyPhrase, addSlot, removeSlot, addSection, removeItem, deleteSection, moveIn, nextPhraseName, phraseById, sectionById, sectionsNotArranged } from '../src/core/song.js';
 import { inScale, transposeDiatonic, snapToScale, degreeOf, effectiveKey } from '../src/core/scales.js';
@@ -43,7 +43,7 @@ pts[0].interp = 'step';
 check('lane: step holds', laneValueAt(pts, 480) === 40);
 
 // New song and normalisation
-const song = newSong();
+const song = orchestraSong();
 check('newSong carries format marker and uid', song.format === SONG_FORMAT && song.version === 4 && SONG_VERSION === 4 && song.$schema.endsWith('tutti-song.schema.json') && typeof song.uid === 'string' && song.uid.length > 8 && Array.isArray(song.patterns) && song.arrangement[0].section === 'a');
 const sparse = JSON.parse(JSON.stringify(song)); delete sparse.$schema; delete sparse.phrases[0].meter; delete sparse.patterns; delete sparse.arrangement; delete sparse.sections; delete sparse.phrases[0].material; delete sparse.phrases[0].id;
 const norm = normalizeSong(sparse, 'x');
@@ -67,7 +67,7 @@ check('render: events ordered by tick then type', sorted);
 check('render: length is the phrase length', r.lengthTicks === phr.rows * tpr);
 
 // Tempo integration: a ritardando makes the last bar longer than the first
-const rit = newSong(); const rp = rit.phrases[0];
+const rit = orchestraSong(); const rp = rit.phrases[0];
 laneSet(rp.tempo, 48 * tpr, 120, 'lin'); laneSet(rp.tempo, 63 * tpr, 60);
 const rr = renderSong(rit), tm = new TimeMap(rr.tempo, rr.lengthTicks, rit.bpm);
 const bar = 16 * tpr;
@@ -82,7 +82,7 @@ check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[1
 
 // Editing primitives: overlap and clamping rules
 {
-  const s = newSong(), p = s.phrases[0], tpr = p.ticksPerRow, id = 'fl';
+  const s = orchestraSong(), p = s.phrases[0], tpr = p.ticksPerRow, id = 'fl';
   setNote(p, id, 0, 0, 60, 4 * tpr);
   setNote(p, id, 0, 2 * tpr, 62, 4 * tpr);
   const a = noteAt(p, id, 0, 0), b = noteAt(p, id, 0, 2);
@@ -115,7 +115,7 @@ check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[1
   check('scale: snap nearest', snapToScale(c, 61, 0) === 60 && snapToScale(c, 61, 1) === 62 && snapToScale(c, 66, 0) === 65);
   check('scale: degree numbering crosses octaves', degreeOf(c, 72) === 42 && degreeOf(c, 60) === 35 && degreeOf(c, 59) === 34);
   check('scale: no key is chromatic', transposeDiatonic(null, 60, 3) === 63);
-  const ks = newSong(); ks.key = am; const kp = newPhrase('B'); kp.key = c;
+  const ks = orchestraSong(); ks.key = am; const kp = newPhrase('B'); kp.key = c;
   check('scale: phrase key overrides the song key', effectiveKey(ks, ks.phrases[0]) === am && effectiveKey(ks, kp) === c && effectiveKey({ key: null }, { key: null }) === null);
 }
 
@@ -128,7 +128,7 @@ check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[1
   check('groove: rowAtTick inverts', rowAtTick(p, 359) === 0 && rowAtTick(p, 360) === 1 && rowAtTick(p, 480) === 2);
   const straight = newPhrase('S', 16, 240); straight.groove = [1, 1];
   check('groove: all-ones is straight', tickMapper(straight)(123) === 123);
-  const gs = newSong(); gs.phrases[0].groove = [1.5, 0.5];
+  const gs = orchestraSong(); gs.phrases[0].groove = [1.5, 0.5];
   line(gs.phrases[0], 'fl', 0, 0, 1, 'C5 D5 E5 F5');
   const ge = renderSong(gs).events.filter(e => e.track === 'fl' && e.type === 'on').map(e => e.tick);
   check('groove: rendered onsets are swung', JSON.stringify(ge) === JSON.stringify([0, 360, 480, 840]), JSON.stringify(ge));
@@ -145,7 +145,7 @@ check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[1
   check('fx: RET 04 splits into four', ret.length === 4 && ret[1].tick === 600 && ret[3].end === 960);
   const arp = applyFx(n, { cmd: 'ARP', value: 0x47 }, 0, tpr, () => 0);
   check('fx: ARP 47 cycles root, +4, +7 per row', arp.length === 2 && arp[0].pitch === 60 && arp[1].pitch === 64);
-  const s = newSong(), p = s.phrases[0];
+  const s = orchestraSong(), p = s.phrases[0];
   line(p, 'tp', 0, 0, 4, 'C5 C5 C5 C5');
   p.material.tp.fx = [{ tick: 4 * tpr, cmd: 'TSP', value: 0xF9 }, { tick: 12 * tpr, cmd: 'TSP', value: 0 }, { tick: 8 * tpr, cmd: 'CHA', value: 0 }];
   const ons = renderSong(s, { random: () => 0.5 }).events.filter(e => e.track === 'tp' && e.type === 'on');
@@ -157,7 +157,7 @@ check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[1
   check('exp: swell peaks at 60% and dips at the ends', expShape(1, 1, 0.6) === 1 && expShape(1, 1, 0) === 0 && expShape(1, 1, 1) < 0.01);
   check('exp: sfz accents then drops', expShape(2, 1, 0.05) === 1 && expShape(2, 1, 0.5) < 0.5);
   check('exp: fade in and out', expShape(3, 1, 0) === 0 && expShape(3, 1, 1) === 1 && expShape(4, 1, 0) === 1 && expShape(4, 1, 1) === 0);
-  const s = newSong(), p = s.phrases[0], tpr = p.ticksPerRow;
+  const s = orchestraSong(), p = s.phrases[0], tpr = p.ticksPerRow;
   line(p, 'vc', 0, 0, 16, 'C3');
   p.material.vc.fx = [{ tick: 0, cmd: 'EXP', value: 0x1F }];
   const r = renderSong(s);
@@ -171,7 +171,7 @@ check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[1
 
 // Track operations
 {
-  const s = newSong(), n = s.instruments.length;
+  const s = orchestraSong(), n = s.instruments.length;
   check('tracks: free channel skips used ones and 10', freeChannel(s) === 15);
   const t = addInstrument(s, 'flute');
   check('tracks: add gives a unique id and free channel', t.id === 'flute' && addInstrument(s, 'flute').id === 'flute-2' && t.channel === 15 && s.instruments.length === n + 2);
@@ -186,7 +186,7 @@ check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[1
 
 // Sections and the arrangement
 {
-  const s = newSong();
+  const s = orchestraSong();
   check('structure: a new song is one section A holding one phrase A1, arranged once', s.sections.length === 1 && s.sections[0].name === 'A' && s.phrases[0].name === 'A1' && s.phrases[0].id === 'a1' && s.sections[0].phrases[0].phrase === 'a1' && arrangementText(s) === 'A' && sectionText(s, s.sections[0]) === 'A1');
   const like = s.phrases[0];
   line(like, 'fl', 0, 0, 16, 'C5 D5 E5 F5');                                   // 4-bar melody in A1
@@ -213,19 +213,19 @@ check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[1
   check('edit: deleting a section takes the phrases only it used', deleteSection(s, 'bridge') && s.sections.length === 1 && s.phrases.length === 1 && !deleteSection(s, 'a'));
   check('edit: copy and move', copyPhrase(s, s.phrases[0]).id === 'a1-copy' && moveIn(s.phrases, 1, -1) && s.phrases[0].id === 'a1-copy' && !moveIn(s.phrases, 0, -1));
   // loader repairs
-  const raw = JSON.parse(JSON.stringify(newSong())); raw.phrases.push(Object.assign(newPhrase('Lost'), { id: 'a1' })); raw.sections[0].phrases.push({ phrase: 'ghost' }); raw.arrangement.push({ section: 'nope' });
+  const raw = JSON.parse(JSON.stringify(orchestraSong())); raw.phrases.push(Object.assign(newPhrase('Lost'), { id: 'a1' })); raw.sections[0].phrases.push({ phrase: 'ghost' }); raw.arrangement.push({ section: 'nope' });
   const fixed = normalizeSong(raw);
   check('loader: duplicate ids renamed, missing references dropped, unplaced phrases gathered but not arranged', fixed.phrases[1].id === 'lost' && fixed.sections[0].phrases.length === 1 && fixed.sections.length === 2 && fixed.sections[1].name === 'Spare' && fixed.sections[1].phrases[0].phrase === 'lost' && arrangementText(fixed) === 'A', JSON.stringify(fixed.sections));
-  const bare = JSON.parse(JSON.stringify(newSong())); delete bare.sections; delete bare.arrangement; bare.phrases.push(newPhrase('B1'));
+  const bare = JSON.parse(JSON.stringify(orchestraSong())); delete bare.sections; delete bare.arrangement; bare.phrases.push(newPhrase('B1'));
   const filled = normalizeSong(bare);
   check('loader: no sections means one section A holding every phrase, played once', filled.sections.length === 1 && sectionText(filled, filled.sections[0]) === 'A1 B1' && arrangementText(filled) === 'A');
-  const bytes = midiFileBytes(Object.assign(newSong(), { title: 'x' }));
+  const bytes = midiFileBytes(Object.assign(orchestraSong(), { title: 'x' }));
   check('midi: a section marker is written', String.fromCharCode(...bytes).includes(String.fromCharCode(0xFF, 6, 1) + 'A'));
 }
 
 // Patterns and placements
 {
-  const s = newSong(); const A = s.phrases[0], tpr = A.ticksPerRow;
+  const s = orchestraSong(); const A = s.phrases[0], tpr = A.ticksPerRow;
   line(A, 'fl', 0, 4, 2, 'C5 D5 E5 F5 G5 A5 B5 C6');       // 16 rows of tune from row 4
   line(A, 'fl', 0, 0, 1, 'G4 A4 B4');                       // pickup on rows 0-2
   laneSet(materialOf(A, 'fl').dyn, 8 * tpr, 90);
@@ -279,7 +279,7 @@ check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[1
 
 // Scheduler: solo gating and live queue
 {
-  const s = newSong(); line(s.phrases[0], 'fl', 0, 0, 4, 'C5'); line(s.phrases[0], 'ob', 0, 0, 4, 'E5');
+  const s = orchestraSong(); line(s.phrases[0], 'fl', 0, 0, 4, 'C5'); line(s.phrases[0], 'ob', 0, 0, 4, 'E5');
   const sent = [];
   const sched = new Scheduler(() => [{ send: ev => sent.push(ev.track + ':' + ev.type), allOff() {} }]);
   s.instruments.find(t => t.id === 'ob').solo = true;
@@ -306,7 +306,11 @@ check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[1
 
 // Instruments: players made from sounds, each with its own settings
 {
-  const s = newSong(), fl = s.instruments[0];
+  const blank = newSong();
+  check('new song: starts with no instruments and no banks, and is a valid, silent song', blank.instruments.length === 0 && blank.banks.length === 0 && normalizeSong(JSON.parse(JSON.stringify(blank))).instruments.length === 0 && renderSong(blank).events.filter(e => e.type === 'on').length === 0 && midiFileBytes(blank).length > 20);
+  const first = addInstrument(blank, 'cellos');
+  check('new song: the first instrument added brings its bank, and the last one can be removed again', blank.banks.includes('orchestra') && first.channel === 1 && removeInstrument(blank, first.id) && blank.instruments.length === 0);
+  const s = orchestraSong(), fl = s.instruments[0];
   check('instrument: a new song\'s instruments name their sound and carry default shaping', fl.sound === 'flute' && fl.instrument === undefined && fl.tune === 0 && fl.cents === 0 && fl.trim === 0 && fl.release === 1 && fl.volume === 100 && fl.pan === 64 && !isShaped(fl));
   line(s.phrases[0], fl.id, 0, 0, 4, 'C5 D5');
   Object.assign(fl, { pan: 30, cents: -8, tune: 12, columns: 2 });
@@ -320,7 +324,7 @@ check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[1
   const sink = new SamplerSink({ master: null }, 'x/');
   check('sampler: shaping comes from the instrument, so two from one sound differ', sink.setting(fl).cents === -8 && sink.setting(two).cents === 9 && sink.setting(null).release === 1 && sink.setting('flute').tune === 0);
   check('instrument: shaping is clamped on load', (() => { const x = normalizeSong(JSON.parse(JSON.stringify(Object.assign({}, s, { instruments: [Object.assign({}, fl, { tune: 99, cents: -400, trim: 'x', release: 0 })] })))).instruments[0]; return x.tune === 24 && x.cents === -100 && x.trim === 0 && x.release === 0.25; })());
-  check('midi export: tuning is for the preview only, the file keeps the written pitch', (() => { const a = newSong(); line(a.phrases[0], 'fl', 0, 0, 4, 'C5'); const plain = midiFileBytes(a); a.instruments[0].tune = 12; a.instruments[0].cents = 30; const tuned = midiFileBytes(a); return plain.length === tuned.length && plain.every((b, i) => b === tuned[i]); })());
+  check('midi export: tuning is for the preview only, the file keeps the written pitch', (() => { const a = orchestraSong(); line(a.phrases[0], 'fl', 0, 0, 4, 'C5'); const plain = midiFileBytes(a); a.instruments[0].tune = 12; a.instruments[0].cents = 30; const tuned = midiFileBytes(a); return plain.length === tuned.length && plain.every((b, i) => b === tuned[i]); })());
   // a draft of format 4 from before instruments: tracks with an instrument id
   const draft = JSON.parse(JSON.stringify(s)); draft.tracks = draft.instruments.map(({ sound, tune, cents, trim, release, ...t }) => Object.assign({ instrument: sound }, t)); delete draft.instruments;
   const up = normalizeSong(draft);
@@ -368,13 +372,13 @@ check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[1
     { id: 'buzz', name: 'Buzz', family: 'electronic', range: [36, 96], articulations: ['sus'], patch: { waves: [['square', 0, 0.5]], a: 0.01, d: 0.1, s: 0.8, r: 0.1, level: 0.2 } } ] };
   const b = installBank(json, 'https://example.test/banks/test-bank/bank.json');
   check('banks: install registers instruments with resolved sample folders', b.instruments.length === 3 && INST.zither.bank === 'test-bank' && INST.zither.samples === 'https://example.test/banks/test-bank/zither/' && INST['box-kit'].kit[38] === 'slap' && INST.buzz.patch.waves[0][0] === 'square');
-  const s = newSong();
+  const s = orchestraSong();
   const t = addInstrument(s, 'zither');
   check('banks: adding a bank instrument records the bank on the song', s.banks.includes('test-bank') && t.sound === 'zither');
   addInstrument(s, 'flute');
   check('banks: new songs record the orchestra like any bank', s.banks.includes('orchestra') && s.banks.length === 2);
   check('banks: unload keeps instruments in use', unloadBank('test-bank', id => id === 'zither') && !!INST.zither && !INST.buzz && !banks.has('test-bank'));
-  const s2 = newSong(); s2.instruments.push({ id: 'x', name: 'X', sound: 'nope', channel: 15, columns: 1, mute: false }); s2.banks = ['no-such-bank'];
+  const s2 = orchestraSong(); s2.instruments.push({ id: 'x', name: 'X', sound: 'nope', channel: 15, columns: 1, mute: false }); s2.banks = ['no-such-bank'];
   const missing = await ensureSongBanks(s2);
   check('banks: missing banks and instruments get placeholders and are reported', missing.includes('no-such-bank') && missing.includes('nope') && INST.nope && INST.nope.bank === 'missing');
   unregisterInstrument('zither'); unregisterInstrument('nope');
