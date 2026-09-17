@@ -158,7 +158,9 @@ function changed(mutate, message) {
   const song = state.song;
   state.phr = Math.min(state.phr, song.phrases.length - 1);
   if (message) state.message = message;
-  syncPhraseUI(); syncSongView(true); state.dirty = true;
+  syncPhraseUI(); syncSongView(true);
+  setSongCursor(state.songCursor.row, state.songCursor.track);   // rows may have moved: the cursor row is the open phrase again
+  state.dirty = true;
 }
 const blockOf = el => { const s = el.closest('.svSec'); return s ? model.blocks.find(b => String(b.ai) === s.dataset.ai && b.sec.id === s.dataset.sec) : null; };
 const rowOf = el => { const r = el.closest('[data-row]'); return r ? model.rows[parseInt(r.dataset.row, 10)] : null; };
