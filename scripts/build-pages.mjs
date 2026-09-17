@@ -87,8 +87,14 @@ export function previewHead(pr, { shareBanks = true, buildsHref = '../../builds/
 (() => {
   const PR = ${scriptJson(info)};
   // 1. Saved songs and settings stay apart from the live app's: same origin, so the same localStorage.
-  const S = Storage.prototype;
-  for (const name of ['getItem', 'setItem', 'removeItem']) { const f = S[name]; S[name] = function (k, ...rest) { return f.call(this, this === window.localStorage ? 'pr' + PR.number + ':' + k : k, ...rest); }; }
+  //    Every key gets a prefix, and clear(), key() and length see this preview's keys only.
+  const S = Storage.prototype, P = 'pr' + PR.number + ':', mine = s => s === window.localStorage;
+  const raw = { key: S.key, clear: S.clear, removeItem: S.removeItem, length: Object.getOwnPropertyDescriptor(S, 'length').get };
+  const own = s => { const out = []; for (let i = 0, n = raw.length.call(s); i < n; i++) { const k = raw.key.call(s, i); if (k.startsWith(P)) out.push(k); } return out; };
+  for (const name of ['getItem', 'setItem', 'removeItem']) { const f = S[name]; S[name] = function (k, ...rest) { return f.call(this, mine(this) ? P + k : k, ...rest); }; }
+  S.clear = function () { if (!mine(this)) return raw.clear.call(this); for (const k of own(this)) raw.removeItem.call(this, k); };
+  S.key = function (i) { if (!mine(this)) return raw.key.call(this, i); const k = own(this)[i]; return k == null ? null : k.slice(P.length); };
+  Object.defineProperty(S, 'length', { configurable: true, get() { return mine(this) ? own(this).length : raw.length.call(this); } });
   // 2. No offline cache in a preview, so a reload always shows the latest push.
   if (navigator.serviceWorker) navigator.serviceWorker.register = () => Promise.reject(new Error('previews do not register a service worker'));
   // 3. Samples come from the live site unless this pull request changes banks/.

@@ -97,6 +97,19 @@ const check = (name, ok, extra = '') => { console.log((ok ? 'PASS ' : 'FAIL ') +
   const iso = await pre.evaluate(async () => ({ keys: Object.keys(localStorage), readBack: localStorage.getItem('tutti.sound'), regs: (await navigator.serviceWorker.getRegistrations()).length, flute: tutti.sampler.has('flute') }));
   check('preview: its saved songs and settings are kept under its own prefix', iso.keys.length > 0 && iso.keys.every(k => k.startsWith('pr7:')) && iso.readBack === 'samples', JSON.stringify(iso.keys));
   check('preview: no service worker is registered', iso.regs === 0);
+  // clear(), key() and length stay inside the fence: a preview can never wipe the live app's songs
+  const fence = await pre.evaluate(() => {
+    const rawSet = (k, v) => { const f = document.createElement('iframe'); document.body.append(f); f.contentWindow.Storage.prototype.setItem.call(localStorage, k, v); f.remove(); };
+    rawSet('tutti.songs.v1', '[{"live":true}]');                       // what the live app would have stored, written past the fence
+    const before = { length: localStorage.length, keys: Array.from({ length: localStorage.length }, (_, i) => localStorage.key(i)), liveSeen: localStorage.getItem('tutti.songs.v1') };
+    sessionStorage.setItem('probe', '1'); const session = { length: sessionStorage.length, key: sessionStorage.key(0) };
+    localStorage.clear();
+    const after = { length: localStorage.length, raw: Object.keys(localStorage) };
+    sessionStorage.clear();
+    return { before, session, after, sessionCleared: sessionStorage.length === 0 };
+  });
+  check('preview: clear, key and length see only its own keys, so the live app\'s songs survive a clear', fence.before.length >= 2 && fence.before.keys.includes('tutti.songs.v1') && fence.before.keys.every(k => !k.startsWith('pr7:')) && fence.before.liveSeen !== '[{"live":true}]' && fence.after.length === 0 && fence.after.raw.join() === 'tutti.songs.v1' && fence.session.length === 1 && fence.session.key === 'probe' && fence.sessionCleared, JSON.stringify(fence).slice(0, 400));
+  await pre.evaluate(() => { tutti.markEdited(); tutti.saveNow(); localStorage.setItem('tutti.sound', 'samples'); });   // put the preview's keys back for the checks below
   check('preview: the footer link to the listing stays hidden, the bar has it', await pre.evaluate(() => { const a = document.getElementById('buildsLink'); return !a || a.hidden; }));
   const bank = requests.filter(r => r.includes('/banks/'));
   check('preview: samples load from the live site, not from the preview', iso.flute && bank.length > 3 && bank.every(r => r.startsWith('/banks/')) && !requests.some(r => r.startsWith('/pr/7/banks/')), bank.slice(0, 3).join(' '));
