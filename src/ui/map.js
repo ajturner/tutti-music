@@ -11,6 +11,12 @@ export function setLevel(level) {
   state.level = level === 'song' ? 'song' : 'grid';
   document.body.dataset.level = state.level;
   $('songView').hidden = state.level !== 'song';
+  // the transport says what it will do at this level
+  const song = state.level === 'song', play = $('playPhrase'), sec = $('playSection'), all = $('playSong');
+  play.querySelector('.full').textContent = song ? 'Play from here' : 'Play phrase';
+  play.title = song ? 'Play the arrangement on from the cursor row, through every repeat (Space)' : 'Loop the open phrase (Space)';
+  sec.textContent = 'Loop section'; sec.title = 'Loop the section under the cursor on its own until you stop it' + (song ? ' (⇧Space)' : '');
+  all.title = song ? 'Play the arrangement from the top' : 'Play the arrangement from where the open phrase first sounds (Enter)';
   state.dirty = true;
   if (state.level === 'song') $('songView').focus({ preventScroll: true }); else $('grid').focus({ preventScroll: true });
 }

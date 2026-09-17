@@ -16,6 +16,7 @@ import { playPhrase, playSection, playSong, stopAll } from './transport.js';
 import { setPad } from './pad.js';
 import { syncPhraseUI, syncSongUI } from './sync.js';
 import { openPhrase } from './map.js';
+import { playHere } from './songview.js';
 
 export function selectSong(i) {
   stopAll();
@@ -30,9 +31,11 @@ export function addSong(song) { state.songs.push(song); selectSong(state.songs.l
 $('song').onchange = e => selectSong(parseInt(e.target.value, 10));
 $('newSong').onclick = () => addSong(Object.assign(newSong(), { title: 'Untitled ' + (state.songs.length + 1) }));
 $('title').onchange = e => { withSongUndo(() => { state.song.title = e.target.value.trim() || 'Untitled'; }); syncSongUI(); };
-$('playPhrase').onclick = () => playPhrase(false);
+// Play acts on what is on screen: in the grid it loops the open phrase, in the Song view it plays the arrangement on
+// from the cursor. Play song starts where the open phrase first sounds, or at the top from the Song view.
+$('playPhrase').onclick = () => (state.level === 'song' ? playHere(false) : playPhrase(false));
 $('playSection').onclick = () => playSection();
-$('playSong').onclick = () => playSong();
+$('playSong').onclick = () => (state.level === 'song' ? playSong(0) : playSong());
 $('stop').onclick = () => stopAll();
 $('rec').onclick = () => toggleRecord();
 $('bpm').onchange = e => { withSongUndo(() => { state.song.bpm = clamp(parseInt(e.target.value, 10) || 100, 20, 300); }); };

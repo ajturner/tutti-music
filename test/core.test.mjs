@@ -294,6 +294,14 @@ check('midi: one track per song track plus conductor', (bytes[10] << 8 | bytes[1
   sched.swapToQueued();
   check('scheduler: swap adopts the queued render', sched.rendered.starts[0].phrase === 1 && sched.next == null);
   sched.stop();
+  // started from the second phrase: during the lead-in the position is that start, never the end of the phrase before it
+  addSection(s, 'Later', s.phrases[0]);
+  const whole = renderSong(s), second = whole.starts[1];
+  sched.play(s, whole, { loop: false, startTick: second.tick });
+  check('scheduler: the position is never before the place playback started from', sched.positionTick() >= second.tick && sched.positionTick() < second.tick + second.rows * second.ticksPerRow, sched.positionTick() + ' vs ' + second.tick);
+  sched.play(s, r, { loop: true });
+  check('scheduler: a loop started from the top reports the top, not the end, while it leads in', sched.positionTick() < r.lengthTicks / 2, String(sched.positionTick()));
+  sched.stop();
 }
 
 // Sampler zone selection (pure) and the bundled sample maps

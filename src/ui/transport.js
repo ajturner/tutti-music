@@ -1,4 +1,4 @@
-// Play phrase, play section, play song, stop.
+// Loop the phrase, loop a section, play the song, stop.
 import { renderSong, rowTicks } from '../core/render.js';
 import { curPhrase, curPattern, curSection, sched, state, synth, preloadSamples } from './state.js';
 import { withUndo } from './edit.js';

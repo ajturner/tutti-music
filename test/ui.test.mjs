@@ -291,6 +291,37 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, track: state.c
   check('song view: Space plays from the row, which lights up with its form chip', pl.playing && pl.row === '0' && /^A/.test(pl.chip || '') && /A › A1/.test(pl.now || ''), JSON.stringify(pl));
   check('monitor: sounding tracks show their note in the Song view header and the mixer', pl.sounding >= 3 && pl.live === pl.sounding && pl.mixer === pl.sounding, JSON.stringify(pl));
   await page.keyboard.press('Escape'); await page.waitForTimeout(60);
+  // Play in the Song view plays forward: a phrase's repeats, then the section's, then the next section, then it stops
+  {
+    const back = await page.evaluate(() => {
+      const back = state.songIndex, s = tutti.newSong(); s.title = 'Forward'; s.bpm = 300;
+      tutti.addSection(s, 'B', s.phrases[0]); for (const p of s.phrases) p.rows = 4;
+      s.sections[0].phrases[0].repeat = 2; s.arrangement[0].repeat = 2;
+      tutti.addSong(s); tutti.setLevel('song'); return back;
+    });
+    await page.waitForTimeout(150);
+    const labels = await page.evaluate(() => ({ play: document.querySelector('#playPhrase .full').textContent, title: document.getElementById('playPhrase').title, sec: document.getElementById('playSection').textContent, loop: document.querySelector('#songBody [data-act="playSec"]').textContent }));
+    check('song view: the transport says Play goes forward from here and that sections loop', labels.play === 'Play from here' && /every repeat/.test(labels.title) && labels.sec === 'Loop section' && /loop/.test(labels.loop), JSON.stringify(labels));
+    await page.evaluate(() => tutti.setSongCursor(0, 0)); await page.click('#playPhrase');
+    const seen = []; let stopped = false;
+    for (let i = 0; i < 90 && !stopped; i++) {
+      const v = await page.evaluate(() => { const t = sched.positionTick(), r = sched.rendered, st = t != null && r ? r.starts.find(x => t >= x.tick && t < x.tick + x.rows * x.ticksPerRow) : null; return { playing: sched.playing, loop: sched.loop, st: st ? st.section + st.sectionRepeat + '.' + st.repeat : '', counts: [...document.querySelectorAll('#songBody .count.on')].map(c => c.textContent).join(','), cur: state.songCursor.row, sec: state.song.sections[state.section].name, crumb: (document.querySelector('#map .crumb[data-level="section"] b') || {}).textContent }; });
+      if (!v.playing) stopped = true; else if (v.st) { const k = [v.st, v.counts, v.cur, v.sec, (v.crumb || '').split(' ')[0], v.loop].join(' '); if (seen.length && seen[seen.length - 1].split(' ')[0] === v.st) seen[seen.length - 1] = k; else seen.push(k); }   // the settled state of each stretch
+      await page.waitForTimeout(30);
+    }
+    check('song view: Play steps through the phrase repeats, the section repeats and on to the next section, counting as it goes, with the cursor and the map following, then stops',
+      stopped && seen.join(' | ') === 'a0.0 1/2,1/2 0 A A false | a0.1 1/2,2/2 0 A A false | a1.0 2/2,1/2 0 A A false | a1.1 2/2,2/2 0 A A false | b0.0  1 B B false', seen.join(' | '));
+    await page.evaluate(() => tutti.setSongCursor(0, 0)); await page.click('#songBody [data-act="playSec"]'); await page.waitForTimeout(700);
+    const looped = await page.evaluate(() => ({ playing: sched.playing, loop: sched.loop, scope: sched.rendered.scope, counts: [...document.querySelectorAll('#songBody .count.on')].map(c => c.textContent).join(',') }));
+    check('song view: a section\'s loop button loops that section alone, counting phrase repeats only', looped.playing && looped.loop && looped.scope === 'a' && /^[12]\/2$/.test(looped.counts), JSON.stringify(looped));
+    await page.click('#stop');
+    await page.keyboard.press('Backquote').catch(() => {}); await page.evaluate(() => tutti.openPhrase(0, 0, 0)); await page.waitForTimeout(60);
+    const gridPlay = await page.evaluate(() => document.querySelector('#playPhrase .full').textContent); await page.click('#playPhrase'); await page.waitForTimeout(120);
+    check('grid: Play is Play phrase and loops the open phrase', gridPlay === 'Play phrase' && await page.evaluate(() => sched.playing && sched.loop && sched.rendered.starts.length === 1));
+    await page.click('#stop');
+    await page.evaluate(back => { state.songs.splice(state.songIndex, 1); tutti.persisted.delete('x'); tutti.selectSong(back); tutti.syncSongUI(); tutti.setLevel('song'); }, back); await page.waitForTimeout(150);
+    await page.focus('#songView');
+  }
   // structure edits keep the song showable and are one undo step each
   await page.click('#songBody .svSec[data-ai="2"] button[data-act="itemRemove"]'); await page.waitForTimeout(60);
   await page.click('#songBody .svSec[data-ai="1"] button[data-act="itemRemove"]'); await page.waitForTimeout(60);

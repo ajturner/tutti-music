@@ -32,7 +32,7 @@ export const KEYMAP = {
 export const state = {
   songs: EXAMPLES.map(e => e.build()), songIndex: 0, song: null,
   phr: 0,                // index of the open phrase
-  section: 0,            // index of the section the open phrase is seen in: its key, the map, Play section
+  section: 0,            // index of the section the open phrase is seen in: its key, the map, Loop section
   level: 'grid',         // 'grid' shows a phrase, or a pattern opened from it; 'song' shows the overview
   songCursor: { row: 0, track: 0 },   // the cell under the cursor in the Song view
   rev: 0,                // bumped by every edit so the DOM views know to rebuild
@@ -106,7 +106,7 @@ export function curPhrase() {
 export const tracksShown = () => state.patternEdit ? state.song.tracks.filter(t => t.id === state.patternEdit.trackId) : state.song.tracks;
 export const curTrack = () => state.cursor.track >= 0 ? tracksShown()[state.cursor.track] || null : null;
 // The section the open phrase is seen in. A phrase may sit in several sections; the one it was opened from
-// decides its key and what Play section loops. Falls back to the first section that holds the phrase.
+// decides its key and what Loop section loops. Falls back to the first section that holds the phrase.
 export function curSection() {
   const song = state.song, phr = song.phrases[state.phr]; if (!phr) return null;
   const holds = sec => !!sec && sec.phrases.some(sl => sl.phrase === phr.id);

@@ -27,7 +27,7 @@ The vocabulary, the file format (version 4) and worked songs are in [docs/domain
 - **Key and scale:** set the song's key; the pad dims out-of-scale notes, selections transpose by scale degree, controller nudges follow the scale.
 - **FX column:** one command per row per track: CHA chance, RET retrigger, DEL delay, ARP arpeggio, TSP transpose.
 - **Groove:** per-phrase swing presets or a custom cycle of row-length multipliers.
-- **Live:** solo tracks with shift-click or long press; pick another phrase while one loops to queue it; Play section loops a whole section.
+- **Live:** solo tracks with shift-click or long press; pick another phrase while one loops to queue it; Loop section loops a whole section; in the Song view Play goes forward from the cursor through every repeat.
 - **Patterns:** select rows on one track and Make pattern; place it anywhere and transform the placement with the keys that move notes (− = transpose, , . shift by scale degree, ⇧− ⇧= octave, < > softer or louder, [ ] repeat). Edit the pattern once with Enter and every placement follows; Detach to vary one copy. A looping bass or beat is one placement with a repeat, in plain sight.
 - **Workflow panels:** the header keeps only the transport and phrase selector; Files, Compose (the open phrase or pattern, key, tracks), Sounds, Connect (MIDI, controller) and ⚙ View open one at a time under it, and become full screens behind a tab bar on a phone.
 - **Mixer sidebar:** volume, pan, mute and solo per track beside the grid while editing.

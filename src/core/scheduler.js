@@ -21,6 +21,7 @@ export class Scheduler {
     const startMs = tm.msAt(startTick);
     const now = performance.now();
     this.origin = now + 60 - startMs;               // absolute time = origin + ev.ms
+    this.startMs = startMs;
     // Catch up controller and keyswitch state for events we skip when starting mid-phrase.
     const carry = new Map();
     let i = 0;
@@ -80,7 +81,8 @@ export class Scheduler {
   }
   positionTick() {
     if (!this.playing) return null;
-    let ms = performance.now() - this.origin;
+    // during the short lead-in the position is the start, not the end of whatever comes before it
+    let ms = Math.max(performance.now() - this.origin, this.startMs || 0);
     if (this.loop) ms = ((ms % this.lengthMs) + this.lengthMs) % this.lengthMs;
     return this.tm.tickAt(Math.max(0, ms));
   }

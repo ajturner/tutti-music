@@ -68,9 +68,9 @@ function render() {
     const others = song.phrases.filter(p => !sec.phrases.some(sl => sl.phrase === p.id));
     html += `<div class="svSec${b.ai < 0 ? ' spare' : ''}${b.first ? '' : ' again'}" data-ai="${b.ai}" data-sec="${esc(sec.id)}" style="--sec:${secColor(b.si)}"><div class="svSecIn">` +
       `<span class="swatch"></span><input data-f="secName" type="text" value="${esc(sec.name)}" size="9" title="Section name: Intro, Verse, Chorus, Bridge, A, B, Coda…" aria-label="Section name">` +
-      (b.ai >= 0 ? `<label title="Play this section this many times here">×<input data-f="itemRepeat" type="number" min="1" max="64" value="${b.item.repeat}"></label>` : '<span class="dim">not in the arrangement</span>') +
+      (b.ai >= 0 ? `<label title="Play this section this many times here">×<input data-f="itemRepeat" type="number" min="1" max="64" value="${b.item.repeat}"><span class="count"></span></label>` : '<span class="dim">not in the arrangement</span>') +
       (b.first ? keySelects(sec.key) : '') +
-      `<span class="secActs"><button data-act="playSec" title="Loop this section">▶ loop</button>` +
+      `<span class="secActs"><button data-act="playSec" title="Loop this section on its own until you stop it (⇧Space). Play and Space play the arrangement forward instead.">⟳ loop</button>` +
       (!b.first ? '' : `<select data-f="addPhrase" title="Add a phrase to this section"><option value="">+ phrase…</option><option value="new">new empty phrase</option><option value="copy">copy of the phrase under the cursor</option>${others.length ? '<optgroup label="reuse a phrase">' + others.map(p => `<option value="id:${esc(p.id)}">${esc(p.name)}</option>`).join('') + '</optgroup>' : ''}</select>`) +
       (b.ai >= 0 ? `<button data-act="itemUp" title="Earlier in the arrangement">↑</button><button data-act="itemDown" title="Later in the arrangement">↓</button><button data-act="itemRemove" title="Take this occurrence out of the arrangement">remove</button>`
                  : `<button data-act="arrange" title="Play this section at the end of the arrangement">add to arrangement</button><button data-act="secDelete" title="Delete this section and the phrases only it uses">delete</button>`) + '</span>' +
@@ -78,7 +78,7 @@ function render() {
     for (const r of b.rows) {
       const phr = song.phrases[r.pi], pm = phraseMeter(phr), shared = song.sections.filter(x => x !== sec && x.phrases.some(sl => sl.phrase === phr.id)).map(x => x.name);
       html += `<div class="svRow svPhrase" data-row="${r.index}" style="--sec:${secColor(b.si)}"><div class="svLeft"><input data-f="phrName" type="text" value="${esc(phr.name)}" size="7" aria-label="Phrase name" title="Phrase name">` +
-        `<label title="Play this phrase this many times">×<input data-f="slotRepeat" type="number" min="1" max="64" value="${r.slot.repeat}"></label>` +
+        `<label title="Play this phrase this many times">×<input data-f="slotRepeat" type="number" min="1" max="64" value="${r.slot.repeat}"><span class="count"></span></label>` +
         `<span class="dim meta">${phr.rows}r ${pm[0]}/${pm[1]}${shared.length ? ' · also in ' + esc(shared.join(', ')) : ''}</span>` +
         `<span class="acts"><button data-act="open" title="Open this phrase in the grid (Enter)">open</button><button data-act="slotUp" title="Earlier in the section">↑</button><button data-act="slotDown" title="Later in the section">↓</button><button data-act="slotRemove" title="Take this phrase out of the section">×</button></span></div>` +
         tracks.map((tr, ti) => cellHtml(song, r, tr, ti)).join('') + '</div>';
@@ -93,7 +93,7 @@ function render() {
   el.innerHTML = html;
   state.songCursor.row = Math.min(state.songCursor.row, Math.max(0, model.rows.length - 1));
   state.songCursor.track = Math.min(state.songCursor.track, Math.max(0, tracks.length - 1));
-  paintCursor(); lastPlaying = -2; lastLive = '';
+  paintCursor(); lastPlaying = -2; lastLive = ''; lastCount = '';
 }
 function paintCursor() {
   const el = $('songBody');
@@ -102,7 +102,7 @@ function paintCursor() {
   if (c) { c.classList.add('cur'); c.parentElement.classList.add('cur'); let sec = c.parentElement.previousElementSibling; while (sec && !sec.classList.contains('svSec')) sec = sec.previousElementSibling; if (sec) sec.classList.add('cur'); }
 }
 // The row under the cursor is the open phrase, seen in that section: the map, the phrase selector, Compose and
-// the Play phrase and Play section buttons all follow it.
+// the Play and Loop section buttons all follow it.
 export function setSongCursor(row, track, reveal) {
   state.songCursor.row = Math.max(0, Math.min(model.rows.length - 1, row));
   state.songCursor.track = Math.max(0, Math.min(state.song.tracks.length - 1, track));
@@ -118,7 +118,7 @@ export function focusSection(sectionIndex) {
 }
 
 // ---- Per frame: rebuild when the song changed, then the playhead and the track monitor -------------------
-let sig = '', lastPlaying = -2, lastLive = '', lastW = 0, lastLevel = '', lastCur = '';
+let sig = '', lastPlaying = -2, lastLive = '', lastW = 0, lastLevel = '', lastCur = '', lastCount = '';
 export function syncSongView(force) {
   if (state.level !== 'song') { lastLevel = state.level; return; }
   const next = state.rev + '|' + state.songIndex + '|' + state.song.uid;
@@ -131,18 +131,40 @@ export function syncSongView(force) {
   const cur = state.songCursor.row + ':' + state.songCursor.track; if (cur !== lastCur) { lastCur = cur; paintCursor(); }
   const w = $('songView').clientWidth; if (w !== lastW) { lastW = w; $('songView').style.setProperty('--svW', w + 'px'); }
   const el = $('songBody'), tick = sched.positionTick(), rendered = sched.rendered;
-  let playing = -1, pos = 0, item = -1;
+  let playing = -1, pos = 0, item = -1, count = '';
   if (tick != null && rendered && !rendered.pattern) {
     const st = rendered.starts.find(s => tick >= s.tick && tick < s.tick + s.rows * s.ticksPerRow);
     if (st) {
       const r = model.rows.find(x => x.block.sec.id === st.section && x.slotIndex === st.slot && (rendered.scope || st.item < 0 || x.block.ai === st.item)) || model.rows.find(x => x.pi === st.phrase);
-      if (r) { playing = r.index; pos = (tick - st.tick) / (st.rows * st.ticksPerRow); item = r.block.ai; }
+      if (r) {
+        playing = r.index; pos = (tick - st.tick) / (st.rows * st.ticksPerRow); item = r.block.ai;
+        // which time through: the section's count only means something while the arrangement plays
+        const of = (i, n) => n > 1 ? (i + 1) + '/' + n : '';
+        count = playing + '|' + (rendered.scope || !r.block.item ? '' : of(st.sectionRepeat, r.block.item.repeat)) + '|' + (rendered.starts.length > 1 || !sched.loop ? of(st.repeat, r.slot.repeat) : '');
+      }
     }
   }
   if (playing !== lastPlaying) {
     for (const x of el.querySelectorAll('.playing')) x.classList.remove('playing');
     if (playing >= 0) { const row = el.querySelector(`.svPhrase[data-row="${playing}"]`); if (row) row.classList.add('playing'); const chip = el.querySelector(`.formChip[data-ai="${item}"]`); if (chip) chip.classList.add('playing'); }
     lastPlaying = playing;
+    // Follow: the cursor rides the playing row, so the map, the phrase selector and the screen stay with the music.
+    if (playing >= 0 && state.follow && !el.contains(document.activeElement)) {
+      const r = model.rows[playing];
+      state.songCursor.row = playing;
+      if (state.phr !== r.pi || state.section !== r.block.si) { state.phr = r.pi; state.section = r.block.si; syncPhraseUI(); }
+      paintCursor(); lastCur = state.songCursor.row + ':' + state.songCursor.track;
+      const row = el.querySelector('.svPhrase.playing'); if (row && row.scrollIntoView) row.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    }
+  }
+  if (count !== lastCount) {
+    lastCount = count;
+    for (const x of el.querySelectorAll('.count.on')) { x.textContent = ''; x.classList.remove('on'); }
+    if (playing >= 0) {
+      const [, secN, phrN] = count.split('|'), row = el.querySelector(`.svPhrase[data-row="${playing}"]`);
+      let sec = row && row.previousElementSibling; while (sec && !sec.classList.contains('svSec')) sec = sec.previousElementSibling;
+      for (const [host, text] of [[sec, secN], [row, phrN]]) { const c = text && host && host.querySelector('.count'); if (c) { c.textContent = text; c.classList.add('on'); } }
+    }
   }
   if (playing >= 0) { const row = el.querySelector('.svPhrase.playing'); if (row) row.style.setProperty('--pos', (pos * 100).toFixed(1) + '%'); }
   const now = soundingNow(), live = JSON.stringify(now);
@@ -225,6 +247,13 @@ function onChange(e) {
   }
   $('songView').focus({ preventScroll: true });
 }
+// Play from the cursor row and keep going: through the phrase's repeats, the section's, then the next section.
+// A section that is not in the arrangement has nowhere to go, so it loops; so does any section when asked to.
+export function playHere(loopSection) {
+  const row = model.rows[state.songCursor.row]; if (!row) return playSong(0);
+  if (loopSection || row.block.ai < 0) { state.phr = row.pi; state.section = row.block.si; return playSection(row.block.sec); }
+  const i = startOf(row); playSong(i >= 0 ? i : 0);
+}
 // Keys while the Song view is up. Arrows move the cell cursor, Enter opens, Space plays from here.
 export function songKey(e) {
   const k = e.key, sh = e.shiftKey, c = state.songCursor, row = model.rows[c.row];
@@ -240,8 +269,7 @@ export function songKey(e) {
     case 'Escape': stopAll(); return true;
     case ' ':
       if (sched.playing) stopAll();
-      else if (row && (sh || row.block.ai < 0)) { state.phr = row.pi; state.section = row.block.si; playSection(row.block.sec); }
-      else if (row) { const i = startOf(row); playSong(i >= 0 ? i : undefined); }
+      else playHere(sh);
       return true;
   }
   return false;

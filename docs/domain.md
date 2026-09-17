@@ -237,14 +237,14 @@ Afterwards: 2 sections with different keys and meters, 1 pattern placed in both.
 
 ### 5. A jazz head (AABA, a bridge in another key)
 
-The file above. Sections A and Bridge; the arrangement `A×2 Bridge A`; the riff stated and then sequenced up three degrees; the ride softer in the bridge; **Play section** loops the bridge while you write it.
+The file above. Sections A and Bridge; the arrangement `A×2 Bridge A`; the riff stated and then sequenced up three degrees; the ride softer in the bridge; **Loop section** loops the bridge while you write it.
 
 Afterwards: 2 sections, 2 phrases, 3 patterns, 7 placements.
 
 ### 6. A live set
 
 1. **Play phrase** loops the open phrase. Choose another in the selector: it is queued and takes over when the loop ends.
-2. **Play section** loops a whole section; the map follows the playing phrase.
+2. **Loop section** loops a whole section; the map follows the playing phrase. In the Song view, **Play from here** goes forward instead: the phrase's repeats, the section's, then the next section.
 3. The mixer's M and S by touch; the track monitor shows who is sounding.
 
 Afterwards: nothing new in the song.
