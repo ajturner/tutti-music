@@ -5,3 +5,4 @@
 - [x] `test/pages.test.mjs` in `npm test`: summaries, escaping, a built site in a browser (listing, preview isolation, shared samples, live app)
 - [x] README section, version 3.0.3
 - [x] Deploy, and check `builds/` and `pr/1/` on the live site
+- [x] 3.0.4: the live service worker leaves `pr/` and `builds/` to the network, with a browser test

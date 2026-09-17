@@ -63,6 +63,17 @@ A preview runs on the live app's origin, so the build SHALL make it keep every l
 - **WHEN** a preview is reloaded after a new commit was deployed
 - **THEN** the new commit's app loads, because nothing was cached offline
 
+### Requirement: The live app's offline cache leaves previews alone
+The live app's service worker has the whole site in its scope. It SHALL NOT handle requests under `pr/` or `builds/`: they SHALL go to the network, SHALL NOT be stored in the shell cache, and a preview's own samples SHALL NOT be served cache-first.
+
+#### Scenario: Preview opened on a device with the app installed
+- **WHEN** someone who has the live app installed opens `pr/1/` and then `builds/`
+- **THEN** both load from the network and the live app's caches hold nothing under `pr/` or `builds/`
+
+#### Scenario: A pull request changes a sample twice
+- **WHEN** a pull request that changes `banks/` replaces a sample file in a later push
+- **THEN** its preview plays the new file
+
 ### Requirement: Shared samples
 When a pull request's `banks/` is identical to main's, its preview SHALL be published without `banks/` and SHALL load samples from the live site. A pull request that changes `banks/` SHALL get its own copy.
 
