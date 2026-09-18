@@ -1,31 +1,31 @@
 // Block selection over the grid and the batch operations that act on it.
 import { clamp } from '../core/constants.js';
-import { INST } from '../core/instruments.js';
+import { SOUND } from '../core/sounds.js';
 import { laneRemove, laneSet, laneValueAt, materialOf, makePattern, detachPlacement, placementAt, patternById, normalizePlacements } from '../core/song.js';
-import { activeKey, curPhrase, curTrack, state, tracksShown } from './state.js';
+import { activeKey, curPhrase, curInstrument, state, instrumentsShown } from './state.js';
 import { currentCell, cellKinds } from './layout.js';
 import { audition, noteAt, noteCovering, notesStartingAt, withUndo, withSongUndo } from './edit.js';
 import { notesIn, putNote, resizeNote, setFx, fxAtRow } from '../core/edit.js';
 import { transposeDiatonic, inScale } from '../core/scales.js';
 
 // ---- Selection ----------------------------------------------------------------------------
-// Cells are numbered globally left to right: 0 is the tempo column, then every track's cells in
+// Cells are numbered globally left to right: 0 is the tempo column, then every instrument's cells in
 // layout order. A selection is a rectangle of rows × global cell indices.
 export function allCells() {
-  const out = [{ track: -1, cell: 0, kind: 'tempo', col: 0 }];
-  tracksShown().forEach((tr, ti) => { cellKinds(tr).forEach((k, i) => out.push({ track: ti, cell: i, kind: k.kind, col: k.col })); });
+  const out = [{ instrument: -1, cell: 0, kind: 'tempo', col: 0 }];
+  instrumentsShown().forEach((tr, ti) => { cellKinds(tr).forEach((k, i) => out.push({ instrument: ti, cell: i, kind: k.kind, col: k.col })); });
   return out;
 }
-export function cellIndex(track, cell) {
-  if (track < 0) return 0;
+export function cellIndex(instrument, cell) {
+  if (instrument < 0) return 0;
   let g = 1;
-  for (let i = 0; i < track; i++) g += cellKinds(tracksShown()[i]).length;
-  return g + clamp(cell, 0, cellKinds(tracksShown()[track]).length - 1);
+  for (let i = 0; i < instrument; i++) g += cellKinds(instrumentsShown()[i]).length;
+  return g + clamp(cell, 0, cellKinds(instrumentsShown()[instrument]).length - 1);
 }
-export const cursorIndex = () => cellIndex(state.cursor.track, state.cursor.cell);
+export const cursorIndex = () => cellIndex(state.cursor.instrument, state.cursor.cell);
 export function setCursorIndex(g) {
   const cells = allCells(), c = cells[clamp(g, 0, cells.length - 1)];
-  state.cursor.track = c.track; state.cursor.cell = c.cell; state.typing = null; state.ensureVisible = true; state.dirty = true;
+  state.cursor.instrument = c.instrument; state.cursor.cell = c.cell; state.typing = null; state.ensureVisible = true; state.dirty = true;
 }
 export function selRect() {   // the selection, or the cursor cell when nothing is selected
   if (state.sel) return state.sel;
@@ -43,14 +43,14 @@ export function selExtend(dRow, dCell) {
   if (dCell) setCursorIndex(cursorIndex() + dCell);
   selUpdate();
 }
-export function selectTrackOrAll() {
+export function selectInstrumentOrAll() {
   const cells = allCells(), rows = curPhrase().rows;
-  const tr = state.cursor.track;
-  const g0 = tr < 0 ? 0 : cellIndex(tr, 0), g1 = tr < 0 ? 0 : cellIndex(tr, cellKinds(tracksShown()[tr]).length - 1);
+  const tr = state.cursor.instrument;
+  const g0 = tr < 0 ? 0 : cellIndex(tr, 0), g1 = tr < 0 ? 0 : cellIndex(tr, cellKinds(instrumentsShown()[tr]).length - 1);
   const whole = state.sel && state.sel.r0 === 0 && state.sel.r1 === rows - 1 && state.sel.g0 === g0 && state.sel.g1 === g1;
   state.sel = whole ? { r0: 0, r1: rows - 1, g0: 0, g1: cells.length - 1 } : { r0: 0, r1: rows - 1, g0, g1 };
   state.selAnchor = { row: state.sel.r0, g: state.sel.g0 };
-  state.message = whole ? 'Selected the whole phrase' : 'Selected the track; ⌘A again for the whole phrase';
+  state.message = whole ? 'Selected the whole phrase' : 'Selected the instrument; ⌘A again for the whole phrase';
   state.dirty = true;
 }
 export function deselect() { state.sel = null; state.selAnchor = null; state.dirty = true; }
@@ -62,8 +62,8 @@ export function inSel(g, r) { const s = state.sel; return !!s && g >= s.g0 && g 
 export function selNotes(rect, phr) {
   const seen = new Set(), out = [];
   for (const c of selCells(rect)) {
-    if (c.track < 0 || c.kind === 'dyn' || c.kind === 'fx') continue;
-    const tr = tracksShown()[c.track];
+    if (c.instrument < 0 || c.kind === 'dyn' || c.kind === 'fx') continue;
+    const tr = instrumentsShown()[c.instrument];
     const cols = c.kind === 'art' ? Array.from({ length: tr.columns }, (_, i) => i) : [c.col];
     for (const col of cols) for (const ev of notesIn(phr, tr.id, col, rect.r0, rect.r1)) if (!seen.has(ev)) { seen.add(ev); out.push({ ev, tr }); }
   }
@@ -75,7 +75,7 @@ export function captureRect(rect) {
     const out = { kind: c.kind, items: [] };
     if (c.kind === 'tempo') out.items = phr.tempo.filter(p => p.tick >= t0 && p.tick < t1).map(p => ({ tick: p.tick - t0, value: p.value, interp: p.interp }));
     else {
-      const tr = tracksShown()[c.track], pt = phr.material[tr.id];
+      const tr = instrumentsShown()[c.instrument], pt = phr.material[tr.id];
       if (c.kind === 'note' && c.col === 0 && pt) out.placements = (pt.placements || []).filter(p => p.row >= rect.r0 && p.row <= rect.r1).map(p => Object.assign({}, p, { row: p.row - rect.r0 }));
       if (c.kind === 'dyn') out.items = pt ? pt.dyn.filter(p => p.tick >= t0 && p.tick < t1).map(p => ({ tick: p.tick - t0, value: p.value, interp: p.interp })) : [];
       else if (c.kind === 'note') out.items = notesIn(phr, tr.id, c.col, rect.r0, rect.r1).map(e => ({ tick: e.tick - t0, len: e.len, pitch: e.pitch, vel: e.vel, art: e.art }));
@@ -98,7 +98,7 @@ export function clearSel() {
   withUndo(() => {
     for (const c of selCells(rect)) {
       if (c.kind === 'tempo') { phr.tempo = phr.tempo.filter(p => p.tick < t0 || p.tick >= t1); continue; }
-      const tr = tracksShown()[c.track], pt = phr.material[tr.id]; if (!pt) continue;
+      const tr = instrumentsShown()[c.instrument], pt = phr.material[tr.id]; if (!pt) continue;
       if (c.kind === 'note' && c.col === 0) pt.placements = (pt.placements || []).filter(p => p.row < rect.r0 || p.row > rect.r1);
       if (c.kind === 'note') pt.notes = pt.notes.filter(e => !(e.col === c.col && e.tick >= t0 && e.tick < t1));
       else if (c.kind === 'art') pt.notes.forEach(e => { if (e.tick >= t0 && e.tick < t1) e.art = null; });
@@ -116,7 +116,7 @@ function pasteInto(row, g, clip) {
   const t0 = row * tpr;
   clip.cells.forEach((cc, i) => {
     const c = cells[g + i]; if (!c || c.kind !== cc.kind) return;
-    const tr = c.track >= 0 ? tracksShown()[c.track] : null;
+    const tr = c.instrument >= 0 ? instrumentsShown()[c.instrument] : null;
     if (cc.placements && cc.placements.length && tr && !state.patternEdit) { const m = materialOf(phr, tr.id); for (const pl of cc.placements) if (row + pl.row < phr.rows && patternById(state.song, pl.pattern)) m.placements.push(Object.assign({}, pl, { row: row + pl.row })); normalizePlacements(state.song, m); }
     for (const it of cc.items) {
       const tick = t0 + Math.round(it.tick * scale); if (tick >= endTick) continue;
@@ -125,7 +125,7 @@ function pasteInto(row, g, clip) {
       else if (cc.kind === 'fx') setFx(phr, tr.id, tick, it.cmd, it.value);
       else if (cc.kind === 'note') putNote(phr, tr.id, c.col, tick, { pitch: it.pitch, len: Math.round(it.len * scale), vel: it.vel, art: it.art });
       else if (cc.kind === 'vel') { const ev = noteAt(phr, tr.id, c.col, Math.floor(tick / tpr)); if (ev) ev.vel = it.vel; }
-      else if (cc.kind === 'art') notesStartingAt(phr, tr.id, Math.floor(tick / tpr)).forEach(e => { if (INST[tr.instrument].articulations.includes(it.art)) e.art = it.art; });
+      else if (cc.kind === 'art') notesStartingAt(phr, tr.id, Math.floor(tick / tpr)).forEach(e => { if (SOUND[tr.sound].articulations.includes(it.art)) e.art = it.art; });
     }
   });
   return { r0: row, r1: Math.min(phr.rows - 1, row + clip.rows - 1), g0: g, g1: Math.min(cells.length - 1, g + clip.cells.length - 1) };
@@ -164,11 +164,11 @@ export function randomizePitchSel() {
 // Humanise timing: rows with notes get a random DEL of up to `max`/256 of a row, unless another command sits there.
 export function humanizeSel(max = 0x20) {
   const rect = selRect(), phr = curPhrase(), tpr = phr.ticksPerRow;
-  const tracks = new Set(selCells(rect).map(c => c.track).filter(t => t >= 0));
-  if (!tracks.size) return;
+  const instruments = new Set(selCells(rect).map(c => c.instrument).filter(t => t >= 0));
+  if (!instruments.size) return;
   withUndo(() => {
-    for (const ti of tracks) {
-      const tr = tracksShown()[ti];
+    for (const ti of instruments) {
+      const tr = instrumentsShown()[ti];
       for (let r = rect.r0; r <= rect.r1; r++) {
         if (!notesStartingAt(phr, tr.id, r).length) continue;
         const f = fxAtRow(phr, tr.id, r); if (f && f.cmd !== 'DEL') continue;
@@ -184,12 +184,12 @@ export function duplicateSel() {
   const placed = pasteAt(row, rect.g0);
   if (placed) { state.sel = placed; state.selAnchor = { row: placed.r0, g: placed.g0 }; state.cursor.row = placed.r0; setCursorIndex(placed.g0); }
 }
-// Placements whose first row lies in the selection, on the selected tracks.
+// Placements whose first row lies in the selection, on the selected instruments.
 export function selPlacements(rect, phr) {
   const out = [], seen = new Set();
   for (const c of selCells(rect)) {
-    if (c.track < 0 || c.kind === 'dyn' || c.kind === 'fx') continue;
-    const tr = tracksShown()[c.track], m = phr.material[tr.id]; if (!m || seen.has(tr.id)) continue; seen.add(tr.id);
+    if (c.instrument < 0 || c.kind === 'dyn' || c.kind === 'fx') continue;
+    const tr = instrumentsShown()[c.instrument], m = phr.material[tr.id]; if (!m || seen.has(tr.id)) continue; seen.add(tr.id);
     for (const p of m.placements || []) if (p.row >= rect.r0 && p.row <= rect.r1) out.push({ p, tr });
   }
   return out;
@@ -200,18 +200,18 @@ export function transposeSel(d) {
   withUndo(() => { notes.forEach(({ ev }) => { ev.pitch = clamp(ev.pitch + d, 0, 127); }); placed.forEach(({ p }) => { p.transpose = clamp(p.transpose + d, -48, 48); }); });
   if (notes.length) { const first = notes[0]; audition(first.tr, first.ev.pitch, first.ev.art); }
 }
-// Make the selected rows of one track a pattern placed there (docs/domain.md, level 2).
+// Make the selected rows of one instrument a pattern placed there (docs/domain.md, level 2).
 export function makePatternSel() {
   if (state.patternEdit) { state.message = 'Finish this pattern first (Esc), then make another'; state.dirty = true; return null; }
   const rect = selRect(), phr = curPhrase();
-  const tracks = [...new Set(selCells(rect).map(c => c.track).filter(t => t >= 0))];
-  if (tracks.length !== 1) { state.message = 'Select rows on one track to make a pattern'; state.dirty = true; return null; }
-  const tr = tracksShown()[tracks[0]];
+  const instruments = [...new Set(selCells(rect).map(c => c.instrument).filter(t => t >= 0))];
+  if (instruments.length !== 1) { state.message = 'Select rows on one instrument to make a pattern'; state.dirty = true; return null; }
+  const tr = instrumentsShown()[instruments[0]];
   for (let r = rect.r0; r <= rect.r1; r++) if (placementAt(state.song, phr, tr.id, r)) { state.message = 'These rows already hold a pattern; detach it first'; state.dirty = true; return null; }
   const n = (state.song.patterns || []).length + 1, name = tr.name + ' ' + n;
   let ptn = null;
   withSongUndo(() => { ptn = makePattern(state.song, phr, tr.id, rect.r0, rect.r1, name); });
-  state.sel = null; state.selAnchor = null; state.cursor.row = rect.r0; state.cursor.track = tracks[0]; state.cursor.cell = 0;
+  state.sel = null; state.selAnchor = null; state.cursor.row = rect.r0; state.cursor.instrument = instruments[0]; state.cursor.cell = 0;
   state.message = 'Made pattern ' + ptn.name + ' from rows ' + rect.r0 + '–' + rect.r1 + ' · Enter edits it, the Song view lists it';
   state.dirty = true;
   return ptn;
@@ -220,7 +220,7 @@ export function makePatternSel() {
 export function detachSel() {
   if (state.patternEdit) return;
   const rect = selRect(), phr = curPhrase();
-  const targets = state.sel ? selPlacements(rect, phr) : (() => { const tr = curTrack(), p = tr && placementAt(state.song, phr, tr.id, state.cursor.row); return p ? [{ p: p.placement, tr }] : []; })();
+  const targets = state.sel ? selPlacements(rect, phr) : (() => { const tr = curInstrument(), p = tr && placementAt(state.song, phr, tr.id, state.cursor.row); return p ? [{ p: p.placement, tr }] : []; })();
   if (!targets.length) { state.message = 'No pattern here to detach'; state.dirty = true; return; }
   withSongUndo(() => { for (const { p, tr } of targets) { const m = phr.material[tr.id], i = m.placements.indexOf(p); if (i >= 0) detachPlacement(state.song, phr, tr.id, i, tr.columns, activeKey()); } });
   state.message = 'Detached ' + targets.length + ' placement' + (targets.length > 1 ? 's' : '') + ' into loose notes';
@@ -244,7 +244,7 @@ export function lengthSel(d) {
   withUndo(() => notes.forEach(({ ev, tr }) => resizeNote(phr, tr.id, ev, d)));
 }
 export function articulationSel(art) {
-  const notes = selNotes(selRect(), curPhrase()).filter(({ tr }) => INST[tr.instrument].articulations.includes(art));
+  const notes = selNotes(selRect(), curPhrase()).filter(({ tr }) => SOUND[tr.sound].articulations.includes(art));
   if (!notes.length) { state.message = 'No notes in the selection take ' + art; state.dirty = true; return; }
   withUndo(() => notes.forEach(({ ev }) => { ev.art = art; }));
 }
@@ -256,13 +256,13 @@ export function interpolateSel() {
   withUndo(() => {
     for (const c of selCells(rect)) {
       if (c.kind === 'tempo' || c.kind === 'dyn') {
-        const pts = c.kind === 'tempo' ? phr.tempo : materialOf(phr, tracksShown()[c.track].id).dyn;
+        const pts = c.kind === 'tempo' ? phr.tempo : materialOf(phr, instrumentsShown()[c.instrument].id).dyn;
         const v0 = laneValueAt(pts, t0, null), v1 = laneValueAt(pts, t1, null);
         if (v0 == null || v1 == null) continue;
         const keep = pts.filter(p => p.tick < t0 || p.tick > t1); pts.length = 0; pts.push(...keep);
         laneSet(pts, t0, v0, 'lin'); laneSet(pts, t1, v1, 'step');
       } else if (c.kind === 'note' || c.kind === 'vel') {
-        const tr = tracksShown()[c.track], evs = notesIn(phr, tr.id, c.col, rect.r0, rect.r1).sort((a, b) => a.tick - b.tick);
+        const tr = instrumentsShown()[c.instrument], evs = notesIn(phr, tr.id, c.col, rect.r0, rect.r1).sort((a, b) => a.tick - b.tick);
         if (evs.length < 3) continue;
         const a = evs[0], b = evs[evs.length - 1];
         for (const e of evs) e.vel = Math.round(a.vel + (b.vel - a.vel) * (e.tick - a.tick) / (b.tick - a.tick));

@@ -2,10 +2,10 @@
 import { inScale } from '../core/scales.js';
 import { FX_COMMANDS } from '../core/render.js';
 import { ART } from '../core/constants.js';
-import { INST } from '../core/instruments.js';
-import { $, KEYMAP, activeKey, curTrack, sched, state, tracksShown } from './state.js';
+import { SOUND } from '../core/sounds.js';
+import { $, KEYMAP, activeKey, curInstrument, sched, state, instrumentsShown } from './state.js';
 import { currentCell } from './layout.js';
-import { moveCell, moveRow, moveTrack, setOctave, setStep, typeIntoCell, undo, placementHere, editPatternHere, transposePlacement, shiftPlacement, octavePlacement, dynamicsPlacement, repeatPlacement } from './edit.js';
+import { moveCell, moveRow, cursorToInstrument, setOctave, setStep, typeIntoCell, undo, placementHere, editPatternHere, transposePlacement, shiftPlacement, octavePlacement, dynamicsPlacement, repeatPlacement } from './edit.js';
 import { placementLabel } from '../core/song.js';
 import { clearSel, detachSel, selCells, selRect } from './selection.js';
 import { changeLength, clearCell } from './edit.js';
@@ -26,9 +26,9 @@ export function padButton(label, cls, fn, title) {
 }
 export function syncPad() {
   if (!state.pad) return;
-  const cell = currentCell(), tr = curTrack();
+  const cell = currentCell(), tr = curInstrument();
   const here = ['note', 'vel', 'art'].includes(cell.kind) ? placementHere() : null;
-  const sig = [cell.kind, tr ? tr.instrument : '', state.octave, state.step, sched.playing ? 1 : 0, state.selectMode ? 1 : 0, JSON.stringify(activeKey()), here ? placementLabel(here.placement, here.pattern.name) : ''].join(':');
+  const sig = [cell.kind, tr ? tr.sound : '', state.octave, state.step, sched.playing ? 1 : 0, state.selectMode ? 1 : 0, JSON.stringify(activeKey()), here ? placementLabel(here.placement, here.pattern.name) : ''].join(':');
   if (sig === padSig) return; padSig = sig;
   const keys = $('padKeys'); keys.innerHTML = '';
   if (here) {
@@ -54,7 +54,7 @@ export function syncPad() {
     const gap = document.createElement('span'); keys.appendChild(gap);
     for (const d of '0123456789abcdef') keys.appendChild(padButton(d.toUpperCase(), '', () => typeIntoCell(d)));
   } else if (cell.kind === 'art') {
-    const arts = INST[tr.instrument].articulations;
+    const arts = SOUND[tr.sound].articulations;
     keys.style.setProperty('--cols', arts.length * 2);
     arts.forEach((a, i) => keys.appendChild(padButton(a, 'small', () => typeIntoCell(String(i + 1)))));
   } else {
@@ -65,7 +65,7 @@ export function syncPad() {
   }
   const nav = $('padNav'); nav.innerHTML = '';
   [['\u2191', () => moveRow(-1), 'Row up'], ['\u2193', () => moveRow(1), 'Row down'], ['\u2190', () => moveCell(-1), 'Field left'], ['\u2192', () => moveCell(1), 'Field right'],
-   ['\u21e4', () => moveTrack(-1), 'Previous track'], ['\u21e5', () => moveTrack(1), 'Next track'],
+   ['\u21e4', () => cursorToInstrument(-1), 'Previous instrument'], ['\u21e5', () => cursorToInstrument(1), 'Next instrument'],
    ['sel', () => { state.selectMode = !state.selectMode; padSig = ''; }, 'Drag selects instead of scrolling'],
    ['del', () => state.sel ? clearSel() : clearCell(), 'Clear'], ['\u21b6', undo, 'Undo']]
     .forEach(([l, f, t]) => nav.appendChild(padButton(l, l === 'sel' && state.selectMode ? 'act' : '', f, t)));
@@ -82,8 +82,8 @@ export function syncSelBar() {
   const bar = $('selbar'); bar.hidden = !show;
   if (!show) { selBarSig = ''; return; }
   const rect = selRect();
-  const tracks = new Set(selCells(rect).map(c => c.track).filter(t => t >= 0));
-  const arts = tracks.size ? [...new Set([...tracks].flatMap(t => INST[tracksShown()[t].instrument].articulations))] : [];
+  const instruments = new Set(selCells(rect).map(c => c.instrument).filter(t => t >= 0));
+  const arts = instruments.size ? [...new Set([...instruments].flatMap(t => SOUND[instrumentsShown()[t].sound].articulations))] : [];
   const sig = [rect.r0, rect.r1, rect.g0, rect.g1, arts.join(','), state.sel ? 1 : 0].join('|');
   if (sig === selBarSig) return; selBarSig = sig;
   $('selInfo').textContent = state.sel ? (rect.r1 - rect.r0 + 1) + ' rows × ' + (rect.g1 - rect.g0 + 1) + ' cells' : 'cursor cell';

@@ -1,4 +1,4 @@
-// Instrument table (ranges, articulations, keyswitches, controller mapping, GM programs) and the default track roster.
+// Instrument table (ranges, articulations, keyswitches, controller mapping, GM programs) and the default instrument roster.
 // Instrument definitions. Pitches are MIDI numbers with 60 = C4 (Kontakt shows 60 as C3).
 // keyswitches: articulation -> MIDI note sent just before a note whose articulation changed.
 // dynCC / exprCC: controllers driven by the dynamics lane (most libraries: CC1 = timbre layer, CC11 = level).
@@ -9,7 +9,7 @@ export function inst(id, name, family, range, arts, opts = {}) {
   arts.forEach((a, i) => { keyswitches[a] = 24 + i; });
   return Object.assign({ id, name, family, range, articulations: arts, keyswitches, dynCC: 1, exprCC: 11, speakDelayMs: 0, program: 0 }, opts);
 }
-export const INSTRUMENTS = [
+export const SOUNDS = [
   inst('flute',     'Flute',      'woodwind',   [60, 96],  ['sus','leg','stc'],                   { speakDelayMs: 8,  program: 73 }),
   inst('oboe',      'Oboe',       'woodwind',   [58, 91],  ['sus','leg','stc'],                   { speakDelayMs: 10, program: 68 }),
   inst('clarinet',  'Clarinet',   'woodwind',   [50, 94],  ['sus','leg','stc'],                   { speakDelayMs: 10, program: 71 }),
@@ -31,16 +31,16 @@ export const INSTRUMENTS = [
   inst('synth-bass', 'Synth bass', 'electronic', [24, 60], ['sus','stc','leg'], { keyswitches: {}, program: 38 }),
   inst('synth-arp',  'Synth arp',  'electronic', [48, 96], ['sus','stc','leg'], { keyswitches: {}, program: 81 }),
 ];
-export const INST = Object.fromEntries(INSTRUMENTS.map(i => [i.id, i]));
+export const SOUND = Object.fromEntries(SOUNDS.map(i => [i.id, i]));
 // The built-in orchestra is a bank like any other: its samples live in banks/orchestra/<id>/ (violins II share Violins I).
-for (const i of INSTRUMENTS) { i.bank = 'orchestra'; if (i.family !== 'electronic' && !i.patch && !i.samples) i.samples = 'orchestra/' + (i.id === 'violins-2' ? 'violins-1' : i.id) + '/'; }
+for (const i of SOUNDS) { i.bank = 'orchestra'; if (i.family !== 'electronic' && !i.patch && !i.samples) i.samples = 'orchestra/' + (i.id === 'violins-2' ? 'violins-1' : i.id) + '/'; }
 
 // ---- Banks: instruments added at run time --------------------------------------------------
 // A bank definition lists instruments in the same shape as the table above plus optional fields:
 //   samples  URL of the folder holding map.json (resolved against the bank file)
 //   kit      { midiNote: name } for fixed-pitch drum kits (samples are not pitch-shifted)
 //   patch    overrides for the sketch synth voice (waves, envelope, level, lfo)
-export function registerInstrument(def, bankId) {
+export function registerSound(def, bankId) {
   const ins = inst(def.id, def.name, def.family, def.range || [0, 127], def.articulations && def.articulations.length ? def.articulations : ['sus'],
     Object.assign({ keyswitches: def.keyswitches || {}, program: def.program || 0 }, def.speakDelayMs != null ? { speakDelayMs: def.speakDelayMs } : {},
       def.dynCC != null ? { dynCC: def.dynCC } : {}, def.exprCC != null ? { exprCC: def.exprCC } : {}));
@@ -48,23 +48,23 @@ export function registerInstrument(def, bankId) {
   if (def.kit) ins.kit = def.kit;
   if (def.patch) ins.patch = def.patch;
   ins.bank = bankId || def.bank || 'custom';
-  const at = INSTRUMENTS.findIndex(i => i.id === ins.id);
-  if (at >= 0) INSTRUMENTS[at] = ins; else INSTRUMENTS.push(ins);
-  INST[ins.id] = ins;
+  const at = SOUNDS.findIndex(i => i.id === ins.id);
+  if (at >= 0) SOUNDS[at] = ins; else SOUNDS.push(ins);
+  SOUND[ins.id] = ins;
   return ins;
 }
-export function unregisterInstrument(id) {
-  const at = INSTRUMENTS.findIndex(i => i.id === id);
+export function unregisterSound(id) {
+  const at = SOUNDS.findIndex(i => i.id === id);
   if (at < 0) return false;
-  INSTRUMENTS.splice(at, 1); delete INST[id]; return true;
+  SOUNDS.splice(at, 1); delete SOUND[id]; return true;
 }
 // A stand-in for an instrument whose bank is not loaded, so songs still open and play through the synth.
-export function placeholderInstrument(id) {
-  return registerInstrument({ id, name: id + ' (missing)', family: 'electronic', range: [0, 127], articulations: ['sus'] }, 'missing');
+export function placeholderSound(id) {
+  return registerSound({ id, name: id + ' (missing)', family: 'electronic', range: [0, 127], articulations: ['sus'] }, 'missing');
 }
 
-// Score-order track list. channel is 1-based; 10 is skipped so GM players don't treat anything as drums.
-export const DEFAULT_TRACKS = [
+// Score-order instrument list. channel is 1-based; 10 is skipped so GM players don't treat anything as drums.
+export const ORCHESTRA = [
   ['fl', 'Flute',      'flute',     1, 1],
   ['ob', 'Oboe',       'oboe',      2, 1],
   ['cl', 'Clarinet',   'clarinet',  3, 1],
@@ -78,10 +78,10 @@ export const DEFAULT_TRACKS = [
   ['va', 'Violas',     'violas',    12, 1],
   ['vc', 'Cellos',     'cellos',    13, 1],
   ['cb', 'Basses',     'basses',    14, 1],
-].map(([id, name, instrument, channel, columns]) => ({ id, name, instrument, channel, columns, mute: false }));
-// Extra tracks a song can add (see addTracks below). Channels 15 and 16.
-export const SYNTH_TRACKS = [
+].map(([id, name, sound, channel, columns]) => ({ id, name, sound, channel, columns, mute: false }));
+// Extra instruments a song can add (see addInstruments below). Channels 15 and 16.
+export const SYNTHS = [
   ['sb', 'Synth bass', 'synth-bass', 15, 1],
   ['sa', 'Synth arp',  'synth-arp',  16, 1],
-].map(([id, name, instrument, channel, columns]) => ({ id, name, instrument, channel, columns, mute: false }));
-export function addTracks(song, tracks) { for (const t of tracks) if (!song.tracks.some(x => x.id === t.id)) song.tracks.push(Object.assign({}, t)); return song; }
+].map(([id, name, sound, channel, columns]) => ({ id, name, sound, channel, columns, mute: false }));
+export function addInstruments(song, instruments) { for (const t of instruments) if (!song.instruments.some(x => x.id === t.id)) song.instruments.push(Object.assign({}, t)); return song; }

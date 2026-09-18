@@ -1,17 +1,17 @@
-// Workflow panels. The header keeps identity and transport; everything else lives in one of five panels
-// opened from the menu bar: Files (open, save, export), Compose (the open phrase or pattern, key, tracks), Sounds (preview,
-// banks, instruments), Connect (MIDI, controller) and View (follow, pad, mixer, columns). One panel is
+// Workflow panels. The header keeps identity and transport; everything else lives in a panel opened from the
+// menu bar: Files (open, save, export), Instruments (the players of the song, their sounds, mix and tuning, and
+// the sound browser), Connect (MIDI, controller) and View (follow, listen, pad, mixer, columns). A fifth, the
+// level sheet, holds the settings of the song, section or phrase and is opened from the map. One panel is
 // open at a time. On a wide screen it drops below the header as a sheet and the grid stays editable;
 // below 760 px it replaces the grid and the tab bar drives it. Every control has one home in the DOM.
 import { $, state } from './state.js';
-import { renderTracks } from './tracks.js';
-import { showSounds, hideSounds } from './sounds.js';
+import { showInstruments, hideInstruments } from './instruments.js';
 import { toggleQuickKeys } from './keyboard.js';
 
-export const PANELS = ['files', 'compose', 'sounds', 'connect', 'view'];
+export const PANELS = ['files', 'instruments', 'level', 'connect', 'view'];
 const NARROW = () => window.innerWidth < 760;
-const onOpen = { compose: renderTracks, sounds: showSounds };
-const onClose = { sounds: hideSounds };
+const onOpen = { instruments: showInstruments };
+const onClose = { instruments: hideInstruments };
 
 export function setPanel(name) {
   if (name && !PANELS.includes(name)) name = null;

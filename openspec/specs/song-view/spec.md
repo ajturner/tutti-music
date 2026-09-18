@@ -17,22 +17,22 @@ The app SHALL present a song at four levels, Song, Section, Phrase and Pattern, 
 - **THEN** the pattern closes and the phrase is back in the grid at the previous cursor
 
 ### Requirement: Drill in and out
-Enter SHALL go in a level: in the Song view it opens the phrase under the cursor on the cursor's track, seen in the cursor's section; in the grid it opens the pattern under the cursor. The backquote key SHALL go out a level: pattern to phrase to song. Coming out to the Song view SHALL land the cursor on the phrase that was open, in its section.
+Enter SHALL go in a level: in the Song view it opens the phrase under the cursor on the cursor's instrument, seen in the cursor's section; in the grid it opens the pattern under the cursor. The backquote key SHALL go out a level: pattern to phrase to song. Coming out to the Song view SHALL land the cursor on the phrase that was open, in its section.
 
 #### Scenario: In and back out
 - **WHEN** the user presses Enter on Bridge › B1 › Clarinet in the Song view, then backquote
 - **THEN** the grid shows B1 with the cursor on Clarinet and the section key in force, then the Song view returns with the cursor on that row
 
 ### Requirement: Song view
-The Song level SHALL show the arrangement read top to bottom: one block per section occurrence in playing order, coloured by section, each followed by its phrase rows; and for every phrase row one cell per track holding a thumbnail of the notes that track plays there (loose notes solid, placed notes lighter) and a chip per placed pattern reading its label. A strip of chips SHALL show the form (`A×2 B A`). A second occurrence of a section SHALL say that edits show in both. The cell under the cursor SHALL be outlined, its row SHALL be the open phrase for the map, the phrase selector, Compose and the play buttons, and the status line SHALL name the section, phrase, key, track and what the track holds.
+The Song level SHALL show the arrangement read top to bottom: one block per section occurrence in playing order, coloured by section, each followed by its phrase rows; and for every phrase row one cell per instrument holding a thumbnail of the notes that instrument plays there (loose notes solid, placed notes lighter) and a chip per placed pattern reading its label. A strip of chips SHALL show the form (`A×2 B A`). A second occurrence of a section SHALL say that edits show in both. The cell under the cursor SHALL be outlined, its row SHALL be the open phrase for the map, the phrase selector, Compose and the play buttons, and the status line SHALL name the section, phrase, key, instrument and what the instrument holds.
 
 #### Scenario: Read the song
 - **WHEN** the user opens the Song view of Night drive
-- **THEN** it shows Verse, Drop, Verse with their phrases, thumbnails for every track, and "Riff" chips on the Synth bass cells
+- **THEN** it shows Verse, Drop, Verse with their phrases, thumbnails for every instrument, and "Riff" chips on the Synth bass cells
 
 #### Scenario: Open a pattern from the overview
 - **WHEN** the user clicks a pattern chip in a cell
-- **THEN** that phrase opens on that track and the pattern opens from it, with Pattern lit in the map
+- **THEN** that phrase opens on that instrument and the pattern opens from it, with Pattern lit in the map
 
 ### Requirement: Arranging in the Song view
 Each section block SHALL offer its name, how many times it plays at that place, its own key, a loop button, adding a phrase (a new empty phrase shaped like the one under the cursor, a copy of it, or an existing phrase reused by reference), moving the occurrence earlier or later, and removing the occurrence. Each phrase row SHALL offer its name, its repeat, open, moving within the section and removal from the section. An add-section control SHALL add a new section with one phrase or play an existing section again. Every change SHALL be one undo step. The song SHALL stay showable: the arrangement keeps at least one item and a section at least one phrase; a section with no occurrence left SHALL wait below, marked as not in the arrangement, until it is added back or deleted with the phrases only it uses; removing a phrase from its last section SHALL delete the phrase and say so.
@@ -75,9 +75,9 @@ While the song or a section plays, the playing phrase row SHALL be highlighted w
 - **WHEN** the Song view is up on a phone and the user taps Play
 - **THEN** the arrangement plays on from the cursor row, as Space does with a keyboard
 
-### Requirement: Track monitor
-While playing, the note each unmuted track is sounding SHALL be shown, shaded by velocity, beside the track's name in the grid header (in its place when the column is too narrow), in the Song view's track headers and on the mixer strips. It SHALL be derived from the rendered events at the play position, so it agrees with the preview and MIDI out, and SHALL clear when playback stops.
+### Requirement: Monitor
+While playing, the note each unmuted instrument is sounding SHALL be shown, shaded by velocity, beside the instrument's name in the grid header (in its place when the column is too narrow), in the Song view's instrument headers and on the mixer strips. It SHALL be derived from the rendered events at the play position, so it agrees with the preview and MIDI out, and SHALL clear when playback stops.
 
 #### Scenario: Who is playing
-- **WHEN** the song plays a bar where six tracks sound
-- **THEN** six track headers in the Song view and six mixer strips show a note name and the others show none
+- **WHEN** the song plays a bar where six instruments sound
+- **THEN** six instrument headers in the Song view and six mixer strips show a note name and the others show none

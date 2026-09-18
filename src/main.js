@@ -1,7 +1,7 @@
 // Tutti entry point: wires the UI modules, starts the draw loop, and exposes the app API on window.tutti
 // (used by the browser tests and available to any host that embeds the tracker).
 import * as core_constants from './core/constants.js';
-import * as core_instruments from './core/instruments.js';
+import * as core_instruments from './core/sounds.js';
 import * as core_song from './core/song.js';
 import * as core_render from './core/render.js';
 import * as core_scheduler from './core/scheduler.js';
@@ -32,7 +32,7 @@ import * as ui_storage from './ui/storage.js';
 import { restoreSongs } from './ui/storage.js';
 import { VERSION } from './version.js';
 import * as ui_session from './ui/session.js';
-import * as ui_tracks from './ui/tracks.js';
+import * as ui_instruments from './ui/instruments.js';
 import * as ui_map from './ui/map.js';
 import * as ui_songview from './ui/songview.js';
 import * as ui_monitor from './ui/monitor.js';
@@ -40,8 +40,7 @@ import { wireMap } from './ui/map.js';
 import { wireSongView, focusSection } from './ui/songview.js';
 import * as ui_mixer from './ui/mixer.js';
 import { wireMixer, setMixer, mixerDefault } from './ui/mixer.js';
-import * as ui_sounds from './ui/sounds.js';
-import { wireSounds, restoreBanks, restoreHiddenBanks } from './ui/sounds.js';
+import { wireInstruments, restoreBanks, restoreHiddenBanks } from './ui/instruments.js';
 import * as core_banks from './core/banks.js';
 import * as ui_panels from './ui/panels.js';
 import { wirePanels } from './ui/panels.js';
@@ -75,7 +74,7 @@ window.addEventListener('hashchange', () => {
 });
 setPad(coarsePointer());
 wireMixer();
-wireSounds();
+wireInstruments();
 restoreHiddenBanks();
 wirePanels();
 wireMap({ focusSection });
@@ -90,4 +89,4 @@ requestAnimationFrame(frame);
 if ('serviceWorker' in navigator && location.protocol.startsWith('http') && !location.search.includes('nosw')) {
   navigator.serviceWorker.register('sw.js').catch(() => { /* offline support is optional */ });
 }
-window.tutti = Object.assign({}, core_constants, core_instruments, core_song, core_render, core_scheduler, core_synth, core_midi, core_midifile, core_examples, core_edit, core_scales, core_sampler, core_banks, ui_state, ui_layout, ui_sync, ui_edit, ui_selection, ui_transport, ui_keyboard, ui_pointer, ui_draw, ui_gamepad, ui_pad, ui_midi_in, ui_toolbar, ui_storage, ui_session, ui_tracks, ui_map, ui_songview, ui_monitor, ui_mixer, ui_sounds, ui_panels, { VERSION });
+window.tutti = Object.assign({}, core_constants, core_instruments, core_song, core_render, core_scheduler, core_synth, core_midi, core_midifile, core_examples, core_edit, core_scales, core_sampler, core_banks, ui_state, ui_layout, ui_sync, ui_edit, ui_selection, ui_transport, ui_keyboard, ui_pointer, ui_draw, ui_gamepad, ui_pad, ui_midi_in, ui_toolbar, ui_storage, ui_session, ui_instruments, ui_map, ui_songview, ui_monitor, ui_mixer, ui_panels, { VERSION });

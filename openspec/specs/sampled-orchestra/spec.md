@@ -13,34 +13,38 @@ The app SHALL ship a CC0 sample set with, for every default orchestral instrumen
 - **THEN** every zone's file exists and every orchestral instrument has a sustain articulation
 
 ### Requirement: Sampler playback
-With the samples sound selected, notes SHALL play the zone whose articulation matches the note (falling back through legato→sustain, marcato→staccato→sustain, tremolo and roll→sustain, pizzicato→staccato→sustain, muted→sustain), whose root is nearest the pitch, pitch-shifted to the note, blending the softest and loudest layers by the dynamics lane for sustained articulations or by velocity for short ones. Expression, volume and pan SHALL apply per track. Instruments without samples, or whose samples are still loading, SHALL play through the synth.
+With the samples sound selected, notes SHALL play the zone whose articulation matches the note (falling back through legato→sustain, marcato→staccato→sustain, tremolo and roll→sustain, pizzicato→staccato→sustain, muted→sustain), whose root is nearest the pitch, pitch-shifted to the note, blending the softest and loudest layers by the dynamics lane for sustained articulations or by velocity for short ones. Expression, volume and pan SHALL apply per instrument. Instruments without samples, or whose samples are still loading, SHALL play through the synth.
 
 #### Scenario: Dynamics choose the layer
 - **WHEN** a sustained violin note plays with dynamics at 0 and again at 127
 - **THEN** the first uses the soft layer alone and the second the loud layer alone
 
-#### Scenario: Synth track
-- **WHEN** a Synth arp track plays with samples selected
+#### Scenario: Synth instrument
+- **WHEN** a Synth arp instrument plays with samples selected
 - **THEN** it sounds through the sketch synth
 
 ### Requirement: Sound selection and loading
-The Sounds panel SHALL offer samples or synth, remembered per browser, defaulting to samples. Selecting a song, changing the sound, starting playback or adding a track SHALL preload the instruments the song uses, and the status line SHALL show loading progress until decoding completes.
+The View panel SHALL offer samples or synth, remembered per browser, defaulting to samples. Selecting a song, changing the preview sound, starting playback, adding an instrument or changing an instrument's sound SHALL preload the sounds the song uses, and the status line SHALL show loading progress until decoding completes.
 
 #### Scenario: Switch to the synth
-- **WHEN** the user picks synth in the Sounds panel
+- **WHEN** the user picks synth in the View panel
 - **THEN** the preview plays through the sketch synth and the choice survives a reload
 
 #### Scenario: Progress
 - **WHEN** a song with strings opens for the first time with samples selected
-- **THEN** the status shows which instrument is loading until all its zones are decoded
+- **THEN** the status shows which sound is loading until all its zones are decoded
 
-### Requirement: Sounds panel
-A Sounds panel SHALL list every instrument with its current source (samples with zone count, synth, or loading), mark each articulation as sampled or show which sampled articulation it falls back to, audition a short pattern on request (per articulation when an articulation is clicked), and offer tune in semitones and cents, a level trim in decibels, and a release scale, applied to that instrument's samples and remembered per browser, with a reset per instrument and for all. The panel SHALL show a live oscilloscope of the preview output and the waveform of the zone that last played with its instrument, articulation, root and file.
-
-#### Scenario: Correct a drum
-- **WHEN** the user sets Timpani tune to +2 and auditions it
-- **THEN** the pattern plays two semitones higher, the setting survives a reload, and reset returns it to 0
+### Requirement: Sound browser
+Under the instruments, closed until asked for, the Instruments panel SHALL list every sound of the loaded banks with its bank, its current source (samples, synth, or loading), each articulation marked as sampled or showing which sampled articulation it falls back to, an audition of a short figure (of one articulation when an articulation is clicked), and a button that adds an instrument made from it with a count of the instruments already using it. A sound SHALL have no settings of its own. Only sounds whose bank is loaded and showing SHALL be listed, here and in the sound pickers: a sound that stays registered because another song in the list uses it after its bank was unloaded, or a placeholder for a sound whose bank has not arrived, SHALL keep playing but SHALL NOT be offered; an instrument's own sound SHALL still show in that instrument's picker. The browser SHALL hold the banks bar and show a live oscilloscope of the preview output and the waveform of the zone that last played with its sound, articulation, root and file.
 
 #### Scenario: See what a fallback does
-- **WHEN** the user opens the panel with violins loaded
+- **WHEN** the user opens the browser with violins loaded
 - **THEN** sus, stc, piz and trm are marked sampled and leg reads "leg→sus"
+
+#### Scenario: Unload a bank another song uses
+- **WHEN** the user loads Electronica, then unloads it, while an example in the song list uses its sounds
+- **THEN** no Electronica sound is listed or offered in a picker, and no row reads "missing"
+
+#### Scenario: Add from the browser
+- **WHEN** the user presses + on Timpani in a song that already has timpani
+- **THEN** a second timpani instrument is added in one undo step and the row counts 2

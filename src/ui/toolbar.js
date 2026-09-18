@@ -1,14 +1,13 @@
 // Header and panel controls: songs, the open phrase or pattern, meter, files, key, groove, view options.
 import { markEdited, deleteCurrentSong } from './storage.js';
 import { placeholdersFor } from '../core/banks.js';
-import { wireTracks } from './tracks.js';
 import { queuePhrase, toggleRecord } from './transport.js';
 import { GROOVES, syncKeyUI, syncGrooveUI } from './sync.js';
 import { padSigReset } from './pad.js';
 import { clamp } from '../core/constants.js';
 import { addPhrase, addSlot, newSong, nextPhraseName, normalizeSong, phraseMeter } from '../core/song.js';
 import { midiFileBytes } from '../core/midifile.js';
-import { $, curPhrase, curPattern, curSection, curTrack, preloadSamples, sampler, state, synth } from './state.js';
+import { $, curPhrase, curPattern, curSection, curInstrument, preloadSamples, sampler, state, synth } from './state.js';
 import { withSongUndo, withUndo, leavePattern } from './edit.js';
 import { articulationSel, batchOp, deselect } from './selection.js';
 import { cellKinds } from './layout.js';
@@ -16,20 +15,23 @@ import { playPhrase, playSection, playSong, stopAll } from './transport.js';
 import { setPad } from './pad.js';
 import { syncPhraseUI, syncSongUI } from './sync.js';
 import { openPhrase } from './map.js';
+import { setPanel } from './panels.js';
 import { playHere } from './songview.js';
 
 export function selectSong(i) {
   stopAll();
-  state.songIndex = i; state.song = state.songs[i]; state.phr = 0; state.section = 0; state.patternEdit = null; state.songCursor = { row: 0, track: 0 }; state.rev++;
+  state.songIndex = i; state.song = state.songs[i]; state.phr = 0; state.section = 0; state.patternEdit = null; state.songCursor = { row: 0, instrument: 0 }; state.rev++;
   placeholdersFor(state.song);
   state.undo.length = 0; state.redo.length = 0;
-  state.cursor = { row: 0, track: 0, cell: 0 }; state.scrollX = 0; state.typing = null; state.message = '';
+  state.cursor = { row: 0, instrument: state.song.instruments.length ? 0 : -1, cell: 0 }; state.scrollX = 0; state.typing = null; state.message = '';
   syncSongUI(); syncPhraseUI(); state.dirty = true;
   preloadSamples();
 }
 export function addSong(song) { state.songs.push(song); selectSong(state.songs.length - 1); markEdited(song); }
 $('song').onchange = e => selectSong(parseInt(e.target.value, 10));
-$('newSong').onclick = () => addSong(Object.assign(newSong(), { title: 'Untitled ' + (state.songs.length + 1) }));
+// A new song has no instruments: it opens on the Instruments panel, where its players are chosen.
+$('newSong').onclick = () => { addSong(Object.assign(newSong(), { title: 'Untitled ' + (state.songs.length + 1) })); setPanel('instruments'); };
+$('emptyAdd').onclick = () => setPanel('instruments');
 $('title').onchange = e => { withSongUndo(() => { state.song.title = e.target.value.trim() || 'Untitled'; }); syncSongUI(); };
 // Play acts on what is on screen: in the grid it loops the open phrase, in the Song view it plays the arrangement on
 // from the cursor. Play song starts where the open phrase first sounds, or at the top from the Song view.
@@ -48,7 +50,6 @@ export function choosePhrase(i, sectionIndex) {
 }
 // Option values are "section:phrase" so a phrase that sits in two sections opens in the one that was picked.
 $('phrase').onchange = e => { leavePattern(); const [si, pi] = e.target.value.split(':').map(n => parseInt(n, 10)); if (queuePhrase(pi)) syncPhraseUI(); else openPhrase(pi, si); };
-wireTracks();
 // Keys nest: a phrase's key over its section's over the song's. The scope select says which one the two key
 // selects are showing and editing; "none" at a narrower scope hands the decision back to the wider one.
 $('keyRoot').onchange = $('keyScale').onchange = () => {
@@ -105,7 +106,7 @@ for (const box of document.querySelectorAll('input[data-show]')) {
   box.onchange = e => {
     state.show[e.target.dataset.show] = e.target.checked;
     try { localStorage.setItem('tutti.show.v1', JSON.stringify(state.show)); } catch { /* no storage */ }
-    const tr = curTrack(); if (tr) state.cursor.cell = Math.min(state.cursor.cell, cellKinds(tr).length - 1);
+    const tr = curInstrument(); if (tr) state.cursor.cell = Math.min(state.cursor.cell, cellKinds(tr).length - 1);
     deselect(); padSigReset(); state.dirty = true;
   };
 }

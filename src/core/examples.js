@@ -1,14 +1,14 @@
 // Compact text notation for writing songs in code, and the built-in example songs.
-import { ensureStructure, makePattern, materialOf, patternById, slug } from './song.js';
+import { ensureStructure, instrumentDefaults, makePattern, materialOf, patternById, slug } from './song.js';
 import { FAMILIES, PPQ, noteName } from './constants.js';
-import { INST, SYNTH_TRACKS, addTracks } from './instruments.js';
-import { laneSet, laneValueAt, newPhrase, newSong, phraseMeter } from './song.js';
+import { SOUND, SYNTHS, addInstruments } from './sounds.js';
+import { laneSet, laneValueAt, newPhrase, newSong, orchestraSong, phraseMeter } from './song.js';
 import { TimeMap, renderSong } from './render.js';
 import { midiFileBytes } from './midifile.js';
 
 // ---- Seed: four bars so Play makes sound immediately ---------------------------
 export function seedSong() {
-  const song = newSong();
+  const song = orchestraSong();
   song.title = 'Sketch in C'; song.bpm = 84;
   song.notes = 'Four bars in C: sustained string chords under a long crescendo, horns entering in bar 3, a trumpet figure, timpani roll and flute line, with a ritardando through the last bar.';
   const phr = song.phrases[0], tpr = phr.ticksPerRow;
@@ -40,7 +40,7 @@ export function seedSong() {
 }
 
 // ---- Compact notation for writing songs in code ---------------------------------------------
-// line(phr, trackId, col, startRow, step, tokens, { art, vel, transpose })
+// line(phr, instrumentId, col, startRow, step, tokens, { art, vel, transpose })
 //   token: NOTE[:rows][@art][!vel]   NOTE like C4, F#3, Bb2 (60 = C4)
 //   '.' rests one step, '-' extends the previous note by one step, '|' is ignored (bar marker).
 //   A note without :rows lasts one step; the cursor advances by the note's length.
@@ -51,8 +51,8 @@ export function parsePitch(s) {
   const base = { c: 0, d: 2, e: 4, f: 5, g: 7, a: 9, b: 11 }[m[1].toLowerCase()];
   return (parseInt(m[3], 10) + 1) * 12 + base + (m[2] === '#' ? 1 : m[2] === 'b' ? -1 : 0);
 }
-export function line(phr, trackId, col, startRow, step, tokens, opts = {}) {
-  const pt = materialOf(phr, trackId), tpr = phr.ticksPerRow;
+export function line(phr, instrumentId, col, startRow, step, tokens, opts = {}) {
+  const pt = materialOf(phr, instrumentId), tpr = phr.ticksPerRow;
   let row = startRow, last = null;
   for (const tok of tokens.trim().split(/\s+/)) {
     if (tok === '|' || !tok) continue;
@@ -93,7 +93,7 @@ export function arrange(song, sections, order) {
   return ensureStructure(song);
 }
 export function fitColumns(song) {
-  for (const tr of song.tracks) {
+  for (const tr of song.instruments) {
     let max = tr.columns;
     for (const phr of song.phrases) { const pt = phr.material[tr.id]; if (!pt) continue; for (const e of pt.notes) max = Math.max(max, e.col + 1); for (const pl of pt.placements || []) { const ptn = patternById(song, pl.pattern); if (ptn) max = Math.max(max, ptn.columns); } }
     tr.columns = max;
@@ -103,7 +103,7 @@ export function fitColumns(song) {
 
 // ---- Example songs ------------------------------------------------------------------------------
 export function exBrassChorale() {
-  const song = newSong(); song.title = 'Brass chorale'; song.bpm = 66;
+  const song = orchestraSong(); song.title = 'Brass chorale'; song.bpm = 66;
   song.notes = 'Divisi horns, trumpets and trombones in six parts, timpani under each chord. Two sections, Chorale and Close, with a ritardando into the final chord.';
   const A = song.phrases[0], B = newPhrase('B'); song.phrases.push(B); arrange(song, [['Chorale', [0]], ['Close', [1]]], ['Chorale', 'Close']);
   const tpr = A.ticksPerRow;
@@ -128,7 +128,7 @@ export function exBrassChorale() {
   return fitColumns(song);
 }
 export function exScherzo() {
-  const song = newSong(); song.title = 'Scherzo (pizzicato)'; song.bpm = 132;
+  const song = orchestraSong(); song.title = 'Scherzo (pizzicato)'; song.bpm = 132;
   song.notes = 'Pizzicato strings and staccato bassoon under flute and oboe in thirds. Articulations come from each line\'s default plus per-note @ markers; the held notes at the end switch back to sustain.';
   const A = song.phrases[0], tpr = A.ticksPerRow;
   line(A, 'cb', 0, 0, 4, 'G1 . D2 . C2 . G2 . D2 . A2 . G1 . D2 .', { art: 'piz' });
@@ -144,7 +144,7 @@ export function exScherzo() {
   return fitColumns(song);
 }
 export function exAdagio() {
-  const song = newSong(); song.title = 'Adagio for strings'; song.bpm = 56;
+  const song = orchestraSong(); song.title = 'Adagio for strings'; song.bpm = 56;
   song.notes = 'Eighth-note grid, so 8 rows make a bar. Legato first violins over sustained divisi, viola tremolo at the climax, a long dynamic arch and a ritardando. Horns and a timpani roll enter late.';
   const A = song.phrases[0]; A.ticksPerRow = 480; const tpr = 480;
   line(A, 'v1', 0, 0, 4, 'D5:6@sus E5:2 F5 D5 G5 Bb5 A5:8 D6 C#6:2 D6:2 F5 D5 G5 E5 D5:8', { art: 'leg' });
@@ -162,7 +162,7 @@ export function exAdagio() {
   return fitColumns(song);
 }
 export function exFanfare() {
-  const song = newSong(); song.title = 'Fanfare'; song.bpm = 116;
+  const song = orchestraSong(); song.title = 'Fanfare'; song.bpm = 116;
   song.notes = 'Marcato and staccato brass over timpani, low strings doubling the trombones, tremolo upper strings joining for the last two bars. The rhythm is written with explicit :rows lengths.';
   const A = song.phrases[0], tpr = A.ticksPerRow;
   line(A, 'tp', 0, 0, 4, 'Bb4:3 Bb4:1@stc Bb4:4 F5:8@sus | Eb5:3 Eb5:1@stc Eb5:4 D5:8@sus | C5:3 C5:1@stc C5:4 F5:8@sus | F5:2@stc G5:2@stc A5:2@stc F5:2@stc Bb5:8@sus', { art: 'mrc' });
@@ -182,7 +182,7 @@ export function exFanfare() {
   return fitColumns(song);
 }
 export function exPulse() {
-  const song = newSong(); song.title = 'Pulse'; song.bpm = 144;
+  const song = orchestraSong(); song.title = 'Pulse'; song.bpm = 144;
   song.notes = 'Minimalist piece, arrangement A×2 B×2: sixteenth-note flute, eighth-note clarinet, pizzicato bass and viola, sustained horns, tremolo violins. Repeated figures are built with rep().';
   const A = song.phrases[0], B = newPhrase('B'); song.phrases.push(B); arrange(song, [['A', [0]], ['B', [1]]], [['A', 2], ['B', 2]]);
   const tpr = A.ticksPerRow;
@@ -212,7 +212,7 @@ export function exPulse() {
   return fitColumns(song);
 }
 export function exNeonCorridor() {
-  const song = addTracks(newSong(), SYNTH_TRACKS); song.title = 'Neon corridor (Tron-style)'; song.bpm = 128;
+  const song = addInstruments(orchestraSong(), SYNTHS); song.title = 'Neon corridor (Tron-style)'; song.bpm = 128;
   song.notes = 'Hybrid electronic and orchestral: a Build section twice, then the Drive section twice. Octave synth bass and a sixteenth-note arp on channels 15 and 16, low strings hammering the root, brass and tremolo strings swelling, trumpet stabs into the fourth bar.';
   const A = song.phrases[0], B = newPhrase('B'); song.phrases.push(B); arrange(song, [['Build', [0]], ['Drive', [1]]], [['Build', 2], ['Drive', 2]]);
   const tpr = A.ticksPerRow;
@@ -243,7 +243,7 @@ export function exNeonCorridor() {
   return fitColumns(song);
 }
 export function exAfterglow() {
-  const song = addTracks(newSong(), SYNTH_TRACKS); song.title = 'Afterglow (Tron-style)'; song.bpm = 72;
+  const song = addInstruments(orchestraSong(), SYNTHS); song.title = 'Afterglow (Tron-style)'; song.bpm = 72;
   song.notes = 'Slow hybrid cue on an eighth-note grid: long synth bass, an eighth-note arp that never stops, string chorale on top, horns and flute for the second half, timpani roll and ritardando to close.';
   const A = song.phrases[0]; A.ticksPerRow = 480; const tpr = 480;
   // Am F C G | Am F Dm E
@@ -267,7 +267,7 @@ export function exAfterglow() {
   return fitColumns(song);
 }
 export function exReel() {
-  const song = newSong(); song.title = 'Reel (folk)'; song.bpm = 112;
+  const song = orchestraSong(); song.title = 'Reel (folk)'; song.bpm = 112;
   song.notes = 'A fiddle reel in D, arrangement A×2 B×2 with one 128-row phrase (8 bars) in each section. Violins I carry the tune, flute doubles an octave up, clarinet joins on the B part, viola chops on 2 and 4, pizzicato cello and bass alternate root and fifth.';
   const A = newPhrase('A', 128), B = newPhrase('B', 128); song.phrases = [A, B]; arrange(song, [['A', [0]], ['B', [1]]], [['A', 2], ['B', 2]]);
   const tpr = A.ticksPerRow;
@@ -296,7 +296,7 @@ export function exReel() {
   return fitColumns(song);
 }
 export function exWaltz() {
-  const song = newSong(); song.title = 'Waltz (folk, 3/4)'; song.bpm = 126;
+  const song = orchestraSong(); song.title = 'Waltz (folk, 3/4)'; song.bpm = 126;
   song.notes = 'A 3/4 folk waltz in G on an eighth-note grid: 6 rows to a bar, 16 bars. Oboe and clarinet share the tune, flute an octave up for the second half, bass on one, viola on two and three, horns holding root and fifth. Ritardando at the end.';
   const A = newPhrase('A', 96, 480, [3, 4]); song.phrases = [A];
   const tpr = 480;
@@ -320,7 +320,7 @@ export function exWaltz() {
   return fitColumns(song);
 }
 export function exLament() {
-  const song = newSong(); song.title = 'Lament (folk, A Dorian)'; song.bpm = 60;
+  const song = orchestraSong(); song.title = 'Lament (folk, A Dorian)'; song.bpm = 60;
   song.notes = 'A slow air over a drone: bass, cellos, bassoon and clarinet hold A and E while the oboe sings in A Dorian. Violins join the tune in unison for the second half, horns move under it, and a timpani roll closes.';
   const A = song.phrases[0]; A.ticksPerRow = 480; const tpr = 480;
   const half1 = 'A4:4 C5:2 D5:2 | E5:4 D5:2 C5:2 | D5:2 C5:2 A4:2 G4:2 | A4:8';
@@ -341,10 +341,10 @@ export function exLament() {
 }
 
 // ---- Bank showcases: one song per bundled bank ---------------------------------------------------
-// Tracks are listed as [id, name, instrument, channel]; the song records its bank so it loads on open.
-function bankSong(title, bank, tracks) {
-  const song = newSong(); song.title = title; song.banks = ['orchestra', bank].filter((b, i, a) => a.indexOf(b) === i);
-  song.tracks = tracks.map(([id, name, instrument, channel]) => ({ id, name, instrument, channel, columns: 1, mute: false }));
+// Instruments are listed as [id, name, sound, channel]; the song records its bank so it loads on open.
+function bankSong(title, bank, instruments) {
+  const song = orchestraSong(); song.title = title; song.banks = ['orchestra', bank].filter((b, i, a) => a.indexOf(b) === i);
+  song.instruments = instruments.map(([id, name, sound, channel]) => instrumentDefaults({ id, name, sound, channel, columns: 1, mute: false }));
   return song;
 }
 // Kit pieces by name so the drum lines read as music, not MIDI numbers.
@@ -392,9 +392,9 @@ export function exBlueInF() {
 }
 
 export function exCrossroadsReel() {
-  const song = bankSong('Crossroads reel (folk)', 'folk', [['fd', 'Fiddle', 'fiddle', 1], ['if', 'Irish flute', 'irish-flute', 2], ['hm', 'Harmonica', 'harmonica', 3], ['bj', 'Banjo', 'banjo', 4], ['fh', 'Folk harp', 'folk-harp', 5], ['fdr', 'Frame drum', 'frame-drum', 9], ['wb', 'Washboard', 'washboard', 11], ['hp', 'Hand percussion', 'hand-percussion', 12]]);
+  const song = bankSong('Crossroads reel (folk)', 'folk', [['fd', 'Fiddle', 'fiddle', 1], ['fd2', 'Fiddle II', 'fiddle', 6], ['if', 'Irish flute', 'irish-flute', 2], ['hm', 'Harmonica', 'harmonica', 3], ['bj', 'Banjo', 'banjo', 4], ['fh', 'Folk harp', 'folk-harp', 5], ['fdr', 'Frame drum', 'frame-drum', 9], ['wb', 'Washboard', 'washboard', 11], ['hp', 'Hand percussion', 'hand-percussion', 12]]);
   song.bpm = 112; song.key = { root: 2, scale: 'major' };
-  song.notes = 'A reel in D: fiddle and Irish flute carry the tune in eighths, banjo rolls and harp arpeggios under it, harmonica holds the drone, frame drum plays the bodhrán part with washboard and shaker keeping time. Arrangement A×2 B×2. The banjo rolls and the fiddle tunes are patterns: open Compose to see them, Enter on a tag to edit one.';
+  song.notes = 'A reel in D: two fiddles made from one sound (the second an octave down, each with its own pan and tuning) and Irish flute carry the tune in eighths, banjo rolls and harp arpeggios under it, harmonica holds the drone, frame drum plays the bodhrán part with washboard and shaker keeping time. Arrangement A×2 B×2. The banjo rolls and the fiddle tunes are patterns: open Compose to see them, Enter on a tag to edit one.';
   const A = song.phrases[0], B = newPhrase('B'); song.phrases.push(B); arrange(song, [['A', [0]], ['B', [1]]], [['A', 2], ['B', 2]]);
   const tpr = A.ticksPerRow;
   const tuneA = 'D5 F#5 A5 F#5 D5 F#5 A5 B5 | A5 F#5 D5 F#5 E5 D5 C#5 E5 | D5 F#5 A5 F#5 D5 F#5 A5 B5 | A5 F#5 E5 C#5 D5:4 . D5:2';
@@ -425,8 +425,13 @@ export function exCrossroadsReel() {
   for (const [phr, chords] of [[A, ['D', 'G', 'D', 'A']], [B, ['D', 'G', 'A', 'D']]]) {
     const m = materialOf(phr, 'bj'); m.notes = []; m.placements = chords.map((ch, bar) => ({ pattern: rollOf[ch], row: bar * 16, transpose: 0, repeat: 1 }));
   }
-  makePattern(song, A, 'fd', 0, 63, 'Reel A'); makePattern(song, B, 'fd', 0, 63, 'Reel B');
-  for (const p of [A, B]) { lane(materialOf(p, 'fd').dyn, '0:96_', tpr); lane(materialOf(p, 'if').dyn, '0:80_', tpr); lane(materialOf(p, 'hm').dyn, '0:60_', tpr); lane(materialOf(p, 'bj').dyn, '0:90_', tpr); lane(materialOf(p, 'fh').dyn, '0:80_', tpr); lane(materialOf(p, 'fdr').dyn, '0:100_', tpr); lane(materialOf(p, 'wb').dyn, '0:80_', tpr); lane(materialOf(p, 'hp').dyn, '0:70_', tpr); }
+  const reelA = makePattern(song, A, 'fd', 0, 63, 'Reel A'), reelB = makePattern(song, B, 'fd', 0, 63, 'Reel B');
+  // Two instruments from one sound: a second fiddle states the same patterns an octave down and softer. Each keeps
+  // its own place in the mix and its own tuning, a few cents apart, as two players are.
+  const [fd, fd2] = [song.instruments.find(t => t.id === 'fd'), song.instruments.find(t => t.id === 'fd2')];
+  Object.assign(fd, { pan: 40, cents: -6 }); Object.assign(fd2, { pan: 88, cents: 7, trim: -2 });
+  for (const [phr, ptn] of [[A, reelA], [B, reelB]]) materialOf(phr, 'fd2').placements = [{ pattern: ptn.id, row: 0, transpose: 0, shift: 0, octave: -1, dynamics: -16, repeat: 1 }];
+  for (const p of [A, B]) { lane(materialOf(p, 'fd').dyn, '0:96_', tpr); lane(materialOf(p, 'fd2').dyn, '0:84_', tpr); lane(materialOf(p, 'if').dyn, '0:80_', tpr); lane(materialOf(p, 'hm').dyn, '0:60_', tpr); lane(materialOf(p, 'bj').dyn, '0:90_', tpr); lane(materialOf(p, 'fh').dyn, '0:80_', tpr); lane(materialOf(p, 'fdr').dyn, '0:100_', tpr); lane(materialOf(p, 'wb').dyn, '0:80_', tpr); lane(materialOf(p, 'hp').dyn, '0:70_', tpr); }
   return fitColumns(song);
 }
 
@@ -493,4 +498,4 @@ const EXAMPLE_LIST = [
 export const EXAMPLES = EXAMPLE_LIST.map(e => ({ title: e.title, uid: 'example:' + e.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
   build: () => { const s = Object.assign(e.build(), { uid: 'example:' + e.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') }); ensureStructure(s); return s; } }));
 
-if (typeof module !== 'undefined') module.exports = { PPQ, INST, FAMILIES, newSong, newPhrase, materialOf, laneSet, laneValueAt, renderSong, TimeMap, midiFileBytes, seedSong, noteName, line, lane, rep, EXAMPLES, phraseMeter };
+if (typeof module !== 'undefined') module.exports = { PPQ, SOUND, FAMILIES, newSong, newPhrase, materialOf, laneSet, laneValueAt, renderSong, TimeMap, midiFileBytes, seedSong, noteName, line, lane, rep, EXAMPLES, phraseMeter };

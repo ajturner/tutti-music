@@ -9,12 +9,12 @@ Defines block selection over the grid and the operations that act on a selection
 ### Requirement: Selection model
 A selection SHALL be a rectangle of consecutive rows by consecutive cells, where cells are numbered left to right across the grid with the tempo column first. A selection persists until it is cleared with Escape, a plain click or tap, or a new selection.
 
-#### Scenario: Selection spans tracks
+#### Scenario: Selection spans instruments
 - **WHEN** the selection starts on a Flute note cell and ends on an Oboe velocity cell
-- **THEN** every cell between them across both tracks is selected for every row in the range
+- **THEN** every cell between them across both instruments is selected for every row in the range
 
 ### Requirement: Extending a selection
-Shift with the arrow keys SHALL extend the selection from the cursor without wrapping. Dragging with a mouse SHALL select from the press point; Shift-click SHALL extend from the cursor. Cmd+A SHALL select the whole current track for every row, and pressing it again SHALL select the whole phrase. During a mouse drag the view SHALL hold its vertical position and creep one row when the pointer passes the top or bottom edge.
+Shift with the arrow keys SHALL extend the selection from the cursor without wrapping. Dragging with a mouse SHALL select from the press point; Shift-click SHALL extend from the cursor. Cmd+A SHALL select the whole current instrument for every row, and pressing it again SHALL select the whole phrase. During a mouse drag the view SHALL hold its vertical position and creep one row when the pointer passes the top or bottom edge.
 
 #### Scenario: Extend down
 - **WHEN** the cursor is at row 4 and the user presses Shift+Down three times
@@ -34,9 +34,9 @@ Every batch operation SHALL act on the selection, or on the single cell under th
 ### Requirement: Copy, cut, paste, duplicate
 Copy (Cmd+C) SHALL capture, per selected cell, the notes starting in the range with length, velocity, and articulation, or the velocities, articulations, or lane points in the range. Cut (Cmd+X) SHALL copy then clear. Paste (Cmd+V) SHALL place the clipboard with its top-left cell at the cursor, matching cells by kind and skipping mismatched cells, clipping at the phrase end, and scaling ticks when the source and target ticks per row differ. Duplicate (Cmd+D) SHALL paste a copy immediately below the selection and move the selection and cursor to the copy.
 
-#### Scenario: Paste onto a different track
+#### Scenario: Paste onto a different instrument
 - **WHEN** a 4-row block of Flute notes is copied and pasted with the cursor on an Oboe note cell
-- **THEN** the Oboe track receives the same notes at the cursor row
+- **THEN** the Oboe instrument receives the same notes at the cursor row
 
 #### Scenario: Kind mismatch
 - **WHEN** a block of notes is pasted with the cursor on a dynamics cell
@@ -50,8 +50,8 @@ Copy (Cmd+C) SHALL capture, per selected cell, the notes starting in the range w
 Delete with a selection SHALL remove the notes, articulations, dynamics points, or tempo points in the selected cells and rows.
 
 #### Scenario: Clear a block
-- **WHEN** rows 0 to 7 of two tracks are selected and the user presses Delete
-- **THEN** notes starting in those rows on those tracks are removed; notes elsewhere are kept
+- **WHEN** rows 0 to 7 of two instruments are selected and the user presses Delete
+- **THEN** notes starting in those rows on those instruments are removed; notes elsewhere are kept
 
 ### Requirement: Transpose, velocity, length, articulation
 With a selection, minus and equals SHALL transpose the selected notes by a semitone, and with Shift by an octave, clamped to 0 to 127. The bracket keys SHALL shorten and lengthen every selected note by one row within the column limits. Velocity operations SHALL add or subtract a fixed amount clamped to 1 to 127. Setting an articulation SHALL apply it to every selected note whose instrument supports it. A note is selected when any of its note, velocity, or articulation cells on its start row is in the selection; an articulation cell selects notes in every column.
@@ -100,8 +100,8 @@ Rnd vel SHALL move every selected note's velocity by a random amount within ±12
 - **THEN** Humanize leaves that row unchanged and delays the others
 
 ### Requirement: Pattern actions on the selection toolbar
-The selection toolbar SHALL offer Make pattern and Detach beside Clear. Make pattern SHALL act on the selected rows of one track; Detach SHALL act on the placement under the cursor or the placements starting in the selection.
+The selection toolbar SHALL offer Make pattern and Detach beside Clear. Make pattern SHALL act on the selected rows of one instrument; Detach SHALL act on the placement under the cursor or the placements starting in the selection.
 
-#### Scenario: Two tracks selected
+#### Scenario: Two instruments selected
 - **WHEN** the selection spans Fiddle and Banjo and Make pattern is pressed
-- **THEN** nothing changes and the status asks for rows on one track
+- **THEN** nothing changes and the status asks for rows on one instrument

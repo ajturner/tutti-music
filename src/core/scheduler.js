@@ -1,5 +1,5 @@
 // Lookahead scheduler that plays rendered events through one or more sinks in the performance.now() domain.
-import { INST } from './instruments.js';
+import { SOUND } from './sounds.js';
 import { TYPE_ORDER, TimeMap } from './render.js';
 
 // ---- Scheduler: lookahead loop in the performance.now() domain ------------------
@@ -27,8 +27,8 @@ export class Scheduler {
     let i = 0;
     while (i < list.length && list[i].ms < startMs) {
       const ev = list[i++];
-      if (ev.type === 'cc') carry.set(ev.track + ':' + ev.cc, ev);
-      else if (ev.type === 'ks') carry.set(ev.track + ':ks', ev);
+      if (ev.type === 'cc') carry.set(ev.instrument + ':' + ev.cc, ev);
+      else if (ev.type === 'ks') carry.set(ev.instrument + ':ks', ev);
     }
     this.playing = true;
     for (const ev of carry.values()) this.dispatch(ev, now + 20);
@@ -37,11 +37,11 @@ export class Scheduler {
     this.tick();
   }
   buildList(rendered) {
-    const tm = this.tm, byId = Object.fromEntries(this.song.tracks.map(t => [t.id, t]));
+    const tm = this.tm, byId = Object.fromEntries(this.song.instruments.map(t => [t.id, t]));
     return rendered.events.map(ev => {
-      const tr = byId[ev.track], ins = INST[tr.instrument];
+      const tr = byId[ev.instrument], ins = SOUND[tr.sound];
       const delay = (ev.type === 'on' || ev.type === 'off') ? (ins.speakDelayMs || 0) : 0;
-      return Object.assign({ ms: tm.msAt(ev.tick) + delay, channel: tr.channel - 1, family: ins.family, trackRef: tr }, ev);
+      return Object.assign({ ms: tm.msAt(ev.tick) + delay, channel: tr.channel - 1, family: ins.family, instrumentRef: tr }, ev);
     }).sort((a, b) => a.ms - b.ms || TYPE_ORDER[a.type] - TYPE_ORDER[b.type]);
   }
   tick() {
@@ -62,14 +62,14 @@ export class Scheduler {
     }
   }
   dispatch(ev, at) {
-    // Mute drops everything but note-offs. When any track is soloed, only soloed tracks sound.
+    // Mute drops everything but note-offs. When any instrument is soloed, only soloed instruments sound.
     if (ev.type !== 'off') {
-      if (ev.trackRef.mute) return;
-      if (this.anySolo() && !ev.trackRef.solo) return;
+      if (ev.instrumentRef.mute) return;
+      if (this.anySolo() && !ev.instrumentRef.solo) return;
     }
     for (const s of this.getSinks()) s.send(ev, at);
   }
-  anySolo() { return this.song && this.song.tracks.some(t => t.solo); }
+  anySolo() { return this.song && this.song.instruments.some(t => t.solo); }
   // Live mode: play `rendered` (looping) when the current loop ends, instead of repeating.
   queue(rendered) { this.next = rendered; }
   swapToQueued() {

@@ -6,17 +6,17 @@ Bring other ensembles into Tutti: whole banks or single instruments, bundled or 
 ## Requirements
 
 ### Requirement: Bank format
-A bank SHALL be a JSON file with an id, a name, and a list of instrument definitions in the instrument schema, each optionally naming a sample folder relative to the bank file, a fixed-pitch kit map, or a synth patch, plus optional ids of existing instruments to show with the bank.
+A bank SHALL be a JSON file with an id, a name, and a list of sound definitions in the sound schema (under the key `instruments`, kept from before the word changed), each optionally naming a sample folder relative to the bank file, a fixed-pitch kit map, or a synth patch, plus optional ids of existing sounds to show with the bank.
 
 #### Scenario: Load from a URL
-- **WHEN** the user enters the URL of a valid bank.json in the Sounds panel
+- **WHEN** the user enters the URL of a valid bank.json in the sound browser of the Instruments panel
 - **THEN** its instruments become available with their samples resolved against that URL
 
 ### Requirement: Bundled banks
 The app SHALL bundle the Symphony orchestra as the bank loaded by default (woodwinds, brass including tuba, timpani, harp, strings, a sampled choir voice, and two synths), plus Jazz combo (piano, vibraphone, tenor, alto and bass sax, sampled guitar, upright bass, drum kit), Folk group (fiddle, banjo, folk harp, Irish flute, recorder, harmonica, washboard, frame drum, hand percussion) and Electronica (FM piano, clavisynth, drum machine, lead, pad, pluck), listed in a catalogue. The default bank SHALL behave like every other bank: it can be loaded, unloaded (instruments in use by any song stay registered) and hidden, and an unloaded default bank SHALL stay unloaded on the next start unless a song needs it.
 
 #### Scenario: Catalogue
-- **WHEN** the user opens the Sounds panel
+- **WHEN** the user opens the sound browser in the Instruments panel
 - **THEN** all four banks are offered with the same controls, the orchestra loaded by default
 
 #### Scenario: Unload the orchestra
@@ -24,10 +24,10 @@ The app SHALL bundle the Symphony orchestra as the bank loaded by default (woodw
 - **THEN** its unused instruments unregister and the chip reads as unloaded; clicking again reloads it from its file
 
 ### Requirement: Instruments from banks
-Loaded banks' instruments SHALL appear grouped by bank in the track instrument picker. Adding or switching a track to a bank instrument SHALL record the bank on the song; opening a song SHALL load its banks first. A bank in use by the open song SHALL NOT unload. A missing bank or instrument SHALL play through the synth and be reported in the status.
+Loaded banks' sounds SHALL appear grouped by bank in the sound pickers of the Instruments panel. Adding an instrument from a bank's sound, or switching an instrument to one, SHALL record the bank on the song; opening a song SHALL load its banks first. A bank in use by the open song SHALL NOT unload. A missing bank or sound SHALL play through the synth and be reported in the status.
 
 #### Scenario: Song remembers its bank
-- **WHEN** a song with a Jazz drum kit track is reopened in a fresh session
+- **WHEN** a song with a Jazz drum kit instrument is reopened in a fresh session
 - **THEN** the jazz bank loads and the kit plays its samples
 
 ### Requirement: Kits and patches
@@ -49,8 +49,8 @@ The synthesized drum machine SHALL sound on every note of the General MIDI percu
 - **THEN** each produces sound
 
 ### Requirement: Hiding banks
-Any loaded bank, including the built-in orchestra and a bank the open song uses, SHALL be hideable from the Sounds bar: its instruments leave the instrument picker and the Sounds table but remain registered so existing tracks keep playing, and the choice persists per browser. Clicking again SHALL show it.
+Any loaded bank, including the built-in orchestra and a bank the open song uses, SHALL be hideable from the banks bar of the sound browser: its sounds leave the sound pickers and the sound browser but remain registered so existing instruments keep playing, and the choice persists per browser. Clicking again SHALL show it.
 
 #### Scenario: Hide the orchestra
 - **WHEN** the user clicks the orchestra chip
-- **THEN** orchestral instruments disappear from the Tracks picker and the Sounds table while an open orchestral song still plays
+- **THEN** orchestral sounds disappear from the sound pickers and the sound browser while an open orchestral song still plays
