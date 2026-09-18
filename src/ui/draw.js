@@ -11,6 +11,7 @@ import { fxAtRow } from '../core/edit.js';
 import { keyName } from '../core/scales.js';
 import { inSel } from './selection.js';
 import { gamepad, pollGamepad } from './gamepad.js';
+import { renderPocket } from './pocket.js';
 import { syncPad, syncSelBar } from './pad.js';
 import { syncMixer } from './mixer.js';
 import { syncMap } from './map.js';
@@ -262,7 +263,7 @@ let lastDrawError = '';
 export function frame(now) {
   try {
     pollGamepad(now || performance.now());
-    if (state.dirty || sched.playing) { state.dirty = false; const none = $('emptyAdd'); if (none) none.hidden = state.song.instruments.length > 0; draw(); }
+    if (state.dirty || sched.playing) { state.dirty = false; const none = $('emptyAdd'); if (none) none.hidden = state.song.instruments.length > 0; if (state.pocket) renderPocket(); else draw(); }
   } catch (e) {
     // never let one bad frame stop the loop; report once per distinct error
     if (e.message !== lastDrawError) { lastDrawError = e.message; console.error('draw:', e); state.message = 'Display error: ' + e.message; }
