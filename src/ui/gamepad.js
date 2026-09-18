@@ -1,10 +1,12 @@
 // Game controller bindings (LSDJ-style), polled every frame.
-import { curPat, curTrack, rowsPerBar, sched, state } from './state.js';
+import { curPhrase, curInstrument, rowsPerBar, sched, state } from './state.js';
 import { currentCell } from './layout.js';
-import { audition, moveCell, moveRow, moveTrack, noteCovering, nudgeArticulation, nudgeCell, tapCell, undo } from './edit.js';
+import { audition, moveCell, moveRow, cursorToInstrument, noteCovering, nudgeArticulation, nudgeCell, tapCell, undo } from './edit.js';
 import { clearSel, copySel, cutSel, duplicateSel, pasteSel, selExtend } from './selection.js';
 import { clearCell } from './edit.js';
-import { playPattern, playSong, stopAll } from './transport.js';
+import { playPhrase, playSong, stopAll } from './transport.js';
+import { levelDown, levelUp } from './map.js';
+import { setSongCursor, songKey } from './songview.js';
 
 // ---- Game controller ------------------------------------------------------------------------
 // The Gamepad API is polled, so this runs every frame. Standard-mapping indices (Xbox layout):
@@ -36,6 +38,20 @@ export function pollGamepad(now) {
   if (fire.a) gamepad.aUsed = false;
   if (fire.b) gamepad.bUsed = false;
   if (fire.back) gamepad.backUsed = false;
+  // Back + LB goes out a level (pattern → phrase → song), Back + RB goes in; both work on every level.
+  if (fire.lb && held.back) { gamepad.backUsed = true; levelUp(); return; }
+  if (fire.rb && held.back) { gamepad.backUsed = true; if (state.level === 'song') songKey({ key: 'Enter' }); else levelDown(); return; }
+  if (state.level === 'song') {   // the overview: the d-pad moves the cell cursor, A opens, Start plays from here
+    const c = state.songCursor;
+    if (fire.up) setSongCursor(c.row - 1, c.instrument, true);
+    if (fire.down) setSongCursor(c.row + 1, c.instrument, true);
+    if (fire.left || fire.lb) setSongCursor(c.row, c.instrument - 1, true);
+    if (fire.right || fire.rb) setSongCursor(c.row, c.instrument + 1, true);
+    if (fire.aUp) songKey({ key: 'Enter' });
+    if (fire.start) { if (held.back) { gamepad.backUsed = true; playSong(); } else songKey({ key: ' ' }); }
+    if (fire.backUp && !gamepad.backUsed) undo();
+    return;
+  }
   const edit = d => { gamepad.aUsed = true; nudgeCell(d); };
   const grow = (dr, dc) => { gamepad.bUsed = true; selExtend(dr, dc); };
   const big = () => { const k = currentCell().kind; return k === 'note' ? 12 : k === 'tempo' ? 10 : 16; };
@@ -45,13 +61,13 @@ export function pollGamepad(now) {
   if (fire.right) held.b ? grow(0, 1) : held.a ? edit(big()) : moveCell(1);
   if (fire.aUp && !gamepad.aUsed) { if (held.back) { gamepad.backUsed = true; pasteSel(); } else tapCell(); }
   if (fire.bUp && !gamepad.bUsed) { if (held.back) { gamepad.backUsed = true; copySel(); } else if (state.sel) clearSel(); else clearCell(); }
-  if (fire.x) { if (held.back) { gamepad.backUsed = true; cutSel(); } else { const tr = curTrack(); if (tr) { const ev = noteCovering(curPat(), tr.id, currentCell().col | 0, state.cursor.row); if (ev) audition(tr, ev.pitch, ev.art); } } }
+  if (fire.x) { if (held.back) { gamepad.backUsed = true; cutSel(); } else { const tr = curInstrument(); if (tr) { const ev = noteCovering(curPhrase(), tr.id, currentCell().col | 0, state.cursor.row); if (ev) audition(tr, ev.pitch, ev.art); } } }
   if (fire.y) { if (held.back) { gamepad.backUsed = true; duplicateSel(); } else nudgeArticulation(1); }
-  if (fire.lb) moveTrack(-1);
-  if (fire.rb) moveTrack(1);
+  if (fire.lb) cursorToInstrument(-1);
+  if (fire.rb) cursorToInstrument(1);
   if (fire.lt) moveRow(-rowsPerBar());
   if (fire.rt) moveRow(rowsPerBar());
-  if (fire.start) { if (held.back) { gamepad.backUsed = true; playSong(); } else if (sched.playing) stopAll(); else playPattern(false); }
+  if (fire.start) { if (held.back) { gamepad.backUsed = true; playSong(); } else if (sched.playing) stopAll(); else playPhrase(false); }
   if (fire.backUp && !gamepad.backUsed) undo();
 }
 window.addEventListener('gamepadconnected', e => { state.message = 'Controller connected: ' + e.gamepad.id; state.dirty = true; });

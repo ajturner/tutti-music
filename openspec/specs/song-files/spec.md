@@ -7,7 +7,7 @@ Defines how songs are listed, created, saved, and loaded, and what survives a pa
 ## Requirements
 
 ### Requirement: Song list
-The Song panel SHALL offer a song list containing the built-in examples plus any songs created or loaded, restored from browser storage on load, beside New and Delete, with Save, Load and Export .mid in a files group. Selecting a song SHALL stop playback, reset the cursor to the first pattern, and clear undo history.
+The Song panel SHALL offer a song list containing the built-in examples plus any songs created or loaded, restored from browser storage on load, beside New and Delete, with Save, Load and Export .mid in a files group. Selecting a song SHALL stop playback, reset the cursor to the first phrase, and clear undo history.
 
 #### Scenario: Built-in examples present
 - **WHEN** the app loads
@@ -18,7 +18,7 @@ The Song panel SHALL offer a song list containing the built-in examples plus any
 - **THEN** it appears in the list on the next load
 
 ### Requirement: New song
-The New button SHALL add an empty song titled "Untitled N" with default patterns and tracks and select it. The title field in the header SHALL rename the current song; an empty title becomes "Untitled".
+The New button SHALL add an empty song titled "Untitled N" with default phrases and instruments and select it. The title field in the header SHALL rename the current song; an empty title becomes "Untitled".
 
 #### Scenario: Create and rename
 - **WHEN** the user clicks New and types "Nocturne" in the header title
@@ -36,33 +36,33 @@ Save SHALL download the current song as pretty-printed JSON named after the titl
 - **THEN** the file contains "format": "tutti-song" and a version number
 
 ### Requirement: Load
-Load SHALL read a JSON file, normalise it (fill defaults, keep unknown fields), reject files without patterns, tracks or a readable version, files of an unknown format, and files older or newer than format 3, with a status message naming the version; default a missing title to the file name, add the song to the list, and select it.
+Load SHALL read a JSON file, normalise it (fill defaults, repair structure, keep unknown fields), reject files without phrases, instruments or a readable version, files of an unknown format, and files older or newer than format 4, with a status message naming the version; default a missing title to the file name, add the song to the list, and select it.
 
 #### Scenario: Wrong file
 - **WHEN** the user loads a JSON file that is not a Tutti song
 - **THEN** the status shows a load failure and the current song is unchanged
 
 #### Scenario: Version 2 file
-- **WHEN** the user loads a song saved by Tutti 2.x
-- **THEN** the status says version 2 is older than this app reads and nothing is added
+- **WHEN** the user loads a song saved by Tutti 2.x or 3.x
+- **THEN** the status says that version is older than this app reads and nothing is added
 
 #### Scenario: Legacy file loads
 - **WHEN** the user loads a song saved before the format fields existed
 - **THEN** the status says version 1 is older than this app reads and nothing is added
 
-### Requirement: Patterns
-The pattern selector SHALL list patterns by index and name. Adding a pattern SHALL create one with the current pattern's rows, row size, and meter, name it with the next letter, append it to the order, and select it. Rows (1 to 512), row size, and meter SHALL be editable per pattern and undoable. The order field SHALL accept space- or comma-separated pattern indices, dropping invalid ones, and never be empty.
+### Requirement: Phrases
+The phrase selector SHALL list phrases by name under their sections, in the order the sections hold them, and a phrase that sits in two sections SHALL open in the one that was picked. Choosing a phrase SHALL show it in the grid. Adding a phrase from Compose SHALL create one with the current phrase's rows, row size, meter and groove, name it with the section's next free name (A1, A2; Verse 1, Verse 2), put it after the current phrase in its section, and select it. The name of the open phrase, or of the open pattern, SHALL be editable in Compose. Rows (1 to 512), row size, and meter SHALL be editable per phrase and undoable; while a pattern is open rows and row size SHALL edit the pattern and meter and groove SHALL be disabled.
 
-#### Scenario: Add a pattern
-- **WHEN** the song has patterns A and B and the user adds one
-- **THEN** pattern 2 "C" exists, is selected, and the order ends with 2
+#### Scenario: Add a phrase
+- **WHEN** section A holds A1 and the user presses + in the phrase's settings
+- **THEN** phrase A2 exists right after A1 in section A, shaped like A1, and is open
 
 #### Scenario: Invalid order entry
-- **WHEN** the user types "0 9 1" and only patterns 0 to 2 exist
-- **THEN** the order becomes "0 1"
+- **WHEN** a loaded file's section names a phrase that does not exist
+- **THEN** that slot is dropped and the section keeps its other phrases
 
-### Requirement: Pattern selector during a loop
-While a pattern loops, the pattern selector SHALL queue the chosen pattern rather than switch, and SHALL keep showing the playing pattern until the switch happens.
+### Requirement: Phrase selector during a loop
+While a phrase loops, the phrase selector SHALL queue the chosen phrase rather than switch, and SHALL keep showing the playing phrase until the switch happens.
 
 #### Scenario: Selector stays
 - **WHEN** A loops and the user selects B
@@ -83,11 +83,11 @@ A Delete control SHALL remove the current song from storage: a built-in example 
 - **THEN** the example is back to its original notes and storage no longer holds it
 
 ### Requirement: Session location
-The URL hash SHALL name the open song by uid and the current pattern index, updated whenever either changes without adding history entries. On load the app SHALL open the song and pattern from the URL; when the URL names no known song it SHALL open the last song opened in this browser, else the first example. Changing the hash SHALL switch to the named song and pattern.
+The URL hash SHALL name the open song by uid and the open phrase by id (`#song=…&phrase=…`), updated whenever either changes without adding history entries. On load the app SHALL open the song and phrase from the URL; when the URL names no known song it SHALL open the last song opened in this browser, else the first example. Changing the hash SHALL switch to the named song and phrase.
 
 #### Scenario: Refresh after creating a song
-- **WHEN** the user creates a new song, enters a note, adds a pattern, and refreshes
-- **THEN** the same song opens on the same pattern with the note present
+- **WHEN** the user creates a new song, enters a note, adds a phrase, and refreshes
+- **THEN** the same song opens on the same phrase with the note present
 
 #### Scenario: Bare URL
 - **WHEN** the user opens the site without a hash after working on a song
@@ -96,21 +96,6 @@ The URL hash SHALL name the open song by uid and the current pattern index, upda
 #### Scenario: Shared link
 - **WHEN** a URL with a song uid that this browser does not have is opened
 - **THEN** the app falls back to the last opened or first song without error
-
-### Requirement: Arranger
-The arrangement SHALL be shown as one chip per entry, marking the open pattern and any queued pattern, with ×N for repeats and a badge when any track follows another pattern. Clicking a chip SHALL open that pattern (or queue it while a loop plays), dragging SHALL reorder entries, a chip's × SHALL remove the entry while at least one remains, + SHALL append the current pattern, and … SHALL open the entry: its repeat count and, per track, which pattern it follows. The arrangement text field SHALL read and accept `N` or `NxR` tokens and keep follows for unchanged positions.
-
-#### Scenario: Follow a pattern of placements
-- **WHEN** the user opens entry 1's … and sets Bass to follow pattern 2 Bass walk
-- **THEN** the chip shows the follows badge and the grid header marks Bass with "Bass walk" while it plays
-
-#### Scenario: Build a form
-- **WHEN** the arrangement is 0 1 0 and the user presses + while pattern 1 is open
-- **THEN** the arrangement is 0 1 0 1 and the text field reads "0 1 0 1"
-
-#### Scenario: Repeat and chain
-- **WHEN** the user sets entry 1 to repeat 2 and Basses to follow pattern 1
-- **THEN** its chip reads "0 A ×2 ⛓" and the text field reads "0x2 …"
 
 ### Requirement: Bank showcases
 The built-in song list SHALL include at least one song for each bundled bank other than the orchestra (jazz, folk, electronica), using that bank's instruments and recording the bank so it loads on open. Every built-in song's notes SHALL lie within its instruments' ranges and on mapped kit pieces.

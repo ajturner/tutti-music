@@ -1,7 +1,7 @@
-import { INST } from './instruments.js';
+import { SOUND } from './sounds.js';
 // WebAudio preview synth: one voice per family shaped by articulation and the dynamics/expression lanes.
 // ---- SynthSink: WebAudio preview ---------------------------------------------
-// One bus per track: voices -> lowpass (opened by the dynamics lane) -> gain -> compressor.
+// One bus per instrument: voices -> lowpass (opened by the dynamics lane) -> gain -> compressor.
 // Family and articulation pick waveforms and envelope; CC1 brightens and lifts, CC11 scales level.
 export function voiceParams(family, art, patch) {
   const base = patch ? Object.assign({ waves: [['sawtooth', 0, 0.5]], a: 0.01, d: 0.2, s: 0.7, r: 0.2, level: 0.25 }, patch) : {
@@ -46,8 +46,8 @@ export class SynthSink {
     if (this.ctx.state !== 'running') this.ctx.resume();
     return this.ctx;
   }
-  bus(track) {
-    let b = this.buses.get(track);
+  bus(instrument) {
+    let b = this.buses.get(instrument);
     if (!b) {
       const ctx = this.ctx;
       const filter = ctx.createBiquadFilter(); filter.type = 'lowpass'; filter.Q.value = 0.7;
@@ -55,7 +55,7 @@ export class SynthSink {
       const pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
       if (pan) filter.connect(gain).connect(pan).connect(this.master); else filter.connect(gain).connect(this.master);
       b = { filter, gain, pan, dyn: 100, expr: 127, vol: 100, panv: 64 };
-      this.buses.set(track, b);
+      this.buses.set(instrument, b);
       this.applyBus(b, ctx.currentTime);
     }
     return b;
@@ -75,12 +75,12 @@ export class SynthSink {
     if (!this.enabled) return;
     this.ensure();
     const t = this.when(atMs);
-    if (ev.type === 'on') this.noteOn(ev.track, ev.family, ev.pitch, ev.vel, ev.art, t, ev.trackRef ? ev.trackRef.instrument : null);
-    else if (ev.type === 'off') this.noteOff(ev.track, ev.pitch, t);
-    else if (ev.type === 'cc') this.control(ev.track, ev.cc, ev.value, t);
+    if (ev.type === 'on') this.noteOn(ev.instrument, ev.family, ev.pitch, ev.vel, ev.art, t, ev.instrumentRef ? ev.instrumentRef.sound : null, ev.instrumentRef);
+    else if (ev.type === 'off') this.noteOff(ev.instrument, ev.pitch, t);
+    else if (ev.type === 'cc') this.control(ev.instrument, ev.cc, ev.value, t);
   }
-  control(track, cc, value, t) {
-    const b = this.bus(track);
+  control(instrument, cc, value, t) {
+    const b = this.bus(instrument);
     if (cc === 1) b.dyn = value; else if (cc === 11) b.expr = value; else if (cc === 7) b.vol = value; else if (cc === 10) b.panv = value; else return;
     this.applyBus(b, t);
   }
@@ -135,13 +135,13 @@ export class SynthSink {
     this.ksCache.set(key, out);
     return out;
   }
-  noteOn(track, family, pitch, vel, art, t, instId) {
-    const ctx = this.ctx, b = this.bus(track), key = track + ':' + pitch;
+  noteOn(instrument, family, pitch, vel, art, t, soundId, shaped) {
+    const ctx = this.ctx, b = this.bus(instrument), key = instrument + ':' + pitch;
     if (this.active.has(key)) this.release(this.active.get(key), t, 0.05);
-    const ins = instId ? INST[instId] : null;
+    const ins = soundId ? SOUND[soundId] : null;
     if (ins && ins.kit && !ins.samples) { if (ins.kit[pitch]) this.drum(b, pitch, vel, t); return; }
     const P = voiceParams(family, art, ins ? ins.patch : null);
-    const f = 440 * Math.pow(2, (pitch - 69) / 12);
+    const f = 440 * Math.pow(2, (pitch - 69 + (shaped ? (shaped.tune || 0) + (shaped.cents || 0) / 100 : 0)) / 12);   // the instrument's tuning
     if (P.ks) {   // plucked string: one buffer source, velocity sets level, release stops it
       const src = ctx.createBufferSource(); src.buffer = this.ksBuffer(f, P.ks);
       const g = ctx.createGain(); g.gain.setValueAtTime((P.level || 0.3) * (0.4 + 0.6 * vel / 127), t);
@@ -274,13 +274,13 @@ export class SynthSink {
     }
     return made;
   }
-  noteOff(track, pitch, t) {
-    const v = this.active.get(track + ':' + pitch);
+  noteOff(instrument, pitch, t) {
+    const v = this.active.get(instrument + ':' + pitch);
     if (v) this.release(v, t);
   }
-  audition(family, pitch, art, instId) {
+  audition(family, pitch, art, soundId, shaped) {
     const t = this.ensure().currentTime + 0.01;
-    this.noteOn('_audition', family, pitch, 100, art, t, instId);
+    this.noteOn('_audition', family, pitch, 100, art, t, soundId, shaped);
     this.noteOff('_audition', pitch, t + 0.35);
   }
   allOff() {

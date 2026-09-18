@@ -7,14 +7,14 @@ Defines the built-in synth used to hear voice leading without a DAW. It is a ske
 ## Requirements
 
 ### Requirement: Preview toggle
-Audio preview SHALL be on by default and switchable off from the Sounds panel. When off, no preview sound is produced and playback continues to any MIDI output. Audio SHALL start only after a user gesture. The preview sound is either the sampled banks or the sketch synth, chosen in the Sounds panel.
+Audio preview SHALL be on by default and switchable off from the View panel. When off, no preview sound is produced and playback continues to any MIDI output. Audio SHALL start only after a user gesture. The preview sound is either the sampled banks or the sketch synth, chosen in the Sounds panel.
 
 #### Scenario: Preview off with MIDI on
 - **WHEN** preview is unticked and a MIDI output is selected
 - **THEN** the synth and sampler are silent and MIDI output, if enabled, still receives events
 
 #### Scenario: Preview off
-- **WHEN** preview is off and the user plays the pattern
+- **WHEN** preview is off and the user plays the phrase
 - **THEN** the synth and sampler are silent and MIDI output, if enabled, still receives events
 
 ### Requirement: Family voices
@@ -42,5 +42,5 @@ Entering a note, nudging it, or pressing the audition control SHALL play the not
 The preview SHALL pass through a compressor so that full orchestral chords do not clip.
 
 #### Scenario: Tutti chord
-- **WHEN** 13 tracks sound at once
+- **WHEN** 13 instruments sound at once
 - **THEN** output remains below clipping

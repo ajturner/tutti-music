@@ -1,29 +1,29 @@
 // Editing primitives: note lookup, undo, cell entry and nudging, clearing, note length and columns, cursor movement.
 import { clamp, noteName } from '../core/constants.js';
-import { INST } from '../core/instruments.js';
-import { laneRemove, laneSet, materialOf, placementAt, phraseUses } from '../core/song.js';
+import { SOUND } from '../core/sounds.js';
+import { laneRemove, laneSet, materialOf, placementAt, placementLabel, patternUses } from '../core/song.js';
 import { setNote as coreSetNote, noteAt, noteCovering, notesStartingAt, removeNotesAt, resizeNote, fxAtRow, setFx, removeFx } from '../core/edit.js';
 import { FX_COMMANDS, FX_DEFAULTS } from '../core/render.js';
 import { transposeDiatonic } from '../core/scales.js';
-import { $, KEYMAP, activeKey, auditionPreview, curPat, curPhrase, curTrack, midi, state, tracksShown } from './state.js';
+import { $, KEYMAP, activeKey, auditionPreview, curPhrase, curPattern, curInstrument, midi, state, instrumentsShown } from './state.js';
 import { currentCell, cellKinds } from './layout.js';
-import { syncPatternUI, syncSongUI } from './sync.js';
+import { syncPhraseUI, syncSongUI } from './sync.js';
 import { markEdited } from './storage.js';
 
-// Pattern lookups live in the core; re-exported so UI modules keep one import path.
-export { indexTrack, noteAt, noteCovering, notesStartingAt, notesIn, putNote, nextNote, maxLength } from '../core/edit.js';
+// Phrase lookups live in the core; re-exported so UI modules keep one import path.
+export { indexInstrument, noteAt, noteCovering, notesStartingAt, notesIn, putNote, nextNote, maxLength } from '../core/edit.js';
 
 // ---- Undo ---------------------------------------------------------------------------
 export function withUndo(fn) {
-  const ph = curPhrase();
-  state.undo.push(ph ? { phrase: ph.id, json: JSON.stringify(ph) } : { pat: state.pat, json: JSON.stringify(curPat()) });
+  const ptn = curPattern();
+  state.undo.push(ptn ? { pattern: ptn.id, json: JSON.stringify(ptn) } : { phr: state.phr, json: JSON.stringify(curPhrase()) });
   if (state.undo.length > 200) state.undo.shift();
   state.redo.length = 0;
   fn();
   markEdited();
   state.dirty = true;
 }
-// Song-level edits (tracks, mixer, key, order, tempo, title) snapshot the whole song.
+// Song-level edits (instruments, mixer, key, order, tempo, title) snapshot the whole song.
 export function withSongUndo(fn) {
   state.undo.push({ song: JSON.stringify(state.song) });
   if (state.undo.length > 200) state.undo.shift();
@@ -36,11 +36,11 @@ export function undo() { swapHistory(state.undo, state.redo); }
 export function redo() { swapHistory(state.redo, state.undo); }
 export function swapHistory(from, to) {
   const h = from.pop(); if (!h) return;
-  if (h.phrase) {   // an edit made while the phrase was open in the grid
-    const i = (state.song.phrases || []).findIndex(p => p.id === h.phrase);
+  if (h.pattern) {   // an edit made while the pattern was open in the grid
+    const i = (state.song.patterns || []).findIndex(p => p.id === h.pattern);
     if (i < 0) return;
-    to.push({ phrase: h.phrase, json: JSON.stringify(state.song.phrases[i]) });
-    state.song.phrases[i] = JSON.parse(h.json);
+    to.push({ pattern: h.pattern, json: JSON.stringify(state.song.patterns[i]) });
+    state.song.patterns[i] = JSON.parse(h.json);
     state.typing = null; markEdited(); state.dirty = true;
     return;
   }
@@ -48,31 +48,31 @@ export function swapHistory(from, to) {
     to.push({ song: JSON.stringify(state.song) });
     const s = JSON.parse(h.song);
     state.songs[state.songIndex] = s; state.song = s;
-    state.pat = Math.min(state.pat, s.patterns.length - 1);
-    state.cursor.track = Math.min(state.cursor.track, s.tracks.length - 1);
+    state.phr = Math.min(state.phr, s.phrases.length - 1);
+    state.cursor.instrument = Math.min(state.cursor.instrument, s.instruments.length - 1);
     state.sel = null; state.selAnchor = null;
-    syncSongUI(); syncPatternUI(); state.typing = null; markEdited(); state.dirty = true;
+    syncSongUI(); syncPhraseUI(); state.typing = null; markEdited(); state.dirty = true;
     return;
   }
-  to.push({ pat: h.pat, json: JSON.stringify(state.song.patterns[h.pat]) });
-  state.song.patterns[h.pat] = JSON.parse(h.json);
-  state.pat = h.pat; syncPatternUI(); state.typing = null; state.dirty = true;
+  to.push({ phr: h.phr, json: JSON.stringify(state.song.phrases[h.phr]) });
+  state.song.phrases[h.phr] = JSON.parse(h.json);
+  state.phr = h.phr; syncPhraseUI(); state.typing = null; markEdited(); state.dirty = true;
 }
 
 // ---- Editing --------------------------------------------------------------------------
 // A note column holds non-overlapping notes: a new note cuts off any note still sounding in that column,
 // and a note can't be lengthened past the next note in its column. Overlaps across columns are fine (divisi).
 // New notes last `step` rows (at least one); the overlap rules are in the core.
-export function setNote(pat, trackId, col, tick, pitch) {
-  return coreSetNote(pat, trackId, col, tick, pitch, Math.max(1, state.step) * pat.ticksPerRow);
+export function setNote(phr, instrumentId, col, tick, pitch) {
+  return coreSetNote(phr, instrumentId, col, tick, pitch, Math.max(1, state.step) * phr.ticksPerRow);
 }
-export function audition(track, pitch, art) {
-  const ins = INST[track.instrument];
-  auditionPreview(ins, pitch, art);
-  if (midi.out) midi.audition(track.channel - 1, pitch);
+export function audition(instrument, pitch, art) {
+  const ins = SOUND[instrument.sound];
+  auditionPreview(ins, pitch, art, instrument);
+  if (midi.out) midi.audition(instrument.channel - 1, pitch);
 }
 export function typingFor(cell, digits) {
-  const c = state.cursor, key = c.row + ':' + c.track + ':' + c.cell;
+  const c = state.cursor, key = c.row + ':' + c.instrument + ':' + c.cell;
   if (state.typing && state.typing.key === key && state.typing.count < digits) return state.typing;
   state.typing = { key, count: 0, value: 0 };
   return state.typing;
@@ -85,63 +85,68 @@ export function typeHex(cell, k, get, set) {
   return true;
 }
 // ---- Placements ---------------------------------------------------------------------
-// The placement under the cursor (never while a phrase is open: its notes are loose there).
+// The placement under the cursor (never while a pattern is open: its notes are loose there).
 export function placementHere(row = state.cursor.row) {
-  const tr = curTrack(); if (!tr || state.phraseEdit) return null;
-  return placementAt(state.song, curPat(), tr.id, row);
+  const tr = curInstrument(); if (!tr || state.patternEdit) return null;
+  return placementAt(state.song, curPhrase(), tr.id, row);
 }
-// Note, velocity and articulation cells inside a placement belong to the phrase: say so instead of editing.
+// Note, velocity and articulation cells inside a placement belong to the pattern: say so instead of editing.
 export function guardPlacement(kind) {
   if (kind !== 'note' && kind !== 'vel' && kind !== 'art') return false;
   const p = placementHere(); if (!p) return false;
-  state.message = 'Inside phrase ' + p.phrase.name + ': Enter edits the phrase, Detach makes these notes loose';
+  state.message = 'Inside pattern ' + p.pattern.name + ': Enter edits the pattern, Detach makes these notes loose';
   state.dirty = true;
   return true;
 }
-const placementLabel = p => p.phrase.name + (p.placement.transpose ? (p.placement.transpose > 0 ? ' +' : ' ') + p.placement.transpose : '') + (p.placement.repeat > 1 ? ' ×' + p.placement.repeat : '');
-export function transposePlacement(d) {
+const labelOf = p => placementLabel(p.placement, p.pattern.name);
+// A placement's transformations change what the pattern sounds like here; the pattern itself is untouched.
+function transform(field, d, lo, hi) {
   const p = placementHere(); if (!p) return false;
-  withUndo(() => { p.placement.transpose = clamp(p.placement.transpose + d, -48, 48); });
-  state.message = 'Placement ' + placementLabel(p);
+  withUndo(() => { p.placement[field] = clamp((p.placement[field] | 0) + d, lo, hi); });
+  state.message = 'Placement ' + labelOf(p);
   return true;
 }
+export const transposePlacement = d => transform('transpose', d, -48, 48);   // semitones
+export const shiftPlacement = d => transform('shift', d, -28, 28);           // scale degrees in the key in force
+export const octavePlacement = d => transform('octave', d, -4, 4);
+export const dynamicsPlacement = d => transform('dynamics', d, -96, 96);     // velocity offset: negative is softer
 export function repeatPlacement(d) {
   const p = placementHere(); if (!p) return false;
-  withUndo(() => { p.placement.repeat = clamp(p.placement.repeat + d, 1, 64); });
-  state.message = 'Placement ' + placementLabel(p);
+  withUndo(() => { p.placement.repeat = clamp((p.placement.repeat || 1) + d, 1, 64); });
+  state.message = 'Placement ' + labelOf(p);
   return true;
 }
 export function removePlacementHere() {
-  const p = placementHere(), tr = curTrack(); if (!p) return false;
-  withUndo(() => { curPat().material[tr.id].placements.splice(p.index, 1); });
-  state.message = 'Removed the placement of ' + p.phrase.name + ' (the phrase is still in Compose)';
+  const p = placementHere(), tr = curInstrument(); if (!p) return false;
+  withUndo(() => { curPhrase().material[tr.id].placements.splice(p.index, 1); });
+  state.message = 'Removed the placement of ' + p.pattern.name + ' (the pattern is still in the song)';
   return true;
 }
-// Open a phrase in the grid on a track; Escape (leavePhrase) returns to the pattern.
-export function editPhrase(id, trackId) {
-  const ph = (state.song.phrases || []).find(p => p.id === id); if (!ph) return false;
-  if (!trackId) { const tr = curTrack(); trackId = tr ? tr.id : state.song.tracks[0].id; }
-  if (state.phraseEdit) state.phraseEdit = null;
-  const back = { pat: state.pat, row: state.cursor.row, track: state.cursor.track, cell: state.cursor.cell, scrollX: state.scrollX };
-  state.phraseEdit = { id, trackId, back };
-  state.cursor = { row: 0, track: 0, cell: 0 }; state.sel = null; state.selAnchor = null; state.scrollX = 0; state.typing = null;
-  state.message = 'Editing phrase ' + ph.name + ' · Esc returns to the pattern';
-  state.ensureVisible = true; syncPatternUI(); state.dirty = true;
+// Open a pattern in the grid on a instrument; Escape (leavePattern) returns to the phrase.
+export function editPattern(id, instrumentId) {
+  const ptn = (state.song.patterns || []).find(p => p.id === id); if (!ptn) return false;
+  if (!instrumentId) { const tr = curInstrument(); instrumentId = tr ? tr.id : state.song.instruments[0].id; }
+  if (state.patternEdit) state.patternEdit = null;
+  const back = { phr: state.phr, row: state.cursor.row, instrument: state.cursor.instrument, cell: state.cursor.cell, scrollX: state.scrollX };
+  state.patternEdit = { id, instrumentId, back };
+  state.cursor = { row: 0, instrument: 0, cell: 0 }; state.sel = null; state.selAnchor = null; state.scrollX = 0; state.typing = null;
+  state.message = 'Editing pattern ' + ptn.name + ' · Esc returns to the phrase';
+  state.ensureVisible = true; syncPhraseUI(); state.dirty = true;
   return true;
 }
-export function editPhraseHere() { const p = placementHere(); return p ? editPhrase(p.phrase.id, curTrack().id) : false; }
-export function leavePhrase() {
-  if (!state.phraseEdit) return false;
-  const b = state.phraseEdit.back; state.phraseEdit = null;
-  state.pat = Math.min(b.pat, state.song.patterns.length - 1);
-  state.cursor = { row: Math.min(b.row, curPat().rows - 1), track: Math.min(b.track, state.song.tracks.length - 1), cell: b.cell }; state.sel = null; state.selAnchor = null; state.scrollX = b.scrollX; state.typing = null;
-  state.message = ''; state.ensureVisible = true; syncPatternUI(); state.dirty = true;
+export function editPatternHere() { const p = placementHere(); return p ? editPattern(p.pattern.id, curInstrument().id) : false; }
+export function leavePattern() {
+  if (!state.patternEdit) return false;
+  const b = state.patternEdit.back; state.patternEdit = null;
+  state.phr = Math.min(b.phr, state.song.phrases.length - 1);
+  state.cursor = { row: Math.min(b.row, curPhrase().rows - 1), instrument: Math.min(b.instrument, state.song.instruments.length - 1), cell: b.cell }; state.sel = null; state.selAnchor = null; state.scrollX = b.scrollX; state.typing = null;
+  state.message = ''; state.ensureVisible = true; syncPhraseUI(); state.dirty = true;
   return true;
 }
-export const phraseStatus = () => { const p = placementHere(); return p ? 'phrase <b>' + placementLabel(p) + '</b> used ' + phraseUses(state.song, p.phrase.id) + '× · Enter edits' : ''; };
+export const patternStatus = () => { const p = placementHere(); return p ? 'pattern <b>' + labelOf(p) + '</b> used ' + patternUses(state.song, p.pattern.id) + '× · Enter edits' : ''; };
 
 export function typeIntoCell(k) {
-  const pat = curPat(), tr = curTrack(), cell = currentCell(), row = state.cursor.row, tick = row * pat.ticksPerRow;
+  const phr = curPhrase(), tr = curInstrument(), cell = currentCell(), row = state.cursor.row, tick = row * phr.ticksPerRow;
   const lower = k.toLowerCase();
   if (guardPlacement(cell.kind)) return true;
   switch (cell.kind) {
@@ -149,27 +154,27 @@ export function typeIntoCell(k) {
       const off = KEYMAP[lower]; if (off == null) return false;
       const pitch = clamp((state.octave + 1) * 12 + off, 0, 127);
       enterPitch(pitch, null, cell.col);
-      audition(tr, pitch, (noteAt(pat, tr.id, cell.col, row) || {}).art);
+      audition(tr, pitch, (noteAt(phr, tr.id, cell.col, row) || {}).art);
       moveRow(state.step);
       return true;
     }
     case 'vel': {
-      const ev = noteAt(pat, tr.id, cell.col, row);
+      const ev = noteAt(phr, tr.id, cell.col, row);
       if (!ev) { state.message = 'No note starts on this row'; return true; }
       return typeHex(cell, k, () => ev.vel, v => { ev.vel = clamp(v, 1, 127); });
     }
     case 'art': {
       if (!/^[1-9]$/.test(k)) return false;
-      const ins = INST[tr.instrument], art = ins.articulations[parseInt(k, 10) - 1];
+      const ins = SOUND[tr.sound], art = ins.articulations[parseInt(k, 10) - 1];
       if (!art) { state.message = ins.name + ' has ' + ins.articulations.length + ' articulations'; return true; }
-      const evs = notesStartingAt(pat, tr.id, row);
+      const evs = notesStartingAt(phr, tr.id, row);
       if (!evs.length) { state.message = 'No note starts on this row'; return true; }
       withUndo(() => evs.forEach(e => { e.art = art; }));
       audition(tr, evs[0].pitch, art);
       return true;
     }
     case 'dyn': {
-      const pt = materialOf(pat, tr.id);
+      const pt = materialOf(phr, tr.id);
       if (lower === 'l' || lower === 's') {
         const p = pt.dyn.find(x => x.tick === tick);
         if (p) withUndo(() => { p.interp = lower === 'l' ? 'lin' : 'step'; });
@@ -180,15 +185,15 @@ export function typeIntoCell(k) {
     case 'fx': {
       // A letter picks the command (c r d a t); hex digits set its value.
       const cmd = FX_COMMANDS.find(c => c[0].toLowerCase() === lower);
-      const cur = fxAtRow(pat, tr.id, row);
-      if (cmd) { withUndo(() => setFx(pat, tr.id, tick, cmd, cur ? cur.value : FX_DEFAULTS[cmd])); state.typing = null; return true; }
+      const cur = fxAtRow(phr, tr.id, row);
+      if (cmd) { withUndo(() => setFx(phr, tr.id, tick, cmd, cur ? cur.value : FX_DEFAULTS[cmd])); state.typing = null; return true; }
       if (!/^[0-9a-f]$/i.test(k)) return false;
       const c = cur ? cur.cmd : 'CHA';
-      return typeHex(cell, k, () => (cur ? cur.value : 0), v => setFx(pat, tr.id, tick, c, v));
+      return typeHex(cell, k, () => (cur ? cur.value : 0), v => setFx(phr, tr.id, tick, c, v));
     }
     case 'tempo': {
       if (lower === 'l' || lower === 's') {
-        const p = pat.tempo.find(x => x.tick === tick);
+        const p = phr.tempo.find(x => x.tick === tick);
         if (p) withUndo(() => { p.interp = lower === 'l' ? 'lin' : 'step'; });
         return true;
       }
@@ -196,34 +201,34 @@ export function typeIntoCell(k) {
       const ty = typingFor(cell, 3);
       ty.value = ((ty.count ? ty.value : 0) * 10 + parseInt(k, 10)) % 1000; ty.count++;
       const v = ty.value;
-      withUndo(() => laneSet(pat.tempo, tick, clamp(v, 20, 300)));
+      withUndo(() => laneSet(phr.tempo, tick, clamp(v, 20, 300)));
       return true;
     }
   }
   return false;
 }
-// Write a pitch (and optionally a velocity) into the cursor row of the current track. Shared by the
+// Write a pitch (and optionally a velocity) into the cursor row of the current instrument. Shared by the
 // keyboard, the touch pad, MIDI in and the game controller.
 export function enterPitch(pitch, vel, col) {
-  const pat = curPat(), tr = curTrack(); if (!tr) return false;
+  const phr = curPhrase(), tr = curInstrument(); if (!tr) return false;
   if (guardPlacement('note')) return false;
-  const row = state.cursor.row, tick = row * pat.ticksPerRow;
+  const row = state.cursor.row, tick = row * phr.ticksPerRow;
   const c = col == null ? (currentCell().col | 0) : col;
   withUndo(() => {
-    setNote(pat, tr.id, c, tick, pitch);
-    if (vel != null) { const ev = noteAt(pat, tr.id, c, row); if (ev) ev.vel = clamp(vel, 1, 127); }
+    setNote(phr, tr.id, c, tick, pitch);
+    if (vel != null) { const ev = noteAt(phr, tr.id, c, row); if (ev) ev.vel = clamp(vel, 1, 127); }
   });
   state.lastPitch = pitch;
-  const ins = INST[tr.instrument];
+  const ins = SOUND[tr.sound];
   state.message = (pitch < ins.range[0] || pitch > ins.range[1]) ? noteName(pitch) + ' is outside the ' + ins.name + ' range ' + noteName(ins.range[0]) + '–' + noteName(ins.range[1]) : '';
   return true;
 }
 export function nudgeArticulation(d) {
-  const pat = curPat(), tr = curTrack(); if (!tr) return;
+  const phr = curPhrase(), tr = curInstrument(); if (!tr) return;
   if (guardPlacement('art')) return;
-  const evs = notesStartingAt(pat, tr.id, state.cursor.row);
+  const evs = notesStartingAt(phr, tr.id, state.cursor.row);
   if (!evs.length) { state.message = 'No note starts on this row'; state.dirty = true; return; }
-  const arts = INST[tr.instrument].articulations;
+  const arts = SOUND[tr.sound].articulations;
   const i = Math.max(0, arts.indexOf(evs[0].art || arts[0]));
   const art = arts[((i + Math.sign(d)) % arts.length + arts.length) % arts.length];
   withUndo(() => evs.forEach(e => { e.art = art; }));
@@ -232,99 +237,99 @@ export function nudgeArticulation(d) {
 // Nudge whatever is under the cursor by d: semitones, velocity, dynamics, bpm, or the articulation list.
 export function nudgeCell(d) {
   if (placementHere() && ['note', 'vel', 'art'].includes(currentCell().kind)) { transposePlacement(d); return; }
-  const pat = curPat(), tr = curTrack(), cell = currentCell(), row = state.cursor.row, tick = row * pat.ticksPerRow;
+  const phr = curPhrase(), tr = curInstrument(), cell = currentCell(), row = state.cursor.row, tick = row * phr.ticksPerRow;
   switch (cell.kind) {
     case 'note': {
       // Single steps follow the song's key when one is set; octave jumps stay chromatic.
       const key = activeKey(), move = p => (key && Math.abs(d) === 1) ? transposeDiatonic(key, p, d) : clamp(p + d, 0, 127);
-      const ev = noteAt(pat, tr.id, cell.col, row);
+      const ev = noteAt(phr, tr.id, cell.col, row);
       if (!ev) { const p = move(state.lastPitch); enterPitch(p, null, cell.col); audition(tr, p, null); return; }
       withUndo(() => { ev.pitch = move(ev.pitch); });
       state.lastPitch = ev.pitch; audition(tr, ev.pitch, ev.art); return;
     }
     case 'vel': {
-      const ev = noteAt(pat, tr.id, cell.col, row);
+      const ev = noteAt(phr, tr.id, cell.col, row);
       if (!ev) { state.message = 'No note starts on this row'; state.dirty = true; return; }
       withUndo(() => { ev.vel = clamp(ev.vel + d, 1, 127); }); return;
     }
     case 'art': nudgeArticulation(d); return;
     case 'fx': {
-      const f = fxAtRow(pat, tr.id, row);
-      if (!f) { withUndo(() => setFx(pat, tr.id, tick, 'CHA', FX_DEFAULTS.CHA)); return; }
-      if (Math.abs(d) > 1) { const i = FX_COMMANDS.indexOf(f.cmd), c = FX_COMMANDS[((i + Math.sign(d)) % FX_COMMANDS.length + FX_COMMANDS.length) % FX_COMMANDS.length]; withUndo(() => setFx(pat, tr.id, tick, c, f.value)); return; }
-      withUndo(() => setFx(pat, tr.id, tick, f.cmd, f.value + d)); return;
+      const f = fxAtRow(phr, tr.id, row);
+      if (!f) { withUndo(() => setFx(phr, tr.id, tick, 'CHA', FX_DEFAULTS.CHA)); return; }
+      if (Math.abs(d) > 1) { const i = FX_COMMANDS.indexOf(f.cmd), c = FX_COMMANDS[((i + Math.sign(d)) % FX_COMMANDS.length + FX_COMMANDS.length) % FX_COMMANDS.length]; withUndo(() => setFx(phr, tr.id, tick, c, f.value)); return; }
+      withUndo(() => setFx(phr, tr.id, tick, f.cmd, f.value + d)); return;
     }
     case 'dyn': {
-      const pts = materialOf(pat, tr.id).dyn, p = pts.find(x => x.tick === tick);
+      const pts = materialOf(phr, tr.id).dyn, p = pts.find(x => x.tick === tick);
       const v = clamp((p ? p.value : 96) + d, 0, 127);
       withUndo(() => laneSet(pts, tick, v)); return;
     }
     case 'tempo': {
-      const p = pat.tempo.find(x => x.tick === tick);
+      const p = phr.tempo.find(x => x.tick === tick);
       const v = clamp((p ? p.value : state.song.bpm) + d, 20, 300);
-      withUndo(() => laneSet(pat.tempo, tick, v)); return;
+      withUndo(() => laneSet(phr.tempo, tick, v)); return;
     }
   }
 }
 // Create a value where there is none, otherwise audition what is there.
 export function tapCell() {
-  const pat = curPat(), tr = curTrack(), cell = currentCell(), row = state.cursor.row, tick = row * pat.ticksPerRow;
-  if (placementHere() && (cell.kind === 'note' || cell.kind === 'vel' || cell.kind === 'art')) { editPhraseHere(); return; }
+  const phr = curPhrase(), tr = curInstrument(), cell = currentCell(), row = state.cursor.row, tick = row * phr.ticksPerRow;
+  if (placementHere() && (cell.kind === 'note' || cell.kind === 'vel' || cell.kind === 'art')) { editPatternHere(); return; }
   switch (cell.kind) {
     case 'note': {
-      const ev = noteAt(pat, tr.id, cell.col, row);
+      const ev = noteAt(phr, tr.id, cell.col, row);
       if (ev) audition(tr, ev.pitch, ev.art);
       else { enterPitch(state.lastPitch, null, cell.col); audition(tr, state.lastPitch, null); moveRow(state.step); }
       return;
     }
-    case 'vel': case 'art': { const ev = noteAt(pat, tr.id, cell.col | 0, row); if (ev) audition(tr, ev.pitch, ev.art); return; }
-    case 'dyn': { const pts = materialOf(pat, tr.id).dyn; if (!pts.find(x => x.tick === tick)) withUndo(() => laneSet(pts, tick, 96)); return; }
-    case 'fx': { if (!fxAtRow(pat, tr.id, row)) withUndo(() => setFx(pat, tr.id, tick, 'CHA', FX_DEFAULTS.CHA)); return; }
-    case 'tempo': { if (!pat.tempo.find(x => x.tick === tick)) withUndo(() => laneSet(pat.tempo, tick, state.song.bpm)); return; }
+    case 'vel': case 'art': { const ev = noteAt(phr, tr.id, cell.col | 0, row); if (ev) audition(tr, ev.pitch, ev.art); return; }
+    case 'dyn': { const pts = materialOf(phr, tr.id).dyn; if (!pts.find(x => x.tick === tick)) withUndo(() => laneSet(pts, tick, 96)); return; }
+    case 'fx': { if (!fxAtRow(phr, tr.id, row)) withUndo(() => setFx(phr, tr.id, tick, 'CHA', FX_DEFAULTS.CHA)); return; }
+    case 'tempo': { if (!phr.tempo.find(x => x.tick === tick)) withUndo(() => laneSet(phr.tempo, tick, state.song.bpm)); return; }
   }
 }
 
 // ---- Cursor movement -------------------------------------------------------------------
-export function setRow(r) { const n = curPat().rows; state.cursor.row = ((r % n) + n) % n; state.typing = null; state.message = ''; state.dirty = true; }
+export function setRow(r) { const n = curPhrase().rows; state.cursor.row = ((r % n) + n) % n; state.typing = null; state.message = ''; state.dirty = true; }
 export function moveRow(d) { setRow(state.cursor.row + d); }
 export function moveCell(d) {
-  const c = state.cursor, n = tracksShown().length;
-  const cellsOf = i => i < 0 ? 1 : cellKinds(tracksShown()[i]).length;
-  let cell = c.cell + d, track = c.track;
-  while (cell < 0) { track = track <= -1 ? n - 1 : track - 1; cell += cellsOf(track); }
-  while (cell >= cellsOf(track)) { cell -= cellsOf(track); track = track >= n - 1 ? -1 : track + 1; }
-  c.track = track; c.cell = cell; state.typing = null; state.message = ''; state.ensureVisible = true; state.dirty = true;
+  const c = state.cursor, n = instrumentsShown().length;
+  const cellsOf = i => i < 0 ? 1 : cellKinds(instrumentsShown()[i]).length;
+  let cell = c.cell + d, instrument = c.instrument;
+  while (cell < 0) { instrument = instrument <= -1 ? n - 1 : instrument - 1; cell += cellsOf(instrument); }
+  while (cell >= cellsOf(instrument)) { cell -= cellsOf(instrument); instrument = instrument >= n - 1 ? -1 : instrument + 1; }
+  c.instrument = instrument; c.cell = cell; state.typing = null; state.message = ''; state.ensureVisible = true; state.dirty = true;
 }
-export function moveTrack(d) {
-  const n = tracksShown().length; let t = state.cursor.track + d;
+export function cursorToInstrument(d) {
+  const n = instrumentsShown().length; let t = state.cursor.instrument + d;
   if (t < -1) t = n - 1; if (t >= n) t = -1;
-  state.cursor.track = t; state.cursor.cell = 0; state.typing = null; state.message = ''; state.ensureVisible = true; state.dirty = true;
+  state.cursor.instrument = t; state.cursor.cell = 0; state.typing = null; state.message = ''; state.ensureVisible = true; state.dirty = true;
 }
 export function setOctave(o) { state.octave = clamp(o, 0, 8); state.dirty = true; }
 export function setStep(s) { state.step = clamp(s, 0, 64); state.dirty = true; }
 
 // ---- Clearing, length, columns ----------------------------------------------------------
 export function clearCell() {
-  const pat = curPat(), tr = curTrack(), cell = currentCell(), row = state.cursor.row, tick = row * pat.ticksPerRow;
+  const phr = curPhrase(), tr = curInstrument(), cell = currentCell(), row = state.cursor.row, tick = row * phr.ticksPerRow;
   if ((cell.kind === 'note' || cell.kind === 'vel' || cell.kind === 'art') && removePlacementHere()) return;
   withUndo(() => {
-    if (cell.kind === 'tempo') laneRemove(pat.tempo, tick);
-    else if (cell.kind === 'dyn') laneRemove(materialOf(pat, tr.id).dyn, tick);
-    else if (cell.kind === 'art') notesStartingAt(pat, tr.id, row).forEach(e => { e.art = null; });
-    else if (cell.kind === 'fx') removeFx(pat, tr.id, tick);
-    else removeNotesAt(pat, tr.id, cell.col, row);
+    if (cell.kind === 'tempo') laneRemove(phr.tempo, tick);
+    else if (cell.kind === 'dyn') laneRemove(materialOf(phr, tr.id).dyn, tick);
+    else if (cell.kind === 'art') notesStartingAt(phr, tr.id, row).forEach(e => { e.art = null; });
+    else if (cell.kind === 'fx') removeFx(phr, tr.id, tick);
+    else removeNotesAt(phr, tr.id, cell.col, row);
   });
   state.typing = null;
 }
 export function changeLength(d) {
-  const pat = curPat(), tr = curTrack(); if (!tr) return;
+  const phr = curPhrase(), tr = curInstrument(); if (!tr) return;
   if (repeatPlacement(d)) return;
-  const ev = noteCovering(pat, tr.id, currentCell().col, state.cursor.row);
+  const ev = noteCovering(phr, tr.id, currentCell().col, state.cursor.row);
   if (!ev) return;
-  withUndo(() => resizeNote(pat, tr.id, ev, d));
+  withUndo(() => resizeNote(phr, tr.id, ev, d));
 }
 export function changeColumns(d) {
-  const tr = curTrack(); if (!tr) return;
+  const tr = curInstrument(); if (!tr) return;
   tr.columns = clamp(tr.columns + d, 1, 4);
   state.cursor.cell = clamp(state.cursor.cell, 0, cellKinds(tr).length - 1);
   state.dirty = true;

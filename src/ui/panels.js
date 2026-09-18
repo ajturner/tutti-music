@@ -1,17 +1,17 @@
-// Workflow panels. The header keeps identity and transport; everything else lives in one of five panels
-// opened from the menu bar: Song (files), Compose (pattern, key, arrangement, tracks), Sounds (preview,
-// banks, instruments), Connect (MIDI, controller) and View (follow, pad, mixer, columns). One panel is
+// Workflow panels. The header keeps identity and transport; everything else lives in a panel opened from the
+// menu bar: Files (open, save, export), Instruments (the players of the song, their sounds, mix and tuning, and
+// the sound browser), Connect (MIDI, controller) and View (follow, listen, pad, mixer, columns). A fifth, the
+// level sheet, holds the settings of the song, section or phrase and is opened from the map. One panel is
 // open at a time. On a wide screen it drops below the header as a sheet and the grid stays editable;
 // below 760 px it replaces the grid and the tab bar drives it. Every control has one home in the DOM.
 import { $, state } from './state.js';
-import { renderTracks } from './tracks.js';
-import { showSounds, hideSounds } from './sounds.js';
+import { showInstruments, hideInstruments } from './instruments.js';
 import { toggleQuickKeys } from './keyboard.js';
 
-export const PANELS = ['song', 'compose', 'sounds', 'connect', 'view'];
+export const PANELS = ['files', 'instruments', 'level', 'connect', 'view'];
 const NARROW = () => window.innerWidth < 760;
-const onOpen = { compose: renderTracks, sounds: showSounds };
-const onClose = { sounds: hideSounds };
+const onOpen = { instruments: showInstruments };
+const onClose = { instruments: hideInstruments };
 
 export function setPanel(name) {
   if (name && !PANELS.includes(name)) name = null;
@@ -22,10 +22,10 @@ export function setPanel(name) {
   document.body.dataset.panel = name || '';
   for (const sec of document.querySelectorAll('#panels .panel')) sec.hidden = sec.dataset.panel !== name;
   for (const b of document.querySelectorAll('header button[data-panel]')) { const on = b.dataset.panel === name; b.classList.toggle('on', on); b.setAttribute('aria-expanded', String(on)); }
-  for (const b of document.querySelectorAll('#tabs button[data-view]')) b.classList.toggle('on', b.dataset.view === (name || 'pattern'));
+  for (const b of document.querySelectorAll('#tabs button[data-view]')) b.classList.toggle('on', b.dataset.view === (name || 'song'));
   if (name && onOpen[name]) onOpen[name]();
   state.dirty = true;
-  if (!name) $('grid').focus();
+  if (!name) (state.level === 'song' ? $('songView') : $('grid')).focus({ preventScroll: true });
   else { const sec = document.querySelector('#panels .panel[data-panel="' + name + '"]'); sec.scrollTop = 0; }
 }
 export const togglePanel = name => setPanel(state.panel === name ? null : name);
@@ -36,7 +36,7 @@ export function wirePanels() {
     const b = e.target.closest('button[data-panel]'); if (!b) return;
     togglePanel(b.dataset.panel);
   });
-  $('tabs').addEventListener('click', e => { const b = e.target.closest('button[data-view]'); if (b) setPanel(b.dataset.view === 'pattern' ? null : b.dataset.view); });
+  $('tabs').addEventListener('click', e => { const b = e.target.closest('button[data-view]'); if (b) setPanel(b.dataset.view === 'song' ? null : b.dataset.view); });
   $('panels').addEventListener('click', e => { if (e.target.closest('button[data-close]')) closePanel(); });
   // Typing in a panel must not edit the grid; Escape closes the panel.
   $('panels').addEventListener('keydown', e => {

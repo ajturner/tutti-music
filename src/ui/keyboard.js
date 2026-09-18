@@ -1,10 +1,12 @@
 // Keyboard bindings. See the help panel for the scheme and its macOS constraints.
-import { curPat, rowsPerBar, sched, state } from './state.js';
-import { moveCell, moveRow, moveTrack, redo, setOctave, setRow, setStep, typeIntoCell, undo, placementHere, transposePlacement, editPhraseHere, leavePhrase } from './edit.js';
-import { clearSel, copySel, cutSel, deselect, duplicateSel, lengthSel, pasteSel, selExtend, selectTrackOrAll, transposeSel, transposeSelDiatonic } from './selection.js';
+import { curPhrase, rowsPerBar, sched, state } from './state.js';
+import { moveCell, moveRow, cursorToInstrument, redo, setOctave, setRow, setStep, typeIntoCell, undo, placementHere, transposePlacement, shiftPlacement, octavePlacement, dynamicsPlacement, editPatternHere, leavePattern } from './edit.js';
+import { levelUp } from './map.js';
+import { songKey } from './songview.js';
+import { clearSel, copySel, cutSel, deselect, duplicateSel, lengthSel, pasteSel, selExtend, selectInstrumentOrAll, transposeSel, transposeSelDiatonic } from './selection.js';
 import { changeColumns, changeLength, clearCell } from './edit.js';
 import { currentCell } from './layout.js';
-import { playPattern, playSong, stopAll, toggleRecord } from './transport.js';
+import { playPhrase, playSong, stopAll, toggleRecord } from './transport.js';
 
 // ---- Keyboard -----------------------------------------------------------------------------
 // macOS constraints this scheme is built around:
@@ -27,18 +29,24 @@ window.addEventListener('keydown', e => {
 export function handleKey(e) {
   if (e.altKey) return false;                                  // Option/Alt belongs to the OS
   const k = e.key, code = e.code, sh = e.shiftKey;
+  // The backquote key goes out a level: pattern → phrase → song. Enter goes in.
+  if (code === 'Backquote' && !e.ctrlKey && !e.metaKey) { levelUp(); return true; }
+  if (state.level === 'song') {
+    if (k === '?' || (code === 'Slash' && sh)) { if (e.ctrlKey || e.metaKey) openGuide(); else toggleQuickKeys(); return true; }
+    return songKey(e);
+  }
   if (e.ctrlKey || e.metaKey) {
     const lower = k.toLowerCase();
     if (lower === 'z' && !sh) { undo(); return true; }
     if ((lower === 'z' && sh) || lower === 'y') { redo(); return true; }
-    if (lower === 'a') { selectTrackOrAll(); return true; }
+    if (lower === 'a') { selectInstrumentOrAll(); return true; }
     if (k === '?' || (code === 'Slash' && sh)) { openGuide(); return true; }   // ⌘? full guide in a new window
     if (lower === 'c') { copySel(); return true; }
     if (lower === 'x') { cutSel(); return true; }
     if (lower === 'v') { pasteSel(); return true; }
     if (lower === 'd') { duplicateSel(); return true; }
     if (k === 'ArrowUp') { sh ? moveRow(-rowsPerBar()) : setRow(0); return true; }                    // ⌘↑ top, ⌘⇧↑ bar
-    if (k === 'ArrowDown') { sh ? moveRow(rowsPerBar()) : setRow(curPat().rows - 1); return true; }  // ⌘↓ end, ⌘⇧↓ bar
+    if (k === 'ArrowDown') { sh ? moveRow(rowsPerBar()) : setRow(curPhrase().rows - 1); return true; }  // ⌘↓ end, ⌘⇧↓ bar
     return false;                                              // let the browser have the rest
   }
   if (k === '?' || (code === 'Slash' && sh)) { toggleQuickKeys(); return true; }   // ? quick keys in the footer
@@ -51,10 +59,13 @@ export function handleKey(e) {
     if (code === 'Comma' || k === ',' || k === '<') { transposeSelDiatonic(-1); return true; }
     if (code === 'Period' || k === '.' || k === '>') { transposeSelDiatonic(1); return true; }
   }
-  // On a placement tag the minus and equals keys transpose the placement (⇧ by an octave).
+  // On a placement the same keys that move notes transform the placement: − = transpose (⇧ by an octave),
+  // , . shift by scale degrees in the key in force (⇧ makes it softer or louder: < and > are the hairpins).
   if (placementHere() && ['note', 'vel', 'art'].includes(currentCell().kind)) {
-    if (code === 'Minus' || k === '-' || k === '_') { transposePlacement(sh ? -12 : -1); return true; }
-    if (code === 'Equal' || k === '=' || k === '+') { transposePlacement(sh ? 12 : 1); return true; }
+    if (code === 'Minus' || k === '-' || k === '_') { sh ? octavePlacement(-1) : transposePlacement(-1); return true; }
+    if (code === 'Equal' || k === '=' || k === '+') { sh ? octavePlacement(1) : transposePlacement(1); return true; }
+    if (code === 'Comma' || k === ',' || k === '<') { sh ? dynamicsPlacement(-8) : shiftPlacement(-1); return true; }
+    if (code === 'Period' || k === '.' || k === '>') { sh ? dynamicsPlacement(8) : shiftPlacement(1); return true; }
   }
   // Octave and step: the two keys to the right of 0. Shift switches from octave to step.
   if (code === 'Minus' || k === '-' || k === '_') {
@@ -67,7 +78,7 @@ export function handleKey(e) {
     else { setOctave(state.octave + 1); state.message = 'Octave ' + state.octave; }
     return true;
   }
-  // Brackets: note length. Shift switches to note columns (divisi) on the track.
+  // Brackets: note length. Shift switches to note columns (divisi) on the instrument.
   if (code === 'BracketLeft' || k === '[' || k === '{') { sh ? changeColumns(-1) : changeLength(-1); return true; }
   if (code === 'BracketRight' || k === ']' || k === '}') { sh ? changeColumns(1) : changeLength(1); return true; }
   switch (k) {
@@ -78,11 +89,11 @@ export function handleKey(e) {
     case 'PageUp': moveRow(-rowsPerBar()); return true;
     case 'PageDown': moveRow(rowsPerBar()); return true;
     case 'Home': setRow(0); return true;
-    case 'End': setRow(curPat().rows - 1); return true;
-    case 'Tab': moveTrack(sh ? -1 : 1); return true;
-    case ' ': if (sched.playing) stopAll(); else playPattern(sh); return true;
-    case 'Enter': if (sh) toggleRecord(); else if (!editPhraseHere()) playSong(); return true;
-    case 'Escape': if (state.sel) deselect(); else if (sched.playing) stopAll(); else if (!leavePhrase()) stopAll(); return true;
+    case 'End': setRow(curPhrase().rows - 1); return true;
+    case 'Tab': cursorToInstrument(sh ? -1 : 1); return true;
+    case ' ': if (sched.playing) stopAll(); else playPhrase(sh); return true;
+    case 'Enter': if (sh) toggleRecord(); else if (!editPatternHere()) playSong(); return true;
+    case 'Escape': if (state.sel) deselect(); else if (sched.playing) stopAll(); else if (!leavePattern()) stopAll(); return true;
     case 'Delete': case 'Backspace': state.sel ? clearSel() : clearCell(); return true;
   }
   if (k.length === 1) return typeIntoCell(k);

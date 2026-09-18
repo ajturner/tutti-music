@@ -41,15 +41,16 @@
   <div class="sub">symphonic tracker · guide</div>
   <ol>
     <li><a href="#start">Getting started</a></li>
+    <li><a href="#song">How a song is built</a></li>
     <li><a href="#grid">The grid</a></li>
     <li><a href="#keys">Keyboard</a></li>
     <li><a href="#selection">Selection and batch edits</a></li>
-    <li><a href="#phrases">Phrases</a></li>
+    <li><a href="#patterns">Patterns</a></li>
     <li><a href="#key">Key and scale</a></li>
     <li><a href="#fx">FX column</a></li>
     <li><a href="#groove">Groove</a></li>
-    <li><a href="#arrange">Patterns, arrangement, live</a></li>
-    <li><a href="#mixer">Mixer and tracks</a></li>
+    <li><a href="#arrange">Sections, arrangement, live</a></li>
+    <li><a href="#mixer">Mixer and instruments</a></li>
     <li><a href="#touch">Touch and the pad</a></li>
     <li><a href="#controller">Game controller</a></li>
     <li><a href="#midi">MIDI out, MIDI in, export</a></li>
@@ -61,17 +62,33 @@
 <main>
 
 <h2 id="start">Getting started</h2>
-<p class="lead">Tutti is a tracker for orchestral sketches. Time runs down the screen in rows; each track is an instrument with its own cells for notes, velocity, articulation, dynamics and effects. Notes go out as MIDI to a DAW or sample library, or play through a built-in sketch synth.</p>
+<p class="lead">Tutti is a tracker for orchestral sketches. Time runs down the screen in rows; each instrument has its own cells for notes, velocity, articulation, dynamics and effects. Notes go out as MIDI to a DAW or sample library, or play through a built-in sketch synth.</p>
 <ol>
-  <li>Open <b>Song</b> in the menu bar, pick a built-in song and press <kbd>Space</kbd> to loop the pattern. <kbd>Esc</kbd> stops.</li>
+  <li>Open <b>Files</b> in the menu bar, pick a built-in song and press <kbd>Space</kbd> to loop the phrase. <kbd>Esc</kbd> stops.</li>
   <li>Click a note cell and type notes on the piano-style keys (<kbd>Z</kbd> is C, <kbd>S</kbd> is C♯, <kbd>X</kbd> is D…). <kbd>-</kbd> and <kbd>=</kbd> change the octave, with <kbd>⇧</kbd> the step; the status line shows both.</li>
-  <li>Press <b>New</b> in Song for an empty song. It autosaves in this browser and the address bar remembers which song and pattern you had open.</li>
-  <li>The header keeps only the transport. Everything else is a panel: <b>Song</b> (files), <b>Compose</b> (pattern, key, arrangement, tracks), <b>Sounds</b> (what you hear), <b>Connect</b> (MIDI, controller) and <b>⚙</b> (follow, pad, mixer, columns). One opens at a time under the header; <kbd>Esc</kbd> or its ✕ closes it.</li>
+  <li>Press <b>New</b> in Files for an empty song. It autosaves in this browser and the address bar remembers which song and phrase you had open.</li>
+  <li>The bar under the header is the <b>map</b>: Song › Section › Phrase › Pattern, with the level you are at lit. Click <b>Song</b> for the overview of the whole piece; <kbd>Enter</kbd> goes in a level, the <kbd>`</kbd> key comes back out.</li>
+  <li>The header keeps only the transport. Everything else is a panel: <b>Files</b> (open, save, export), <b>Instruments</b> (the players of the song: their sounds, mix and tuning), <b>Connect</b> (MIDI, controller) and <b>⚙</b> (follow, preview sound, pad, mixer, columns). The settings of the song, a section or the open phrase open from the <b>▾</b> beside their name in the map. One opens at a time under the header; <kbd>Esc</kbd> or its ✕ closes it.</li>
 </ol>
 <p>The app runs in Chromium browsers (Chrome, Edge, Arc) for MIDI; the grid, pad and controller work in any modern browser, including Safari on iPhone and iPad.</p>
 
+<h2 id="song">How a song is built</h2>
+<p class="lead">A song is arranged from <b>sections</b>, a section is made of <b>phrases</b>, a phrase is a few bars for every instrument, and the ideas inside it are <b>patterns</b> placed on instruments. You can read a song top to bottom in those words, and the app shows it that way.</p>
+<table>
+  <tr><th>word</th><th>what it is</th><th>musicians call it</th></tr>
+  <tr><td><b>arrangement</b></td><td>the sections in playing order, each with a repeat: <code>A×2 B A</code></td><td>form: AABA, verse and chorus, sonata</td></tr>
+  <tr><td><b>section</b></td><td>a named span made of phrases in order; it can carry its own key</td><td>intro, verse, chorus, bridge, outro; A and B sections, the head; exposition, development, coda</td></tr>
+  <tr><td><b>phrase</b></td><td>a few bars for every instrument: what the grid shows, and the only thing that owns meter, tempo lane and groove</td><td>a phrase; four or eight bars; a line of the verse</td></tr>
+  <tr><td><b>pattern</b></td><td>one voice's reusable line, written once</td><td>motif, riff, lick, figure, ostinato, hook, fill</td></tr>
+  <tr><td><b>placement</b></td><td>one use of a pattern on a instrument of a phrase, with its transformations: transpose, shift in the key, octave, dynamics, repeat</td><td>a statement of the motif; the riff again a fourth up, softer</td></tr>
+  <tr><td><b>instrument</b></td><td>an instrument, the same across the whole song</td><td>instrument, player, staff</td></tr>
+</table>
+<p>The <b>Song view</b> (click <b>Song</b> in the map) is that picture: every section in playing order with its colour, its phrases underneath, and for each phrase a thumbnail of what every instrument plays, with a chip for each placed pattern. The arrangement strip at the top left shows the form at a glance. Below it the song's patterns are listed with their use counts. While the song plays, the playing phrase lights up with a moving line and the instrument headers show the note each instrument is sounding.</p>
+<p>From there you drill in. Arrow keys move the cell cursor; <kbd>Enter</kbd>, a double click or a second tap opens that phrase on that instrument; a pattern chip opens that pattern. In the grid <kbd>Enter</kbd> on a pattern's tag opens the pattern alone. The <kbd>`</kbd> key (left of <kbd>1</kbd>) goes back out one level each time, and every crumb of the map is a button. A beginner never needs any of this: a new song is one section <b>A</b> holding one phrase <b>A1</b>, and you type notes.</p>
+<p>Reuse happens at three levels and nowhere else: a pattern is placed many times, a phrase can sit in more than one section, and a section can play more than once in the arrangement. Everything a instrument plays in a phrase is visible in that phrase. If you know the M8: a song row is a phrase, a chain is a instrument's placements read down one phrase, a chain step is a placement, and an M8 phrase is a pattern. The full vocabulary, the file format and worked songs are in the <a href="https://github.com/ajturner/tutti-music/blob/main/docs/domain.md" target="_blank" rel="noopener">domain model</a>.</p>
+
 <h2 id="grid">The grid</h2>
-<p>A pattern is 64 rows by default, one sixteenth note per row, so four rows make a beat and sixteen a bar. Beats are shaded, bars are ruled, and <b>rows</b>, <b>row</b> size and <b>meter</b> are set per pattern in the pattern group. Changing the row size rescales the grid, not the music.</p>
+<p>The grid shows one phrase: 64 rows by default, one sixteenth note per row, so four rows make a beat and sixteen a bar. Beats are shaded, bars are ruled, and <b>rows</b>, <b>row</b> size and <b>meter</b> are set per phrase: press <b>▾</b> beside the phrase's name in the map. Changing the row size rescales the grid, not the music.</p>
 <table>
   <tr><th>cell</th><th>shows</th><th>entry</th></tr>
   <tr><td>note</td><td>note name where a note starts, a line while it sustains</td><td>piano keys</td></tr>
@@ -81,7 +98,7 @@
   <tr><td>fx</td><td>one command per row</td><td>a letter, then hex</td></tr>
   <tr><td>bpm (gutter)</td><td>tempo lane, decimal</td><td>digits, <kbd>L</kbd> ramp, <kbd>S</kbd> hold</td></tr>
 </table>
-<p>The header names every cell, and the <b>columns</b> group in the ⚙ View panel shows or hides the vel, art, dyn and fx cells for all tracks while keeping their data. A track can have up to four note columns for divisi. Notes in one column never overlap: a new note cuts the one sounding, and a note cannot grow past the next. Click a track name to mute it; ⇧-click or long-press to solo. The status line under the grid always describes the cell under the cursor.</p>
+<p>The header names every cell, and the <b>columns</b> group in the ⚙ View panel shows or hides the vel, art, dyn and fx cells for all instruments while keeping their data. A instrument can have up to four note columns for divisi. Notes in one column never overlap: a new note cuts the one sounding, and a note cannot grow past the next. Click a instrument name to mute it; ⇧-click or long-press to solo. While playing, the note each instrument is sounding shows beside its name. The status line under the grid always describes the cell under the cursor.</p>
 
 <h2 id="keys">Keyboard</h2>
 <div class="two">
@@ -89,17 +106,19 @@
 <h3>Moving</h3>
 <table>
   <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>row</td></tr>
-  <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>cell, wrapping across tracks</td></tr>
-  <tr><td><kbd>Tab</kbd> <kbd>⇧Tab</kbd></td><td>track</td></tr>
+  <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>cell, wrapping across instruments</td></tr>
+  <tr><td><kbd>Tab</kbd> <kbd>⇧Tab</kbd></td><td>instrument</td></tr>
   <tr><td><kbd>PgUp</kbd> <kbd>PgDn</kbd> or <kbd>⌘⇧↑</kbd> <kbd>⌘⇧↓</kbd></td><td>bar</td></tr>
   <tr><td><kbd>Home</kbd> <kbd>End</kbd> or <kbd>⌘↑</kbd> <kbd>⌘↓</kbd></td><td>first / last row</td></tr>
+  <tr><td><kbd>Enter</kbd></td><td>go in a level: open the phrase under the Song view cursor, or the pattern under the grid cursor</td></tr>
+  <tr><td><kbd>`</kbd></td><td>go out a level: pattern → phrase → song</td></tr>
 </table>
 <h3>Transport</h3>
 <table>
-  <tr><td><kbd>Space</kbd></td><td>loop the pattern, or stop</td></tr>
-  <tr><td><kbd>⇧Space</kbd></td><td>loop from the cursor row</td></tr>
-  <tr><td><kbd>Return</kbd></td><td>play the song order</td></tr>
-  <tr><td><kbd>⇧Return</kbd></td><td>arm real-time record (loops the pattern)</td></tr>
+  <tr><td><kbd>Space</kbd></td><td>loop the phrase, or stop; in the Song view, play the song from the cursor row</td></tr>
+  <tr><td><kbd>⇧Space</kbd></td><td>loop from the cursor row; in the Song view, loop the cursor row's section</td></tr>
+  <tr><td><kbd>Return</kbd></td><td>play the song from where the open phrase first sounds (unless the cursor is on a pattern tag)</td></tr>
+  <tr><td><kbd>⇧Return</kbd></td><td>arm real-time record (loops the phrase)</td></tr>
   <tr><td><kbd>Esc</kbd></td><td>stop (or deselect)</td></tr>
 </table>
 </div>
@@ -116,7 +135,7 @@
   <tr><td><kbd>0</kbd>–<kbd>F</kbd></td><td>velocity, dynamics, fx value</td></tr>
   <tr><td><kbd>L</kbd> <kbd>S</kbd></td><td>ramp / hold a lane point</td></tr>
   <tr><td><kbd>Delete</kbd></td><td>clear the cell</td></tr>
-  <tr><td><kbd>⌘Z</kbd> <kbd>⌘⇧Z</kbd></td><td>undo / redo, including track, mixer, key and order changes</td></tr>
+  <tr><td><kbd>⌘Z</kbd> <kbd>⌘⇧Z</kbd></td><td>undo / redo, including instrument, mixer, key, section and arrangement changes</td></tr>
   <tr><td><kbd>?</kbd> <kbd>⌘?</kbd></td><td>quick keys panel / this guide in a new window</td></tr>
 </table>
 </div>
@@ -126,89 +145,108 @@
 <h2 id="selection">Selection and batch edits</h2>
 <table>
   <tr><td><kbd>⇧↑</kbd> <kbd>⇧↓</kbd> <kbd>⇧←</kbd> <kbd>⇧→</kbd></td><td>extend the selection from the cursor; or drag with the mouse, ⇧-click to extend</td></tr>
-  <tr><td><kbd>⌘A</kbd></td><td>select the track; again, the whole pattern</td></tr>
+  <tr><td><kbd>⌘A</kbd></td><td>select the instrument; again, the whole phrase</td></tr>
   <tr><td><kbd>⌘C</kbd> <kbd>⌘X</kbd> <kbd>⌘V</kbd></td><td>copy, cut, paste at the cursor</td></tr>
   <tr><td><kbd>⌘D</kbd></td><td>duplicate right below the selection</td></tr>
   <tr><td><kbd>Delete</kbd></td><td>clear the selection</td></tr>
   <tr><td><kbd>-</kbd> <kbd>=</kbd> · <kbd>⇧-</kbd> <kbd>⇧=</kbd></td><td>transpose a semitone · an octave</td></tr>
-  <tr><td><kbd>,</kbd> <kbd>.</kbd></td><td>transpose a scale degree in the song's key</td></tr>
+  <tr><td><kbd>,</kbd> <kbd>.</kbd></td><td>move by a scale degree in the key in force</td></tr>
   <tr><td><kbd>[</kbd> <kbd>]</kbd></td><td>shorten / lengthen every selected note</td></tr>
 </table>
 <p>A toolbar appears with the selection and adds velocity up and down, an articulation list, <b>Interpolate</b> (ramp velocity, dynamics or tempo from the first row to the last), <b>Fill</b> (repeat the first row every step rows), <b>Rnd vel</b>, <b>Rnd pitch</b> (in key, within the selection's range) and <b>Humanize</b> (small random DEL on rows with notes). Paste lines cells up by kind: notes land on note columns, a dynamics run on a dynamics column.</p>
 
-<h2 id="phrases">Phrases</h2>
-<p>A <b>phrase</b> is a block of one track's material you keep once and play in many places. Select rows on one track and press <b>Make phrase</b> on the selection toolbar: the notes move into a phrase named after the track and the rows show a tag, <code>▸Fiddle 1</code>. Rename it in <b>Compose → phrases</b>, which appears once the song has a phrase.</p>
-<p>A <b>placement</b> is the tag: the phrase playing at that row. Its notes show dimmed and cannot be typed over. With the cursor on the tag, <kbd>-</kbd> and <kbd>=</kbd> transpose the placement (<kbd>⇧</kbd> by an octave), <kbd>[</kbd> and <kbd>]</kbd> repeat it back to back, <kbd>Delete</kbd> removes it (the phrase stays), and <kbd>⌘C</kbd> <kbd>⌘V</kbd> <kbd>⌘D</kbd> copy, paste and duplicate it like any selection. A transposed selection transposes its placements too.</p>
-<p><kbd>Enter</kbd> on a tag opens the phrase alone in the grid: one track, the phrase's rows. Everything works as usual there, including undo and <kbd>Space</kbd> to loop it; <kbd>Esc</kbd> returns to the pattern, and every placement plays the change. <b>Detach</b> turns a placement back into loose notes when one copy should differ. Removing a phrase in Compose detaches every placement first.</p>
-<p>One track can also <b>follow</b> a pattern that holds only placements while the others play the entry's pattern: open a chip's <b>…</b> in the arrangement and choose the pattern for that track. That is how a bass walks through a riff transposed per chord under a long pad (open <i>Night drive</i>, entry 1, and pattern 2 <i>Bass walk</i>). The words and rules are in the <a href="docs/domain.md">domain model</a>; six worked workflows live there too.</p>
+<h2 id="patterns">Patterns</h2>
+<p>A <b>pattern</b> is one voice's line that you write once and use in many places: what musicians call a motif, a riff, a lick or a hook. Select rows on one instrument and press <b>Make pattern</b> on the selection toolbar: the notes move into a pattern named after the instrument and the rows show a tag, <code>▸Fiddle 1</code>. The Song view lists every pattern with its use count, where you can rename, open or remove it; Compose renames the one that is open.</p>
+<p>A <b>placement</b> is the tag: the pattern playing at that row of that instrument. Its notes show dimmed and cannot be typed over. With the cursor on it, the keys that move notes transform the placement instead, and the tag, the status line and the map all read the result, for example <code>▸Riff ↑3 +5 8va+1 v−16 ×2</code>.</p>
+<table>
+  <tr><td><kbd>-</kbd> <kbd>=</kbd></td><td><b>transpose</b> a semitone</td></tr>
+  <tr><td><kbd>,</kbd> <kbd>.</kbd></td><td><b>shift</b> a scale degree in the key in force, so the line stays in the key: a sequence</td></tr>
+  <tr><td><kbd>⇧-</kbd> <kbd>⇧=</kbd></td><td>an <b>octave</b> down or up</td></tr>
+  <tr><td><kbd>&lt;</kbd> <kbd>&gt;</kbd></td><td><b>dynamics</b>: softer or louder (the hairpins), as a velocity offset</td></tr>
+  <tr><td><kbd>[</kbd> <kbd>]</kbd></td><td><b>repeat</b> it back to back: a one-bar beat under a four-bar phrase is one placement ×4</td></tr>
+  <tr><td><kbd>Enter</kbd></td><td>open the pattern alone in the grid; <kbd>`</kbd> or <kbd>Esc</kbd> returns</td></tr>
+  <tr><td><kbd>Delete</kbd></td><td>remove the placement; the pattern stays in the song</td></tr>
+  <tr><td><kbd>⌘C</kbd> <kbd>⌘V</kbd> <kbd>⌘D</kbd></td><td>copy, paste, duplicate it like any selection; transposing or degree-shifting a selection moves its placements too</td></tr>
+</table>
+<p>Inside an open pattern everything works as usual, including undo and <kbd>Space</kbd> to loop it, and every placement plays the change. <b>Detach</b> turns a placement back into loose notes, with its transformations baked in, when one copy should differ. Removing a pattern detaches every placement first. A pattern belongs to a kind of voice, not a instrument: any instrument can place it, and columns the instrument lacks are dropped with a warning.</p>
+<p>Open <i>Crossroads reel</i> to see banjo rolls and the fiddle tunes as patterns, and <i>Night drive</i> for one bass riff placed on every bar and shifted by scale degrees so it stays in A minor under A, F, C and G.</p>
 
 <h2 id="key">Key and scale</h2>
-<p>Set the song's key in the key group, or tick <b>this pattern</b> to give the current pattern its own key for a modulation or a relative-major section. Entry stays chromatic, but the pad dims out-of-scale keys, <kbd>,</kbd> <kbd>.</kbd> and −deg / +deg move a selection by scale degrees, Rnd pitch draws from the key, and the controller's single-step nudge follows the scale. Scales: major, natural, harmonic and melodic minor, dorian, phrygian, lydian, mixolydian, pentatonics, whole tone, chromatic.</p>
+<p>Keys nest: a phrase's key over its section's over the song's. Set one from the <b>▾</b> beside the song, the section or the phrase in the map, or a section's in the Song view; a section's key is where a modulation lives, as when the bridge goes to the relative major. A key does not move notes you have typed. It decides what is in scale, where the degree keys move things, and where a placement's shift lands, so the same phrase reused in a section with another key sounds its shifted patterns in that key. Entry stays chromatic, but the pad dims out-of-scale keys, <kbd>,</kbd> <kbd>.</kbd> and −deg / +deg move a selection by scale degrees, Rnd pitch draws from the key, and the controller's single-step nudge follows the scale. Scales: major, natural, harmonic and melodic minor, dorian, phrygian, lydian, mixolydian, pentatonics, whole tone, chromatic.</p>
 
 <h2 id="fx">FX column</h2>
-<p>Each track's <b>fx</b> cell takes one command per row. Press the command's first letter, then two hex digits for its value.</p>
+<p>Each instrument's <b>fx</b> cell takes one command per row. Press the command's first letter, then two hex digits for its value.</p>
 <table>
   <tr><th>command</th><th>value</th><th>effect</th></tr>
   <tr><td><code>CHA</code> chance</td><td>00–FF</td><td>probability the row's notes play; FF always, 80 about half</td></tr>
   <tr><td><code>RET</code> retrigger</td><td>count</td><td>play each note that many times, evenly across its length</td></tr>
   <tr><td><code>DEL</code> delay</td><td>xx/256 row</td><td>push the row's notes behind the beat</td></tr>
   <tr><td><code>ARP</code> arpeggio</td><td>two nibbles</td><td>cycle root, +first, +second semitones each row</td></tr>
-  <tr><td><code>TSP</code> transpose</td><td>signed byte</td><td>shift the track from this row until the next TSP (F9 is −7)</td></tr>
+  <tr><td><code>TSP</code> transpose</td><td>signed byte</td><td>shift the instrument from this row until the next TSP (F9 is −7)</td></tr>
   <tr><td><code>EXP</code> expression</td><td>shape, depth</td><td>1 swell, 2 sfz, 3 fade in, 4 fade out; then depth 0–F</td></tr>
 </table>
 
 <h2 id="groove">Groove</h2>
-<p>A groove stretches and shrinks rows in a cycle without moving notes. Choose a preset in the pattern group (swing 8ths light, medium, hard; swing 16ths) or type a custom list of multipliers such as <code>1.33 0.67</code>. Playback, export and the playing-row highlight all follow it.</p>
+<p>A groove stretches and shrinks rows in a cycle without moving notes. Choose a preset in the phrase's settings (<b>▾</b> beside its name in the map: swing 8ths light, medium, hard; swing 16ths) or type a custom list of multipliers such as <code>1.33 0.67</code>. Playback, export and the playing-row highlight all follow it.</p>
 
-<h2 id="arrange">Patterns, arrangement, live</h2>
-<p><b>+</b> adds a pattern with the current one's settings. The <b>arrangement</b> chips are the song order: click a chip to open that pattern, drag to reorder, × to remove, + to append the current pattern. The text field beside them accepts indices directly, with an optional repeat such as <code>0x2 1 0</code>.</p>
-<h3>Repeats and chains</h3>
-<p>Each chip's <b>…</b> opens the entry: a <b>repeat</b> count, and for every track a choice of which pattern it plays during that entry. A track that follows another pattern loops or clips it to the entry's length, so a one-bar bass figure in pattern B can run under a four-bar melody in pattern A without copying it. The chip shows <b>×N</b> and a <b>⛓</b> badge, and while that entry plays the grid header marks each chained track with the pattern it is sounding. The entry's own pattern sets the length, tempo lane and groove.</p>
-<p>While a pattern loops, choosing another pattern (selector or chip) queues it; it takes over when the loop ends and the status shows <b>next</b>. Solo a track with ⇧-click or a long press on its name: with any solo on, only soloed tracks sound.</p>
+<h2 id="arrange">Sections, arrangement, live</h2>
+<p>The <b>Song view</b> is where a song is arranged. Each section has a bar with its name, how many times it plays here (<b>×</b>), its key, <b>⟳ loop</b>, <b>+ phrase…</b>, ↑ ↓ to move it in the arrangement and <b>remove</b>. Each phrase row has its name, its own <b>×</b> repeat and, on the row under the cursor, <b>open</b>, ↑ ↓ and ×. Every change is one undo step.</p>
+<ul>
+  <li><b>+ phrase…</b> adds a new empty phrase shaped like the one under the cursor, a copy of it to vary, or a phrase that already exists elsewhere, reused by reference. <b>+</b> in the phrase's settings adds an empty one after the open phrase.</li>
+  <li><b>+ section…</b> adds a new section with one phrase, or plays an existing section again: that is how <code>A B A</code> is built from two sections. A section that plays more than once shows its phrases each time, and says that edits show in both.</li>
+  <li><b>remove</b> takes that occurrence out of the arrangement. A section with no occurrence left waits at the bottom, not in the arrangement, until you add it back or delete it with the phrases only it uses. Taking a phrase out of a section deletes the phrase when that was its last use. The arrangement keeps at least one section and a section at least one phrase.</li>
+</ul>
+<p><b>Play acts on what is on screen.</b> In the grid, <b>Play phrase</b> (Space) loops the open phrase. In the Song view the same button reads <b>Play from here</b>: it plays the arrangement on from the cursor row, through the phrase's repeats, the section's repeats and into the next section, and stops at the end. The playing section and phrase show which time through they are on (2/3). Looping is always asked for: <b>Loop section</b> (⇧Space in the Song view, or <b>⟳ loop</b> on a section's bar) goes round one section until you stop it. <b>Play song</b> plays the arrangement from where the open phrase first sounds, or from the top in the Song view. With <b>follow</b> on the grid, the Song view's cursor and the map instrument the playing phrase. The exported .mid carries a marker at every section so a DAW shows the form.</p>
+<p>While a phrase loops, choosing another phrase in the selector queues it; it takes over when the loop ends and the status shows <b>next</b>. Solo a instrument with ⇧-click or a long press on its name: with any solo on, only soloed instruments sound.</p>
 
-<h2 id="mixer">Mixer and tracks</h2>
-<p>The <b>mixer</b> sidebar (tick <b>mixer</b> in ⚙ View, or its ✕ to hide) shows each track with M, S, volume and pan. Tap a name to jump to that track. Volume and pan go out as CC7 and CC10 and are applied by the preview. The <b>tracks</b> table in <b>Compose</b> (also behind the mixer's <b>Tracks…</b>) adds any instrument as a track, renames, changes instrument, channel or columns, reorders and removes. A track's channel is shown in the grid header.</p>
+<h2 id="mixer">Mixer and instruments</h2>
+<p>The <b>mixer</b> sidebar (tick <b>mixer</b> in ⚙ View, or its ✕ to hide) shows each instrument with M, S, volume and pan. Tap a name to jump to that instrument. While playing, each strip shows the note its instrument is sounding, shaded by velocity: the same readout sits in the grid header and the Song view's instrument headers. Volume and pan go out as CC7 and CC10 and are applied by the preview. The <b>Instruments</b> panel (also behind the mixer's <b>Instruments…</b>) is where the players are set up; see <a href="#instruments">Instruments and sounds</a>. An instrument's channel is shown in the grid header.</p>
 
 <h2 id="touch">Touch and the pad</h2>
-<p>On a phone a tab bar at the bottom switches between <b>Pattern</b> (the grid with the pad) and the <b>Song</b>, <b>Compose</b>, <b>Sounds</b> and <b>Connect</b> panels, each filling the screen. ⚙ opens the View sheet; ticking <b>mixer</b> there overlays the mixer on the grid.</p>
-<p>Tap a cell to place the cursor, drag to scroll, long-press to clear a cell. The pad under the grid appears on touch screens (or tick <b>entry pad</b> in ⚙ View). Its key row follows the cell: a piano for notes, hex for velocity and dynamics, digits for tempo, commands for fx, articulation names for the art cell. The other rows move the cursor, switch track, toggle <b>sel</b> (drag selects instead of scrolling), clear, undo, change octave and step, note length, and play.</p>
+<p>On a phone a tab bar at the bottom switches between <b>Song</b> (the workspace: the map, then the Song view or the grid with the pad) and the <b>Files</b>, <b>Instruments</b> and <b>Connect</b> panels, each filling the screen. The map's crumbs switch levels; in the Song view one tap moves the cursor and a second tap opens that phrase on that instrument. ⚙ opens the View sheet; ticking <b>mixer</b> there overlays the mixer on the grid. The grid starts with note columns only so every instrument fits across.</p>
+<p>Tap a cell to place the cursor, drag to scroll, long-press to clear a cell. The pad under the grid appears on touch screens (or tick <b>entry pad</b> in ⚙ View). Its key row follows the cell: a piano for notes, hex for velocity and dynamics, digits for tempo, commands for fx, articulation names for the art cell, and on a placement its transformations (open, ±1, deg↓ deg↑, 8va, soft, loud, rep, detach). The other rows move the cursor, switch instrument, toggle <b>sel</b> (drag selects instead of scrolling), clear, undo, change octave and step, note length, and play.</p>
 
 <h2 id="controller">Game controller</h2>
 <p>Pair a Bluetooth or USB controller and press any button so the browser lists it. The scheme follows LSDJ. Works on iPhone and iPad.</p>
 <table>
   <tr><td>d-pad / left stick</td><td>move the cursor (hold to repeat)</td></tr>
-  <tr><td>LB / RB</td><td>previous / next track</td></tr>
+  <tr><td>LB / RB</td><td>previous / next instrument</td></tr>
   <tr><td>LT / RT</td><td>a bar up / down</td></tr>
   <tr><td>A + up / down</td><td>nudge the value under the cursor (a scale degree with a key set)</td></tr>
   <tr><td>A + left / right</td><td>nudge by an octave, 16 or 10 bpm; next fx command</td></tr>
   <tr><td>A tap</td><td>enter the last pitch on an empty cell and advance; audition an existing note</td></tr>
   <tr><td>B</td><td>clear the cell or selection; held with the d-pad, extend the selection</td></tr>
   <tr><td>X / Y</td><td>audition / cycle articulation</td></tr>
-  <tr><td>Start</td><td>play or stop the pattern</td></tr>
-  <tr><td>Back</td><td>undo; held: + Start plays the song, + B copies, + X cuts, + A pastes, + Y duplicates</td></tr>
+  <tr><td>Start</td><td>play or stop the phrase; in the Song view, play from the cursor row</td></tr>
+  <tr><td>Back</td><td>undo; held: + Start plays the song, + B copies, + X cuts, + A pastes, + Y duplicates, + LB goes out a level, + RB goes in</td></tr>
+  <tr><td>in the Song view</td><td>the d-pad moves the cell cursor, A opens the phrase on that instrument</td></tr>
 </table>
 
 <h2 id="midi">MIDI out, MIDI in, export</h2>
 <h3>Out to a DAW or sampler</h3>
 <p>Open <b>Connect</b>, press <b>Enable MIDI</b> and choose an output. On macOS open Audio MIDI Setup → IAC Driver and tick <i>Device is online</i>; on Windows install loopMIDI and add a port. In Bitwig add Settings → Controllers → Generic → MIDI Keyboard with the IAC bus as input, set each instrument track's note input to that controller on the channel shown in Tutti's header, and arm it.</p>
-<p>Each track sends on its own channel. Articulation keyswitches default to C1–G1 in list order (Kontakt shows these as C0–G0); the dynamics lane drives CC1 and the expression lane CC11; the mixer sends CC7 and CC10. Edit the instrument table in <code>src/core/instruments.js</code> to match your library.</p>
+<p>Each instrument sends on its own channel. Articulation keyswitches default to C1–G1 in list order (Kontakt shows these as C0–G0); the dynamics lane drives CC1 and the expression lane CC11; the mixer sends CC7 and CC10. Edit the sound table in <code>src/core/sounds.js</code> to match your library.</p>
 <h3>In from a keyboard</h3>
 <p>Choose an input after enabling MIDI. Played notes go into the cursor cell with their velocity and advance by step; chords spread across note columns. The sustain pedal skips a step, the mod wheel writes dynamics. WebMIDI is not available on iOS.</p>
 <h3>Real-time record</h3>
-<p>Press <b>● Rec</b> or <kbd>⇧Return</kbd> to arm; the pattern loops if it is not playing. Played notes land on the row the loop is passing, in the first free note column of the cursor's track (columns grow up to four for chords), and releasing the key sets the length. Stop disarms, and the whole pass is one undo step.</p>
+<p>Press <b>● Rec</b> or <kbd>⇧Return</kbd> to arm; the phrase loops if it is not playing. Played notes land on the row the loop is passing, in the first free note column of the cursor's instrument (columns grow up to four for chords), and releasing the key sets the length. Stop disarms, and the whole pass is one undo step.</p>
 <h3>Export</h3>
-<p><b>Export .mid</b> writes a type 1 Standard MIDI File at 960 PPQ: a conductor track with tempo and meter, then one track per instrument with a program change, notes, controllers and keyswitches. Or drop the file on a DAW arranger.</p>
+<p><b>Export .mid</b> writes a type 1 Standard MIDI File at 960 PPQ: a conductor track with tempo, meter and a marker at every section, then one instrument per instrument with a program change, notes, controllers and keyswitches. Or drop the file on a DAW arranger.</p>
 
 <h2 id="files">Songs, autosave, files</h2>
 <p><b>Install it.</b> Tutti is an installable web app: use your browser's install or Add to Home Screen option and it opens full screen with its own icon. Once opened it works offline, and the instruments you have played stay available without a network.</p>
-<p>Every song you create, load or edit is saved in this browser a moment after each change, and the address bar names the open song and pattern (<code>#song=…&amp;pat=…</code>), so a refresh or a bookmark brings you back. <b>Delete</b> removes your song, or resets a built-in example to its original.</p>
-<p><b>Save</b> downloads the song as JSON; <b>Load</b> adds a saved file to the list. The format (version 3: tracks, phrases, patterns with material per track, and an arrangement of entries with follows) is described by a <a href="schema/tutti-song.schema.json">JSON Schema</a> and the <a href="docs/domain.md">domain model</a>; files from Tutti 1 and 2 are not read. Built-in examples are written in code with a compact <code>line()</code> notation in <code>src/core/examples.js</code>; copy one to sketch a piece in text.</p>
-<p>The preview plays the <b>samples</b> sound by default: a bundled orchestra derived from VSCO 2 Community Edition (public domain), with sustain, staccato, pizzicato, tremolo, muted and roll articulations and two dynamic layers blended by the dynamics lane. Samples load per instrument the first time a song needs them, with progress in the status line; instruments without samples (the synths) and notes played before loading finishes use the sketch <b>synth</b>, which you can also choose outright in the <b>Sounds</b> panel's listen group, next to the preview switch. Neither replaces a real library over MIDI; they are for judging orchestration while you write.</p>
-<p><b>Sound banks.</b> The Sounds panel's <b>banks</b> bar loads other ensembles: <b>Jazz combo</b> (piano, vibraphone, tenor sax, upright bass, drum kit), <b>Folk group</b> (fiddle, folk harp, recorder, harmonica, frame drum, hand percussion) and <b>Electronica</b> (FM piano, clavisynth, drum machine, lead, pad, pluck), all from public-domain samples, or any bank.json by URL. The <b>Symphony orchestra</b> is the bank loaded by default and otherwise like any other: click its chip to unload it (instruments a song uses stay), or to hide it while a song uses it. The orchestra has a harp, a tuba and a sampled choir <b>voice</b> (Sonatina Symphonic Orchestra); folk adds banjo (a plucked-string model), an Irish flute (a baroque alto recorder standing in for a wooden flute), harmonica and a washboard kit; jazz adds a sampled classical guitar (FreePats) and alto and bass saxes derived from the tenor samples. The electronica drum machine covers the whole General MIDI percussion map (with C4 as middle C the kick sits at C2, the snare at D2, the hats at F♯2 and A♯2, and so on up to the woodblocks at F4); the status line names the piece under the cursor. Loaded banks' instruments appear grouped in the Tracks panel's instrument list, so you can add a single instrument to an orchestral song. A song remembers the banks it uses and loads them when opened. Drum kits play on mapped notes only; the status line names the piece under the cursor.</p>
-<p>The <b>Sounds</b> panel also lists each instrument's source, which articulations are real recordings and which fall back, an audition button (click an articulation to hear just that one), and tune, cents, level trim and release scale per instrument, remembered in this browser. Two scopes show the live output and the waveform of the sample that last played.</p>
+<p>Every song you create, load or edit is saved in this browser a moment after each change, and the address bar names the open song and phrase (<code>#song=…&amp;phrase=…</code>), so a refresh or a bookmark brings you back. <b>Delete</b> removes your song, or resets a built-in example to its original.</p>
+<p><b>Save</b> downloads the song as JSON; <b>Load</b> adds a saved file to the list. The format (version 4: instruments, patterns, phrases with material per instrument, sections, and an arrangement of sections) is described by a <a href="schema/tutti-song.schema.json">JSON Schema</a> and the <a href="https://github.com/ajturner/tutti-music/blob/main/docs/domain.md" target="_blank" rel="noopener">domain model</a>; files from Tutti 3 and earlier are not read. Built-in examples are written in code with a compact <code>line()</code> notation in <code>src/core/examples.js</code>; copy one to sketch a piece in text.</p>
+<p>The preview plays the <b>samples</b> sound by default: a bundled orchestra derived from VSCO 2 Community Edition (public domain), with sustain, staccato, pizzicato, tremolo, muted and roll articulations and two dynamic layers blended by the dynamics lane. Samples load per instrument the first time a song needs them, with progress in the status line; instruments without samples (the synths) and notes played before loading finishes use the sketch <b>synth</b>, which you can also choose outright in ⚙ View's listen group, next to the preview switch. Neither replaces a real library over MIDI; they are for judging orchestration while you write.</p>
+<p><b>Sound banks.</b> Open <b>Sounds</b> at the foot of the Instruments panel: its <b>banks</b> bar loads other ensembles: <b>Jazz combo</b> (piano, vibraphone, tenor sax, upright bass, drum kit), <b>Folk group</b> (fiddle, folk harp, recorder, harmonica, frame drum, hand percussion) and <b>Electronica</b> (FM piano, clavisynth, drum machine, lead, pad, pluck), all from public-domain samples, or any bank.json by URL. The <b>Symphony orchestra</b> is the bank loaded by default and otherwise like any other: click its chip to unload it (instruments a song uses stay), or to hide it while a song uses it. The orchestra has a harp, a tuba and a sampled choir <b>voice</b> (Sonatina Symphonic Orchestra); folk adds banjo (a plucked-string model), an Irish flute (a baroque alto recorder standing in for a wooden flute), harmonica and a washboard kit; jazz adds a sampled classical guitar (FreePats) and alto and bass saxes derived from the tenor samples. The electronica drum machine covers the whole General MIDI percussion map (with C4 as middle C the kick sits at C2, the snare at D2, the hats at F♯2 and A♯2, and so on up to the woodblocks at F4); the status line names the piece under the cursor. Loaded banks' instruments appear grouped in the Instruments panel's instrument list, so you can add a single instrument to an orchestral song. A song remembers the banks it uses and loads them when opened. Drum kits play on mapped notes only; the status line names the piece under the cursor.</p>
+<h3 id="instruments">Instruments and sounds</h3>
+<p>An <b>instrument</b> is a player in your song; a <b>sound</b> is what it is made from, and comes from a bank. The <b>Instruments</b> panel has a row per instrument: its name, its sound, whether that sound is sampled (SMP) or synthesised (SYN), <b>▶</b> to hear it, volume, pan, mute and solo. <b>⋯</b> opens the rest: <b>tune</b> in semitones, <b>cents</b>, level <b>trim</b> in dB and <b>release</b> scale, with ↺ to return them to the sound's own; MIDI channel and note columns; the articulations the sound has (click one to hear it, outlined ones are real recordings, the others fall back); and, when the row has no room for them, ↑ ↓ and <b>remove</b>. A row whose tuning, trim or release differs from its sound says so beside ⋯, as <code>+12 −8c</code>.</p>
+<p>All of this belongs to the instrument and is saved in the song, so <b>several instruments can share one sound</b>. <b>⧉</b> makes another player from the same sound with the same settings and no notes: two fiddles a few cents apart and panned left and right, a second harp an octave down, a quieter copy of the pad. The samples load once. Tuning, trim and release shape the preview only; exported MIDI keeps the written pitch. The Crossroads reel shows it: Fiddle and Fiddle II are one sound, and the second plays the first's patterns an octave down.</p>
+<p>A <b>new song has no instruments</b>: it opens here with the sounds showing, and the empty grid offers <b>+ instrument</b> until you have chosen one. On a wide screen each row also ends with ↑ ↓ and × to reorder and remove; on a phone those are behind ⋯.</p>
+<p><b>+ instrument</b> adds a player from the chosen sound. <b>Sounds</b> underneath lists every sound of the loaded banks with its source, its articulations and ▶ to audition, <b>+</b> to add an instrument from it (with a count of those already using it), and two scopes: the live output and the waveform of the sample that last played.</p>
 
 <h2 id="theory">Writing a first phrase</h2>
-<p>Plan one chord per bar, for example A minor, F, C, G. Put the roots on Basses and Cellos with step 16. Give Violins II and Violas one chord tone each per bar, moving each voice to the nearest tone. Fill the middle with an open fifth on the two Horns columns. Add a pulse: pizzicato basses on beats 1 and 3, or staccato bassoon on step 2 alternating root and fifth, timpani on tonic and dominant with a roll into the repeat. Write the melody last on Violins I or Flute, chord tones on the beats, and shape the phrase with a dynamics ramp from 30 to 60 across the four bars. Add a pattern B, set the order to 0 0 1 1, and change only the last two chords.</p>
+<p>Plan one chord per bar, for example A minor, F, C, G. Put the roots on Basses and Cellos with step 16. Give Violins II and Violas one chord tone each per bar, moving each voice to the nearest tone. Fill the middle with an open fifth on the two Horns columns. Add a pulse: pizzicato basses on beats 1 and 3, or staccato bassoon on step 2 alternating root and fifth, timpani on tonic and dominant with a roll into the repeat. Write the melody last on Violins I or Flute, chord tones on the beats, and shape the phrase with a dynamics ramp from 30 to 60 across the four bars. Then grow it: in the Song view add a copy of the phrase with <b>+ phrase…</b> and change only its last two chords, so section A is an eight-bar period; add a section B for contrast and play A again after it. When a figure repeats, such as the bass pulse, select it and <b>Make pattern</b>, then place it with a shift under each chord instead of retyping it.</p>
 
 </main>
 </body>

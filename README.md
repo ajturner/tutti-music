@@ -4,8 +4,20 @@ A browser-based tracker for composing orchestral music, with MIDI export. Plain 
 
 **Live:** https://ajturner.github.io/tutti-music/ · **Guide:** https://ajturner.github.io/tutti-music/help.html
 
+## How a song is built
 
-The vocabulary (song, track, pattern, material, phrase, placement, arrangement, entry, follows) and how it fits together is in [docs/domain.md](docs/domain.md); what comes next is in [docs/roadmap.md](docs/roadmap.md).
+A song is arranged from **sections** (intro, verse, chorus, bridge; A and B; exposition, coda). A section is made of **phrases**, a few bars for every instrument, which is what the grid shows. The ideas inside a phrase are **patterns**, one voice's reusable line (a motif, riff, lick or hook), **placed** on instruments with transformations: transpose, shift in the key, octave, dynamics, repeat.
+
+- **Song view:** the whole piece at a glance. Sections in playing order, their phrases, and for every phrase a thumbnail of what each instrument plays with a chip per placed pattern. The arrangement is edited here and the song's patterns are listed underneath.
+- **The map:** a bar reading Song › Section › Phrase › Pattern with the current level lit. Enter goes in a level, the backquote key comes back out, every crumb is a button.
+- **Monitor:** while playing, the note each instrument is sounding shows in the grid header, the Song view and the mixer.
+
+![The Song view: sections in playing order, their phrases, a thumbnail of what every instrument plays, pattern chips, the playing row lit and the patterns of the song underneath](docs/img/song-view.png)
+
+![The phrase grid while a section loops: the map under the header, pattern tags with their transformations, and the note each instrument is sounding beside its name](docs/img/phrase-grid.png)
+
+The vocabulary, the file format (version 4) and worked songs are in [docs/domain.md](docs/domain.md); what comes next is in [docs/roadmap.md](docs/roadmap.md).
+
 ## Input
 
 - **Keyboard:** piano-layout letters, arrows, and the shortcuts listed under "Keys and MIDI setup" in the app.
@@ -13,20 +25,20 @@ The vocabulary (song, track, pattern, material, phrase, placement, arrangement, 
 - **Game controller:** Bluetooth or USB gamepad, LSDJ-style. D-pad moves, A + d-pad edits, B clears, Start plays. Works on iPhone and iPad.
 - **Selection and batch edits:** Shift+arrows or mouse drag select a block. Copy, cut, paste, duplicate, clear, transpose, velocity, note length, articulation, and linear ramps from the toolbar or keyboard.
 - **Key and scale:** set the song's key; the pad dims out-of-scale notes, selections transpose by scale degree, controller nudges follow the scale.
-- **FX column:** one command per row per track: CHA chance, RET retrigger, DEL delay, ARP arpeggio, TSP transpose.
-- **Groove:** per-pattern swing presets or a custom cycle of row-length multipliers.
-- **Live:** solo tracks with shift-click or long press; pick another pattern while one loops to queue it.
-- **Phrases:** select rows on one track and Make phrase; place it anywhere with a transpose and a repeat, edit it once with Enter and every placement follows, Detach to vary one copy. A track can follow a pattern of placements under the others, which is how a bass walks through one riff per chord.
-- **Workflow panels:** the header keeps only the transport and pattern selector; Song (files), Compose (pattern, key, arrangement, tracks), Sounds, Connect (MIDI, controller) and ⚙ View open one at a time under it, and become full screens behind a tab bar on a phone.
-- **Mixer sidebar:** volume, pan, mute and solo per track beside the grid while editing.
-- **Tracks and mixer:** add any instrument as a track, rename, reorder, remove, set channel and columns, volume and pan (CC7 and CC10), mute and solo.
-- **Arranger:** the song order as chips: click to open, drag to reorder, × to remove, + to append; each entry has a repeat count and per-track chains so a track can follow another pattern (song format 2).
+- **FX column:** one command per row per instrument: CHA chance, RET retrigger, DEL delay, ARP arpeggio, TSP transpose.
+- **Groove:** per-phrase swing presets or a custom cycle of row-length multipliers.
+- **Live:** solo instruments with shift-click or long press; pick another phrase while one loops to queue it; Loop section loops a whole section; in the Song view Play goes forward from the cursor through every repeat.
+- **Patterns:** select rows on one instrument and Make pattern; place it anywhere and transform the placement with the keys that move notes (− = transpose, , . shift by scale degree, ⇧− ⇧= octave, < > softer or louder, [ ] repeat). Edit the pattern once with Enter and every placement follows; Detach to vary one copy. A looping bass or beat is one placement with a repeat, in plain sight.
+- **Workflow panels:** the header keeps only the transport and phrase selector; Files, Instruments (the players of the song: their sounds, mix, tuning and articulations, with the sound browser and banks), Connect (MIDI, controller) and ⚙ View open one at a time under it, the settings of the song, a section or the phrase open from the ▾ beside its name in the map, and become full screens behind a tab bar on a phone.
+- **Mixer sidebar:** volume, pan, mute and solo per instrument beside the grid while editing.
+- **Instruments made from sounds:** an instrument is a player in the song with its own name, channel, columns, volume and pan (CC7 and CC10), mute and solo, and its own tune, cents, trim and release, all saved in the song. ⧉ makes another from the same sound, so two fiddles can sit a few cents apart, left and right; the samples load once.
+- **Sections and arrangement:** add, name, repeat, reorder and key sections in the Song view; reuse a phrase in another section or play a section again; the .mid gets a marker per section (song format 4).
 - **Shaping and variation:** EXP fx command for per-note swell, sfz, fade in and out; Fill, Rnd vel, Rnd pitch and Humanize on selections.
-- **Pattern keys, live record, full undo:** a pattern can override the song key; ⇧Return records played MIDI onto the passing row; undo covers tracks, mixer, key, order, tempo and title.
+- **Nested keys, live record, full undo:** a phrase's key over its section's over the song's; ⇧Return records played MIDI onto the passing row; undo covers instruments, mixer, keys, sections, the arrangement, tempo and title.
 - **Sound banks:** the Symphony orchestra (loaded by default) plus bundled Jazz combo, Folk group and Electronica banks, or any bank.json URL; add whole banks or single instruments; songs remember their banks. `npm run build:banks` regenerates them.
 - **Sampled orchestra:** VSCO 2 (CC0) multisamples with articulations and dynamic layers in `banks/orchestra/`, synth fallback; regenerate with `npm run build:samples`.
 - **Installable and offline:** web manifest, icons and a service worker; add to home screen, and previously played samples work without a network.
-- **Autosave:** songs persist in the browser and the URL names the open song and pattern, so a refresh or bookmark reopens it. Delete resets an example or removes your song.
+- **Autosave:** songs persist in the browser and the URL names the open song and phrase, so a refresh or bookmark reopens it. Delete resets an example or removes your song.
 - **MIDI in:** step-record from a keyboard into the cursor cell, with chords spread across note columns. Chromium browsers only.
 
 ## Run locally
