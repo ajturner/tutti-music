@@ -1,6 +1,6 @@
 {
   "name": "tutti-music",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "description": "Tutti \u2014 a symphonic tracker: compose orchestral music in a tracker-style grid and export to MIDI. Single-file browser app with no dependencies.",
   "homepage": "https://ajturner.github.io/tutti-music/",
   "repository": {
