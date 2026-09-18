@@ -3,7 +3,7 @@
 // instruments may use one sound. Below the list, the sound browser: every sound the loaded banks provide, with
 // audition and add, the banks themselves, and two scopes (the preview output, the sample zone that last played).
 // Instrument changes are song-level: one undo step each, outside the phrase undo history.
-import { INSTRUMENTS, INST } from '../core/instruments.js';
+import { SOUNDS, SOUND } from '../core/sounds.js';
 import { FAMILIES, ART } from '../core/constants.js';
 import { addInstrument, duplicateInstrument, removeInstrument, moveInstrument, setInstrumentSound, instrumentDefaults, isShaped, INSTRUMENT_SETTINGS } from '../core/song.js';
 import { banks, hiddenBanks, loadCatalog, loadBank, unloadBank, DEFAULT_BANK } from '../core/banks.js';
@@ -22,14 +22,14 @@ let raf = 0, zoneDirty = true;
 
 function afterChange() {
   const n = state.song.instruments.length;
-  if (state.cursor.track >= n) state.cursor.track = n - 1;
+  if (state.cursor.instrument >= n) state.cursor.instrument = n - 1;
   deselect(); markEdited(); state.dirty = true; renderInstruments();
 }
 // Send a mixer controller now, so sliders are audible while playing.
 export function sendControl(tr, cc, value) {
   if (!sched.playing) return;
-  const ins = INST[tr.sound];
-  const ev = { type: 'cc', track: tr.id, cc, value, channel: tr.channel - 1, family: ins.family, trackRef: tr };
+  const ins = SOUND[tr.sound];
+  const ev = { type: 'cc', instrument: tr.id, cc, value, channel: tr.channel - 1, family: ins.family, instrumentRef: tr };
   for (const s of sched.getSinks()) s.send(ev, performance.now());
 }
 // A sound is on offer when its bank is loaded and showing. Sounds can stay registered without that: another song in
@@ -39,9 +39,9 @@ export const offered = ins => !!ins && banks.has(ins.bank) && !hiddenBanks.has(i
 // Sounds grouped by bank: the orchestra first, then each loaded bank (with the sounds it includes).
 export function soundOptions(cur) {
   const groups = [];
-  for (const b of banks.values()) { if (hiddenBanks.has(b.id) && !(cur && INST[cur] && INST[cur].bank === b.id)) continue; groups.push([b.id, b.name, [...b.instruments, ...b.includes].map(id => INST[id]).filter(Boolean)]); }
+  for (const b of banks.values()) { if (hiddenBanks.has(b.id) && !(cur && SOUND[cur] && SOUND[cur].bank === b.id)) continue; groups.push([b.id, b.name, [...b.instruments, ...b.includes].map(id => SOUND[id]).filter(Boolean)]); }
   // an instrument's own sound always shows in its picker, even when its bank is not on offer
-  if (cur && INST[cur] && !groups.some(([, , list]) => list.includes(INST[cur]))) groups.push(['current', 'This instrument', [INST[cur]]]);
+  if (cur && SOUND[cur] && !groups.some(([, , list]) => list.includes(SOUND[cur]))) groups.push(['current', 'This instrument', [SOUND[cur]]]);
   const opt = i => '<option value="' + i.id + '"' + (i.id === cur ? ' selected' : '') + '>' + esc(i.name) + ' (' + (FAMILIES[i.family] || FAMILIES.electronic).label + ')</option>';
   return groups.map(([id, label, list]) => '<optgroup label="' + esc(label) + '">' + list.map(opt).join('') + '</optgroup>').join('');
 }
@@ -69,7 +69,7 @@ export function renderInstruments() {
   if (el.contains(document.activeElement) && document.activeElement.matches('input[type=text], input[type=number]')) document.activeElement.blur();
   const uses = {}; for (const tr of state.song.instruments) uses[tr.sound] = (uses[tr.sound] || 0) + 1;
   el.innerHTML = state.song.instruments.map((tr, i) => {
-    const ins = INST[tr.sound] || { name: tr.sound, family: 'electronic', articulations: [] }, fam = FAMILIES[ins.family] || FAMILIES.electronic, cov = sampler.coverage(tr.sound), more = open.has(tr.id), shape = shapeLabel(tr);
+    const ins = SOUND[tr.sound] || { name: tr.sound, family: 'electronic', articulations: [] }, fam = FAMILIES[ins.family] || FAMILIES.electronic, cov = sampler.coverage(tr.sound), more = open.has(tr.id), shape = shapeLabel(tr);
     const num = (f, step, title) => { const [lo, hi] = INSTRUMENT_SETTINGS[f]; return `<label title="${title}">${f === 'release' ? 'rel ×' : f === 'trim' ? 'trim dB' : f}<input data-f="${f}" type="number" min="${lo}" max="${hi}" step="${step}" value="${tr[f]}"></label>`; };
     return `<div class="inst${more ? ' open' : ''}" data-i="${i}" data-id="${esc(tr.id)}" style="--fam:${fam.color}">
       <div class="instMain">
@@ -104,7 +104,7 @@ function onChange(e) {
   const tr = rowOf(e.target), f = e.target.dataset.f; if (!tr || !f) return;
   const apply = () => {
     switch (f) {
-      case 'name': tr.name = e.target.value.trim() || (INST[tr.sound] || {}).name || tr.id; break;
+      case 'name': tr.name = e.target.value.trim() || (SOUND[tr.sound] || {}).name || tr.id; break;
       case 'sound': setInstrumentSound(state.song, tr.id, e.target.value); break;
       case 'channel': tr.channel = clampInt(e.target.value, 1, 16, tr.channel); break;
       case 'columns': tr.columns = clampInt(e.target.value, 1, 4, tr.columns); break;
@@ -124,7 +124,7 @@ function onChange(e) {
   afterChange();
 }
 function audition(tr, art) {
-  const ins = INST[tr.sound]; if (!ins) return;
+  const ins = SOUND[tr.sound]; if (!ins) return;
   synth.ensure(); sampler.demo(tr.sound, art ? demoFor(ins).slice(0, 3) : demoFor(ins), art || null, 0.4, tr);
 }
 function onClick(e) {
@@ -143,14 +143,14 @@ function onClick(e) {
     else if (act === 'duplicate') made = duplicateInstrument(state.song, tr.id);
     else if (act === 'reset') { for (const [f, [, , d]] of Object.entries(INSTRUMENT_SETTINGS)) tr[f] = d; }
   });
-  if (made) { open.add(made.id); state.cursor.track = state.song.instruments.indexOf(made); state.cursor.cell = 0; state.ensureVisible = true; }
+  if (made) { open.add(made.id); state.cursor.instrument = state.song.instruments.indexOf(made); state.cursor.cell = 0; state.ensureVisible = true; }
   afterChange();
   if (made) { const name = $('instList').querySelector(`.inst[data-id="${made.id}"] input[data-f="name"]`); if (name) { name.focus(); name.select(); } }
 }
 export function addInstrumentFromPanel(soundId) {
   let tr; withSongUndo(() => { tr = addInstrument(state.song, soundId || $('instAddSound').value); });
   preloadSamples();
-  state.cursor.track = state.song.instruments.indexOf(tr); state.cursor.cell = 0; state.ensureVisible = true;
+  state.cursor.instrument = state.song.instruments.indexOf(tr); state.cursor.cell = 0; state.ensureVisible = true;
   afterChange(); renderBanks();
   return tr;
 }
@@ -160,7 +160,7 @@ export function openInstruments() { setPanel('instruments'); }
 export function renderSounds() {
   const body = $('soundsBody'); if (!body) return;
   const uses = {}; for (const tr of state.song.instruments) uses[tr.sound] = (uses[tr.sound] || 0) + 1;
-  body.innerHTML = INSTRUMENTS.filter(offered).map(ins => {
+  body.innerHTML = SOUNDS.filter(offered).map(ins => {
     const cov = sampler.coverage(ins.id), fam = FAMILIES[ins.family] || FAMILIES.electronic;
     return `<tr data-id="${ins.id}" style="--fam:${fam.color}">
       <td class="name"><span class="swatch"></span>${esc(ins.name)}<small>${fam.label}</small></td>
@@ -226,7 +226,7 @@ function drawZone() {
   ctx.fillStyle = '#0A0D1C'; ctx.fillRect(0, 0, W, H);
   const lz = sampler.lastZone, label = $('scopeZoneLabel');
   if (!lz) { label.textContent = 'zone'; return; }
-  const ins = INST[lz.instrument], color = ins ? FAMILIES[ins.family].color : '#8FA6E6';
+  const ins = SOUND[lz.instrument], color = ins ? FAMILIES[ins.family].color : '#8FA6E6';
   label.innerHTML = `zone: <b style="color:${color}">${ins ? ins.name : lz.instrument}</b> ${lz.zone.art} root ${lz.zone.note} layer ${lz.zone.layer} · ${lz.zone.file}`;
   const ch = lz.buffer.getChannelData(0), n = ch.length, cols = W, per = Math.max(1, Math.floor(n / cols));
   ctx.fillStyle = color; ctx.globalAlpha = 0.85;
@@ -255,7 +255,7 @@ function fitCanvases() {
 async function showBrowser() {
   fitCanvases(); if (!raf) raf = requestAnimationFrame(loop);
   catalog = await loadCatalog(); renderBanks(); renderSounds(); fitCanvases();
-  sampler.preload(INSTRUMENTS.filter(offered).map(i => i.id)).then(() => { if ($('soundBrowser').open) renderSounds(); });   // load what is not loaded yet so the rows fill in
+  sampler.preload(SOUNDS.filter(offered).map(i => i.id)).then(() => { if ($('soundBrowser').open) renderSounds(); });   // load what is not loaded yet so the rows fill in
 }
 // Called by the panels module when the Instruments panel opens and closes.
 export function showInstruments() { if (!state.song.instruments.length) $('soundBrowser').open = true; renderInstruments(); if ($('soundBrowser').open) showBrowser(); }
@@ -271,7 +271,7 @@ export function wireInstruments() {
   list.addEventListener('click', onClick);
   $('soundBrowser').addEventListener('toggle', () => { if ($('soundBrowser').open) showBrowser(); });
   $('soundsBody').addEventListener('click', e => {
-    const row = e.target.closest('tr'); if (!row) return; const id = row.dataset.id, ins = INST[id];
+    const row = e.target.closest('tr'); if (!row) return; const id = row.dataset.id, ins = SOUND[id];
     const art = e.target.closest('button[data-art]'), act = e.target.closest('button[data-act]');
     if (art) { synth.ensure(); sampler.demo(id, demoFor(ins).slice(0, 3), art.dataset.art); return; }
     if (act && act.dataset.act === 'play') { synth.ensure(); sampler.demo(id, demoFor(ins), null); return; }

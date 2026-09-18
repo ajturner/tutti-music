@@ -1,10 +1,10 @@
 // Canvas drawing of the grid, the status line, and the animation-frame loop.
 import { FAMILIES, clamp, hex2, noteName } from '../core/constants.js';
-import { INST } from '../core/instruments.js';
+import { SOUND } from '../core/sounds.js';
 import { laneValueAt, expandPlacements, patternById, placementLabel, placementRows } from '../core/song.js';
-import { $, COLORS, activeKey, applyDensity, canvas, ctx, curPhrase, curPattern, curSection, curTrack, midi, rowsPerBar, rowsPerStrongBeat, sched, state, tracksShown, view } from './state.js';
+import { $, COLORS, activeKey, applyDensity, canvas, ctx, curPhrase, curPattern, curSection, curInstrument, midi, rowsPerBar, rowsPerStrongBeat, sched, state, instrumentsShown, view } from './state.js';
 import { computeLayout, currentCell, HEADER_ROWS, CELL_LABEL } from './layout.js';
-import { indexTrack, noteCovering, patternStatus } from './edit.js';
+import { indexInstrument, noteCovering, patternStatus } from './edit.js';
 import { indexMaterial } from '../core/edit.js';
 import { rowAtTick, grooveOf, FX_HELP } from '../core/render.js';
 import { fxAtRow } from '../core/edit.js';
@@ -29,7 +29,7 @@ export function resize() {
 }
 window.addEventListener('resize', resize);
 
-// Text cut to a width, so narrow columns (note-only tracks on a phone) do not overlap their neighbours.
+// Text cut to a width, so narrow columns (note-only instruments on a phone) do not overlap their neighbours.
 function fitText(text, maxW) {
   if (ctx.measureText(text).width <= maxW) return text;
   let n = text.length; while (n > 1 && ctx.measureText(text.slice(0, n)).width > maxW) n--;
@@ -57,10 +57,10 @@ export function draw() {
   // While a drag selection is in progress the view stays put (state.topLock) so rows don't slide under the pointer.
   const top = state.topLock != null ? state.topLock : centerRow - Math.floor(visible / 2);
 
-  if (state.cursor.track >= L.tracks.length) state.cursor.track = L.tracks.length - 1;   // its instrument is gone: the last one, or the tempo column of a song with none
-  // Bring the cursor's track on screen after the cursor moved, but leave a hand-scrolled view alone.
-  if (state.cursor.track >= 0 && state.ensureVisible) {
-    const lay = L.tracks[state.cursor.track];
+  if (state.cursor.instrument >= L.instruments.length) state.cursor.instrument = L.instruments.length - 1;   // its instrument is gone: the last one, or the tempo column of a song with none
+  // Bring the cursor's instrument on screen after the cursor moved, but leave a hand-scrolled view alone.
+  if (state.cursor.instrument >= 0 && state.ensureVisible) {
+    const lay = L.instruments[state.cursor.instrument];
     if (lay.x - state.scrollX < L.gutter.w) state.scrollX = lay.x - L.gutter.w;
     if (lay.x + lay.w - state.scrollX > W) state.scrollX = lay.x + lay.w - W;
   }
@@ -82,17 +82,17 @@ export function draw() {
   ctx.beginPath(); ctx.rect(L.gutter.w, headerH, W - L.gutter.w, H - headerH); ctx.clip();
   ctx.translate(-state.scrollX, 0);
   const cur = state.cursor;
-  const cursorCell = cur.track >= 0 ? L.tracks[cur.track].cells[clamp(cur.cell, 0, L.tracks[cur.track].cells.length - 1)] : null;
+  const cursorCell = cur.instrument >= 0 ? L.instruments[cur.instrument].cells[clamp(cur.cell, 0, L.instruments[cur.instrument].cells.length - 1)] : null;
   for (let r = Math.max(0, top); r < Math.min(phr.rows, top + visible + 1); r++) {
     const y = rowY(r);
     if (r % rpb === 0) { ctx.fillStyle = COLORS.bar; ctx.fillRect(L.gutter.w + state.scrollX, y, L.totalW, 1); }
   }
-  for (let ti = 0; ti < L.tracks.length; ti++) {
-    const lay = L.tracks[ti];
+  for (let ti = 0; ti < L.instruments.length; ti++) {
+    const lay = L.instruments[ti];
     if (lay.x + lay.w < state.scrollX || lay.x > state.scrollX + W) continue;
-    const tr = lay.track, ins = INST[tr.sound], fam = FAMILIES[ins.family];
-    const idx = indexTrack(phr, tr.id);
-    // Placements: the pattern's notes drawn dimmed under the track, a band over the rows, a tag on the first row.
+    const tr = lay.instrument, ins = SOUND[tr.sound], fam = FAMILIES[ins.family];
+    const idx = indexInstrument(phr, tr.id);
+    // Placements: the pattern's notes drawn dimmed under the instrument, a band over the rows, a tag on the first row.
     const mat = phr.material[tr.id], placements = state.patternEdit ? [] : (mat && mat.placements || []).map(pl => { const ptn = patternById(song, pl.pattern); return ptn ? Object.assign(placementRows(phr, pl, ptn), { pl, ptn }) : null; }).filter(Boolean);
     const pidx = placements.length ? indexMaterial(phr, expandPlacements(song, phr, tr.id, tr.columns, activeKey())) : null;
     const noteEnd = lay.cells.filter(c => c.kind === 'note' || c.kind === 'vel' || c.kind === 'art').reduce((m, c) => Math.max(m, c.x + c.w), lay.x);
@@ -110,11 +110,11 @@ export function draw() {
       const starts = Object.assign({}, pstarts, idx.starts.get(r) || {}), spans = Object.assign({}, pspans, idx.spans.get(r) || {});
       for (let ci = 0; ci < lay.cells.length; ci++) {
         const cell = lay.cells[ci];
-        const isCursor = cur.track === ti && cell === cursorCell && r === cur.row;
+        const isCursor = cur.instrument === ti && cell === cursorCell && r === cur.row;
         if (state.sel && inSel(lay.g0 + ci, r)) { ctx.fillStyle = COLORS.accent; ctx.globalAlpha = 0.22; ctx.fillRect(cell.x - 2, y, cell.w + 4, view.ROW_H); ctx.globalAlpha = 1; }
         if (isCursor) { ctx.fillStyle = COLORS.accent; ctx.fillRect(cell.x - 2, y + 1, cell.w + 4, view.ROW_H - 2); }
         const textColor = isCursor ? COLORS.cursorText : COLORS.text;
-        if (tag) {   // the tag row names the pattern across the whole track
+        if (tag) {   // the tag row names the pattern across the whole instrument
           if (cell === lay.cells[0]) {
             const label = '\u25b8' + placementLabel(tag.pl, tag.ptn.name);
             if (isCursor) { ctx.fillStyle = COLORS.accent; ctx.fillRect(cell.x - 2, y + 1, lay.w - view.charW * 0.5, view.ROW_H - 2); }
@@ -161,7 +161,7 @@ export function draw() {
     if (r === playRow && playPhr === state.phr) { ctx.fillStyle = COLORS.play; ctx.fillRect(0, y, L.gutter.w - view.charW * 0.5, view.ROW_H); }
     ctx.fillStyle = r % rpb === 0 ? COLORS.accent : COLORS.num;
     ctx.fillText(String(r).padStart(3, '0'), L.gutter.rowX, ym);
-    const isCursor = cur.track === -1 && r === cur.row;
+    const isCursor = cur.instrument === -1 && r === cur.row;
     if (state.sel && inSel(0, r)) { ctx.fillStyle = COLORS.accent; ctx.globalAlpha = 0.22; ctx.fillRect(L.gutter.tempoX - 2, y, view.charW * 4 + 4, view.ROW_H); ctx.globalAlpha = 1; }
     if (isCursor) { ctx.fillStyle = COLORS.accent; ctx.fillRect(L.gutter.tempoX - 2, y + 1, view.charW * 4 + 4, view.ROW_H - 2); }
     const p = phr.tempo.find(x => x.tick === r * phr.ticksPerRow);
@@ -177,28 +177,28 @@ export function draw() {
   ctx.beginPath(); ctx.rect(L.gutter.w, 0, W - L.gutter.w, headerH); ctx.clip();
   ctx.translate(-state.scrollX, 0);
   const bandY = 8 + view.ROW_H / 2, nameY = view.ROW_H + 8 + view.ROW_H / 2, labelY = view.ROW_H * 2 + 8 + view.ROW_H / 2;
-  const labelEnd = new Map();          // first track of each family group -> where its label ends
+  const labelEnd = new Map();          // first instrument of each family group -> where its label ends
   let i = 0;
-  while (i < L.tracks.length) {
-    const fam = INST[L.tracks[i].track.sound].family;
-    let j = i; while (j + 1 < L.tracks.length && INST[L.tracks[j + 1].track.sound].family === fam) j++;
-    const x0 = L.tracks[i].x, x1 = L.tracks[j].x + L.tracks[j].w - view.charW;
+  while (i < L.instruments.length) {
+    const fam = SOUND[L.instruments[i].instrument.sound].family;
+    let j = i; while (j + 1 < L.instruments.length && SOUND[L.instruments[j + 1].instrument.sound].family === fam) j++;
+    const x0 = L.instruments[i].x, x1 = L.instruments[j].x + L.instruments[j].w - view.charW;
     ctx.fillStyle = FAMILIES[fam].color; ctx.fillRect(x0, 4, x1 - x0, 2);
     const famLabel = fitText(FAMILIES[fam].label, Math.max(view.charW * 2, x1 - x0));
     ctx.globalAlpha = 0.75; ctx.fillText(famLabel, x0, bandY); ctx.globalAlpha = 1;
-    for (let k = i; k <= j; k++) labelEnd.set(k, x0 + ctx.measureText(famLabel).width + view.charW);   // every track under the label
+    for (let k = i; k <= j; k++) labelEnd.set(k, x0 + ctx.measureText(famLabel).width + view.charW);   // every instrument under the label
     i = j + 1;
   }
-  const anySolo = tracksShown().some(t => t.solo), sounding = soundingNow();
-  L.tracks.forEach((lay, ti) => {
-    const tr = lay.track, fam = FAMILIES[INST[tr.sound].family];
+  const anySolo = instrumentsShown().some(t => t.solo), sounding = soundingNow();
+  L.instruments.forEach((lay, ti) => {
+    const tr = lay.instrument, fam = FAMILIES[SOUND[tr.sound].family];
     const silent = tr.mute || (anySolo && !tr.solo);
     ctx.fillStyle = silent ? COLORS.num : fam.color;
     const nameFull = state.patternEdit ? tr.name + ' \u00b7 pattern ' + (curPattern() || {}).name : tr.name, name = fitText(nameFull, lay.w - view.charW * (tr.solo ? 2 : 0.75));
     ctx.fillText(name, lay.x, nameY);
     if (tr.mute) ctx.fillRect(lay.x, nameY, ctx.measureText(name).width, 1);
     if (tr.solo) { ctx.fillStyle = COLORS.accent; ctx.fillText('S', lay.x + ctx.measureText(name).width + view.charW * 0.6, nameY); }
-    // While playing, the note this track is sounding sits beside its name (or in its place in a narrow column).
+    // While playing, the note this instrument is sounding sits beside its name (or in its place in a narrow column).
     const live = sounding[tr.id];
     if (live) {
       const txt = noteName(live.pitch), nameW = ctx.measureText(name).width, x = lay.x + nameW + view.charW * (tr.solo ? 2 : 0.8);
@@ -227,13 +227,13 @@ export function draw() {
 
 export let lastStatus = '';
 export function updateStatus(playRow) {
-  const phr = curPhrase(), tr = curTrack(), cell = currentCell(), row = state.cursor.row;
+  const phr = curPhrase(), tr = curInstrument(), cell = currentCell(), row = state.cursor.row;
   const parts = [];
   if (state.level === 'song') { const st = songStatus(); if (st) parts.push(st); if (sched.playing) parts.push('<b>playing</b>'); if (state.message) parts.push('<span class="warn">' + state.message + '</span>'); const h = parts.map(x => '<span>' + x + '</span>').join(''); if (h !== lastStatus) { $('status').innerHTML = h; lastStatus = h; } return; }
   if (state.patternEdit) parts.push('<b class="warn">pattern ' + esc((curPattern() || {}).name || '') + '</b> Esc returns to phrase ' + state.phr);
   const ps = patternStatus(); if (ps) parts.push(ps);
   if (tr) {
-    const ins = INST[tr.sound];
+    const ins = SOUND[tr.sound];
     let s = '<b>' + tr.name + '</b> col ' + ((cell.col | 0) + 1) + ' row ' + row;
     const ev = noteCovering(phr, tr.id, cell.col | 0, row);
     if (ev) s += ' <b>' + noteName(ev.pitch) + '</b>' + (ins.kit && ins.kit[ev.pitch] ? ' ' + esc(ins.kit[ev.pitch]) : '') + ' vel ' + ev.vel + ' len ' + (ev.len / phr.ticksPerRow) + ' rows ' + (ev.art || ins.articulations[0]);

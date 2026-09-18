@@ -4,7 +4,7 @@ import { curPhrase, curPattern, curSection, sched, state, synth, preloadSamples 
 import { withUndo } from './edit.js';
 
 // ---- Transport ----------------------------------------------------------------------------
-// Loop the open phrase. While a pattern is open the loop is the pattern alone, on its track, through its stand-in.
+// Loop the open phrase. While a pattern is open the loop is the pattern alone, on its instrument, through its stand-in.
 export function playPhrase(fromCursor) {
   if (state.preview) { synth.ensure(); preloadSamples(); }
   const ptn = curPattern();

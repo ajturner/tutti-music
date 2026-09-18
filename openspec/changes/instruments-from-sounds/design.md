@@ -7,4 +7,4 @@
 
 **Level sheet.** The phrase and key groups moved as they were, ids and wiring intact, into a panel named `level` with no menu button. `openLevel(scope)` in `src/ui/map.js` sets the key scope, the title and `data-scope`, which hides the phrase group for the song and a section and the key group for a pattern. The ▾ buttons sit beside the crumbs; pressing the same one again closes the sheet.
 
-**Left as it is for now.** Code identifiers and the bank file's `instruments` key, as the proposal says. `state.sound` (samples or synth) keeps its name.
+**Names in the code** follow the words once the direction was approved: `src/core/sounds.js` with `SOUND`, `SOUNDS`, `registerSound`; `soundId` for a catalogue id and `instrumentId` for a song's player; `curInstrument`, `instrumentsShown`, `cursor.instrument`, `instrumentRef` and `ev.instrument` on rendered events; `ORCHESTRA` and `SYNTHS` for the two rosters. A MIDI file still has tracks. The bank file's `instruments` key and `state.sound` (samples or synth) keep their names.

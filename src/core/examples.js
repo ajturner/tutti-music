@@ -1,7 +1,7 @@
 // Compact text notation for writing songs in code, and the built-in example songs.
 import { ensureStructure, instrumentDefaults, makePattern, materialOf, patternById, slug } from './song.js';
 import { FAMILIES, PPQ, noteName } from './constants.js';
-import { INST, SYNTH_TRACKS, addTracks } from './instruments.js';
+import { SOUND, SYNTHS, addInstruments } from './sounds.js';
 import { laneSet, laneValueAt, newPhrase, newSong, orchestraSong, phraseMeter } from './song.js';
 import { TimeMap, renderSong } from './render.js';
 import { midiFileBytes } from './midifile.js';
@@ -40,7 +40,7 @@ export function seedSong() {
 }
 
 // ---- Compact notation for writing songs in code ---------------------------------------------
-// line(phr, trackId, col, startRow, step, tokens, { art, vel, transpose })
+// line(phr, instrumentId, col, startRow, step, tokens, { art, vel, transpose })
 //   token: NOTE[:rows][@art][!vel]   NOTE like C4, F#3, Bb2 (60 = C4)
 //   '.' rests one step, '-' extends the previous note by one step, '|' is ignored (bar marker).
 //   A note without :rows lasts one step; the cursor advances by the note's length.
@@ -51,8 +51,8 @@ export function parsePitch(s) {
   const base = { c: 0, d: 2, e: 4, f: 5, g: 7, a: 9, b: 11 }[m[1].toLowerCase()];
   return (parseInt(m[3], 10) + 1) * 12 + base + (m[2] === '#' ? 1 : m[2] === 'b' ? -1 : 0);
 }
-export function line(phr, trackId, col, startRow, step, tokens, opts = {}) {
-  const pt = materialOf(phr, trackId), tpr = phr.ticksPerRow;
+export function line(phr, instrumentId, col, startRow, step, tokens, opts = {}) {
+  const pt = materialOf(phr, instrumentId), tpr = phr.ticksPerRow;
   let row = startRow, last = null;
   for (const tok of tokens.trim().split(/\s+/)) {
     if (tok === '|' || !tok) continue;
@@ -212,7 +212,7 @@ export function exPulse() {
   return fitColumns(song);
 }
 export function exNeonCorridor() {
-  const song = addTracks(orchestraSong(), SYNTH_TRACKS); song.title = 'Neon corridor (Tron-style)'; song.bpm = 128;
+  const song = addInstruments(orchestraSong(), SYNTHS); song.title = 'Neon corridor (Tron-style)'; song.bpm = 128;
   song.notes = 'Hybrid electronic and orchestral: a Build section twice, then the Drive section twice. Octave synth bass and a sixteenth-note arp on channels 15 and 16, low strings hammering the root, brass and tremolo strings swelling, trumpet stabs into the fourth bar.';
   const A = song.phrases[0], B = newPhrase('B'); song.phrases.push(B); arrange(song, [['Build', [0]], ['Drive', [1]]], [['Build', 2], ['Drive', 2]]);
   const tpr = A.ticksPerRow;
@@ -243,7 +243,7 @@ export function exNeonCorridor() {
   return fitColumns(song);
 }
 export function exAfterglow() {
-  const song = addTracks(orchestraSong(), SYNTH_TRACKS); song.title = 'Afterglow (Tron-style)'; song.bpm = 72;
+  const song = addInstruments(orchestraSong(), SYNTHS); song.title = 'Afterglow (Tron-style)'; song.bpm = 72;
   song.notes = 'Slow hybrid cue on an eighth-note grid: long synth bass, an eighth-note arp that never stops, string chorale on top, horns and flute for the second half, timpani roll and ritardando to close.';
   const A = song.phrases[0]; A.ticksPerRow = 480; const tpr = 480;
   // Am F C G | Am F Dm E
@@ -342,9 +342,9 @@ export function exLament() {
 
 // ---- Bank showcases: one song per bundled bank ---------------------------------------------------
 // Instruments are listed as [id, name, sound, channel]; the song records its bank so it loads on open.
-function bankSong(title, bank, tracks) {
+function bankSong(title, bank, instruments) {
   const song = orchestraSong(); song.title = title; song.banks = ['orchestra', bank].filter((b, i, a) => a.indexOf(b) === i);
-  song.instruments = tracks.map(([id, name, sound, channel]) => instrumentDefaults({ id, name, sound, channel, columns: 1, mute: false }));
+  song.instruments = instruments.map(([id, name, sound, channel]) => instrumentDefaults({ id, name, sound, channel, columns: 1, mute: false }));
   return song;
 }
 // Kit pieces by name so the drum lines read as music, not MIDI numbers.
@@ -498,4 +498,4 @@ const EXAMPLE_LIST = [
 export const EXAMPLES = EXAMPLE_LIST.map(e => ({ title: e.title, uid: 'example:' + e.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
   build: () => { const s = Object.assign(e.build(), { uid: 'example:' + e.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') }); ensureStructure(s); return s; } }));
 
-if (typeof module !== 'undefined') module.exports = { PPQ, INST, FAMILIES, newSong, newPhrase, materialOf, laneSet, laneValueAt, renderSong, TimeMap, midiFileBytes, seedSong, noteName, line, lane, rep, EXAMPLES, phraseMeter };
+if (typeof module !== 'undefined') module.exports = { PPQ, SOUND, FAMILIES, newSong, newPhrase, materialOf, laneSet, laneValueAt, renderSong, TimeMap, midiFileBytes, seedSong, noteName, line, lane, rep, EXAMPLES, phraseMeter };

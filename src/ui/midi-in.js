@@ -2,19 +2,19 @@
 import { rowTicks, rowAtTick } from '../core/render.js';
 import { putNote, noteAt, maxLength } from '../core/edit.js';
 import { markEdited } from './storage.js';
-import { INST } from '../core/instruments.js';
+import { SOUND } from '../core/sounds.js';
 import { laneSet, materialOf } from '../core/song.js';
-import { $, auditionPreview, curPhrase, curTrack, midi, sched, state } from './state.js';
+import { $, auditionPreview, curPhrase, curInstrument, midi, sched, state } from './state.js';
 import { currentCell } from './layout.js';
 import { enterPitch, moveRow } from './edit.js';
 import { esc } from './sync.js';
 
 // ---- MIDI in: step recording -----------------------------------------------------------------
-// Notes arriving within a short window are one chord and spread across the track's note columns,
+// Notes arriving within a short window are one chord and spread across the instrument's note columns,
 // growing the columns if needed; when the window closes the cursor advances by step.
 export const midiRec = { timer: 0, n: 0 };
 // Live record: notes land on the row the loop is passing (nearest row), note-off sets the length.
-const live = new Map();   // pitch -> { ev, row, trackId }
+const live = new Map();   // pitch -> { ev, row, instrumentId }
 function liveRow() {
   const phr = curPhrase(); let t = sched.positionTick(); if (t == null) return 0;
   const st = sched.rendered && sched.rendered.starts.find(s => t >= s.tick && t < s.tick + s.rows * s.ticksPerRow); if (st) t -= st.tick;   // a looping section holds several phrase plays
@@ -23,19 +23,19 @@ function liveRow() {
   return r % phr.rows;
 }
 function liveNoteOn(pitch, vel) {
-  const tr = curTrack(); if (!tr) return;
+  const tr = curInstrument(); if (!tr) return;
   const phr = curPhrase(), row = liveRow(), tick = row * phr.ticksPerRow;
   let col = [...Array(tr.columns).keys()].find(c => !noteAt(phr, tr.id, c, row));
   if (col == null) { if (tr.columns < 4) { tr.columns++; col = tr.columns - 1; } else col = currentCell().col | 0; }
   const ev = putNote(phr, tr.id, col, tick, { pitch, len: phr.ticksPerRow, vel });
-  live.set(pitch, { ev, row, trackId: tr.id });
+  live.set(pitch, { ev, row, instrumentId: tr.id });
   state.lastPitch = pitch; markEdited(); state.dirty = true;
 }
 function liveNoteOff(pitch) {
   const l = live.get(pitch); if (!l) return; live.delete(pitch);
   const phr = curPhrase(); let end = liveRow(); if (end <= l.row) end += phr.rows;
   const rows = Math.max(1, end - l.row);
-  l.ev.len = Math.min(rows * phr.ticksPerRow, maxLength(phr, l.trackId, l.ev.col, l.ev.tick));
+  l.ev.len = Math.min(rows * phr.ticksPerRow, maxLength(phr, l.instrumentId, l.ev.col, l.ev.tick));
   markEdited(); state.dirty = true;
 }
 export function onMidiMessage(e) {
@@ -46,18 +46,18 @@ export function onMidiMessage(e) {
   if (type === 0x90 && d2 > 0) recordPitch(d1, d2);
   else if (type === 0xB0 && d1 === 64 && d2 >= 64) moveRow(Math.max(1, state.step));
   else if (type === 0xB0 && d1 === 1) {
-    const tr = curTrack(); if (!tr) return;
+    const tr = curInstrument(); if (!tr) return;
     const phr = curPhrase(); laneSet(materialOf(phr, tr.id).dyn, state.cursor.row * phr.ticksPerRow, d2); state.dirty = true;
   }
 }
 export function recordPitch(pitch, vel) {
-  const tr = curTrack();
+  const tr = curInstrument();
   if (!tr) { state.message = 'Move the cursor onto an instrument to record'; state.dirty = true; return; }
   if (midiRec.timer) { clearTimeout(midiRec.timer); midiRec.n++; } else midiRec.n = 0;
   const col = Math.min((currentCell().col | 0) + midiRec.n, 3);
   if (col >= tr.columns) tr.columns = col + 1;
   enterPitch(pitch, vel, col);
-  const ins = INST[tr.sound];
+  const ins = SOUND[tr.sound];
   auditionPreview(ins, pitch, null, tr);
   midiRec.timer = setTimeout(() => { midiRec.timer = 0; moveRow(state.step); }, 80);
   state.dirty = true;

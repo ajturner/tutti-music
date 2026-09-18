@@ -7,7 +7,7 @@ import { padSigReset } from './pad.js';
 import { clamp } from '../core/constants.js';
 import { addPhrase, addSlot, newSong, nextPhraseName, normalizeSong, phraseMeter } from '../core/song.js';
 import { midiFileBytes } from '../core/midifile.js';
-import { $, curPhrase, curPattern, curSection, curTrack, preloadSamples, sampler, state, synth } from './state.js';
+import { $, curPhrase, curPattern, curSection, curInstrument, preloadSamples, sampler, state, synth } from './state.js';
 import { withSongUndo, withUndo, leavePattern } from './edit.js';
 import { articulationSel, batchOp, deselect } from './selection.js';
 import { cellKinds } from './layout.js';
@@ -20,10 +20,10 @@ import { playHere } from './songview.js';
 
 export function selectSong(i) {
   stopAll();
-  state.songIndex = i; state.song = state.songs[i]; state.phr = 0; state.section = 0; state.patternEdit = null; state.songCursor = { row: 0, track: 0 }; state.rev++;
+  state.songIndex = i; state.song = state.songs[i]; state.phr = 0; state.section = 0; state.patternEdit = null; state.songCursor = { row: 0, instrument: 0 }; state.rev++;
   placeholdersFor(state.song);
   state.undo.length = 0; state.redo.length = 0;
-  state.cursor = { row: 0, track: state.song.instruments.length ? 0 : -1, cell: 0 }; state.scrollX = 0; state.typing = null; state.message = '';
+  state.cursor = { row: 0, instrument: state.song.instruments.length ? 0 : -1, cell: 0 }; state.scrollX = 0; state.typing = null; state.message = '';
   syncSongUI(); syncPhraseUI(); state.dirty = true;
   preloadSamples();
 }
@@ -106,7 +106,7 @@ for (const box of document.querySelectorAll('input[data-show]')) {
   box.onchange = e => {
     state.show[e.target.dataset.show] = e.target.checked;
     try { localStorage.setItem('tutti.show.v1', JSON.stringify(state.show)); } catch { /* no storage */ }
-    const tr = curTrack(); if (tr) state.cursor.cell = Math.min(state.cursor.cell, cellKinds(tr).length - 1);
+    const tr = curInstrument(); if (tr) state.cursor.cell = Math.min(state.cursor.cell, cellKinds(tr).length - 1);
     deselect(); padSigReset(); state.dirty = true;
   };
 }

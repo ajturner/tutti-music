@@ -6,7 +6,7 @@ const SHELL = 'tutti-shell-' + VERSION, SAMPLES = 'tutti-samples-v1';
 const SHELL_FILES = [
   './', 'index.html', 'help.html', 'styles.css', 'manifest.webmanifest', 'assets/icon-192.png', 'assets/icon-512.png',
   'src/main.js', 'src/version.js',
-  'src/core/constants.js', 'src/core/instruments.js', 'src/core/song.js', 'src/core/render.js', 'src/core/scheduler.js', 'src/core/synth.js',
+  'src/core/constants.js', 'src/core/sounds.js', 'src/core/song.js', 'src/core/render.js', 'src/core/scheduler.js', 'src/core/synth.js',
   'src/core/midi.js', 'src/core/midifile.js', 'src/core/examples.js', 'src/core/edit.js', 'src/core/scales.js', 'src/core/sampler.js',
   'src/ui/state.js', 'src/ui/layout.js', 'src/ui/sync.js', 'src/ui/edit.js', 'src/ui/selection.js', 'src/ui/transport.js', 'src/ui/keyboard.js',
   'src/ui/pointer.js', 'src/ui/draw.js', 'src/ui/gamepad.js', 'src/ui/pad.js', 'src/ui/midi-in.js', 'src/ui/toolbar.js', 'src/ui/storage.js',

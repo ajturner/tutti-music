@@ -2,8 +2,8 @@
 import { inScale } from '../core/scales.js';
 import { FX_COMMANDS } from '../core/render.js';
 import { ART } from '../core/constants.js';
-import { INST } from '../core/instruments.js';
-import { $, KEYMAP, activeKey, curTrack, sched, state, tracksShown } from './state.js';
+import { SOUND } from '../core/sounds.js';
+import { $, KEYMAP, activeKey, curInstrument, sched, state, instrumentsShown } from './state.js';
 import { currentCell } from './layout.js';
 import { moveCell, moveRow, cursorToInstrument, setOctave, setStep, typeIntoCell, undo, placementHere, editPatternHere, transposePlacement, shiftPlacement, octavePlacement, dynamicsPlacement, repeatPlacement } from './edit.js';
 import { placementLabel } from '../core/song.js';
@@ -26,7 +26,7 @@ export function padButton(label, cls, fn, title) {
 }
 export function syncPad() {
   if (!state.pad) return;
-  const cell = currentCell(), tr = curTrack();
+  const cell = currentCell(), tr = curInstrument();
   const here = ['note', 'vel', 'art'].includes(cell.kind) ? placementHere() : null;
   const sig = [cell.kind, tr ? tr.sound : '', state.octave, state.step, sched.playing ? 1 : 0, state.selectMode ? 1 : 0, JSON.stringify(activeKey()), here ? placementLabel(here.placement, here.pattern.name) : ''].join(':');
   if (sig === padSig) return; padSig = sig;
@@ -54,7 +54,7 @@ export function syncPad() {
     const gap = document.createElement('span'); keys.appendChild(gap);
     for (const d of '0123456789abcdef') keys.appendChild(padButton(d.toUpperCase(), '', () => typeIntoCell(d)));
   } else if (cell.kind === 'art') {
-    const arts = INST[tr.sound].articulations;
+    const arts = SOUND[tr.sound].articulations;
     keys.style.setProperty('--cols', arts.length * 2);
     arts.forEach((a, i) => keys.appendChild(padButton(a, 'small', () => typeIntoCell(String(i + 1)))));
   } else {
@@ -82,8 +82,8 @@ export function syncSelBar() {
   const bar = $('selbar'); bar.hidden = !show;
   if (!show) { selBarSig = ''; return; }
   const rect = selRect();
-  const tracks = new Set(selCells(rect).map(c => c.track).filter(t => t >= 0));
-  const arts = tracks.size ? [...new Set([...tracks].flatMap(t => INST[tracksShown()[t].sound].articulations))] : [];
+  const instruments = new Set(selCells(rect).map(c => c.instrument).filter(t => t >= 0));
+  const arts = instruments.size ? [...new Set([...instruments].flatMap(t => SOUND[instrumentsShown()[t].sound].articulations))] : [];
   const sig = [rect.r0, rect.r1, rect.g0, rect.g1, arts.join(','), state.sel ? 1 : 0].join('|');
   if (sig === selBarSig) return; selBarSig = sig;
   $('selInfo').textContent = state.sel ? (rect.r1 - rect.r0 + 1) + ' rows × ' + (rect.g1 - rect.g0 + 1) + ' cells' : 'cursor cell';

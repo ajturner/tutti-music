@@ -1,5 +1,5 @@
 // Game controller bindings (LSDJ-style), polled every frame.
-import { curPhrase, curTrack, rowsPerBar, sched, state } from './state.js';
+import { curPhrase, curInstrument, rowsPerBar, sched, state } from './state.js';
 import { currentCell } from './layout.js';
 import { audition, moveCell, moveRow, cursorToInstrument, noteCovering, nudgeArticulation, nudgeCell, tapCell, undo } from './edit.js';
 import { clearSel, copySel, cutSel, duplicateSel, pasteSel, selExtend } from './selection.js';
@@ -43,10 +43,10 @@ export function pollGamepad(now) {
   if (fire.rb && held.back) { gamepad.backUsed = true; if (state.level === 'song') songKey({ key: 'Enter' }); else levelDown(); return; }
   if (state.level === 'song') {   // the overview: the d-pad moves the cell cursor, A opens, Start plays from here
     const c = state.songCursor;
-    if (fire.up) setSongCursor(c.row - 1, c.track, true);
-    if (fire.down) setSongCursor(c.row + 1, c.track, true);
-    if (fire.left || fire.lb) setSongCursor(c.row, c.track - 1, true);
-    if (fire.right || fire.rb) setSongCursor(c.row, c.track + 1, true);
+    if (fire.up) setSongCursor(c.row - 1, c.instrument, true);
+    if (fire.down) setSongCursor(c.row + 1, c.instrument, true);
+    if (fire.left || fire.lb) setSongCursor(c.row, c.instrument - 1, true);
+    if (fire.right || fire.rb) setSongCursor(c.row, c.instrument + 1, true);
     if (fire.aUp) songKey({ key: 'Enter' });
     if (fire.start) { if (held.back) { gamepad.backUsed = true; playSong(); } else songKey({ key: ' ' }); }
     if (fire.backUp && !gamepad.backUsed) undo();
@@ -61,7 +61,7 @@ export function pollGamepad(now) {
   if (fire.right) held.b ? grow(0, 1) : held.a ? edit(big()) : moveCell(1);
   if (fire.aUp && !gamepad.aUsed) { if (held.back) { gamepad.backUsed = true; pasteSel(); } else tapCell(); }
   if (fire.bUp && !gamepad.bUsed) { if (held.back) { gamepad.backUsed = true; copySel(); } else if (state.sel) clearSel(); else clearCell(); }
-  if (fire.x) { if (held.back) { gamepad.backUsed = true; cutSel(); } else { const tr = curTrack(); if (tr) { const ev = noteCovering(curPhrase(), tr.id, currentCell().col | 0, state.cursor.row); if (ev) audition(tr, ev.pitch, ev.art); } } }
+  if (fire.x) { if (held.back) { gamepad.backUsed = true; cutSel(); } else { const tr = curInstrument(); if (tr) { const ev = noteCovering(curPhrase(), tr.id, currentCell().col | 0, state.cursor.row); if (ev) audition(tr, ev.pitch, ev.art); } } }
   if (fire.y) { if (held.back) { gamepad.backUsed = true; duplicateSel(); } else nudgeArticulation(1); }
   if (fire.lb) cursorToInstrument(-1);
   if (fire.rb) cursorToInstrument(1);

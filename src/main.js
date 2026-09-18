@@ -1,7 +1,7 @@
 // Tutti entry point: wires the UI modules, starts the draw loop, and exposes the app API on window.tutti
 // (used by the browser tests and available to any host that embeds the tracker).
 import * as core_constants from './core/constants.js';
-import * as core_instruments from './core/instruments.js';
+import * as core_instruments from './core/sounds.js';
 import * as core_song from './core/song.js';
 import * as core_render from './core/render.js';
 import * as core_scheduler from './core/scheduler.js';

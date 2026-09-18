@@ -1,14 +1,14 @@
-// Song data model: tracks, patterns, phrases, sections, the arrangement, file-format identity and
+// Song data model: instruments, patterns, phrases, sections, the arrangement, file-format identity and
 // normalisation of loaded files. Vocabulary and rules: docs/domain.md.
-import { DEFAULT_TRACKS, INST } from './instruments.js';
+import { ORCHESTRA, SOUND } from './sounds.js';
 import { effectiveKey, transposeDiatonic } from './scales.js';
 
 // ---- Song model ------------------------------------------------------------
 // song        { title, bpm, key, banks, instruments:[instrument], patterns:[pattern], phrases:[phrase], sections:[section], arrangement:[item] }
 // arrangement [{ section: id, repeat }]            the sections in playing order
 // section     { id, name, key, phrases:[{ phrase: id, repeat }] }   a named span: intro, verse, A, bridge, coda
-// phrase      { id, name, rows, ticksPerRow, meter:[beats, unit], groove, key, tempo:[point], material:{ trackId: material } }
-//             a few bars for every track; the unit the grid shows and the only owner of time
+// phrase      { id, name, rows, ticksPerRow, meter:[beats, unit], groove, key, tempo:[point], material:{ instrumentId: material } }
+//             a few bars for every instrument; the unit the grid shows and the only owner of time
 // material    { notes:[note], dyn:[point], expr:[point], fx:[fx], placements:[placement] }
 // note        { tick, len, pitch, vel, col, art }   ticks relative to the phrase or pattern; col = note column
 // point       { tick, value, interp }               interp 'lin' ramps to the next point, 'step' holds
@@ -22,7 +22,7 @@ export const phraseMeter = phr => phr.meter || [4, 4];
 // File format identity. Saved files carry these so other tools can recognise them; see schema/tutti-song.schema.json.
 export const SONG_SCHEMA = 'https://ajturner.github.io/tutti-music/schema/tutti-song.schema.json';
 export const SONG_FORMAT = 'tutti-song';
-export const SONG_VERSION = 4;   // 4: sections arranged into a song, phrases as the multi-track block, patterns placed with transformations
+export const SONG_VERSION = 4;   // 4: sections arranged into a song, phrases as the multi-instrument block, patterns placed with transformations
 export const newUid = () => (globalThis.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 export function newSong() {
   const song = { $schema: SONG_SCHEMA, format: SONG_FORMAT, version: SONG_VERSION, uid: newUid(), title: 'Untitled', notes: '', bpm: 100, key: null, banks: [], instruments: [], patterns: [], phrases: [newPhrase('A1')], sections: [], arrangement: [] };
@@ -31,7 +31,7 @@ export function newSong() {
 // A new song starts with no instruments: the composer chooses the players. This one seats the standard orchestra,
 // for the orchestral examples and for tests.
 export function orchestraSong() {
-  const song = newSong(); song.banks = ['orchestra']; song.instruments = DEFAULT_TRACKS.map(t => instrumentDefaults(Object.assign({}, t)));
+  const song = newSong(); song.banks = ['orchestra']; song.instruments = ORCHESTRA.map(t => instrumentDefaults(Object.assign({}, t)));
   return song;
 }
 const fillMaterial = m => { m.notes = m.notes || []; m.dyn = m.dyn || []; m.expr = m.expr || []; m.fx = m.fx || []; m.placements = m.placements || []; return m; };
@@ -42,7 +42,8 @@ const uniqueId = (list, base, self) => { let id = base, n = 2; while (list.some(
 // Accept a parsed JSON object as a song. Files older than format 4 are refused (docs/domain.md, Compatibility);
 // missing optional fields are filled in the order the loader rules list.
 export function normalizeSong(s, fallbackTitle) {
-  // Drafts of format 4 made before instruments had their own settings called them tracks: read them once, save them new.
+  // Drafts of format 4 made before instruments had their own settings called them `tracks`, each naming an `instrument`:
+  // read them once, save them new.
   if (s && typeof s === 'object' && !Array.isArray(s.instruments) && Array.isArray(s.tracks)) { const { tracks, ...rest } = s; s = Object.assign(rest, { instruments: tracks.map(({ instrument, ...t }) => Object.assign({ sound: instrument }, t)) }); }
   if (!s || typeof s !== 'object' || !Array.isArray(s.phrases) || !Array.isArray(s.instruments) || !s.phrases.length) throw new Error('not a Tutti song');
   if (s.format != null && s.format !== SONG_FORMAT) throw new Error('unknown format ' + s.format);
@@ -50,7 +51,7 @@ export function normalizeSong(s, fallbackTitle) {
   if (s.version > SONG_VERSION) throw new Error('song version ' + s.version + ' is newer than this app');
   const out = Object.assign({ $schema: SONG_SCHEMA, format: SONG_FORMAT, notes: '', bpm: 100, key: null, banks: [], patterns: [], sections: [], arrangement: [] }, s, { version: SONG_VERSION });
   if (!Array.isArray(out.banks)) out.banks = [];
-  if (!out.banks.includes('orchestra') && out.instruments.some(t => INST[t.sound] && INST[t.sound].bank === 'orchestra')) out.banks.unshift('orchestra');
+  if (!out.banks.includes('orchestra') && out.instruments.some(t => SOUND[t.sound] && SOUND[t.sound].bank === 'orchestra')) out.banks.unshift('orchestra');
   if (!out.uid) out.uid = newUid();
   if (!out.title) out.title = fallbackTitle || 'Untitled';
   if (!Array.isArray(out.patterns)) out.patterns = [];
@@ -66,8 +67,8 @@ export function normalizeSong(s, fallbackTitle) {
   out.instruments = out.instruments.map(instrumentDefaults);
   return out;
 }
-export function materialOf(phr, trackId) {
-  const m = phr.material[trackId] || (phr.material[trackId] = newMaterial());
+export function materialOf(phr, instrumentId) {
+  const m = phr.material[instrumentId] || (phr.material[instrumentId] = newMaterial());
   return fillMaterial(m);
 }
 
@@ -91,8 +92,8 @@ export function laneRemove(points, tick) {
   if (i >= 0) points.splice(i, 1);
 }
 
-// ---- Track operations ---------------------------------------------------------------------------
-// Tracks are song-level: phrases key their material by track id, so removing a track drops that material.
+// ---- Instrument operations ---------------------------------------------------------------------------
+// Instruments are song-level: phrases key their material by instrument id, so removing a instrument drops that material.
 export function freeChannel(song) {
   const used = new Set(song.instruments.map(t => t.channel));
   for (let c = 1; c <= 16; c++) if (c !== 10 && !used.has(c)) return c;
@@ -111,12 +112,12 @@ export function instrumentDefaults(tr) {
   return tr;
 }
 export const isShaped = tr => Object.entries(INSTRUMENT_SETTINGS).some(([f, [, , d]]) => tr[f] !== d);
-export function addInstrument(song, instrumentId, opts = {}) {
-  const ins = INST[instrumentId]; if (!ins) throw new Error('unknown sound ' + instrumentId);
+export function addInstrument(song, soundId, opts = {}) {
+  const ins = SOUND[soundId]; if (!ins) throw new Error('unknown sound ' + soundId);
   if (ins.bank && ins.bank !== 'missing') { song.banks = song.banks || []; if (!song.banks.includes(ins.bank)) song.banks.push(ins.bank); }
-  let id = instrumentId, n = 2;
-  while (song.instruments.some(t => t.id === id)) id = instrumentId + '-' + n++;
-  const tr = instrumentDefaults({ id, name: opts.name || ins.name, sound: instrumentId, channel: opts.channel || freeChannel(song), columns: 1, mute: false, volume: 100, pan: 64 });
+  let id = soundId, n = 2;
+  while (song.instruments.some(t => t.id === id)) id = soundId + '-' + n++;
+  const tr = instrumentDefaults({ id, name: opts.name || ins.name, sound: soundId, channel: opts.channel || freeChannel(song), columns: 1, mute: false, volume: 100, pan: 64 });
   const at = opts.index == null ? song.instruments.length : opts.index;
   song.instruments.splice(at, 0, tr);
   return tr;
@@ -143,17 +144,17 @@ export function moveInstrument(song, index, d) {
   return true;
 }
 // Give an instrument another sound; articulations the new sound lacks fall back to its default.
-export function setInstrumentSound(song, id, instrumentId) {
-  const ins = INST[instrumentId], tr = song.instruments.find(t => t.id === id); if (!ins || !tr) return false;
+export function setInstrumentSound(song, id, soundId) {
+  const ins = SOUND[soundId], tr = song.instruments.find(t => t.id === id); if (!ins || !tr) return false;
   if (ins.bank && ins.bank !== 'missing') { song.banks = song.banks || []; if (!song.banks.includes(ins.bank)) song.banks.push(ins.bank); }
-  tr.sound = instrumentId;
+  tr.sound = soundId;
   for (const p of song.phrases) { const m = p.material[id]; if (m) for (const n of m.notes) if (n.art && !ins.articulations.includes(n.art)) n.art = null; }
   return true;
 }
 
 // ---- Patterns and placements --------------------------------------------------------------------
-// A pattern is one track's material of a fixed size kept once on the song; a placement plays it at a row of a
-// track's material, transposed and repeated. A placement never copies: editing the pattern changes every placement.
+// A pattern is one instrument's material of a fixed size kept once on the song; a placement plays it at a row of a
+// instrument's material, transposed and repeated. A placement never copies: editing the pattern changes every placement.
 export const patternById = (song, id) => (song.patterns || []).find(p => p.id === id) || null;
 export function newPattern(song, name, rows, ticksPerRow = 240, columns = 1) {
   let id = String(name || 'pattern').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'pattern', n = 2;
@@ -185,9 +186,9 @@ export function normalizePlacements(song, m) {
 }
 // Rows a placement covers: [r0, r1] inclusive, clipped to the phrase.
 export function placementRows(phr, p, ptn) { return { r0: p.row, r1: Math.min(phr.rows - 1, p.row + ptn.rows * p.repeat - 1) }; }
-// The placement covering a row of a track's material, if any.
-export function placementAt(song, phr, trackId, row) {
-  const m = phr.material[trackId]; if (!m || !m.placements) return null;
+// The placement covering a row of a instrument's material, if any.
+export function placementAt(song, phr, instrumentId, row) {
+  const m = phr.material[instrumentId]; if (!m || !m.placements) return null;
   for (let i = 0; i < m.placements.length; i++) {
     const p = m.placements[i], ptn = patternById(song, p.pattern); if (!ptn) continue;
     const { r0, r1 } = placementRows(phr, p, ptn);
@@ -214,25 +215,25 @@ export function expandPlacement(song, phr, raw, columns = 4, key = null) {
   }
   return out;
 }
-// Only what the placements of a track produce (drawn dimmed under the loose material).
-export function expandPlacements(song, phr, trackId, columns = 4, key = null) {
-  const m = phr.material[trackId], out = newMaterial(); if (!m) return out;
+// Only what the placements of a instrument produce (drawn dimmed under the loose material).
+export function expandPlacements(song, phr, instrumentId, columns = 4, key = null) {
+  const m = phr.material[instrumentId], out = newMaterial(); if (!m) return out;
   for (const p of m.placements || []) { const x = expandPlacement(song, phr, p, columns, key); out.notes.push(...x.notes); out.dyn.push(...x.dyn); out.expr.push(...x.expr); out.fx.push(...x.fx); }
   return out;
 }
-// A track's material with every placement expanded into plain notes, lanes and fx: what the renderer plays.
-// Everything a track sounds in a phrase comes from that phrase, so this is the whole story for the track.
-export function expandMaterial(song, phr, trackId, columns = 4, key = null) {
-  const m = phr.material[trackId]; if (!m) return null;
+// A instrument's material with every placement expanded into plain notes, lanes and fx: what the renderer plays.
+// Everything a instrument sounds in a phrase comes from that phrase, so this is the whole story for the instrument.
+export function expandMaterial(song, phr, instrumentId, columns = 4, key = null) {
+  const m = phr.material[instrumentId]; if (!m) return null;
   const out = { notes: m.notes.slice(), dyn: m.dyn.slice(), expr: m.expr.slice(), fx: (m.fx || []).slice() };
-  const x = expandPlacements(song, phr, trackId, columns, key);
+  const x = expandPlacements(song, phr, instrumentId, columns, key);
   out.notes.push(...x.notes); out.dyn.push(...x.dyn); out.expr.push(...x.expr); out.fx.push(...x.fx);
   for (const k of ['dyn', 'expr', 'fx']) out[k].sort((a, b) => a.tick - b.tick);
   return out;
 }
-// Turn rows r0..r1 of a track's loose material into a pattern placed there. Returns the pattern.
-export function makePattern(song, phr, trackId, r0, r1, name) {
-  const m = materialOf(phr, trackId), tpr = phr.ticksPerRow, t0 = r0 * tpr, t1 = (r1 + 1) * tpr;
+// Turn rows r0..r1 of a instrument's loose material into a pattern placed there. Returns the pattern.
+export function makePattern(song, phr, instrumentId, r0, r1, name) {
+  const m = materialOf(phr, instrumentId), tpr = phr.ticksPerRow, t0 = r0 * tpr, t1 = (r1 + 1) * tpr;
   const inRange = x => x.tick >= t0 && x.tick < t1;
   const notes = m.notes.filter(inRange), columns = Math.max(1, ...notes.map(n => n.col + 1));
   const ptn = newPattern(song, name, r1 - r0 + 1, tpr, columns);
@@ -243,8 +244,8 @@ export function makePattern(song, phr, trackId, r0, r1, name) {
   return ptn;
 }
 // Replace a placement with the loose material it produced. Returns true when something was detached.
-export function detachPlacement(song, phr, trackId, index, columns = 4, key = null) {
-  const m = phr.material[trackId]; if (!m || !m.placements[index]) return false;
+export function detachPlacement(song, phr, instrumentId, index, columns = 4, key = null) {
+  const m = phr.material[instrumentId]; if (!m || !m.placements[index]) return false;
   const x = expandPlacement(song, phr, m.placements[index], columns, key);
   m.placements.splice(index, 1);
   for (const n of x.notes) { delete n.placed; m.notes.push(n); }
@@ -254,8 +255,8 @@ export function detachPlacement(song, phr, trackId, index, columns = 4, key = nu
 // Remove a pattern from the song, detaching every placement of it first.
 export function removePattern(song, id) {
   const i = (song.patterns || []).findIndex(p => p.id === id); if (i < 0) return false;
-  for (const phr of song.phrases) for (const [trackId, m] of Object.entries(phr.material)) {
-    for (let k = (m.placements || []).length - 1; k >= 0; k--) if (m.placements[k].pattern === id) detachPlacement(song, phr, trackId, k, 4, keyFor(song, phr));
+  for (const phr of song.phrases) for (const [instrumentId, m] of Object.entries(phr.material)) {
+    for (let k = (m.placements || []).length - 1; k >= 0; k--) if (m.placements[k].pattern === id) detachPlacement(song, phr, instrumentId, k, 4, keyFor(song, phr));
   }
   song.patterns.splice(i, 1);
   return true;

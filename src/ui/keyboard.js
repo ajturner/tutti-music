@@ -3,7 +3,7 @@ import { curPhrase, rowsPerBar, sched, state } from './state.js';
 import { moveCell, moveRow, cursorToInstrument, redo, setOctave, setRow, setStep, typeIntoCell, undo, placementHere, transposePlacement, shiftPlacement, octavePlacement, dynamicsPlacement, editPatternHere, leavePattern } from './edit.js';
 import { levelUp } from './map.js';
 import { songKey } from './songview.js';
-import { clearSel, copySel, cutSel, deselect, duplicateSel, lengthSel, pasteSel, selExtend, selectTrackOrAll, transposeSel, transposeSelDiatonic } from './selection.js';
+import { clearSel, copySel, cutSel, deselect, duplicateSel, lengthSel, pasteSel, selExtend, selectInstrumentOrAll, transposeSel, transposeSelDiatonic } from './selection.js';
 import { changeColumns, changeLength, clearCell } from './edit.js';
 import { currentCell } from './layout.js';
 import { playPhrase, playSong, stopAll, toggleRecord } from './transport.js';
@@ -39,7 +39,7 @@ export function handleKey(e) {
     const lower = k.toLowerCase();
     if (lower === 'z' && !sh) { undo(); return true; }
     if ((lower === 'z' && sh) || lower === 'y') { redo(); return true; }
-    if (lower === 'a') { selectTrackOrAll(); return true; }
+    if (lower === 'a') { selectInstrumentOrAll(); return true; }
     if (k === '?' || (code === 'Slash' && sh)) { openGuide(); return true; }   // ⌘? full guide in a new window
     if (lower === 'c') { copySel(); return true; }
     if (lower === 'x') { cutSel(); return true; }
@@ -78,7 +78,7 @@ export function handleKey(e) {
     else { setOctave(state.octave + 1); state.message = 'Octave ' + state.octave; }
     return true;
   }
-  // Brackets: note length. Shift switches to note columns (divisi) on the track.
+  // Brackets: note length. Shift switches to note columns (divisi) on the instrument.
   if (code === 'BracketLeft' || k === '[' || k === '{') { sh ? changeColumns(-1) : changeLength(-1); return true; }
   if (code === 'BracketRight' || k === ']' || k === '}') { sh ? changeColumns(1) : changeLength(1); return true; }
   switch (k) {

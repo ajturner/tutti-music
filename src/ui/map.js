@@ -23,14 +23,14 @@ export function setLevel(level) {
 }
 // The overview of the whole song.
 export function openSong() { leavePattern(); setLevel('song'); state.message = ''; return true; }
-// A phrase in the grid, seen in one of its sections, with the cursor on a track.
-export function openPhrase(phraseIndex, sectionIndex, trackIndex) {
+// A phrase in the grid, seen in one of its sections, with the cursor on a instrument.
+export function openPhrase(phraseIndex, sectionIndex, instrumentIndex) {
   const song = state.song; if (!song.phrases[phraseIndex]) return false;
   leavePattern();
   state.phr = phraseIndex;
   if (sectionIndex != null && song.sections[sectionIndex]) state.section = sectionIndex;
   else { const sec = sectionsOfPhrase(song, song.phrases[phraseIndex].id)[0]; if (sec && !curSection()) state.section = song.sections.indexOf(sec); }
-  if (trackIndex != null && trackIndex >= 0) { state.cursor.track = Math.min(trackIndex, song.instruments.length - 1); state.cursor.cell = 0; state.ensureVisible = true; }
+  if (instrumentIndex != null && instrumentIndex >= 0) { state.cursor.instrument = Math.min(instrumentIndex, song.instruments.length - 1); state.cursor.cell = 0; state.ensureVisible = true; }
   state.cursor.row = Math.min(state.cursor.row, curPhrase().rows - 1);
   state.sel = null; state.selAnchor = null; state.typing = null; state.message = '';
   setLevel('grid'); syncPhraseUI();

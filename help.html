@@ -225,7 +225,7 @@
 <h2 id="midi">MIDI out, MIDI in, export</h2>
 <h3>Out to a DAW or sampler</h3>
 <p>Open <b>Connect</b>, press <b>Enable MIDI</b> and choose an output. On macOS open Audio MIDI Setup → IAC Driver and tick <i>Device is online</i>; on Windows install loopMIDI and add a port. In Bitwig add Settings → Controllers → Generic → MIDI Keyboard with the IAC bus as input, set each instrument instrument's note input to that controller on the channel shown in Tutti's header, and arm it.</p>
-<p>Each instrument sends on its own channel. Articulation keyswitches default to C1–G1 in list order (Kontakt shows these as C0–G0); the dynamics lane drives CC1 and the expression lane CC11; the mixer sends CC7 and CC10. Edit the instrument table in <code>src/core/instruments.js</code> to match your library.</p>
+<p>Each instrument sends on its own channel. Articulation keyswitches default to C1–G1 in list order (Kontakt shows these as C0–G0); the dynamics lane drives CC1 and the expression lane CC11; the mixer sends CC7 and CC10. Edit the sound table in <code>src/core/sounds.js</code> to match your library.</p>
 <h3>In from a keyboard</h3>
 <p>Choose an input after enabling MIDI. Played notes go into the cursor cell with their velocity and advance by step; chords spread across note columns. The sustain pedal skips a step, the mod wheel writes dynamics. WebMIDI is not available on iOS.</p>
 <h3>Real-time record</h3>

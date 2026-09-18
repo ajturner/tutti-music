@@ -7,4 +7,4 @@
 - [x] Tests (core, schema, browser), guide, README, domain model, specs
 - [x] New songs start with no instruments: empty state, + instrument in the workspace, panel opens on New with the sounds showing; `orchestraSong()` for examples and tests
 - [x] Order and remove in the row when the panel is wide (container query), with the details otherwise
-- [ ] After approval: mechanical rename of code identifiers and the bank file key
+- [x] After approval: mechanical rename of code identifiers (`src/core/sounds.js`, `SOUND`/`SOUNDS`, `soundId`, `instrumentId`, `curInstrument`, `instrumentsShown`, `instrumentRef`, `ev.instrument`, `cursor.instrument`, `ORCHESTRA`, `SYNTHS`); the bank file keeps its `instruments` key

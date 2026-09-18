@@ -7,4 +7,4 @@ The song has **instruments**, each made from a **sound**. An instrument carries 
 - **Modified:** `instruments-and-mixer` (was tracks-and-mixer), `sampled-orchestra`, `responsive-layout`, `song-model`
 - **Renamed in place, wording only:** capability `instruments` is now `sounds`; "track" reads "instrument" in every spec except where MIDI file tracks are meant
 ## Non-goals
-Renaming identifiers inside the code (`trackId`, `curTrack`, `INST`, `ev.track`): deferred to one mechanical commit after the direction is approved, so fixes to the format 4 branch keep merging cleanly. Renaming the `instruments` key inside bank.json files. Per-instrument keyswitch maps. Applying tune to MIDI out.
+Renaming the `instruments` key inside bank.json files (the loader's word for a bank's list stays, so the sample trees do not change). Per-instrument keyswitch maps. Applying tune to MIDI out.

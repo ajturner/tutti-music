@@ -1,6 +1,6 @@
 // Standard MIDI File (type 1) writer.
 import { PPQ, clamp } from './constants.js';
-import { INST } from './instruments.js';
+import { SOUND } from './sounds.js';
 import { phraseMeter, sectionById } from './song.js';
 import { renderSong } from './render.js';
 
@@ -43,12 +43,12 @@ export function midiFileBytes(song) {
   }
   tracks.push(t0.bytes(r.lengthTicks));
   for (const tr of song.instruments) {
-    const ins = INST[tr.sound], ch = (tr.channel - 1) & 15;
+    const ins = SOUND[tr.sound], ch = (tr.channel - 1) & 15;
     const w = new TrackWriter();
     w.meta(0, 0x03, strBytes(tr.name));
     w.event(0, [0xC0 | ch, ins.program & 127]);
     for (const e of r.events) {
-      if (e.track !== tr.id) continue;
+      if (e.instrument !== tr.id) continue;
       switch (e.type) {
         case 'on':  w.event(e.tick, [0x90 | ch, e.pitch & 127, clamp(e.vel | 0, 1, 127)]); break;
         case 'off': w.event(e.tick, [0x80 | ch, e.pitch & 127, 0]); break;
