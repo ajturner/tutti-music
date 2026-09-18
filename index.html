@@ -130,6 +130,7 @@
         <label title="Scroll the grid with playback"><input id="follow" type="checkbox" checked> follow playback</label>
         <label title="Show the mixer beside the grid"><input id="mixerToggle" type="checkbox"> mixer</label>
         <label title="On-screen entry pad under the grid"><input id="padToggle" type="checkbox"> entry pad</label>
+        <label title="The whole app on one phone screen with an eight-button pad, in the image of the M8"><input id="pocketToggle" type="checkbox"> pocket view</label>
       </div>
       <div class="group listen" data-label="listen">
         <label title="Hear the preview while editing and playing"><input id="preview" type="checkbox" checked> preview</label>
@@ -145,6 +146,17 @@
   </section>
 </div>
 <nav id="map" aria-label="Where you are: song, section, phrase, pattern"></nav>
+<section id="pocket" hidden tabindex="0" aria-label="Pocket view">
+  <div id="pkTop"><span id="pkLevels"></span><span id="pkNow"></span><button id="pkMenuBtn" title="Menu: new, save, load, songs, full view (Esc)">≡</button></div>
+  <div id="pkBody"></div>
+  <div id="pkMsg"></div>
+  <div id="pkLive"></div>
+  <div id="pkPad">
+    <div class="pkDpad"><button data-btn="up" aria-label="Up">▲</button><button data-btn="left" aria-label="Left">◀</button><button data-btn="right" aria-label="Right">▶</button><button data-btn="down" aria-label="Down">▼</button></div>
+    <div class="pkMid"><button data-btn="back" aria-label="Back: hold to modify, tap to undo">back</button><button data-btn="start" aria-label="Start: play or stop">start</button></div>
+    <div class="pkAb"><button data-btn="lb" aria-label="L">L</button><button data-btn="rb" aria-label="R">R</button><button data-btn="b" class="pkB" aria-label="B: clear">B</button><button data-btn="a" class="pkA" aria-label="A: enter, open; hold with a direction to edit">A</button></div>
+  </div>
+</section>
 <div id="workspace">
   <button id="emptyAdd" class="primary" hidden title="A new song has no instruments yet: choose its players">+ instrument</button>
   <main><canvas id="grid" tabindex="0" aria-label="Phrase grid"></canvas></main>

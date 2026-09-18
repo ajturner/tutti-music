@@ -33,6 +33,7 @@ import { restoreSongs } from './ui/storage.js';
 import { VERSION } from './version.js';
 import * as ui_session from './ui/session.js';
 import * as ui_instruments from './ui/instruments.js';
+import * as ui_pocket from './ui/pocket.js';
 import * as ui_map from './ui/map.js';
 import * as ui_songview from './ui/songview.js';
 import * as ui_monitor from './ui/monitor.js';
@@ -75,6 +76,7 @@ window.addEventListener('hashchange', () => {
 setPad(coarsePointer());
 wireMixer();
 wireInstruments();
+ui_pocket.wirePocket();
 restoreHiddenBanks();
 wirePanels();
 wireMap({ focusSection });
@@ -89,4 +91,4 @@ requestAnimationFrame(frame);
 if ('serviceWorker' in navigator && location.protocol.startsWith('http') && !location.search.includes('nosw')) {
   navigator.serviceWorker.register('sw.js').catch(() => { /* offline support is optional */ });
 }
-window.tutti = Object.assign({}, core_constants, core_instruments, core_song, core_render, core_scheduler, core_synth, core_midi, core_midifile, core_examples, core_edit, core_scales, core_sampler, core_banks, ui_state, ui_layout, ui_sync, ui_edit, ui_selection, ui_transport, ui_keyboard, ui_pointer, ui_draw, ui_gamepad, ui_pad, ui_midi_in, ui_toolbar, ui_storage, ui_session, ui_instruments, ui_map, ui_songview, ui_monitor, ui_mixer, ui_panels, { VERSION });
+window.tutti = Object.assign({}, core_constants, core_instruments, core_song, core_render, core_scheduler, core_synth, core_midi, core_midifile, core_examples, core_edit, core_scales, core_sampler, core_banks, ui_state, ui_layout, ui_sync, ui_edit, ui_selection, ui_transport, ui_keyboard, ui_pointer, ui_draw, ui_gamepad, ui_pad, ui_midi_in, ui_toolbar, ui_storage, ui_session, ui_instruments, ui_pocket, ui_map, ui_songview, ui_monitor, ui_mixer, ui_panels, { VERSION });
