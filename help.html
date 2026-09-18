@@ -62,7 +62,7 @@
 <main>
 
 <h2 id="start">Getting started</h2>
-<p class="lead">Tutti is a tracker for orchestral sketches. Time runs down the screen in rows; each instrument is an instrument with its own cells for notes, velocity, articulation, dynamics and effects. Notes go out as MIDI to a DAW or sample library, or play through a built-in sketch synth.</p>
+<p class="lead">Tutti is a tracker for orchestral sketches. Time runs down the screen in rows; each instrument has its own cells for notes, velocity, articulation, dynamics and effects. Notes go out as MIDI to a DAW or sample library, or play through a built-in sketch synth.</p>
 <ol>
   <li>Open <b>Files</b> in the menu bar, pick a built-in song and press <kbd>Space</kbd> to loop the phrase. <kbd>Esc</kbd> stops.</li>
   <li>Click a note cell and type notes on the piano-style keys (<kbd>Z</kbd> is C, <kbd>S</kbd> is C♯, <kbd>X</kbd> is D…). <kbd>-</kbd> and <kbd>=</kbd> change the octave, with <kbd>⇧</kbd> the step; the status line shows both.</li>
@@ -224,7 +224,7 @@
 
 <h2 id="midi">MIDI out, MIDI in, export</h2>
 <h3>Out to a DAW or sampler</h3>
-<p>Open <b>Connect</b>, press <b>Enable MIDI</b> and choose an output. On macOS open Audio MIDI Setup → IAC Driver and tick <i>Device is online</i>; on Windows install loopMIDI and add a port. In Bitwig add Settings → Controllers → Generic → MIDI Keyboard with the IAC bus as input, set each instrument instrument's note input to that controller on the channel shown in Tutti's header, and arm it.</p>
+<p>Open <b>Connect</b>, press <b>Enable MIDI</b> and choose an output. On macOS open Audio MIDI Setup → IAC Driver and tick <i>Device is online</i>; on Windows install loopMIDI and add a port. In Bitwig add Settings → Controllers → Generic → MIDI Keyboard with the IAC bus as input, set each instrument track's note input to that controller on the channel shown in Tutti's header, and arm it.</p>
 <p>Each instrument sends on its own channel. Articulation keyswitches default to C1–G1 in list order (Kontakt shows these as C0–G0); the dynamics lane drives CC1 and the expression lane CC11; the mixer sends CC7 and CC10. Edit the sound table in <code>src/core/sounds.js</code> to match your library.</p>
 <h3>In from a keyboard</h3>
 <p>Choose an input after enabling MIDI. Played notes go into the cursor cell with their velocity and advance by step; chords spread across note columns. The sustain pedal skips a step, the mod wheel writes dynamics. WebMIDI is not available on iOS.</p>
