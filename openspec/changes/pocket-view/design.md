@@ -19,7 +19,7 @@ Portrait, monospace, four bands. Nothing scrolls except the body, and it scrolls
 └──────────────────────────────────┘
 ```
 
-The context line is the map, in the M8's letters: **SO SE PH PA IN**. Left and right on that line are not needed; the levels are reached the way the controller already does it: Back+L goes out, Back+R goes in, and **IN** is Back+Start held... no: **IN** is a level beside the others, reached with Back+R from the Phrase level's instrument column or from the menu.
+The context line is the map, in the M8's letters: **SO SE PH PA IN**, each a tab to tap. On the pad the two shoulder buttons are **out** and **in** (Back held with them does the same, as on a controller); **IN** is one tap away on the line from anywhere. A legend under the level says what the buttons do there, because a chord is not something a thumb discovers.
 
 ## The levels
 

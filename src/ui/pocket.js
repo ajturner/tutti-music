@@ -22,6 +22,16 @@ import { addSong, download, selectSong } from './toolbar.js';
 import { markEdited } from './storage.js';
 
 const KEY = 'tutti.pocket.v1';
+// What the buttons do here, one line under the level. A+ means A held while pressing.
+const HINTS = {
+  song: '<b>A</b> open phrase · <b>in</b> section · <b>A+▲▼</b> repeat · <b>B</b> remove · <b>Start</b> play from here',
+  section: '<b>A</b> open phrase · <b>out</b> song · <b>in</b> phrase · <b>A+▲▼</b> repeat · <b>B</b> remove · <b>Back+◀▶</b> other section',
+  phrase: '<b>A</b> note · <b>A+▲▼</b> pitch · <b>B</b> clear · <b>out</b> section · <b>in</b> pattern under ▸ · <b>Start</b> loop',
+  pattern: '<b>A+▲▼</b> pitch · <b>B</b> clear · <b>out</b> phrase · <b>Start</b> loop',
+  instrument: '<b>A+◀▶▲▼</b> value · <b>A</b> pick sound · <b>Back+A</b> duplicate · <b>Back+◀▶</b> other instrument · <b>B</b> on name removes',
+  sounds: '<b>A</b> pick · <b>out</b> or <b>B</b> back',
+  menu: '<b>A</b> pick · <b>out</b> or <b>B</b> back',
+};
 export const LEVELS = [['song', 'SO', 'Song: the arrangement'], ['section', 'SE', 'Section: its phrases'], ['phrase', 'PH', 'Phrase: the notes'], ['pattern', 'PA', 'Pattern: one voice'], ['instrument', 'IN', 'Instruments: sound, mix, tuning']];
 const FIELDS = [['name', 'name'], ['sound', 'sound'], ['volume', 'volume'], ['pan', 'pan'], ['mute', 'mute'], ['solo', 'solo'], ['tune', 'tune'], ['cents', 'cents'], ['trim', 'trim dB'], ['release', 'release'], ['channel', 'channel'], ['columns', 'columns']];
 let savedShow = null, sig = '', lastPlay = '', lastLive = '';
@@ -58,12 +68,12 @@ export function pocketLevel() { const p = pk(); if (!p) return null; if (p.menu)
 export function goLevel(level, opts = {}) {
   const p = pk(), song = state.song; if (!p) return;
   p.menu = null; p.sounds = null;
-  if (level === 'pattern') { if (!curPattern() && !editPatternHere()) return; p.level = 'pattern'; setLevel('grid'); }
+  if (level === 'pattern') { if (!curPattern() && !editPatternHere()) return false; p.level = 'pattern'; setLevel('grid'); }
   else if (level === 'phrase') { if (opts.phrase != null) openPhrase(opts.phrase, opts.section, opts.instrument); else leavePattern(); setLevel('grid'); p.level = 'phrase'; }
   else if (level === 'section') { const sec = curSection(); if (!sec) { goLevel('song'); return; } openSong(); p.level = 'section'; p.sec.row = Math.max(0, Math.min(p.sec.row, sec.phrases.length)); }
   else if (level === 'instrument') { openSong(); p.level = 'instrument'; p.inst.i = Math.max(0, Math.min(song.instruments.length ? state.cursor.instrument : 0, song.instruments.length - 1)); }
   else { openSong(); p.level = 'song'; const m = songLines(); const at = m.lines.findIndex(l => l.kind === 'phrase' && l.r.pi === state.phr && l.r.block.si === state.section); if (at >= 0) p.song.row = at; p.song.col = Math.max(0, Math.min(state.cursor.instrument, song.instruments.length - 1)); }
-  sig = ''; state.dirty = true;
+  sig = ''; state.dirty = true; return true;
 }
 // Out a level and in a level, in the order of the context line.
 const ORDER = ['song', 'section', 'phrase', 'pattern'];
@@ -72,7 +82,7 @@ export function pocketIn() {
   const l = pocketLevel();
   if (l === 'song') { const line = songLines().lines[pk().song.row]; if (line && line.kind === 'phrase') { openRow(line.r); goLevel('section'); } else if (line && line.kind === 'bar') { state.section = line.b.si; goLevel('section'); } }
   else if (l === 'section') { const sec = curSection(), i = pk().sec.row; if (sec && sec.phrases[i]) goLevel('phrase', { phrase: state.song.phrases.findIndex(x => x.id === sec.phrases[i].phrase), section: state.song.sections.indexOf(sec), instrument: state.cursor.instrument }); }
-  else if (l === 'phrase') goLevel('pattern');
+  else if (l === 'phrase') { if (!goLevel('pattern')) { state.message = 'No pattern under the cursor: a ▸ tag opens one'; after(); } }
 }
 function openRow(r) { state.phr = r.pi; state.section = r.block.si; }
 
@@ -121,8 +131,8 @@ function songInput(fire, held) {
   if (fire.down) { p.row++; clampRow(); after(); return true; }
   if (fire.left) { p.col = Math.max(0, p.col - 1); after(); return true; }
   if (fire.right) { p.col = Math.min(Math.max(0, n - 1), p.col + 1); after(); return true; }
-  if (fire.lb) { for (let i = p.row - 1; i >= 0; i--) if (lines[i].kind === 'bar') { p.row = i; break; } after(); return true; }
-  if (fire.rb) { for (let i = p.row + 1; i < lines.length; i++) if (lines[i].kind === 'bar') { p.row = i; break; } after(); return true; }
+  if (held.back && fire.up) { state.padUsed = true; for (let i = p.row - 1; i >= 0; i--) if (lines[i].kind === 'bar') { p.row = i; break; } after(); return true; }
+  if (held.back && fire.down) { state.padUsed = true; for (let i = p.row + 1; i < lines.length; i++) if (lines[i].kind === 'bar') { p.row = i; break; } after(); return true; }
   if (fire.aUp && !state.padUsed && line) {
     if (line.kind === 'phrase') { openRow(line.r); goLevel('phrase', { phrase: line.r.pi, section: line.b.si, instrument: n ? p.col : null }); }
     else if (line.kind === 'bar') { state.section = line.b.si; state.phr = line.b.rows[0] ? line.b.rows[0].pi : state.phr; goLevel('section'); }
@@ -165,7 +175,7 @@ function sectionInput(fire, held) {
   }
   if (fire.up) { p.row = Math.max(0, p.row - 1); after(); return true; }
   if (fire.down) { p.row = Math.min(n, p.row + 1); after(); return true; }
-  if (fire.lb || fire.rb) { const si = Math.max(0, Math.min(song.sections.length - 1, state.section + (fire.rb ? 1 : -1))); state.section = si; const s2 = song.sections[si]; if (s2.phrases[0]) state.phr = song.phrases.findIndex(x => x.id === s2.phrases[0].phrase); p.row = 0; syncPhraseUI(); after(); return true; }
+  if (held.back && (fire.left || fire.right)) { state.padUsed = true; const si = Math.max(0, Math.min(song.sections.length - 1, state.section + (fire.right ? 1 : -1))); state.section = si; const s2 = song.sections[si]; if (s2.phrases[0]) state.phr = song.phrases.findIndex(x => x.id === s2.phrases[0].phrase); p.row = 0; syncPhraseUI(); after(); return true; }
   if (fire.aUp && !state.padUsed) {
     if (sec.phrases[p.row]) goLevel('phrase', { phrase: song.phrases.findIndex(x => x.id === sec.phrases[p.row].phrase), section: song.sections.indexOf(sec), instrument: state.cursor.instrument });
     else { withSongUndo(() => { const like = curPhrase(); const phr = addPhrase(song, nextPhraseName(song, sec), like); addSlot(song, sec, phr.id); }); after(); }
@@ -237,8 +247,8 @@ function instrumentInput(fire, held) {
   }
   if (fire.up) { p.row = Math.max(0, p.row - 1); after(); return true; }
   if (fire.down) { p.row = Math.min(FIELDS.length, p.row + 1); after(); return true; }
-  if (fire.lb) { p.i = Math.max(0, p.i - 1); state.cursor.instrument = p.i; after(); return true; }
-  if (fire.rb) { p.i = Math.min(n - 1, p.i + 1); state.cursor.instrument = p.i; after(); return true; }
+  if (held.back && fire.left) { state.padUsed = true; p.i = Math.max(0, p.i - 1); state.cursor.instrument = p.i; after(); return true; }
+  if (held.back && fire.right) { state.padUsed = true; p.i = Math.min(n - 1, p.i + 1); state.cursor.instrument = p.i; after(); return true; }
   if (fire.aUp && !state.padUsed) {
     if (held.back) { state.padUsed = true; let made; withSongUndo(() => { made = duplicateInstrument(song, tr.id); }); p.i = song.instruments.indexOf(made); }
     else if (p.row === FIELDS.length) openSounds('add');
@@ -265,15 +275,13 @@ function soundsInput(fire) {
   const p = pk(), s = p.sounds, list = SOUNDS.filter(offered);
   if (fire.up) { s.row = Math.max(0, s.row - 1); after(); return true; }
   if (fire.down) { s.row = Math.min(list.length - 1, s.row + 1); after(); return true; }
-  if (fire.lb) { s.row = Math.max(0, s.row - 8); after(); return true; }
-  if (fire.rb) { s.row = Math.min(list.length - 1, s.row + 8); after(); return true; }
+  if (fire.lb || fire.bUp) { p.sounds = null; after(); return true; }
   if (fire.aUp && list[s.row]) {
     const song = state.song, id = list[s.row].id;
     if (s.mode === 'add') { let made; withSongUndo(() => { made = addInstrument(song, id); }); p.inst.i = song.instruments.indexOf(made); p.inst.row = 1; state.cursor.instrument = p.inst.i; }
     else { const tr = song.instruments[p.inst.i]; if (tr) withSongUndo(() => setInstrumentSound(song, tr.id, id)); }
     preloadSamples(); p.sounds = null; after(); return true;
   }
-  if (fire.bUp) { p.sounds = null; after(); return true; }
   return true;
 }
 
@@ -285,7 +293,7 @@ function menuInput(fire) {
   const p = pk(), m = p.menu, items = menuItems();
   if (fire.up) { m.row = Math.max(0, m.row - 1); after(); return true; }
   if (fire.down) { m.row = Math.min(items.length - 1, m.row + 1); after(); return true; }
-  if (fire.bUp) { p.menu = null; after(); return true; }
+  if (fire.bUp || fire.lb) { p.menu = null; after(); return true; }
   if (fire.aUp) { const [id] = items[m.row]; p.menu = null; menuAction(id); after(); return true; }
   return true;
 }
@@ -307,8 +315,9 @@ export function pocketInput(fire, held) {
   if (fire.a || fire.b || fire.back) state.padUsed = false;
   if (l === 'menu') return menuInput(fire, held);
   if (l === 'sounds') return soundsInput(fire, held);
-  if (fire.lb && held.back) { state.padUsed = true; pocketOut(); return true; }
-  if (fire.rb && held.back) { state.padUsed = true; pocketIn(); return true; }
+  // L goes out a level and R in, with nothing held; Back + L/R does the same, as on a controller
+  if (fire.lb && !held.a && !held.b) { if (held.back) state.padUsed = true; pocketOut(); return true; }
+  if (fire.rb && !held.a && !held.b) { if (held.back) state.padUsed = true; pocketIn(); return true; }
   if (l === 'song') return songInput(fire, held);
   if (l === 'section') return sectionInput(fire, held);
   if (l === 'instrument') return instrumentInput(fire, held);
@@ -330,6 +339,7 @@ export function renderPocket() {
     $('pkBody').innerHTML = l === 'menu' ? menuHtml() : l === 'sounds' ? soundsHtml() : l === 'song' ? songHtml() : l === 'section' ? sectionHtml() : l === 'instrument' ? instrumentHtml() : gridHtml();
     const cur = $('pkBody').querySelector('.pkLine.cur'); if (cur && cur.scrollIntoView) cur.scrollIntoView({ block: 'nearest' });
     $('pkMsg').textContent = state.message || '';
+    $('pkHint').innerHTML = HINTS[l] || '';
     lastPlay = '';
   }
   // the playhead, in the song's words and on the rows
