@@ -12,7 +12,8 @@
   body { height: 100vh; height: 100dvh; margin: 0; background: var(--bg); color: var(--text); font: 13px/1.4 var(--mono); }
   body { display: flex; flex-direction: column; }
   /* Header: two fixed rows. Row 1 is identity and the menu bar; row 2 is the transport. */
-  header { display: flex; flex-direction: column; gap: 4px; padding: 6px 14px 8px; border-bottom: 1px solid var(--line); background: var(--panel); }
+  /* On a phone with a notch the page runs under the status bar (viewport-fit=cover): the first thing on screen keeps clear of it. */
+  header { display: flex; flex-direction: column; gap: 4px; padding: calc(6px + env(safe-area-inset-top)) 14px 8px; border-bottom: 1px solid var(--line); background: var(--panel); }
   header .bar { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: flex-end; }
   #topbar { align-items: center; gap: 6px 12px; }
   #topbar #title { flex: 0 1 18em; min-width: 6em; background: none; border-color: transparent; color: var(--accent); }
