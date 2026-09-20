@@ -890,6 +890,15 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, instrument: st
     check('pocket menu: Full view returns to the full interface with its columns back', !off.pocket && !off.cls && off.grid && off.show === true && off.stored === '0', JSON.stringify(off));
     await page.evaluate(() => { tutti.selectSong(tutti.deleteCurrentSong()); });
   }
+  // a phone with a notch: the page runs under the status bar, so the first thing on screen keeps clear of it
+  const notch = await page.evaluate(async () => {
+    const st = document.createElement('style'); st.textContent = 'header, #pkTop { padding-top: calc(6px + 54px) !important; }'; document.head.append(st);   // what env(safe-area-inset-top) gives on an iPhone
+    const full = document.getElementById('topbar').getBoundingClientRect().top;
+    tutti.setPocket(true); await new Promise(r => setTimeout(r, 200));
+    const pocket = document.getElementById('pkLevels').getBoundingClientRect().top, fits = document.documentElement.scrollHeight <= innerHeight + 1;
+    tutti.setPocket(false); st.remove(); return { full: Math.round(full), pocket: Math.round(pocket), fits };
+  });
+  check('phone: the header and the pocket\'s context line pad by the top safe-area inset, so a notch hides nothing', notch.full >= 54 && notch.pocket >= 54 && notch.fits && /safe-area-inset-top/.test(await page.evaluate(() => [...document.styleSheets].flatMap(ss => { try { return [...ss.cssRules].map(r => r.cssText); } catch { return []; } }).filter(t => /^header |^#pkTop/.test(t)).join(' '))), JSON.stringify(notch));
   check('phone: no errors after interaction', errors.length === 0, errors.join(' | '));
   await ctx.close();
 }

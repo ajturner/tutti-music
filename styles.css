@@ -12,7 +12,8 @@
   body { height: 100vh; height: 100dvh; margin: 0; background: var(--bg); color: var(--text); font: 13px/1.4 var(--mono); }
   body { display: flex; flex-direction: column; }
   /* Header: two fixed rows. Row 1 is identity and the menu bar; row 2 is the transport. */
-  header { display: flex; flex-direction: column; gap: 4px; padding: 6px 14px 8px; border-bottom: 1px solid var(--line); background: var(--panel); }
+  /* On a phone with a notch the page runs under the status bar (viewport-fit=cover): the first thing on screen keeps clear of it. */
+  header { display: flex; flex-direction: column; gap: 4px; padding: calc(6px + env(safe-area-inset-top)) 14px 8px; border-bottom: 1px solid var(--line); background: var(--panel); }
   header .bar { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: flex-end; }
   #topbar { align-items: center; gap: 6px 12px; }
   #topbar #title { flex: 0 1 18em; min-width: 6em; background: none; border-color: transparent; color: var(--accent); }
@@ -392,7 +393,7 @@ body.pocket header, body.pocket #map, body.pocket #workspace, body.pocket #tabs,
 body.pocket { overflow: hidden; }
 #pocket { display: flex; flex-direction: column; height: 100dvh; background: #0B0E1C; color: var(--text); font-family: var(--mono); font-size: 15px; line-height: 1.35; outline: none; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
 #pocket[hidden] { display: none; }
-#pkTop { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-bottom: 1px solid var(--line); background: #10142A; }
+#pkTop { display: flex; align-items: center; gap: 6px; padding: calc(6px + env(safe-area-inset-top)) 8px 6px; border-bottom: 1px solid var(--line); background: #10142A; }
 #pkLevels { display: flex; gap: 3px; }
 #pkLevels button { padding: 4px 7px; min-height: 0; font-size: 12px; font-weight: 700; letter-spacing: .06em; color: var(--dim); background: #171C36; border: 1px solid var(--line); border-radius: 3px; }
 #pkLevels button.on { background: var(--accent); color: var(--bg); border-color: var(--accent); }
