@@ -52,7 +52,8 @@
     <li><a href="#arrange">Sections, arrangement, live</a></li>
     <li><a href="#mixer">Mixer and instruments</a></li>
     <li><a href="#touch">Touch and the pad</a></li>
-    <li><a href="#controller">Game controller</a></li>
+    <li><a href="#pocket">Pocket view</a></li>
+  <li><a href="#controller">Game controller</a></li>
     <li><a href="#midi">MIDI out, MIDI in, export</a></li>
     <li><a href="#files">Songs, autosave, files</a></li>
     <li><a href="#theory">Writing a first phrase</a></li>
@@ -205,6 +206,17 @@
 <h2 id="touch">Touch and the pad</h2>
 <p>On a phone a tab bar at the bottom switches between <b>Song</b> (the workspace: the map, then the Song view or the grid with the pad) and the <b>Files</b>, <b>Instruments</b> and <b>Connect</b> panels, each filling the screen. The map's crumbs switch levels; in the Song view one tap moves the cursor and a second tap opens that phrase on that instrument. ⚙ opens the View sheet; ticking <b>mixer</b> there overlays the mixer on the grid. The grid starts with note columns only so every instrument fits across.</p>
 <p>Tap a cell to place the cursor, drag to scroll, long-press to clear a cell. The pad under the grid appears on touch screens (or tick <b>entry pad</b> in ⚙ View). Its key row follows the cell: a piano for notes, hex for velocity and dynamics, digits for tempo, commands for fx, articulation names for the art cell, and on a placement its transformations (open, ±1, deg↓ deg↑, 8va, soft, loud, rep, detach). The other rows move the cursor, switch instrument, toggle <b>sel</b> (drag selects instead of scrolling), clear, undo, change octave and step, note length, and play.</p>
+
+<h2 id="pocket">Pocket view</h2>
+<p>Tick <b>pocket view</b> in ⚙ View (or add <code>?pocket</code> to the address) and the whole app becomes one phone screen in the image of the M8: a line naming the five levels, <b>SO SE PH PA IN</b>, with the one you are on lit and the playhead in the song's words; the level itself; a readout of what every instrument is sounding; and a pad with the game controller's buttons. Everything works the controller's way: the d-pad moves, <b>A</b> enters or opens, <b>A</b> held with a direction edits the value under the cursor, <b>B</b> clears, <b>Back</b> held modifies (alone it undoes), <b>Start</b> plays and stops, <b>out</b> and <b>in</b> (the shoulder buttons) change level, and the five letters on the line are tabs. A line under the level says what the buttons do there. On a keyboard the arrows, <kbd>X</kbd> (A), <kbd>Z</kbd> (B), <kbd>Shift</kbd> (Back), <kbd>Enter</kbd> (Start) and <kbd>A</kbd> <kbd>S</kbd> (out, in) do the same, and a paired controller keeps working (Back+L/R there).</p>
+<ul>
+  <li><b>Song</b>: the arrangement top to bottom, a bar per section with its repeat, a row per phrase, a cell per instrument reading the placed pattern (<code>Ri</code>), <code>≡≡</code> for notes or <code>··</code>. A opens a phrase on that instrument, A on a bar opens the section, A on the last row adds a section; A + up/down changes a repeat; B takes the phrase or occurrence out; Start plays from here through every repeat, Back+Start from the top; Back+▲▼ jumps between sections.</li>
+  <li><b>Section</b>: its phrases with repeats; A opens or adds, A + up/down changes a repeat, B takes one out, Back+◀▶ changes section, Start loops the section.</li>
+  <li><b>Phrase</b> and <b>Pattern</b>: rows down, instruments across (three at a time), one note per instrument. Left and right step between instruments; the rest is the grid's controller scheme, so A on <code>▸Riff</code> opens the pattern and A + up/down on it transposes. <b>in</b> on a cell with no pattern makes one there, as an M8 chain slot makes a phrase: the notes that follow on that instrument become a pattern placed at the cursor, or an empty bar to write into, and it opens.</li>
+  <li><b>Instruments</b>, one tap away on the line: one instrument as a list of values. A + direction changes the value (by ten with left and right for volume, pan, tune and cents); A on <b>sound</b> or <b>+ instrument</b> picks from the sounds on offer; A on mute or solo toggles it, on the name renames; Back+A duplicates; B on the name removes; Back+◀▶ moves between instruments.</li>
+  <li><b>≡</b> (or <kbd>Esc</kbd>): full view, new song, save, load, and the song list.</li>
+</ul>
+<p>It is the same song, cursor and undo history as the full view, so you can switch back and forth; only the note column shows in the pocket, and your column choices return when you leave.</p>
 
 <h2 id="controller">Game controller</h2>
 <p>Pair a Bluetooth or USB controller and press any button so the browser lists it. The scheme follows LSDJ. Works on iPhone and iPad.</p>

@@ -7,6 +7,7 @@ import { clearCell } from './edit.js';
 import { playPhrase, playSong, stopAll } from './transport.js';
 import { levelDown, levelUp } from './map.js';
 import { setSongCursor, songKey } from './songview.js';
+import { pocketInput } from './pocket.js';
 
 // ---- Game controller ------------------------------------------------------------------------
 // The Gamepad API is polled, so this runs every frame. Standard-mapping indices (Xbox layout):
@@ -18,15 +19,19 @@ export const GP_REPEATS = { up: 1, down: 1, left: 1, right: 1, lt: 2.5, rt: 2.5 
 export function pollGamepad(now) {
   const list = navigator.getGamepads ? navigator.getGamepads() : [];
   let gp = null; for (const g of list) if (g && g.connected) { gp = g; break; }
-  if (!gp) { if (gamepad.name) { gamepad.name = null; gamepad.held = {}; state.dirty = true; } return; }
-  if (gamepad.name !== gp.id) {
+  // The Pocket view's on-screen pad and keys: what is held now, plus any press that came and went between two frames
+  const taps = state.padTaps || {}; state.padTaps = {};
+  const pad = Object.assign({}, taps, state.padHeld || {}), padOn = Object.keys(pad).length > 0;
+  if (!gp && !padOn && !Object.keys(gamepad.held).length) { if (gamepad.name) { gamepad.name = null; state.dirty = true; } return; }
+  if (!gp) gamepad.name = null;
+  else if (gamepad.name !== gp.id) {
     gamepad.name = gp.id; gamepad.held = {}; state.dirty = true;
     if (gp.mapping !== 'standard' && !gamepad.warned) { gamepad.warned = true; state.message = 'Controller reports a non-standard layout; buttons may be shuffled'; }
   }
-  const b = i => { const x = gp.buttons[i]; return !!x && (x.pressed || x.value > 0.5); };
-  const ax = (i, sign) => (gp.axes[i] || 0) * sign > 0.5;
-  const held = { up: b(12) || ax(1, -1), down: b(13) || ax(1, 1), left: b(14) || ax(0, -1), right: b(15) || ax(0, 1),
-                 a: b(0), b: b(1), x: b(2), y: b(3), lb: b(4), rb: b(5), lt: b(6), rt: b(7), back: b(8), start: b(9) };
+  const b = i => { if (!gp) return false; const x = gp.buttons[i]; return !!x && (x.pressed || x.value > 0.5); };
+  const ax = (i, sign) => !!gp && (gp.axes[i] || 0) * sign > 0.5;
+  const held = { up: b(12) || ax(1, -1) || !!pad.up, down: b(13) || ax(1, 1) || !!pad.down, left: b(14) || ax(0, -1) || !!pad.left, right: b(15) || ax(0, 1) || !!pad.right,
+                 a: b(0) || !!pad.a, b: b(1) || !!pad.b, x: b(2), y: b(3), lb: b(4) || !!pad.lb, rb: b(5) || !!pad.rb, lt: b(6), rt: b(7), back: b(8) || !!pad.back, start: b(9) || !!pad.start };
   const fire = {};
   for (const k in held) {
     const was = gamepad.held[k];
@@ -38,6 +43,7 @@ export function pollGamepad(now) {
   if (fire.a) gamepad.aUsed = false;
   if (fire.b) gamepad.bUsed = false;
   if (fire.back) gamepad.backUsed = false;
+  if (state.pocket && pocketInput(fire, held)) return;   // the Pocket view's own levels; its phrase and pattern follow the rules below
   // Back + LB goes out a level (pattern → phrase → song), Back + RB goes in; both work on every level.
   if (fire.lb && held.back) { gamepad.backUsed = true; levelUp(); return; }
   if (fire.rb && held.back) { gamepad.backUsed = true; if (state.level === 'song') songKey({ key: 'Enter' }); else levelDown(); return; }

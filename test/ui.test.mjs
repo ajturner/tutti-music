@@ -829,6 +829,86 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, instrument: st
   check('phone: back at the phrase', await page.evaluate(() => !state.patternEdit && state.level === 'grid'));
   await page.evaluate(() => { tutti.selectSong(tutti.deleteCurrentSong()); });
   await page.screenshot({ path: 'test/out/phone-after.png' });
+  // --- Pocket view: one screen, five levels, the controller's eight buttons on screen ---
+  {
+    const tap = async (btn, ms = 120) => { const b = await (await page.$(`#pkPad [data-btn="${btn}"]`)).boundingBox(); await page.touchscreen.tap(b.x + b.width / 2, b.y + b.height / 2); await page.waitForTimeout(ms); };
+    const hold = async (btn, fn) => { await page.evaluate(b => { state.padHeld[b] = true; }, btn); await page.waitForTimeout(40); await fn(); await page.evaluate(b => { delete state.padHeld[b]; }, btn); await page.waitForTimeout(80); };
+    const pkState = () => page.evaluate(() => ({ level: tutti.pocketLevel(), cur: (document.querySelector('#pkBody .pkLine.cur') || {}).textContent, lit: (document.querySelector('#pkLevels button.on') || {}).dataset?.lvl, phr: state.phr, sec: state.section, row: state.cursor.row, inst: state.cursor.instrument, playing: sched.playing }));
+    await page.evaluate(() => { const i = state.songs.findIndex(s => /Night/.test(s.title)); tutti.selectSong(i); tutti.setPanel('view'); });
+    await page.tap('#pocketToggle'); await page.waitForTimeout(250);
+    const on = await page.evaluate(() => ({ pocket: !!state.pocket, cls: document.body.classList.contains('pocket'), hidden: ['header', '#map', '#workspace', '#tabs', 'footer', '#panels'].map(q => getComputedStyle(document.querySelector(q)).display === 'none'), bands: ['#pkTop', '#pkBody', '#pkLive', '#pkPad'].map(q => document.querySelector(q).getBoundingClientRect().height > 20), fits: document.documentElement.scrollHeight <= innerHeight + 1, pad: document.querySelectorAll('#pkPad [data-btn]').length, levels: [...document.querySelectorAll('#pkLevels button')].map(b => b.textContent).join(' '), stored: localStorage.getItem('tutti.pocket.v1'), show: state.show }));
+    check('pocket: View\'s toggle replaces the whole interface with the four bands, the five levels and the eight-button pad, within the screen', on.pocket && on.cls && on.hidden.every(Boolean) && on.bands.every(Boolean) && on.fits && on.pad === 10 && on.levels === 'SO SE PH PA IN' && on.stored === '1' && !on.show.vel && !on.show.fx, JSON.stringify(on));
+    await page.evaluate(() => tutti.goLevel('song')); await page.waitForTimeout(100);
+    const song0 = await pkState();
+    await tap('down'); await tap('down'); await tap('right');
+    const song1 = await pkState();
+    check('pocket song: the arrangement as rows × instruments, the cursor on the open phrase; the d-pad moves it over bars and phrase rows', song0.lit === 'song' && /^Verse/.test(song0.cur) && /^Drop/.test(song1.cur) && song1.level === 'song', JSON.stringify([song0, song1]));
+    const reps = await page.evaluate(() => [state.song.sections[1].phrases[0].repeat, state.song.arrangement[1].repeat]);
+    await hold('a', () => tap('up'));
+    check('pocket song: A + up on a phrase row raises its repeat', await page.evaluate(r => state.song.sections[1].phrases[0].repeat === r + 1, reps[0]));
+    await tap('up'); await hold('a', () => tap('up'));
+    check('pocket song: A + up on a section bar raises the section\'s repeat', await page.evaluate(r => state.song.arrangement[1].repeat === r + 1, reps[1]));
+    await tap('down'); await tap('a');
+    const ph = await pkState();
+    check('pocket: A on a phrase row opens it on that instrument at the phrase level', ph.level === 'phrase' && ph.lit === 'phrase' && ph.phr === 1 && ph.sec === 1 && ph.inst === 1 && /^00/.test(ph.cur), JSON.stringify(ph));
+    await tap('down'); await tap('down'); await tap('right');
+    const mv = await pkState();
+    check('pocket phrase: down moves rows and right steps to the next instrument', mv.row === 2 && mv.inst === 2, JSON.stringify(mv));
+    const before = await page.evaluate(() => (curPhrase().material[curInstrument().id] || { notes: [] }).notes.filter(n => n.tick === 2 * curPhrase().ticksPerRow).length);
+    await tap('a');
+    const entered = await page.evaluate(() => { const m = curPhrase().material[curInstrument().id]; const n = m && m.notes.find(n => n.tick === 2 * curPhrase().ticksPerRow && n.col === 0); return { n: !!n, pitch: n && n.pitch, last: state.lastPitch, row: state.cursor.row, step: state.step }; });
+    for (let i = 0; i < entered.step; i++) await tap('up', 60);
+    await hold('a', () => tap('up'));
+    const wrote = await page.evaluate(() => { const m = curPhrase().material[curInstrument().id]; const n = m && m.notes.find(n => n.tick === 2 * curPhrase().ticksPerRow && n.col === 0); return { pitch: n && n.pitch, row: state.cursor.row, cell: (document.querySelector('#pkBody .pkCell.cur') || {}).textContent }; });
+    check('pocket phrase: A enters the last note and steps on; back on it, A + up raises it, shown in the cell', before === 0 && entered.n && entered.pitch === entered.last && entered.row === 2 + entered.step && wrote.row === 2 && wrote.pitch > entered.pitch && /^[A-G][#-]?-?\d$/.test(wrote.cell), JSON.stringify({ entered, wrote }));
+    await tap('b');
+    check('pocket phrase: B clears the note', await page.evaluate(() => !(curPhrase().material[curInstrument().id] || { notes: [] }).notes.some(n => n.tick === 2 * curPhrase().ticksPerRow && n.col === 0)));
+    await tap('start', 500);
+    const pl = await page.evaluate(() => ({ playing: sched.playing, loop: sched.loop, now: document.getElementById('pkNow').textContent, live: document.querySelectorAll('#pkLive span.on').length, row: !!document.querySelector('#pkBody .pkRow.playing') }));
+    check('pocket: Start loops the phrase; the context line and the readout follow', pl.playing && pl.loop && /▶/.test(pl.now) && pl.live > 0, JSON.stringify(pl));
+    await tap('start');
+    await tap('lb');
+    check('pocket: out goes out a level, to the section', (await pkState()).level === 'section');
+    await hold('back', () => tap('lb'));
+    check('pocket: Back + L does the same, to the song', (await pkState()).level === 'song');
+    await tap('rb'); await tap('rb');
+    const back2 = await pkState();
+    check('pocket: in goes in again, song to section to phrase, and the legend names the buttons', back2.level === 'phrase' && /A.*note/.test(await page.evaluate(() => document.getElementById('pkHint').textContent)), JSON.stringify(back2));
+    // in on a cell with no pattern makes one there and opens it; what is written inside plays back in the phrase
+    await page.evaluate(() => { state.cursor.row = 32; state.cursor.instrument = 2; state.dirty = true; }); await page.waitForTimeout(80);
+    const nPat = await page.evaluate(() => state.song.patterns.length);
+    await tap('rb');
+    const made = await page.evaluate(() => ({ level: tutti.pocketLevel(), n: state.song.patterns.length, editing: !!state.patternEdit, rows: curPhrase().rows, msg: document.getElementById('pkMsg').textContent }));
+    await tap('a');
+    await tap('lb');
+    const placed = await page.evaluate(() => { const m = state.song.phrases[state.phr].material[state.song.instruments[2].id]; const pl = m.placements.find(p => p.row === 32); const ptn = pl && state.song.patterns.find(p => p.id === pl.pattern); return { level: tutti.pocketLevel(), placed: !!pl, notes: ptn ? ptn.material.notes.length : -1, rows: ptn && ptn.rows, tag: (document.querySelector('#pkBody .pkRow[data-row="32"] .pkCell.cur') || {}).textContent }; });
+    check('pocket phrase: in with no pattern under the cursor makes one there from the notes that follow and opens it; a note written inside shows in the phrase as its tag', made.level === 'pattern' && made.n === nPat + 1 && made.editing && made.rows === 32 && /pattern/i.test(made.msg) && placed.level === 'phrase' && placed.placed && placed.notes >= 1 && placed.rows === 32 && /^▸/.test(placed.tag), JSON.stringify({ made, placed }));
+    await page.evaluate(() => { tutti.undo(); tutti.undo(); state.dirty = true; });
+    await tap('lb'); await tap('lb');
+    await page.tap('#pkLevels [data-lvl="instrument"]'); await page.waitForTimeout(120);
+    const inst = await pkState();
+    await tap('down'); await hold('a', () => tap('right')); await hold('a', () => tap('up'));
+    const vol = await page.evaluate(() => state.song.instruments[state.pocket.inst.i].volume);
+    check('pocket instruments: one tap away on the context line; A + right and A + up change the value under the cursor', inst.level === 'instrument' && inst.lit === 'instrument' && /sound/.test(inst.cur) && vol === 111, JSON.stringify({ inst, vol }));
+    const i0 = await page.evaluate(() => state.pocket.inst.i); await hold('back', () => tap('right'));
+    check('pocket instruments: Back + right steps to the next instrument', await page.evaluate(i => state.pocket.inst.i === i + 1 && state.cursor.instrument === i + 1, i0));
+    await page.tap('#pkMenuBtn'); await page.waitForTimeout(120);
+    const menu = await page.evaluate(() => ({ level: tutti.pocketLevel(), items: [...document.querySelectorAll('#pkBody .pkRow .pkName')].slice(0, 4).map(x => x.textContent) }));
+    check('pocket menu: full view, new, save, load and the songs', menu.level === 'menu' && menu.items.join(',') === 'Full view,New song,Save .json,Load .json', JSON.stringify(menu));
+    await tap('a');
+    const off = await page.evaluate(() => ({ pocket: !!state.pocket, cls: document.body.classList.contains('pocket'), grid: document.getElementById('grid').clientWidth > 0 || document.getElementById('songView').clientWidth > 0, show: state.show.vel, stored: localStorage.getItem('tutti.pocket.v1') }));
+    check('pocket menu: Full view returns to the full interface with its columns back', !off.pocket && !off.cls && off.grid && off.show === true && off.stored === '0', JSON.stringify(off));
+    await page.evaluate(() => { tutti.selectSong(tutti.deleteCurrentSong()); });
+  }
+  // a phone with a notch: the page runs under the status bar, so the first thing on screen keeps clear of it
+  const notch = await page.evaluate(async () => {
+    const st = document.createElement('style'); st.textContent = 'header, #pkTop { padding-top: calc(6px + 54px) !important; }'; document.head.append(st);   // what env(safe-area-inset-top) gives on an iPhone
+    const full = document.getElementById('topbar').getBoundingClientRect().top;
+    tutti.setPocket(true); await new Promise(r => setTimeout(r, 200));
+    const pocket = document.getElementById('pkLevels').getBoundingClientRect().top, fits = document.documentElement.scrollHeight <= innerHeight + 1;
+    tutti.setPocket(false); st.remove(); return { full: Math.round(full), pocket: Math.round(pocket), fits };
+  });
+  check('phone: the header and the pocket\'s context line pad by the top safe-area inset, so a notch hides nothing', notch.full >= 54 && notch.pocket >= 54 && notch.fits && /safe-area-inset-top/.test(await page.evaluate(() => [...document.styleSheets].flatMap(ss => { try { return [...ss.cssRules].map(r => r.cssText); } catch { return []; } }).filter(t => /^header |^#pkTop/.test(t)).join(' '))), JSON.stringify(notch));
   check('phone: no errors after interaction', errors.length === 0, errors.join(' | '));
   await ctx.close();
 }
