@@ -8,9 +8,9 @@
 import { noteName } from '../core/constants.js';
 import { SOUND, SOUNDS } from '../core/sounds.js';
 import { keyName } from '../core/scales.js';
-import { addInstrument, addPhrase, addSection, addSlot, duplicateInstrument, INSTRUMENT_SETTINGS, instrumentDefaults, keyFor, nextPhraseName, nextSectionName, newSong, patternById, phraseMeter, placementLabel, removeInstrument, removeItem, removeSlot, deleteSection, sectionById, setInstrumentSound } from '../core/song.js';
+import { addInstrument, addPhrase, addSection, addSlot, duplicateInstrument, INSTRUMENT_SETTINGS, instrumentDefaults, keyFor, makePattern, nextPhraseName, nextSectionName, newSong, patternById, phraseMeter, placementLabel, removeInstrument, removeItem, removeSlot, deleteSection, sectionById, setInstrumentSound } from '../core/song.js';
 import { renderSong, rowAtTick } from '../core/render.js';
-import { $, curInstrument, curPattern, curPhrase, curSection, instrumentsShown, preloadSamples, sched, state } from './state.js';
+import { $, curInstrument, curPattern, curPhrase, curSection, instrumentsShown, preloadSamples, rowsPerBar, sched, state } from './state.js';
 import { withSongUndo, leavePattern, editPatternHere, cursorToInstrument, undo } from './edit.js';
 import { openPhrase, openSong, setLevel } from './map.js';
 import { songRows } from './songview.js';
@@ -26,7 +26,7 @@ const KEY = 'tutti.pocket.v1';
 const HINTS = {
   song: '<b>A</b> open phrase · <b>in</b> section · <b>A+▲▼</b> repeat · <b>B</b> remove · <b>Start</b> play from here',
   section: '<b>A</b> open phrase · <b>out</b> song · <b>in</b> phrase · <b>A+▲▼</b> repeat · <b>B</b> remove · <b>Back+◀▶</b> other section',
-  phrase: '<b>A</b> note · <b>A+▲▼</b> pitch · <b>B</b> clear · <b>out</b> section · <b>in</b> pattern under ▸ · <b>Start</b> loop',
+  phrase: '<b>A</b> note · <b>A+▲▼</b> pitch · <b>B</b> clear · <b>out</b> section · <b>in</b> pattern here (makes one) · <b>Start</b> loop',
   pattern: '<b>A+▲▼</b> pitch · <b>B</b> clear · <b>out</b> phrase · <b>Start</b> loop',
   instrument: '<b>A+◀▶▲▼</b> value · <b>A</b> pick sound · <b>Back+A</b> duplicate · <b>Back+◀▶</b> other instrument · <b>B</b> on name removes',
   sounds: '<b>A</b> pick · <b>out</b> or <b>B</b> back',
@@ -82,7 +82,21 @@ export function pocketIn() {
   const l = pocketLevel();
   if (l === 'song') { const line = songLines().lines[pk().song.row]; if (line && line.kind === 'phrase') { openRow(line.r); goLevel('section'); } else if (line && line.kind === 'bar') { state.section = line.b.si; goLevel('section'); } }
   else if (l === 'section') { const sec = curSection(), i = pk().sec.row; if (sec && sec.phrases[i]) goLevel('phrase', { phrase: state.song.phrases.findIndex(x => x.id === sec.phrases[i].phrase), section: state.song.sections.indexOf(sec), instrument: state.cursor.instrument }); }
-  else if (l === 'phrase') { if (!goLevel('pattern')) { state.message = 'No pattern under the cursor: a ▸ tag opens one'; after(); } }
+  else if (l === 'phrase') { if (!goLevel('pattern')) makePatternHere(); }
+}
+// In on a cell with no pattern makes one there, the way an M8 chain slot makes a phrase: the instrument's loose notes
+// from the cursor row to the next pattern or the end of the phrase become a pattern placed at the cursor; with no
+// notes it is one empty bar to write into. Every later placement of it plays what is written.
+function makePatternHere() {
+  const song = state.song, phr = curPhrase(), tr = curInstrument(); if (!phr || !tr) return;
+  const m = phr.material[tr.id] || { notes: [], placements: [] }, r0 = state.cursor.row;
+  let r1 = phr.rows - 1; for (const pl of (m.placements || [])) if (pl.row > r0 && pl.row - 1 < r1) r1 = pl.row - 1;
+  const notes = m.notes.filter(n => n.tick >= r0 * phr.ticksPerRow && n.tick <= r1 * phr.ticksPerRow);
+  if (!notes.length) r1 = Math.min(r1, r0 + rowsPerBar() - 1);   // an empty bar to write into
+  const name = tr.name + ' ' + ((song.patterns || []).length + 1);
+  withSongUndo(() => makePattern(song, phr, tr.id, r0, r1, name));
+  state.message = notes.length ? 'Made ' + name + ' from rows ' + r0 + '–' + r1 : 'New empty pattern ' + name + ', one bar: write into it';
+  goLevel('pattern');
 }
 function openRow(r) { state.phr = r.pi; state.section = r.block.si; }
 

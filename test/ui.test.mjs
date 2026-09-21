@@ -874,6 +874,16 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, instrument: st
     await tap('rb'); await tap('rb');
     const back2 = await pkState();
     check('pocket: in goes in again, song to section to phrase, and the legend names the buttons', back2.level === 'phrase' && /A.*note/.test(await page.evaluate(() => document.getElementById('pkHint').textContent)), JSON.stringify(back2));
+    // in on a cell with no pattern makes one there and opens it; what is written inside plays back in the phrase
+    await page.evaluate(() => { state.cursor.row = 32; state.cursor.instrument = 2; state.dirty = true; }); await page.waitForTimeout(80);
+    const nPat = await page.evaluate(() => state.song.patterns.length);
+    await tap('rb');
+    const made = await page.evaluate(() => ({ level: tutti.pocketLevel(), n: state.song.patterns.length, editing: !!state.patternEdit, rows: curPhrase().rows, msg: document.getElementById('pkMsg').textContent }));
+    await tap('a');
+    await tap('lb');
+    const placed = await page.evaluate(() => { const m = state.song.phrases[state.phr].material[state.song.instruments[2].id]; const pl = m.placements.find(p => p.row === 32); const ptn = pl && state.song.patterns.find(p => p.id === pl.pattern); return { level: tutti.pocketLevel(), placed: !!pl, notes: ptn ? ptn.material.notes.length : -1, rows: ptn && ptn.rows, tag: (document.querySelector('#pkBody .pkRow[data-row="32"] .pkCell.cur') || {}).textContent }; });
+    check('pocket phrase: in with no pattern under the cursor makes one there from the notes that follow and opens it; a note written inside shows in the phrase as its tag', made.level === 'pattern' && made.n === nPat + 1 && made.editing && made.rows === 32 && /pattern/i.test(made.msg) && placed.level === 'phrase' && placed.placed && placed.notes >= 1 && placed.rows === 32 && /^▸/.test(placed.tag), JSON.stringify({ made, placed }));
+    await page.evaluate(() => { tutti.undo(); tutti.undo(); state.dirty = true; });
     await tap('lb'); await tap('lb');
     await page.tap('#pkLevels [data-lvl="instrument"]'); await page.waitForTimeout(120);
     const inst = await pkState();
