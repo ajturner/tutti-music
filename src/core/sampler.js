@@ -2,7 +2,7 @@
 // sketch synth for instruments without samples or while they load. Zones are chosen by articulation
 // (with fallbacks), nearest root note, and a dynamic layer blended from the dynamics lane (CC1) for
 // sustained articulations or from velocity for short ones.
-import { INST } from './instruments.js';
+import { SOUND } from './sounds.js';
 
 const ART_FALLBACK = { leg: ['sus'], mrc: ['stc', 'sus'], mut: ['sus'], trm: ['sus'], rll: ['sus'], piz: ['stc', 'sus'], stc: ['sus'], sus: [] };
 const RELEASE = { stc: 0.08, piz: 0.12, sus: 0.25, leg: 0.2, mrc: 0.15, mut: 0.25, trm: 0.3, rll: 0.35 };
@@ -31,35 +31,34 @@ export class SamplerSink {
     this.maps = new Map();                            // instrument id -> { zones } | null (no samples)
     this.buffers = new Map();                         // url -> AudioBuffer | Promise
     this.loading = new Map();                         // instrument id -> Promise
-    this.buses = new Map(); this.voices = new Map();  // track -> bus; track:pitch -> [voice]
+    this.buses = new Map(); this.voices = new Map();  // instrument -> bus; instrument:pitch -> [voice]
     this.enabled = true; this.onProgress = null;
-    this.settings = {};                               // instrument id -> { tune, cents, trim, release }
     this.lastZone = null;                             // { instrument, zone, buffer, pitch } of the last voice, for the scope
     this.onZone = null;
   }
   get ctx() { return this.synth.ctx; }
   ensure() { return this.synth.ensure(); }
   // ---- loading ------------------------------------------------------------------------------
-  has(instrumentId) { const m = this.maps.get(instrumentId); return !!(m && m.zones); }
-  known(instrumentId) { return this.maps.has(instrumentId); }
-  async load(instrumentId) {
-    if (this.maps.has(instrumentId)) return this.has(instrumentId);
-    if (this.loading.has(instrumentId)) return this.loading.get(instrumentId);
+  has(soundId) { const m = this.maps.get(soundId); return !!(m && m.zones); }
+  known(soundId) { return this.maps.has(soundId); }
+  async load(soundId) {
+    if (this.maps.has(soundId)) return this.has(soundId);
+    if (this.loading.has(soundId)) return this.loading.get(soundId);
     const p = (async () => {
-      let folder = INST[instrumentId] && INST[instrumentId].samples;   // every sampled instrument names its folder
+      let folder = SOUND[soundId] && SOUND[soundId].samples;   // every sampled instrument names its folder
       if (folder && !/^(https?:)?\/\//.test(folder) && !folder.startsWith('/')) folder = this.base + folder;   // relative to banks/
       let map = null;
       if (folder) try { const r = await fetch(folder + 'map.json'); if (r.ok) map = await r.json(); } catch { map = null; }
-      if (!map) { this.maps.set(instrumentId, null); return false; }
+      if (!map) { this.maps.set(soundId, null); return false; }
       map.folder = folder;
       this.ensure();
       let done = 0;
-      await Promise.all(map.zones.map(async z => { await this.buffer(folder + z.file); done++; if (this.onProgress) this.onProgress(instrumentId, done, map.zones.length); }));
-      this.maps.set(instrumentId, map);
+      await Promise.all(map.zones.map(async z => { await this.buffer(folder + z.file); done++; if (this.onProgress) this.onProgress(soundId, done, map.zones.length); }));
+      this.maps.set(soundId, map);
       return true;
     })();
-    this.loading.set(instrumentId, p);
-    try { return await p; } finally { this.loading.delete(instrumentId); }
+    this.loading.set(soundId, p);
+    try { return await p; } finally { this.loading.delete(soundId); }
   }
   async buffer(url) {
     if (this.buffers.has(url)) return this.buffers.get(url);
@@ -72,42 +71,36 @@ export class SamplerSink {
     this.buffers.set(url, p);
     try { return await p; } catch (e) { this.buffers.delete(url); throw e; }
   }
-  preload(instrumentIds) { return Promise.all([...new Set(instrumentIds)].map(id => this.load(id))); }
+  preload(soundIds) { return Promise.all([...new Set(soundIds)].map(id => this.load(id))); }
   // ---- per-instrument settings (tuning, level trim, release scale) ------------------------
-  setting(instrumentId) { return Object.assign({ tune: 0, cents: 0, trim: 0, release: 1 }, this.settings[instrumentId] || {}); }
-  setSetting(instrumentId, patch) {
-    const cur = this.setting(instrumentId), next = Object.assign(cur, patch);
-    next.tune = Math.max(-24, Math.min(24, Math.round(next.tune || 0))); next.cents = Math.max(-100, Math.min(100, Math.round(next.cents || 0)));
-    next.trim = Math.max(-24, Math.min(24, +next.trim || 0)); next.release = Math.max(0.25, Math.min(4, +next.release || 1));
-    if (!next.tune && !next.cents && !next.trim && next.release === 1) delete this.settings[instrumentId]; else this.settings[instrumentId] = next;
-    return this.setting(instrumentId);
-  }
+  // They belong to the song's instrument (tune, cents, trim, release), so two instruments made from one sound can differ.
+  setting(of) { return Object.assign({ tune: 0, cents: 0, trim: 0, release: 1 }, of && typeof of === 'object' ? { tune: of.tune || 0, cents: of.cents || 0, trim: of.trim || 0, release: of.release || 1 } : {}); }
   // Which articulations an instrument has real samples for, and where the others fall back to.
-  coverage(instrumentId) {
-    const ins = INST[instrumentId], map = this.maps.get(instrumentId);
+  coverage(soundId) {
+    const ins = SOUND[soundId], map = this.maps.get(soundId);
     if (!ins) return null;
     const sampled = map && map.zones ? [...new Set(map.zones.map(z => z.art))] : [];
     const fallback = {};
     for (const a of ins.articulations) if (!sampled.includes(a)) { const chain = [...(ART_FALLBACK[a] || []), 'sus']; fallback[a] = chain.find(c => sampled.includes(c)) || null; }
-    return { sampled, fallback, zones: map && map.zones ? map.zones.length : 0, state: map && map.zones ? 'samples' : this.loading.has(instrumentId) ? 'loading' : map === null ? 'synth' : 'unloaded' };
+    return { sampled, fallback, zones: map && map.zones ? map.zones.length : 0, state: map && map.zones ? 'samples' : this.loading.has(soundId) ? 'loading' : map === null ? 'synth' : 'unloaded' };
   }
-  // Short phrase through one instrument, for the Sounds panel.
-  phrase(instrumentId, pitches, art, gap = 0.4) {
-    this.ensure(); const t0 = this.ctx.currentTime + 0.02, ins = INST[instrumentId];
+  // A few notes through one sound, shaped as one of the song's instruments when given, for the Instruments panel.
+  demo(soundId, pitches, art, gap = 0.4, shaped = null) {
+    this.ensure(); const t0 = this.ctx.currentTime + 0.02, ins = SOUND[soundId];
     const a = art || (ins ? ins.articulations[0] : 'sus');
     pitches.forEach((p, i) => {
       const t = t0 + i * gap, end = t + (i === pitches.length - 1 ? gap * 2.2 : gap * 0.95);
-      if (this.has(instrumentId)) { this.noteOn('sounds', instrumentId, p, 100, a, t); this.noteOff('sounds', p, end); }
-      else this.synth.audition(ins ? ins.family : 'strings', p, a, instrumentId);
+      if (this.has(soundId)) { this.noteOn('sounds', soundId, p, 100, a, t, shaped); this.noteOff('sounds', p, end); }
+      else this.synth.audition(ins ? ins.family : 'strings', p, a, soundId, shaped);
     });
   }
   // ---- playing ------------------------------------------------------------------------------
-  bus(track) {
-    let b = this.buses.get(track);
+  bus(instrument) {
+    let b = this.buses.get(instrument);
     if (!b) {
       const ctx = this.ctx, gain = ctx.createGain(), pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
       if (pan) gain.connect(pan).connect(this.synth.master); else gain.connect(this.synth.master);
-      b = { gain, pan, dyn: 100, expr: 127, vol: 100, panv: 64 }; this.buses.set(track, b); this.applyBus(b, ctx.currentTime);
+      b = { gain, pan, dyn: 100, expr: 127, vol: 100, panv: 64 }; this.buses.set(instrument, b); this.applyBus(b, ctx.currentTime);
     }
     return b;
   }
@@ -117,18 +110,18 @@ export class SamplerSink {
   }
   send(ev, atMs) {
     if (!this.enabled) return;
-    const inst = ev.trackRef ? ev.trackRef.instrument : null;
-    if (ev.type === 'cc') { const b = this.bus(ev.track); if (ev.cc === 1) b.dyn = ev.value; else if (ev.cc === 11) b.expr = ev.value; else if (ev.cc === 7) b.vol = ev.value; else if (ev.cc === 10) b.panv = ev.value; this.applyBus(b, this.synth.when(atMs)); this.synth.send(ev, atMs); return; }
+    const inst = ev.instrumentRef ? ev.instrumentRef.sound : null;
+    if (ev.type === 'cc') { const b = this.bus(ev.instrument); if (ev.cc === 1) b.dyn = ev.value; else if (ev.cc === 11) b.expr = ev.value; else if (ev.cc === 7) b.vol = ev.value; else if (ev.cc === 10) b.panv = ev.value; this.applyBus(b, this.synth.when(atMs)); this.synth.send(ev, atMs); return; }
     if (!inst || !this.has(inst)) { if (inst && !this.known(inst) && !this.loading.has(inst)) this.load(inst); this.synth.send(ev, atMs); return; }
     this.ensure();
     const t = this.synth.when(atMs);
-    if (ev.type === 'on') this.noteOn(ev.track, inst, ev.pitch, ev.vel, ev.art, t);
-    else if (ev.type === 'off') this.noteOff(ev.track, ev.pitch, t);
+    if (ev.type === 'on') this.noteOn(ev.instrument, inst, ev.pitch, ev.vel, ev.art, t, ev.instrumentRef);
+    else if (ev.type === 'off') this.noteOff(ev.instrument, ev.pitch, t);
   }
-  noteOn(track, inst, pitch, vel, art, t) {
-    const ctx = this.ctx, b = this.bus(track), key = track + ':' + pitch, map = this.maps.get(inst);
+  noteOn(instrument, inst, pitch, vel, art, t, shaped) {
+    const ctx = this.ctx, b = this.bus(instrument), key = instrument + ':' + pitch, map = this.maps.get(inst);
     if (this.voices.has(key)) this.release(this.voices.get(key), t, 0.05);
-    const ins = INST[inst], useArt = art || (ins ? ins.articulations[0] : 'sus'), st = this.setting(inst);
+    const ins = SOUND[inst], useArt = art || (ins ? ins.articulations[0] : 'sus'), st = this.setting(shaped);
     const picks = pickZones(map, useArt, pitch, b.dyn, vel);
     if (!picks.length || (ins && ins.kit && Math.abs(picks[0].zone.note - pitch) > 0)) return;   // a kit only sounds on its mapped notes
     const list = [], trim = Math.pow(10, st.trim / 20), detune = st.tune + st.cents / 100;
@@ -143,14 +136,14 @@ export class SamplerSink {
     }
     this.voices.set(key, list);
   }
-  noteOff(track, pitch, t) { const key = track + ':' + pitch, v = this.voices.get(key); if (!v) return; this.voices.delete(key); this.release(v, t); }
+  noteOff(instrument, pitch, t) { const key = instrument + ':' + pitch, v = this.voices.get(key); if (!v) return; this.voices.delete(key); this.release(v, t); }
   release(list, t, secs) {
     for (const v of list) { const r = secs || v.release; v.g.gain.cancelScheduledValues(t); v.g.gain.setValueAtTime(v.g.gain.value, t); v.g.gain.linearRampToValueAtTime(0, t + r); try { v.src.stop(t + r + 0.02); } catch { /* already stopped */ } }
   }
   allOff() { const t = this.ctx ? this.ctx.currentTime : 0; for (const v of this.voices.values()) this.release(v, t, 0.1); this.voices.clear(); this.synth.allOff(); }
-  audition(instrumentId, family, pitch, art) {
-    if (!this.has(instrumentId)) { this.load(instrumentId); return this.synth.audition(family, pitch, art, instrumentId); }
+  audition(soundId, family, pitch, art, shaped) {
+    if (!this.has(soundId)) { this.load(soundId); return this.synth.audition(family, pitch, art, soundId, shaped); }
     this.ensure(); const t = this.ctx.currentTime + 0.01;
-    this.noteOn('audition', instrumentId, pitch, 100, art, t); this.noteOff('audition', pitch, t + 0.6);
+    this.noteOn('audition', soundId, pitch, 100, art, t, shaped); this.noteOff('audition', pitch, t + 0.6);
   }
 }

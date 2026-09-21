@@ -14,7 +14,7 @@ The app SHALL poll connected gamepads every frame, use the first connected one, 
 - **THEN** the status line shows the controller name
 
 ### Requirement: Navigation
-D-pad or left stick SHALL move the cursor by row and cell, with hold-to-repeat after 260 ms at 70 ms intervals. Bumpers SHALL move by track. Triggers SHALL move by a bar with slower repeat.
+D-pad or left stick SHALL move the cursor by row and cell, with hold-to-repeat after 260 ms at 70 ms intervals. Bumpers SHALL move by instrument. Triggers SHALL move by a bar with slower repeat.
 
 #### Scenario: Hold down
 - **WHEN** the user holds d-pad down for one second
@@ -43,8 +43,15 @@ Holding B with the d-pad SHALL extend the selection. With Back held: B copies, X
 - **THEN** three rows are selected
 
 ### Requirement: Transport
-Start SHALL play or stop the pattern. Back held with Start SHALL play the song. Back tapped alone SHALL undo.
+Start SHALL play or stop the phrase. Back held with Start SHALL play the song. Back tapped alone SHALL undo.
 
 #### Scenario: Undo
 - **WHEN** the user taps Back after entering a note
 - **THEN** the note is removed
+
+### Requirement: Levels on the controller
+Back held with LB SHALL go out a level (pattern to phrase to song) and with RB go in a level. In the Song view the d-pad, LB and RB SHALL move the cell cursor, A SHALL open the phrase under the cursor on that instrument, Start SHALL play from the cursor row or stop, Back with Start SHALL play the song, and Back alone SHALL undo.
+
+#### Scenario: Out and back in
+- **WHEN** the user holds Back and presses LB in the grid, moves down a row and presses A
+- **THEN** the Song view opens and then the phrase on that row opens in the grid

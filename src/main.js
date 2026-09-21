@@ -1,7 +1,7 @@
 // Tutti entry point: wires the UI modules, starts the draw loop, and exposes the app API on window.tutti
 // (used by the browser tests and available to any host that embeds the tracker).
 import * as core_constants from './core/constants.js';
-import * as core_instruments from './core/instruments.js';
+import * as core_instruments from './core/sounds.js';
 import * as core_song from './core/song.js';
 import * as core_render from './core/render.js';
 import * as core_scheduler from './core/scheduler.js';
@@ -26,18 +26,22 @@ import * as ui_pad from './ui/pad.js';
 import * as ui_midi_in from './ui/midi-in.js';
 import * as ui_toolbar from './ui/toolbar.js';
 import { canvas, coarsePointer } from './ui/state.js';
-import { syncSongUI, syncPatternUI } from './ui/sync.js';
+import { syncSongUI, syncPhraseUI } from './ui/sync.js';
 import { setPad } from './ui/pad.js';
 import * as ui_storage from './ui/storage.js';
 import { restoreSongs } from './ui/storage.js';
 import { VERSION } from './version.js';
 import * as ui_session from './ui/session.js';
-import * as ui_tracks from './ui/tracks.js';
-import * as ui_arranger from './ui/arranger.js';
+import * as ui_instruments from './ui/instruments.js';
+import * as ui_pocket from './ui/pocket.js';
+import * as ui_map from './ui/map.js';
+import * as ui_songview from './ui/songview.js';
+import * as ui_monitor from './ui/monitor.js';
+import { wireMap } from './ui/map.js';
+import { wireSongView, focusSection } from './ui/songview.js';
 import * as ui_mixer from './ui/mixer.js';
 import { wireMixer, setMixer, mixerDefault } from './ui/mixer.js';
-import * as ui_sounds from './ui/sounds.js';
-import { wireSounds, restoreBanks, restoreHiddenBanks } from './ui/sounds.js';
+import { wireInstruments, restoreBanks, restoreHiddenBanks } from './ui/instruments.js';
 import * as core_banks from './core/banks.js';
 import * as ui_panels from './ui/panels.js';
 import { wirePanels } from './ui/panels.js';
@@ -50,7 +54,7 @@ document.querySelectorAll('select, input').forEach(el => el.addEventListener('ch
 document.querySelectorAll('button').forEach(b => b.addEventListener('click', () => b.blur()));
 restoreSongs();
 const loc = restoreLocation();
-if (loc) { state.songIndex = loc.index; state.song = state.songs[loc.index]; state.pat = loc.pat; }
+if (loc) { state.songIndex = loc.index; state.song = state.songs[loc.index]; state.phr = loc.phr; }
 document.getElementById('version').textContent = 'v' + VERSION;
 // The deployed site lists its builds (main, and a preview of every open pull request), and its build marks
 // the live page with where. No marker when running locally or inside a preview, which has its own bar.
@@ -62,18 +66,21 @@ document.getElementById('version').textContent = 'v' + VERSION;
   }
 }
 syncSongUI();
-syncPatternUI();
-// Back/forward or a hand-edited hash: open that song and pattern.
+syncPhraseUI();
+// Back/forward or a hand-edited hash: open that song and phrase.
 window.addEventListener('hashchange', () => {
   const target = restoreLocation(); if (!target) return;
   if (target.index !== state.songIndex) selectSong(target.index);
-  if (target.pat !== state.pat) { state.pat = target.pat; syncPatternUI(); state.dirty = true; }
+  if (target.phr !== state.phr) { state.phr = target.phr; syncPhraseUI(); state.dirty = true; }
 });
 setPad(coarsePointer());
 wireMixer();
-wireSounds();
+wireInstruments();
+ui_pocket.wirePocket();
 restoreHiddenBanks();
 wirePanels();
+wireMap({ focusSection });
+wireSongView();
 setMixer(mixerDefault());
 preloadSamples().then(restoreBanks);
 resize();
@@ -84,4 +91,4 @@ requestAnimationFrame(frame);
 if ('serviceWorker' in navigator && location.protocol.startsWith('http') && !location.search.includes('nosw')) {
   navigator.serviceWorker.register('sw.js').catch(() => { /* offline support is optional */ });
 }
-window.tutti = Object.assign({}, core_constants, core_instruments, core_song, core_render, core_scheduler, core_synth, core_midi, core_midifile, core_examples, core_edit, core_scales, core_sampler, core_banks, ui_state, ui_layout, ui_sync, ui_edit, ui_selection, ui_transport, ui_keyboard, ui_pointer, ui_draw, ui_gamepad, ui_pad, ui_midi_in, ui_toolbar, ui_storage, ui_session, ui_tracks, ui_arranger, ui_mixer, ui_sounds, ui_panels, { VERSION });
+window.tutti = Object.assign({}, core_constants, core_instruments, core_song, core_render, core_scheduler, core_synth, core_midi, core_midifile, core_examples, core_edit, core_scales, core_sampler, core_banks, ui_state, ui_layout, ui_sync, ui_edit, ui_selection, ui_transport, ui_keyboard, ui_pointer, ui_draw, ui_gamepad, ui_pad, ui_midi_in, ui_toolbar, ui_storage, ui_session, ui_instruments, ui_pocket, ui_map, ui_songview, ui_monitor, ui_mixer, ui_panels, { VERSION });

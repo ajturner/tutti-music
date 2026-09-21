@@ -1,0 +1,15 @@
+# Sections, patterns and the Song view
+## Why
+`follows` did not make sense as a concept: a hidden substitution that the grid never showed, that went silent when a phrase was looped, and that tied a track to the same track of another block. The vocabulary also had no word for what every musician calls a section, and used "pattern" and "phrase" the opposite way round from how songs are talked about. The user asked for a model in standard terms (intro, verse, chorus, bridge; A and B sections; movements) and for a UX where the overall picture is visible and every level can be drilled into, pointing at the M8's song screen, its SCPIT map and its track readout.
+## What changes
+- **Vocabulary and format 4.** A song is arranged from **sections**; a section is made of **phrases** (the multi-track block the grid shows); the ideas inside a phrase are **patterns** (one voice's reusable line) **placed** on tracks. The words pattern and phrase swap everywhere: code, markup, schema, specs, guide. `follows`, entries and the loop-and-clip path are removed; a looping part is a placement with a repeat. Placements gain **shift** (scale degrees in the key in force), **octave** and **dynamics** beside transpose and repeat. Keys nest: phrase over section over song. Phrases and sections carry ids. Format 3 files are refused.
+- **Song view.** A new level above the grid shows every section in playing order, its phrases, and for each phrase what every track plays (a thumbnail and a chip per placed pattern). The arrangement is edited here (add, name, repeat, reorder, key, reuse a phrase, play a section again) and the song's patterns are listed underneath. Enter, a double click or a second tap opens a phrase on a track; a chip opens a pattern.
+- **The map.** A bar under the header reads Song › Section › Phrase › Pattern with the current level lit and the playhead's position in the song's own words. Enter goes in a level, the backquote key comes back out, every crumb is a button.
+- **Track monitor.** While playing, the note each track is sounding shows beside its name in the grid header, in the Song view's track headers and on the mixer strips.
+- **Around it.** Play section loops a section. The Song panel becomes Files. The phrase selector groups phrases under their sections. The key controls gain a scope (song, section, phrase). The .mid carries a marker per section. On a phone the pad offers a placement's transformations, the selection toolbar is one scrolling row, and the controller moves between levels.
+## Capabilities
+- **New:** `song-view`
+- **Modified:** `song-model`, `song-files`, `playback`, `patterns`, `responsive-layout`, `key-and-scale`, `touch-input`, `game-controller`, `midi-export`, `help`, `core-api`, `grid`
+- **Renamed (folders, with the word swap applied to every main spec):** `phrases` → `patterns`, `pattern-grid` → `grid`
+## Non-goals
+A reusable chain object; transposing a section in the arrangement; tempo on a section; the paused learning roadmap (docs/roadmap.md).

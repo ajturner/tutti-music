@@ -1,7 +1,7 @@
 // Render a song to a flat, absolute-tick event list and map ticks to milliseconds under a changing tempo.
 import { PPQ, clamp } from './constants.js';
-import { INST } from './instruments.js';
-import { laneValueAt, normalizeArrangement, entryOf, materialFor } from './song.js';
+import { SOUND } from './sounds.js';
+import { laneValueAt, expandMaterial, keyFor, playOrder } from './song.js';
 
 // ---- Render: song -> flat, absolute-tick event list --------------------------
 // Event types: 'ks' keyswitch, 'cc' controller, 'off' note off, 'on' note on. Order at equal tick matters:
@@ -29,47 +29,47 @@ export const fmtCC = v => clamp(Math.round(v), 0, 127);
 export const fmtBpm = v => clamp(Math.round(v), 20, 300);
 
 // ---- Groove: grid ticks -> performed ticks -----------------------------------------------------
-// pattern.groove is a list of row-length multipliers applied cyclically (for example [1.33, 0.67] swings
-// eighths at sixteenth rows). The cycle is normalised so the pattern keeps its length.
-export function grooveOf(pat) {
-  const g = Array.isArray(pat.groove) ? pat.groove.filter(x => typeof x === 'number' && x > 0) : [];
+// phrase.groove is a list of row-length multipliers applied cyclically (for example [1.33, 0.67] swings
+// eighths at sixteenth rows). The cycle is normalised so the phrase keeps its length.
+export function grooveOf(phr) {
+  const g = Array.isArray(phr.groove) ? phr.groove.filter(x => typeof x === 'number' && x > 0) : [];
   if (!g.length || g.every(x => x === 1)) return null;
   const mean = g.reduce((a, b) => a + b, 0) / g.length;
   return g.map(x => x / mean);
 }
-// Performed start tick of every row (rows + 1 entries, the last is the pattern end).
-export function rowTicks(pat) {
-  const g = grooveOf(pat), tpr = pat.ticksPerRow, out = new Array(pat.rows + 1);
+// Performed start tick of every row (rows + 1 entries, the last is the phrase end).
+export function rowTicks(phr) {
+  const g = grooveOf(phr), tpr = phr.ticksPerRow, out = new Array(phr.rows + 1);
   let t = 0;
-  for (let r = 0; r < pat.rows; r++) { out[r] = Math.round(t); t += g ? tpr * g[r % g.length] : tpr; }
-  out[pat.rows] = pat.rows * tpr;
+  for (let r = 0; r < phr.rows; r++) { out[r] = Math.round(t); t += g ? tpr * g[r % g.length] : tpr; }
+  out[phr.rows] = phr.rows * tpr;
   return out;
 }
-export function tickMapper(pat) {
-  if (!grooveOf(pat)) return t => t;
-  const rt = rowTicks(pat), tpr = pat.ticksPerRow, len = pat.rows * tpr;
+export function tickMapper(phr) {
+  if (!grooveOf(phr)) return t => t;
+  const rt = rowTicks(phr), tpr = phr.ticksPerRow, len = phr.rows * tpr;
   return t => {
     if (t <= 0) return 0; if (t >= len) return len;
     const r = Math.floor(t / tpr), f = (t - r * tpr) / tpr;
     return Math.round(rt[r] + (rt[r + 1] - rt[r]) * f);
   };
 }
-// Inverse for the play-position highlight: performed tick within the pattern -> row.
-export function rowAtTick(pat, tick) {
-  if (!grooveOf(pat)) return Math.floor(tick / pat.ticksPerRow);
-  const rt = rowTicks(pat);
-  let lo = 0, hi = pat.rows - 1;
+// Inverse for the play-position highlight: performed tick within the phrase -> row.
+export function rowAtTick(phr, tick) {
+  if (!grooveOf(phr)) return Math.floor(tick / phr.ticksPerRow);
+  const rt = rowTicks(phr);
+  let lo = 0, hi = phr.rows - 1;
   while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (rt[mid] <= tick) lo = mid; else hi = mid - 1; }
   return lo;
 }
 
 // ---- FX column --------------------------------------------------------------------------------
-// One command per row per track (pattern.material[id].fx = [{ tick, cmd, value }], value 0-255):
+// One command per row per instrument (phrase.material[id].fx = [{ tick, cmd, value }], value 0-255):
 //   CHA  chance the notes on this row play, value/255 (FF always, 80 about half)
 //   RET  retrigger: play each note on this row `value` times, evenly across its length
 //   DEL  delay the notes on this row by value/256 of a row (humanise, play behind the beat)
 //   ARP  arpeggio: cycle pitch, +high nibble, +low nibble semitones every row for the note's length
-//   TSP  transpose this track by a signed byte of semitones from this row until the next TSP
+//   TSP  transpose this instrument by a signed byte of semitones from this row until the next TSP
 //   EXP  expression shape on the notes of this row: high nibble picks the shape (1 swell, 2 sfz, 3 fade in,
 //        4 fade out), low nibble the depth 0-F; rendered as expression-controller ramps inside the note
 export const FX_COMMANDS = ['CHA', 'RET', 'DEL', 'ARP', 'TSP', 'EXP'];
@@ -88,12 +88,12 @@ export function expShape(s, d, f) {
 }
 export const FX_HELP = {
   CHA: 'chance the row plays, 00 never to FF always', RET: 'retrigger count across the note', DEL: 'delay by value/256 of a row',
-  ARP: 'arpeggio, two semitone offsets per nibble', TSP: 'transpose track from here, signed semitones',
+  ARP: 'arpeggio, two semitone offsets per nibble', TSP: 'transpose instrument from here, signed semitones',
   EXP: 'expression shape: 1 swell 2 sfz 3 fade in 4 fade out, then depth 0-F',
 };
 const signedByte = v => (v & 0xFF) > 127 ? (v & 0xFF) - 256 : (v & 0xFF);
 export function fxAt(fx, tick) { return fx.find(f => f.tick === tick) || null; }
-// Expand one note through the FX on its row and the track's running transpose. Returns [{tick, end, pitch, vel}].
+// Expand one note through the FX on its row and the instrument's running transpose. Returns [{tick, end, pitch, vel}].
 export function applyFx(note, fx, transpose, tpr, random) {
   let pitch = clamp(note.pitch + transpose, 0, 127);
   let start = note.tick, end = note.tick + note.len;
@@ -112,25 +112,26 @@ export function applyFx(note, fx, transpose, tpr, random) {
   return [{ tick: start, end, pitch, vel: note.vel }];
 }
 
+// opts.phrases: phrase indices to play once each (the loop of the open phrase); opts.section: one section's
+// phrases with their repeats; neither: the whole arrangement. Each start records where it sits in the song.
 export function renderSong(song, opts = {}) {
-  const entries = opts.patterns ? opts.patterns.map(entryOf) : normalizeArrangement(song);
+  const plays = opts.phrases ? opts.phrases.filter(i => song.phrases[i]).map(i => ({ item: -1, sectionRepeat: 0, section: opts.sectionRef || null, slot: -1, repeat: 0, phrase: i }))
+    : playOrder(song, opts.section);
   const random = opts.random || Math.random;
   const events = [], tempo = [{ tick: 0, bpm: song.bpm }], starts = [];
   let offset = 0;
-  const plays = [];
-  entries.forEach((e, ei) => { if (song.patterns[e.pattern]) for (let k = 0; k < e.repeat; k++) plays.push({ e, ei, k }); });
-  for (const { e, ei, k } of plays) {
-    const pi = e.pattern, pat = song.patterns[pi];
-    const len = pat.rows * pat.ticksPerRow, tpr = pat.ticksPerRow, map = tickMapper(pat);
-    starts.push({ pattern: pi, tick: offset, rows: pat.rows, ticksPerRow: tpr, groove: !!grooveOf(pat), entry: ei, repeat: k, follows: e.follows });
-    renderLane(pat.tempo, len, offset, (t, v) => tempo.push({ tick: offset + map(t - offset), bpm: v }), fmtBpm);
-    for (const tr of song.tracks) {
-      const ins = INST[tr.instrument];
+  for (const play of plays) {
+    const pi = play.phrase, phr = song.phrases[pi], key = keyFor(song, phr, play.section);
+    const len = phr.rows * phr.ticksPerRow, tpr = phr.ticksPerRow, map = tickMapper(phr);
+    starts.push({ phrase: pi, tick: offset, rows: phr.rows, ticksPerRow: tpr, groove: !!grooveOf(phr), item: play.item, section: play.section ? play.section.id : null, sectionRepeat: play.sectionRepeat, slot: play.slot, repeat: play.repeat });
+    renderLane(phr.tempo, len, offset, (t, v) => tempo.push({ tick: offset + map(t - offset), bpm: v }), fmtBpm);
+    for (const tr of song.instruments) {
+      const ins = SOUND[tr.sound];
       if (offset === 0) {   // mixer state once at the start: CC7 volume, CC10 pan
-        events.push({ tick: 0, type: 'cc', track: tr.id, cc: 7, value: fmtCC(tr.volume == null ? 100 : tr.volume) });
-        events.push({ tick: 0, type: 'cc', track: tr.id, cc: 10, value: fmtCC(tr.pan == null ? 64 : tr.pan) });
+        events.push({ tick: 0, type: 'cc', instrument: tr.id, cc: 7, value: fmtCC(tr.volume == null ? 100 : tr.volume) });
+        events.push({ tick: 0, type: 'cc', instrument: tr.id, cc: 10, value: fmtCC(tr.pan == null ? 64 : tr.pan) });
       }
-      const pt = materialFor(song, e, tr.id, tr.columns || 1);
+      const pt = expandMaterial(song, phr, tr.id, tr.columns || 1, key);
       if (!pt) continue;
       const evs = pt.notes.slice().sort((a, b) => a.tick - b.tick || a.col - b.col);
       const fx = (pt.fx || []).slice().sort((a, b) => a.tick - b.tick);
@@ -146,7 +147,7 @@ export function renderSong(song, opts = {}) {
         const parts = applyFx({ tick: e.tick, len: Math.min(e.tick + e.len, len) - e.tick, pitch: e.pitch, vel: e.vel }, rowFx, transpose, tpr, random);
         if (!parts.length) continue;
         if (art !== lastArt && ks != null) {
-          events.push({ tick: offset + Math.max(0, map(parts[0].tick) - KS_LEAD_TICKS), type: 'ks', track: tr.id, pitch: ks });
+          events.push({ tick: offset + Math.max(0, map(parts[0].tick) - KS_LEAD_TICKS), type: 'ks', instrument: tr.id, pitch: ks });
           lastArt = art;
         }
         const exp = fx.find(f => f.tick === e.tick && f.cmd === 'EXP');
@@ -158,19 +159,19 @@ export function renderSong(song, opts = {}) {
             const shape = (exp.value >> 4) & 15, depth = (exp.value & 15) / 15;
             for (let t = p.tick; t < Math.min(p.end, len); t += CC_SAMPLE_TICKS) {
               const base = laneValueAt(pt.expr, t, 127), f = (t - p.tick) / (p.end - p.tick);
-              events.push({ tick: offset + map(t), type: 'cc', track: tr.id, cc: ins.exprCC, value: fmtCC(base * expShape(shape, depth, f)), shaped: true });
+              events.push({ tick: offset + map(t), type: 'cc', instrument: tr.id, cc: ins.exprCC, value: fmtCC(base * expShape(shape, depth, f)), shaped: true });
             }
-            events.push({ tick: t1, type: 'cc', track: tr.id, cc: ins.exprCC, value: fmtCC(laneValueAt(pt.expr, Math.min(p.end, len), 127)), shaped: true });
+            events.push({ tick: t1, type: 'cc', instrument: tr.id, cc: ins.exprCC, value: fmtCC(laneValueAt(pt.expr, Math.min(p.end, len), 127)), shaped: true });
           }
           if (open[p.pitch] && open[p.pitch].tick > t0) open[p.pitch].tick = t0;
-          const off = { tick: t1, type: 'off', track: tr.id, pitch: p.pitch };
-          events.push({ tick: t0, type: 'on', track: tr.id, pitch: p.pitch, vel: p.vel, art });
+          const off = { tick: t1, type: 'off', instrument: tr.id, pitch: p.pitch };
+          events.push({ tick: t0, type: 'on', instrument: tr.id, pitch: p.pitch, vel: p.vel, art });
           events.push(off);
           open[p.pitch] = off;
         }
       }
-      renderLane(pt.dyn,  len, offset, (t, v) => events.push({ tick: offset + map(t - offset), type: 'cc', track: tr.id, cc: ins.dynCC,  value: v }), fmtCC);
-      renderLane(pt.expr, len, offset, (t, v) => events.push({ tick: offset + map(t - offset), type: 'cc', track: tr.id, cc: ins.exprCC, value: v }), fmtCC);
+      renderLane(pt.dyn,  len, offset, (t, v) => events.push({ tick: offset + map(t - offset), type: 'cc', instrument: tr.id, cc: ins.dynCC,  value: v }), fmtCC);
+      renderLane(pt.expr, len, offset, (t, v) => events.push({ tick: offset + map(t - offset), type: 'cc', instrument: tr.id, cc: ins.exprCC, value: v }), fmtCC);
     }
     offset += len;
   }
