@@ -38,7 +38,7 @@ The Section level SHALL show one section's name, repeat and key, its phrases wit
 - **THEN** an empty phrase shaped like the one under the cursor is added to the section and named after it
 
 ### Requirement: Phrase and Pattern levels
-The Phrase level SHALL show the phrase's name, meter and key, then rows down and instruments across, three at a time following the cursor, one note cell per instrument (its first note column): the note name, ··· for none, a placed pattern as ▸ and its label on its first row with the rows it covers dimmed. Left and right SHALL step between instruments; everything else SHALL be the controller's rules for the grid, including A on a pattern tag opening the Pattern level, which SHALL show the pattern's rows on one voice. In on a cell with no pattern SHALL make one there: the instrument's loose notes from the cursor row to the next pattern or the end of the phrase become a pattern placed at the cursor, or, with no notes, an empty one-bar pattern to write into; either way the Pattern level opens on it.
+The Phrase level SHALL show the phrase's name, meter and key, then rows down and instruments across, three at a time following the cursor, one note cell per instrument (its first note column): the note name, ··· for none, a placed pattern as ▸ and its label on its first row with the rows it covers dimmed. Left and right SHALL step between instruments; everything else SHALL be the controller's rules for the grid, including A on a pattern tag opening the Pattern level, which SHALL show the pattern's rows on one voice. In on a cell with no pattern SHALL make one there: the instrument's loose notes from the cursor row to the next pattern or the end of the phrase become a pattern placed at the cursor, or, with no notes, an empty one-bar pattern to write into; either way the Pattern level opens on it. Rows past the loop's end, as the playback capability defines it, SHALL be dimmed on both levels.
 
 #### Scenario: Make a pattern by thumb
 - **WHEN** the user presses in on an empty cell at row 16
@@ -47,6 +47,10 @@ The Phrase level SHALL show the phrase's name, meter and key, then rows down and
 #### Scenario: Note only
 - **WHEN** an instrument has two note columns, velocity and fx
 - **THEN** the Phrase level shows its first note column and nothing else
+
+#### Scenario: The loop's end by thumb
+- **WHEN** a phrase holds notes in its first bar only
+- **THEN** rows from 16 on are dimmed and Start loops the first bar
 
 ### Requirement: Instrument level
 The Instrument level SHALL show one instrument as a list: name, sound, volume, pan, mute, solo, tune, cents, trim, release, channel and columns, and a row to add an instrument; up and down SHALL move between values, A with left or right or up or down SHALL change the value under the cursor (by ten for volume, pan, tune and cents with left and right), A on sound or on + instrument SHALL open the list of sounds on offer to pick from, A on mute or solo SHALL toggle it, A on the name SHALL rename, Back+A SHALL duplicate the instrument, B on the name SHALL remove it, and Back with left or right SHALL move to the previous or next instrument. The level SHALL be one tap away on the context line from anywhere. A song with no instruments SHALL show the add row alone.
