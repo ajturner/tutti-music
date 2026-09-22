@@ -407,6 +407,8 @@ body.pocket { overflow: hidden; }
 .pkLine { display: flex; gap: 8px; align-items: baseline; white-space: nowrap; padding: 1px 4px; border-radius: 3px; min-height: 22px; }
 .pkLine.cur { background: #1B2145; }
 .pkLine.playing { box-shadow: inset 3px 0 0 var(--accent); }
+.pkRow.past { opacity: .45; }
+.pkRow.past .pkNum { color: var(--accent); }
 .pkLine.beat .pkNum { color: var(--text); }
 .pkHead { color: var(--dim); border-bottom: 1px solid var(--line); margin-bottom: 3px; padding-bottom: 3px; }
 .pkHead .pkName { color: var(--text); font-weight: 700; }

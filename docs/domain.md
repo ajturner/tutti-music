@@ -41,6 +41,8 @@ A song has four levels, and the **map** bar under the header shows them with the
 
 The **monitor** shows the note each instrument is sounding while the song plays: beside the instrument name in the grid header, in the Song view's instrument headers, and on the mixer strips. The map also says where the playhead is, in the song's own words: `▶ Bridge › B1`.
 
+A phrase **loops what is written**: Play phrase turns at the end of the last bar in which any instrument sounds a note, so a sketch of one bar comes round every bar and the loop grows with the writing, and an edit made while it loops is heard next time round. The arrangement and Loop section play phrases whole.
+
 ## For M8 users
 
 | M8 | Tutti |

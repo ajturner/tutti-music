@@ -1,7 +1,7 @@
 // Render a song to a flat, absolute-tick event list and map ticks to milliseconds under a changing tempo.
 import { PPQ, clamp } from './constants.js';
 import { SOUND } from './sounds.js';
-import { laneValueAt, expandMaterial, keyFor, playOrder } from './song.js';
+import { laneValueAt, expandMaterial, keyFor, playOrder, writtenRows } from './song.js';
 
 // ---- Render: song -> flat, absolute-tick event list --------------------------
 // Event types: 'ks' keyswitch, 'cc' controller, 'off' note off, 'on' note on. Order at equal tick matters:
@@ -112,8 +112,9 @@ export function applyFx(note, fx, transpose, tpr, random) {
   return [{ tick: start, end, pitch, vel: note.vel }];
 }
 
-// opts.phrases: phrase indices to play once each (the loop of the open phrase); opts.section: one section's
-// phrases with their repeats; neither: the whole arrangement. Each start records where it sits in the song.
+// opts.phrases: phrase indices to play once each (the loop of the open phrase), each cut to its written rows when
+// opts.trim is set; opts.section: one section's phrases with their repeats; neither: the whole arrangement, always
+// whole. Each start records where it sits in the song.
 export function renderSong(song, opts = {}) {
   const plays = opts.phrases ? opts.phrases.filter(i => song.phrases[i]).map(i => ({ item: -1, sectionRepeat: 0, section: opts.sectionRef || null, slot: -1, repeat: 0, phrase: i }))
     : playOrder(song, opts.section);
@@ -121,7 +122,8 @@ export function renderSong(song, opts = {}) {
   const events = [], tempo = [{ tick: 0, bpm: song.bpm }], starts = [];
   let offset = 0;
   for (const play of plays) {
-    const pi = play.phrase, phr = song.phrases[pi], key = keyFor(song, phr, play.section);
+    const pi = play.phrase, whole = song.phrases[pi], key = keyFor(song, whole, play.section);
+    const phr = opts.trim && opts.phrases ? Object.assign({}, whole, { rows: writtenRows(song, whole) }) : whole;
     const len = phr.rows * phr.ticksPerRow, tpr = phr.ticksPerRow, map = tickMapper(phr);
     starts.push({ phrase: pi, tick: offset, rows: phr.rows, ticksPerRow: tpr, groove: !!grooveOf(phr), item: play.item, section: play.section ? play.section.id : null, sectionRepeat: play.sectionRepeat, slot: play.slot, repeat: play.repeat });
     renderLane(phr.tempo, len, offset, (t, v) => tempo.push({ tick: offset + map(t - offset), bpm: v }), fmtBpm);

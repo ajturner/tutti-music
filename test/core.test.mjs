@@ -1,7 +1,7 @@
 // Headless tests of the core: it must import and run under Node with no DOM.
 import { PPQ, noteName, clamp, GM_DRUMS } from '../src/core/constants.js';
 import { SOUNDS, SOUND } from '../src/core/sounds.js';
-import { newSong, orchestraSong, newPhrase, materialOf, laneSet, laneValueAt, normalizeSong, SONG_FORMAT, SONG_VERSION, newPattern, makePattern, detachPlacement, expandMaterial, expandPlacement, placementAt, placementLabel, patternUses, removePattern } from '../src/core/song.js';
+import { newSong, orchestraSong, newPhrase, materialOf, writtenRows, barRows, laneSet, laneValueAt, normalizeSong, SONG_FORMAT, SONG_VERSION, newPattern, makePattern, detachPlacement, expandMaterial, expandPlacement, placementAt, placementLabel, patternUses, removePattern } from '../src/core/song.js';
 import { renderSong, TimeMap, TYPE_ORDER, rowTicks, tickMapper, rowAtTick, applyFx, expShape } from '../src/core/render.js';
 import { addInstrument, duplicateInstrument, isShaped, removeInstrument, moveInstrument, setInstrumentSound, freeChannel, arrangementText, sectionText, playOrder, keyFor, addPhrase, copyPhrase, addSlot, removeSlot, addSection, removeItem, deleteSection, moveIn, nextPhraseName, phraseById, sectionById, sectionsNotArranged } from '../src/core/song.js';
 import { inScale, transposeDiatonic, snapToScale, degreeOf, effectiveKey } from '../src/core/scales.js';
@@ -414,6 +414,29 @@ for (const ex of EXAMPLES) {
   const s = ex.build(); let ok = true, why = '';
   try { const rr = renderSong(s); const b = midiFileBytes(s); ok = rr.events.length > 0 && b.length > 100; } catch (e) { ok = false; why = e.message; }
   check('example renders and exports: ' + ex.title, ok, why);
+}
+
+// The loop is what is written: whole bars to the end of the last note, placements and held notes included.
+{
+  const s = orchestraSong(), phr = s.phrases[0], tpr = phr.ticksPerRow;   // 64 rows, 4/4 at sixteenths
+  check('written: nothing written loops the whole phrase', writtenRows(s, phr) === 64 && barRows(phr) === 16);
+  materialOf(phr, 'fl').notes.push({ tick: 0, len: tpr, pitch: 60, vel: 100, col: 0 }, { tick: 11 * tpr, len: tpr, pitch: 62, vel: 100, col: 0 });
+  check('written: a bar of notes loops one bar', writtenRows(s, phr) === 16);
+  materialOf(phr, 'fl').notes.push({ tick: 14 * tpr, len: 4 * tpr, pitch: 64, vel: 100, col: 0 });
+  check('written: a held note counts to its end', writtenRows(s, phr) === 32);
+  const ptn = newPattern(s, 'Riff', 16); ptn.material.notes.push({ tick: 0, len: tpr, pitch: 48, vel: 100, col: 0 });
+  materialOf(phr, 'fl').placements.push({ pattern: ptn.id, row: 32, repeat: 2 });
+  check('written: a placement counts with its repeats', writtenRows(s, phr) === 64);
+  phr.rows = 50;
+  check('written: never longer than the phrase', writtenRows(s, phr) === 50);
+  phr.rows = 64; materialOf(phr, 'fl').placements.length = 0;
+  phr.meter = [3, 4];
+  check('written: bars follow the meter', writtenRows(s, phr) === 24 && barRows(phr) === 12);
+  phr.meter = [4, 4];
+  const cut = renderSong(s, { phrases: [0], trim: true }), full = renderSong(s, { phrases: [0] });
+  check('render: trim plays the written rows and says so in the start', cut.lengthTicks === 32 * tpr && cut.starts[0].rows === 32 && full.lengthTicks === 64 * tpr && full.starts[0].rows === 64);
+  check('render: trim never touches the arrangement or a section', renderSong(s, { trim: true }).lengthTicks === 64 * tpr && renderSong(s, { section: s.sections[0].id, trim: true }).lengthTicks === 64 * tpr);
+  check('render: the phrase itself is left as it was', phr.rows === 64);
 }
 console.log(fails.length ? `\n${fails.length} FAILED` : '\nALL PASSED');
 process.exit(fails.length ? 1 : 0);

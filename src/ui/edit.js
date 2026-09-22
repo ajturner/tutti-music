@@ -9,6 +9,7 @@ import { $, KEYMAP, activeKey, auditionPreview, curPhrase, curPattern, curInstru
 import { currentCell, cellKinds } from './layout.js';
 import { syncPhraseUI, syncSongUI } from './sync.js';
 import { markEdited } from './storage.js';
+import { refreshLoop } from './transport.js';
 
 // Phrase lookups live in the core; re-exported so UI modules keep one import path.
 export { indexInstrument, noteAt, noteCovering, notesStartingAt, notesIn, putNote, nextNote, maxLength } from '../core/edit.js';
@@ -20,7 +21,7 @@ export function withUndo(fn) {
   if (state.undo.length > 200) state.undo.shift();
   state.redo.length = 0;
   fn();
-  markEdited();
+  markEdited(); refreshLoop();
   state.dirty = true;
 }
 // Song-level edits (instruments, mixer, key, order, tempo, title) snapshot the whole song.
@@ -29,7 +30,7 @@ export function withSongUndo(fn) {
   if (state.undo.length > 200) state.undo.shift();
   state.redo.length = 0;
   fn();
-  markEdited();
+  markEdited(); refreshLoop();
   state.dirty = true;
 }
 export function undo() { swapHistory(state.undo, state.redo); }
@@ -41,7 +42,7 @@ export function swapHistory(from, to) {
     if (i < 0) return;
     to.push({ pattern: h.pattern, json: JSON.stringify(state.song.patterns[i]) });
     state.song.patterns[i] = JSON.parse(h.json);
-    state.typing = null; markEdited(); state.dirty = true;
+    state.typing = null; markEdited(); refreshLoop(); state.dirty = true;
     return;
   }
   if (h.song) {
@@ -51,12 +52,12 @@ export function swapHistory(from, to) {
     state.phr = Math.min(state.phr, s.phrases.length - 1);
     state.cursor.instrument = Math.min(state.cursor.instrument, s.instruments.length - 1);
     state.sel = null; state.selAnchor = null;
-    syncSongUI(); syncPhraseUI(); state.typing = null; markEdited(); state.dirty = true;
+    syncSongUI(); syncPhraseUI(); state.typing = null; markEdited(); refreshLoop(); state.dirty = true;
     return;
   }
   to.push({ phr: h.phr, json: JSON.stringify(state.song.phrases[h.phr]) });
   state.song.phrases[h.phr] = JSON.parse(h.json);
-  state.phr = h.phr; syncPhraseUI(); state.typing = null; markEdited(); state.dirty = true;
+  state.phr = h.phr; syncPhraseUI(); state.typing = null; markEdited(); refreshLoop(); state.dirty = true;
 }
 
 // ---- Editing --------------------------------------------------------------------------

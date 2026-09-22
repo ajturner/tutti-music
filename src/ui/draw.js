@@ -2,7 +2,7 @@
 import { FAMILIES, clamp, hex2, noteName } from '../core/constants.js';
 import { SOUND } from '../core/sounds.js';
 import { laneValueAt, expandPlacements, patternById, placementLabel, placementRows } from '../core/song.js';
-import { $, COLORS, activeKey, applyDensity, canvas, ctx, curPhrase, curPattern, curSection, curInstrument, midi, rowsPerBar, rowsPerStrongBeat, sched, state, instrumentsShown, view } from './state.js';
+import { $, COLORS, activeKey, applyDensity, canvas, ctx, curPhrase, curPattern, curSection, curInstrument, midi, rowsPerBar, rowsPerStrongBeat, sched, state, instrumentsShown, view, loopRowsOf } from './state.js';
 import { computeLayout, currentCell, HEADER_ROWS, CELL_LABEL } from './layout.js';
 import { indexInstrument, noteCovering, patternStatus } from './edit.js';
 import { indexMaterial } from '../core/edit.js';
@@ -71,6 +71,7 @@ export function draw() {
   ctx.fillStyle = COLORS.bg; ctx.fillRect(0, 0, W, H);
   const rpb = rowsPerBar(), rpBeat = rowsPerStrongBeat();
   const rowY = r => headerH + (r - top) * view.ROW_H;
+  const loopEnd = loopRowsOf(phr);   // the row the loop turns on; rows from here are washed out
 
   // Row backgrounds
   for (let r = Math.max(0, top); r < Math.min(phr.rows, top + visible + 1); r++) {
@@ -160,8 +161,9 @@ export function draw() {
     const y = rowY(r), ym = y + view.ROW_H / 2;
     if (r % rpBeat === 0) { ctx.fillStyle = COLORS.beat; ctx.fillRect(0, y, L.gutter.w - view.charW * 0.5, view.ROW_H); }
     if (r === playRow && playPhr === state.phr) { ctx.fillStyle = COLORS.play; ctx.fillRect(0, y, L.gutter.w - view.charW * 0.5, view.ROW_H); }
-    ctx.fillStyle = r % rpb === 0 ? COLORS.accent : COLORS.num;
-    ctx.fillText(String(r).padStart(3, '0'), L.gutter.rowX, ym);
+    const turns = r === loopEnd && loopEnd < phr.rows;
+    ctx.fillStyle = turns || r % rpb === 0 ? COLORS.accent : COLORS.num;
+    ctx.fillText(turns ? ' \u21bb ' : String(r).padStart(3, '0'), L.gutter.rowX, ym);
     const isCursor = cur.instrument === -1 && r === cur.row;
     if (state.sel && inSel(0, r)) { ctx.fillStyle = COLORS.accent; ctx.globalAlpha = 0.22; ctx.fillRect(L.gutter.tempoX - 2, y, view.charW * 4 + 4, view.ROW_H); ctx.globalAlpha = 1; }
     if (isCursor) { ctx.fillStyle = COLORS.accent; ctx.fillRect(L.gutter.tempoX - 2, y + 1, view.charW * 4 + 4, view.ROW_H - 2); }
@@ -169,6 +171,8 @@ export function draw() {
     ctx.fillStyle = isCursor ? COLORS.cursorText : (p ? COLORS.text : COLORS.dim);
     ctx.fillText(p ? String(p.value).padStart(3, ' ') + (p.interp === 'lin' ? '~' : ' ') : '  ·', L.gutter.tempoX, ym);
   }
+  // Rows past the loop's end, washed out so the loop is visible before it plays and grows as the writing does.
+  if (loopEnd < phr.rows) { ctx.fillStyle = COLORS.wash; for (let r = Math.max(top, loopEnd); r < Math.min(phr.rows, top + visible + 1); r++) ctx.fillRect(0, rowY(r), W, view.ROW_H); }
   ctx.fillStyle = COLORS.line; ctx.fillRect(L.gutter.w - view.charW * 0.5, headerH, 1, H - headerH);
 
   // Header
@@ -253,7 +257,11 @@ export function updateStatus(playRow) {
   if (gamepad.name) parts.push('\u{1F3AE} <b>' + esc(gamepad.name.replace(/\s*\(.*$/, '')) + '</b>');
   const cs = $('controllerStatus'); if (cs) { const t = gamepad.name ? 'Connected: ' + gamepad.name : 'No controller'; if (cs.textContent !== t) cs.textContent = t; }
   if (state.record) parts.push('<b class="warn">REC</b> notes land on the passing row');
-  if (sched.playing) parts.push('<b>playing</b>' + (sched.loop ? ' (loop)' : '') + (playRow != null ? ' row ' + playRow : ''));
+  if (sched.playing) {
+    const r = sched.rendered, bars = n => { const b = n / rowsPerBar(); return Number.isInteger(b) ? b : b.toFixed(1); };
+    const loop = sched.loop ? (r && !r.scope && r.loopRows && r.loopRows < phr.rows ? ' (loop ' + bars(r.loopRows) + ' of ' + bars(phr.rows) + ' bars)' : ' (loop)') : '';
+    parts.push('<b>playing</b>' + loop + (playRow != null ? ' row ' + playRow : ''));
+  }
   if (state.message) parts.push('<span class="warn">' + state.message + '</span>');
   const html = parts.map(p => '<span>' + p + '</span>').join('');
   if (html !== lastStatus) { $('status').innerHTML = html; lastStatus = html; }
