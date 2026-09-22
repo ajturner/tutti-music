@@ -1,7 +1,7 @@
 // UI state, sink instances, view metrics, DOM handles and small accessors shared by every UI module.
 import { PPQ } from '../core/constants.js';
 import { effectiveKey } from '../core/scales.js';
-import { phraseMeter } from '../core/song.js';
+import { phraseMeter, beatRows, barRows, writtenRows } from '../core/song.js';
 import { Scheduler } from '../core/scheduler.js';
 import { SynthSink } from '../core/synth.js';
 import { SamplerSink } from '../core/sampler.js';
@@ -21,7 +21,7 @@ export function applyDensity() {
 }
 applyDensity();
 export const COLORS = { bg: '#151A2E', beat: '#191F3A', bar: '#3A4370', text: '#D7DBEA', dim: '#4C5478', num: '#6C7597',
-                 accent: '#F2E8C6', cursorText: '#151A2E', play: 'rgba(242,232,198,0.10)', header: '#1B2140', line: '#2A3258' };
+                 accent: '#F2E8C6', cursorText: '#151A2E', play: 'rgba(242,232,198,0.10)', wash: 'rgba(21,26,46,0.5)', header: '#1B2140', line: '#2A3258' };
 
 // Piano-style key map: offsets in semitones from C of the chosen octave.
 export const KEYMAP = {
@@ -38,6 +38,7 @@ export const state = {
   rev: 0,                // bumped by every edit so the DOM views know to rebuild
   cursor: { row: 0, instrument: 8, cell: 0 },        // instrument -1 = tempo column
   octave: 4, step: 4, follow: true, preview: true,
+  loopWritten: true,     // a phrase loops to the end of the last bar with notes, not to its end (View)
   scrollX: 0, typing: null, undo: [], redo: [], dirty: true, message: '',
   ensureVisible: true,   // scroll horizontally to the cursor's instrument on the next draw
   lastPitch: 60,         // what the controller's A button enters on an empty cell
@@ -116,13 +117,16 @@ export function curSection() {
   return i >= 0 ? song.sections[i] : null;
 }
 export const activeKey = () => effectiveKey(state.song, curPhrase(), curSection());
-export const rowsPerBeat = () => { const [, unit] = phraseMeter(curPhrase()); return Math.max(1, Math.round(PPQ * 4 / unit / curPhrase().ticksPerRow)); };
-export const rowsPerBar = () => phraseMeter(curPhrase())[0] * rowsPerBeat();
+export const rowsPerBeat = () => beatRows(curPhrase());
+export const rowsPerBar = () => barRows(curPhrase());
+// Where the loop turns: the written rows while the View rule is on, else the phrase's end.
+export const loopRowsOf = (phr = curPhrase()) => state.loopWritten ? writtenRows(state.song, phr) : phr.rows;
 // In compound meters (6/8, 9/8, 12/8) the felt beat is every three written beats.
 export const rowsPerStrongBeat = () => { const [beats, unit] = phraseMeter(curPhrase()); return rowsPerBeat() * (unit === 8 && beats % 3 === 0 ? 3 : 1); };
 
 sampler.onProgress = (id, done, total) => { state.loadingSamples = done < total ? id + ' ' + done + '/' + total : null; state.dirty = true; };
 try { const v = localStorage.getItem('tutti.sound'); if (v === 'synth' || v === 'samples') state.sound = v; } catch { /* no storage */ }
+try { if (localStorage.getItem('tutti.loopWritten.v1') === '0') state.loopWritten = false; } catch { /* no storage */ }
 // Column visibility: a phone starts with note columns only so the whole orchestra fits across the screen
 // (ten instruments instead of one); the View menu turns the other cells on, and the choice is remembered.
 try {

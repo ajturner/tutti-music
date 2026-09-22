@@ -1,6 +1,7 @@
 // Song data model: instruments, patterns, phrases, sections, the arrangement, file-format identity and
 // normalisation of loaded files. Vocabulary and rules: docs/domain.md.
 import { ORCHESTRA, SOUND } from './sounds.js';
+import { PPQ } from './constants.js';
 import { effectiveKey, transposeDiatonic } from './scales.js';
 
 // ---- Song model ------------------------------------------------------------
@@ -19,6 +20,8 @@ export function newPhrase(name, rows = 64, ticksPerRow = 240, meter = [4, 4]) {
   return { id: null, name, rows, ticksPerRow, meter: meter.slice(), groove: [], key: null, tempo: [], material: {} };
 }
 export const phraseMeter = phr => phr.meter || [4, 4];
+export const beatRows = phr => { const [, unit] = phraseMeter(phr); return Math.max(1, Math.round(PPQ * 4 / unit / phr.ticksPerRow)); };
+export const barRows = phr => phraseMeter(phr)[0] * beatRows(phr);
 // File format identity. Saved files carry these so other tools can recognise them; see schema/tutti-song.schema.json.
 export const SONG_SCHEMA = 'https://ajturner.github.io/tutti-music/schema/tutti-song.schema.json';
 export const SONG_FORMAT = 'tutti-song';
@@ -230,6 +233,18 @@ export function expandMaterial(song, phr, instrumentId, columns = 4, key = null)
   out.notes.push(...x.notes); out.dyn.push(...x.dyn); out.expr.push(...x.expr); out.fx.push(...x.fx);
   for (const k of ['dyn', 'expr', 'fx']) out[k].sort((a, b) => a.tick - b.tick);
   return out;
+}
+// The rows a loop of the phrase plays: to the end of the last bar in which any instrument sounds a note, loose or
+// placed, a held note counting to its end; whole bars, never more than the phrase. Nothing written: the whole phrase.
+export function writtenRows(song, phr) {
+  const tpr = phr.ticksPerRow, len = phr.rows * tpr; let last = 0;
+  for (const tr of song.instruments) {
+    const m = expandMaterial(song, phr, tr.id, tr.columns || 1, null); if (!m) continue;
+    for (const n of m.notes) if (n.len > 0 && n.tick < len) last = Math.max(last, Math.min(len, n.tick + n.len));
+  }
+  if (!last) return phr.rows;
+  const bar = barRows(phr);
+  return Math.min(phr.rows, Math.ceil(last / tpr / bar) * bar);
 }
 // Turn rows r0..r1 of a instrument's loose material into a pattern placed there. Returns the pattern.
 export function makePattern(song, phr, instrumentId, r0, r1, name) {

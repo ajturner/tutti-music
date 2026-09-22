@@ -10,7 +10,7 @@ import { SOUND, SOUNDS } from '../core/sounds.js';
 import { keyName } from '../core/scales.js';
 import { addInstrument, addPhrase, addSection, addSlot, duplicateInstrument, INSTRUMENT_SETTINGS, instrumentDefaults, keyFor, makePattern, nextPhraseName, nextSectionName, newSong, patternById, phraseMeter, placementLabel, removeInstrument, removeItem, removeSlot, deleteSection, sectionById, setInstrumentSound } from '../core/song.js';
 import { renderSong, rowAtTick } from '../core/render.js';
-import { $, curInstrument, curPattern, curPhrase, curSection, instrumentsShown, preloadSamples, rowsPerBar, sched, state } from './state.js';
+import { $, curInstrument, curPattern, curPhrase, curSection, instrumentsShown, preloadSamples, rowsPerBar, sched, state, loopRowsOf } from './state.js';
 import { withSongUndo, leavePattern, editPatternHere, cursorToInstrument, undo } from './edit.js';
 import { openPhrase, openSong, setLevel } from './map.js';
 import { songRows } from './songview.js';
@@ -208,10 +208,10 @@ function gridHtml() {
   const key = keyName(keyFor(song, phr, curSection()));
   let h = `<div class="pkLine pkHead"><span class="pkName">${ptn ? 'PA ' + esc(ptn.name) : esc(phr.name)}</span><span class="dim">${phraseMeter(phr).join('/')} · ${esc(key)}</span></div>`;
   h += `<div class="pkLine pkCols"><span class="pkNum"></span>${shown.map(i => `<span class="pkCol${i === c.instrument ? ' cur' : ''}">${esc(trs[i].name.slice(0, 6))}</span>`).join('')}</div>`;
-  const visible = visibleRows(2), top = Math.max(0, Math.min(c.row - Math.floor(visible / 2), rows - visible));
+  const visible = visibleRows(2), top = Math.max(0, Math.min(c.row - Math.floor(visible / 2), rows - visible)), end = loopRowsOf(phr);
   const perTrack = shown.map(i => { const m = phr.material[trs[i].id] || { notes: [], placements: [] }; const notes = new Map(); for (const n of m.notes) if (n.col === 0 || n.col == null) notes.set(Math.floor(n.tick / phr.ticksPerRow), n); const pls = new Map(); for (const pl of (m.placements || [])) { const pt = patternById(song, pl.pattern); if (pt) pls.set(pl.row, { pl, pt, rows: pt.rows * (pl.repeat || 1) }); } return { notes, pls }; });
   for (let r = top; r < Math.min(rows, top + visible); r++) {
-    h += `<div class="pkLine pkRow${r === c.row ? ' cur' : ''}${r % 4 === 0 ? ' beat' : ''}" data-row="${r}"><span class="pkNum">${String(r).padStart(2, '0')}</span>`;
+    h += `<div class="pkLine pkRow${r === c.row ? ' cur' : ''}${r % 4 === 0 ? ' beat' : ''}${r >= end ? ' past' : ''}" data-row="${r}"><span class="pkNum">${r === end ? '\u21bb ' : String(r).padStart(2, '0')}</span>`;
     shown.forEach((i, k) => {
       const t = perTrack[k], pl = t.pls.get(r), cur = r === c.row && i === c.instrument;
       let inside = false; for (const [at, x] of t.pls) if (r > at && r < at + x.rows) inside = true;

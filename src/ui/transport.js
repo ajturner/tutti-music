@@ -4,16 +4,34 @@ import { curPhrase, curPattern, curSection, sched, state, synth, preloadSamples 
 import { withUndo } from './edit.js';
 
 // ---- Transport ----------------------------------------------------------------------------
-// Loop the open phrase. While a pattern is open the loop is the pattern alone, on its instrument, through its stand-in.
-export function playPhrase(fromCursor) {
-  if (state.preview) { synth.ensure(); preloadSamples(); }
+// The loop of the open phrase, or of the open pattern alone on its instrument through its stand-in: what is written,
+// to the end of the last bar with notes, while the View rule is on. loopRows on the render says where it turns.
+function renderLoop() {
   const ptn = curPattern();
   const song = ptn ? Object.assign({}, state.song, { phrases: [curPhrase()] }) : state.song;
-  const r = renderSong(song, { phrases: [ptn ? 0 : state.phr], sectionRef: curSection() });
+  const r = renderSong(song, { phrases: [ptn ? 0 : state.phr], sectionRef: curSection(), trim: state.loopWritten });
   if (ptn) r.pattern = ptn.id;
-  sched.play(song, r, { loop: true, startTick: fromCursor ? rowTicks(curPhrase())[state.cursor.row] : 0 });
+  r.loopRows = r.starts.length ? r.starts[0].rows : curPhrase().rows;
+  return { song, r };
+}
+// Loop the open phrase. A start from the cursor on or past the loop's end starts at the top.
+export function playPhrase(fromCursor) {
+  if (state.preview) { synth.ensure(); preloadSamples(); }
+  const { song, r } = renderLoop();
+  const row = fromCursor && state.cursor.row < r.loopRows ? state.cursor.row : 0;
+  sched.play(song, r, { loop: true, startTick: rowTicks(curPhrase())[row] });
   state.queued = null;
   state.dirty = true;
+}
+// While the phrase or the pattern loops, an edit is rendered again and takes over when the loop comes round, so what
+// is written, and how much of it, is what plays. A queued phrase keeps its turn; a section loop is left alone.
+export function refreshLoop() {
+  const was = sched.rendered;
+  if (!sched.playing || !sched.loop || !was || was.scope || state.queued != null) return;
+  const ptn = curPattern();
+  if (ptn ? was.pattern !== ptn.id : (was.pattern || !was.starts.length || was.starts[0].phrase !== state.phr)) return;
+  const { song, r } = renderLoop();
+  sched.song = song; sched.queue(r);
 }
 // Loop one section: its phrases in order with their repeats, starting at the open phrase when it is in it.
 export function playSection(section = curSection()) {
@@ -48,4 +66,7 @@ export function queuePhrase(i) {
   state.queued = i; state.dirty = true;
   return true;
 }
-sched.onSwap = rendered => { state.phr = rendered.starts[0].phrase; state.queued = null; state.cursor.row = Math.min(state.cursor.row, curPhrase().rows - 1); state.phrChanged = true; state.dirty = true; };
+sched.onSwap = rendered => {
+  if (rendered.pattern || rendered.starts[0].phrase === state.phr) { state.queued = null; state.dirty = true; return; }   // the same loop, refreshed
+  state.phr = rendered.starts[0].phrase; state.queued = null; state.cursor.row = Math.min(state.cursor.row, curPhrase().rows - 1); state.phrChanged = true; state.dirty = true;
+};

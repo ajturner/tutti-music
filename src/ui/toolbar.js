@@ -11,7 +11,7 @@ import { $, curPhrase, curPattern, curSection, curInstrument, preloadSamples, sa
 import { withSongUndo, withUndo, leavePattern } from './edit.js';
 import { articulationSel, batchOp, deselect } from './selection.js';
 import { cellKinds } from './layout.js';
-import { playPhrase, playSection, playSong, stopAll } from './transport.js';
+import { playPhrase, playSection, playSong, refreshLoop, stopAll } from './transport.js';
 import { setPad } from './pad.js';
 import { syncPhraseUI, syncSongUI } from './sync.js';
 import { openPhrase } from './map.js';
@@ -93,6 +93,12 @@ $('tpr').onchange = e => { const n = parseInt(e.target.value, 10), ptn = curPatt
 $('meterNum').onchange = e => { const n = clamp(parseInt(e.target.value, 10) || 4, 1, 16); withUndo(() => { curPhrase().meter = [n, phraseMeter(curPhrase())[1]]; }); syncPhraseUI(); };
 $('meterDen').onchange = e => { const n = parseInt(e.target.value, 10); withUndo(() => { curPhrase().meter = [phraseMeter(curPhrase())[0], n]; }); };
 $('follow').onchange = e => { state.follow = e.target.checked; };
+$('loopWritten').checked = state.loopWritten;
+$('loopWritten').onchange = e => {
+  state.loopWritten = e.target.checked;
+  try { localStorage.setItem('tutti.loopWritten.v1', state.loopWritten ? '1' : '0'); } catch { /* no storage */ }
+  refreshLoop(); state.dirty = true;
+};
 $('preview').onchange = e => { state.preview = e.target.checked; synth.enabled = sampler.enabled = state.preview; if (!state.preview) sampler.allOff(); else preloadSamples(); state.dirty = true; };
 $('sound').onchange = e => {
   state.sound = e.target.value; sampler.allOff();

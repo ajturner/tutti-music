@@ -538,6 +538,31 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, instrument: st
   await page.waitForTimeout(30);
   await page.keyboard.press('Meta+z'); await page.waitForTimeout(30);
   check('song undo: a slider drag is one step', await page.evaluate(() => state.song.instruments[0].volume == null || state.song.instruments[0].volume === 100));
+  // --- the loop is what is written ---
+  await page.evaluate(() => { stopAll(); state.preview = false; state.loopWritten = true; document.getElementById('loopWritten').checked = true; const phr = curPhrase(); for (const m of Object.values(phr.material)) { m.notes = []; m.placements = []; } phr.rows = 64; phr.meter = [4, 4]; phr.ticksPerRow = 240; state.cursor.row = 0; state.cursor.instrument = 0; state.cursor.cell = 0; state.dirty = true; });
+  await page.waitForTimeout(60);
+  const lw_empty = await page.evaluate(() => ({ loop: tutti.loopRowsOf(curPhrase()), phr: state.phr }));
+  check('loop: nothing written loops the whole phrase', lw_empty.loop === 64, JSON.stringify(lw_empty));
+  await page.evaluate(() => { withUndo(() => { curPhrase().material[curInstrument().id].notes.push({ tick: 0, len: 240, pitch: 60, vel: 100, col: 0 }, { tick: 11 * 240, len: 240, pitch: 62, vel: 100, col: 0 }); }); });
+  await page.keyboard.press(' '); await page.waitForTimeout(80);
+  const lw_bar1 = await page.evaluate(() => ({ playing: sched.playing, loop: sched.loop, rows: sched.rendered.loopRows, len: sched.rendered.lengthTicks / 240, end: tutti.loopRowsOf(curPhrase()), status: document.getElementById('status').textContent }));
+  check('loop: a bar of sketch loops one bar and the status says so', lw_bar1.playing && lw_bar1.loop && lw_bar1.rows === 16 && lw_bar1.len === 16 && lw_bar1.end === 16 && /loop 1 of 4 bars/.test(lw_bar1.status), JSON.stringify(lw_bar1));
+  // writing in bar three while it loops: the end moves at once, and the longer loop is queued for when it comes round
+  await page.evaluate(() => { withUndo(() => { curPhrase().material[curInstrument().id].notes.push({ tick: 40 * 240, len: 240, pitch: 64, vel: 100, col: 0 }); }); });
+  await page.waitForTimeout(60);
+  const lw_grew = await page.evaluate(() => ({ end: tutti.loopRowsOf(curPhrase()), queuedRows: sched.next && sched.next.loopRows, playingRows: sched.rendered.loopRows, sel: state.queued }));
+  check('loop: a note in bar three moves the end to 48 and queues the longer loop', lw_grew.end === 48 && lw_grew.queuedRows === 48 && lw_grew.playingRows === 16 && lw_grew.sel === null, JSON.stringify(lw_grew));
+  await page.evaluate(() => sched.swapToQueued()); await page.waitForTimeout(30);
+  const lw_after = await page.evaluate(() => ({ rows: sched.rendered.loopRows, phr: state.phr, playing: sched.playing }));
+  check('loop: when it comes round the loop is three bars and the phrase stays open', lw_after.rows === 48 && lw_after.phr === lw_empty.phr && lw_after.playing, JSON.stringify(lw_after));
+  await page.evaluate(() => { const box = document.getElementById('loopWritten'); box.checked = false; box.dispatchEvent(new Event('change')); }); await page.waitForTimeout(30);
+  const lw_off = await page.evaluate(() => ({ end: tutti.loopRowsOf(curPhrase()), queuedRows: sched.next && sched.next.loopRows, stored: localStorage.getItem('tutti.loopWritten.v1') }));
+  check('loop: unticking loop what is written loops the whole phrase, remembered', lw_off.end === 64 && lw_off.queuedRows === 64 && lw_off.stored === '0', JSON.stringify(lw_off));
+  await page.evaluate(() => { const box = document.getElementById('loopWritten'); box.checked = true; box.dispatchEvent(new Event('change')); stopAll(); state.cursor.row = 60; state.dirty = true; });
+  await page.keyboard.press('Shift+ '); await page.waitForTimeout(80);
+  const lw_past = await page.evaluate(() => ({ playing: sched.playing, start: sched.startMs, rows: sched.rendered.loopRows }));
+  check('loop: play from a cursor past the loop\'s end starts at the top', lw_past.playing && lw_past.start === 0 && lw_past.rows === 48, JSON.stringify(lw_past));
+  await page.evaluate(() => stopAll());
   // --- real-time record ---
   await page.evaluate(() => { state.preview = false; state.cursor.instrument = 0; state.cursor.cell = 0; const phr = curPhrase(); phr.material.fl.notes = []; state.song.instruments[0].columns = 1; });
   await page.keyboard.press('Shift+Enter'); await page.waitForTimeout(80);
@@ -866,6 +891,18 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, instrument: st
     await tap('start', 500);
     const pl = await page.evaluate(() => ({ playing: sched.playing, loop: sched.loop, now: document.getElementById('pkNow').textContent, live: document.querySelectorAll('#pkLive span.on').length, row: !!document.querySelector('#pkBody .pkRow.playing') }));
     check('pocket: Start loops the phrase; the context line and the readout follow', pl.playing && pl.loop && /▶/.test(pl.now) && pl.live > 0, JSON.stringify(pl));
+    // rows past the loop's end are dimmed and marked; while it loops, an edit that shortens the writing queues the shorter loop
+    const dim = await page.evaluate(async () => {
+      withUndo(() => { const phr = curPhrase(); for (const m of Object.values(phr.material)) { m.notes = m.notes.filter(n => n.tick + n.len <= 16 * phr.ticksPerRow); m.placements = []; } });
+      state.cursor.row = 18; state.dirty = true;
+      await new Promise(r => setTimeout(r, 120));
+      const out = { end: tutti.loopRowsOf(curPhrase()), past: document.querySelectorAll('#pkBody .pkRow.past').length, turn: (document.querySelector('#pkBody .pkRow.past .pkNum') || {}).textContent, queued: sched.next && sched.next.loopRows };
+      undo(); state.cursor.row = 2; state.dirty = true;
+      await new Promise(r => setTimeout(r, 60));
+      out.restored = tutti.loopRowsOf(curPhrase());
+      return out;
+    });
+    check('pocket phrase: rows past the loop\'s end are dimmed and marked, and the loop is queued to follow the writing', dim.end === 16 && dim.past > 0 && /↻/.test(dim.turn) && dim.queued === 16 && dim.restored > 16, JSON.stringify(dim));
     await tap('start');
     await tap('lb');
     check('pocket: out goes out a level, to the section', (await pkState()).level === 'section');
