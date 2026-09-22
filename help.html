@@ -13,6 +13,10 @@
   nav h1 { font: italic 500 26px/1 "Iowan Old Style", "Palatino Linotype", Georgia, serif; color: var(--accent); margin: 0 0 4px; }
   nav .sub { color: var(--dim); margin-bottom: 14px; font-family: var(--mono); font-size: 12px; }
   nav ol { list-style: none; padding: 0; margin: 0; }
+  nav ol ol { padding-left: 12px; }
+  nav ol ol a { color: var(--dim); }
+  main h4 { font-size: 14px; margin: 16px 0 4px; color: var(--dim); text-transform: uppercase; letter-spacing: .05em; }
+  ol.steps li { margin: 6px 0; }
   nav li { margin: 3px 0; }
   nav a { color: var(--text); text-decoration: none; }
   nav a:hover { color: var(--accent); }
@@ -57,6 +61,15 @@
     <li><a href="#midi">MIDI out, MIDI in, export</a></li>
     <li><a href="#files">Songs, autosave, files</a></li>
     <li><a href="#theory">Writing a first phrase</a></li>
+    <li><a href="#tutorials">Tutorials</a>
+      <ol>
+        <li><a href="#tut-theory">Theory in Tutti's words</a></li>
+        <li><a href="#tut-symphonic">A symphonic period</a></li>
+        <li><a href="#tut-jazz">A twelve-bar blues</a></li>
+        <li><a href="#tut-folk">A reel</a></li>
+        <li><a href="#tut-electronica">An electronica track</a></li>
+      </ol>
+    </li>
   </ol>
   <a class="back" href="./">← back to the app</a>
 </nav>
@@ -260,6 +273,129 @@
 
 <h2 id="theory">Writing a first phrase</h2>
 <p>Plan one chord per bar, for example A minor, F, C, G. Put the roots on Basses and Cellos with step 16. Give Violins II and Violas one chord tone each per bar, moving each voice to the nearest tone. Fill the middle with an open fifth on the two Horns columns. Add a pulse: pizzicato basses on beats 1 and 3, or staccato bassoon on step 2 alternating root and fifth, timpani on tonic and dominant with a roll into the repeat. Write the melody last on Violins I or Flute, chord tones on the beats, and shape the phrase with a dynamics ramp from 30 to 60 across the four bars. Then grow it: in the Song view add a copy of the phrase with <b>+ phrase…</b> and change only its last two chords, so section A is an eight-bar period; add a section B for contrast and play A again after it. When a figure repeats, such as the bass pulse, select it and <b>Make pattern</b>, then place it with a shift under each chord instead of retyping it.</p>
+
+<h2 id="tutorials">Tutorials</h2>
+<p class="lead">Four pieces built from an empty song, step by step: a symphonic period, a twelve-bar blues, a reel and an electronica track. Each one starts with the theory you already know and shows where it lands in Tutti. Every tutorial has a finished cousin among the built-in songs (Files → the examples), so you can open one and compare.</p>
+<div class="note">The habit that makes all four work: write <b>one bar</b>, press <kbd>Space</kbd>, and build over the loop. The loop is what is written, so a bar of sketch comes round every bar, the loop grows as you add bars, and an edit is heard the next time round. Nothing has to be set up first.</div>
+
+<h3 id="tut-theory">Theory in Tutti's words</h3>
+<p>Tutti has no chord symbols yet (they are next on the <a href="https://github.com/ajturner/tutti-music/blob/main/docs/roadmap.md" target="_blank" rel="noopener">roadmap</a>); harmony is what the voices spell. Everything else you know has one home:</p>
+<table>
+  <tr><th>you think</th><th>in Tutti</th></tr>
+  <tr><td>key, mode</td><td>the <b>key</b> of the song, or of a section (that is a modulation), or of a phrase, set from the ▾ beside each in the map. Typing stays chromatic: a key never moves a note you typed. It decides what the pad dims, where <kbd>,</kbd> <kbd>.</kbd> move a selection by scale degree, what Rnd pitch draws from, and where a placement's shift lands.</td></tr>
+  <tr><td>a chord progression, one chord per bar</td><td>a bar is 16 rows at sixteenths. The bass column spells the roots; the middle voices spell the chord tones across instruments and across an instrument's <b>note columns</b> (divisi, <kbd>⇧]</kbd> adds one). There is no chord object: the chord is what the bar's voices say.</td></tr>
+  <tr><td>voice leading</td><td>each voice is a column; move each to the nearest chord tone. A note in a column lasts until the next note in that column, so a common tone is one long note (<kbd>]</kbd> lengthens).</td></tr>
+  <tr><td>a motif and its development</td><td>a <b>pattern</b> (Make pattern on a selection) and its <b>placements</b>. Transpose is chromatic; <b>shift</b> is a sequence in the key; octave, dynamics and repeat are the rest. Detach a placement to vary one copy by hand.</td></tr>
+  <tr><td>form: AABA, verse and chorus, exposition and recapitulation</td><td>the <b>arrangement</b> of <b>sections</b>, each with a repeat, in the Song view. A section is made of <b>phrases</b> with their own repeats; a phrase can sit in two sections and a section can play twice.</td></tr>
+  <tr><td>meter, note values, swing</td><td>rows: at the default row size a row is a sixteenth, so <b>step</b> 4 writes quarter notes and step 2 eighths (<kbd>⇧-</kbd> <kbd>⇧=</kbd>). Meter and row size are the phrase's. Swing is the phrase's <b>groove</b>: rows stay straight on screen and playback swings.</td></tr>
+  <tr><td>dynamics and hairpins, accents</td><td>the <b>dyn</b> lane (CC1) with ramps for hairpins (a value, then <kbd>L</kbd>; or Interpolate on a selection); <b>vel</b> per note for accents; <code>EXP</code> in the fx cell for a swell inside one note; a placement's dynamics for a softer statement.</td></tr>
+  <tr><td>articulation, bowing, mutes</td><td>the <b>art</b> cell: the digits the status line lists for that instrument (1 sus, 2 leg, 3 stc, 4 piz…). A row's articulation holds until the next.</td></tr>
+  <tr><td>tempo, ritardando</td><td><b>bpm</b> in the header and the tempo lane in the gutter: a value, then <kbd>L</kbd> to ramp to the next.</td></tr>
+  <tr><td>orchestration, ranges, doubling</td><td><b>instruments</b> made from <b>sounds</b>; the status line shows the range under the cursor. Doubling at the octave is copy, paste, <kbd>⇧=</kbd>. Two players of one sound are two instruments (<b>⧉</b>) a few cents and a pan apart.</td></tr>
+</table>
+<p>Hex is the one thing to get used to: velocity and dynamics are two hex digits, 00–7F. <code>40</code> is 64, about mezzo-forte; <code>60</code> is 96, forte; <code>28</code> is 40, piano. The status line always shows the decimal value under the cursor.</p>
+
+<h3 id="tut-symphonic">A symphonic period in D minor</h3>
+<p>Compare: <i>Brass chorale</i>, <i>Adagio for strings</i>. The plan is a four-bar phrase over <b>Dm · B♭ · Gm · A</b> (i, VI, iv, V), grown into an eight-bar period, a contrasting section in the relative major and a return.</p>
+<h4>Set up</h4>
+<ol class="steps">
+  <li><b>Files → New.</b> The Instruments panel opens with the Symphony orchestra's sounds. Pick each sound in the <b>+ instrument</b> selector and add it, in this order so the grid reads like a score from the bottom: Basses, Cellos, Violas, Violins II, Violins I, Horns, Flute, Timpani.</li>
+  <li>Set <b>bpm</b> 72 in the header. Press the ▾ beside <b>Song</b> in the map and set the key: root D, scale natural minor. Now the pad dims notes outside D minor and the degree keys know the scale.</li>
+  <li>The phrase is already 64 rows of 4/4 at sixteenths: four bars, one chord each. Press <kbd>Esc</kbd> to close the panel.</li>
+</ol>
+<h4>Bass and harmony</h4>
+<ol class="steps" start="4">
+  <li><b>Roots, one per bar.</b> Click Basses' note cell on row 0. Raise the step to 16 with <kbd>⇧=</kbd> (the status line shows it) and set octave 2 with <kbd>-</kbd> <kbd>=</kbd>. The piano layout is <kbd>Z</kbd> C, <kbd>S</kbd> C♯, <kbd>X</kbd> D, <kbd>D</kbd> E♭, <kbd>C</kbd> E, <kbd>V</kbd> F, <kbd>G</kbd> F♯, <kbd>B</kbd> G, <kbd>H</kbd> A♭, <kbd>N</kbd> A, <kbd>J</kbd> B♭, <kbd>M</kbd> B, with <kbd>Q</kbd>–<kbd>P</kbd> the same an octave up. Type <kbd>X</kbd>: D2 lands on row 0, lasts 16 rows and the cursor jumps to row 16. Press <kbd>-</kbd> for octave 1 and type <kbd>J</kbd>, <kbd>B</kbd>, <kbd>N</kbd>: B♭1, G1, A1 on rows 16, 32 and 48. Press <kbd>Space</kbd>: the four roots loop, and you have a harmonic rhythm to build on.</li>
+  <li><b>Cellos an octave up.</b> Select the Basses column (<kbd>⌘A</kbd>), <kbd>⌘C</kbd>, <kbd>Tab</kbd> to Cellos, <kbd>Home</kbd>, <kbd>⌘V</kbd>, then with the pasted notes still selected <kbd>⇧=</kbd> raises them an octave. The loop picks it up next time round.</li>
+  <li><b>Inner voices by nearest tone.</b> Step 16 still. Violas: A3 · B♭3 · B♭3 · A3 (the fifth of Dm, the root of B♭, the third of Gm, the root of A: each a step or a common tone away). Violins II: F4 · F4 · G4 · E4. Horns get an open fifth in two columns: <kbd>⇧]</kbd> on Horns adds a second note column; column 1 D3 · B♭2 · G3 · A3, column 2 A3 · F3 · D4 · E4. Nobody has the third of A yet: C♯ is the melody's job, so the cadence has somewhere to go.</li>
+  <li><b>A pulse.</b> Timpani, step 8: D3 · A2 on beats 1 and 3 of bar 1 (rows 0 and 8), then D3 · D3 (the common tone under B♭), G2 · D3, A2 · A2. On row 56 type A2, lengthen it to 8 rows with <kbd>]</kbd>, move to its <b>art</b> cell and press <kbd>2</kbd>: a roll (the status line lists Timpani's articulations as 1 sus 2 rll 3 stc) into the repeat.</li>
+</ol>
+<h4>Melody, doubling, shape</h4>
+<ol class="steps" start="8">
+  <li><b>Violins I last</b>, step 4, chord tones on the beats and passing notes between. Bar 1 (Dm): D5 E5 F5 A5. Bar 2 (B♭): B♭4 D5 F5 D5. Bar 3 (Gm): G4 B♭4 D5 G5. Bar 4 (A): E5 C♯5 then A4 on row 56 lengthened to 8. Move to row 0's art cell and press <kbd>2</kbd> for legato; a row's articulation holds until the next. Play: the E5 to C♯5 to A4 is the cadence, and the C♯ is the leading tone the inner voices left out.</li>
+  <li><b>Flute doubles the violins an octave up:</b> <kbd>⌘A</kbd> on Violins I, <kbd>⌘C</kbd>, Flute, <kbd>Home</kbd>, <kbd>⌘V</kbd>, <kbd>⇧=</kbd>. If a note leaves the flute's range the status line says so under the cursor.</li>
+  <li><b>A hairpin across the phrase.</b> On Violins I's <b>dyn</b> cell, row 0, type <kbd>3</kbd> <kbd>0</kbd> then <kbd>L</kbd> (ramp); row 63, type <kbd>6</kbd> <kbd>0</kbd>. Or select rows 0–63 of the dyn cell and press <b>Interpolate</b>. Do the same for the strings, and give the Horns a hold at <code>40</code> (a value then <kbd>S</kbd>). Basses and Cellos: put the cursor on row 32's art cell and press <kbd>4</kbd>: pizzicato for the second half, sustain again on row 48 with <kbd>1</kbd>.</li>
+</ol>
+<h4>Form</h4>
+<ol class="steps" start="11">
+  <li><b>An eight-bar period.</b> Click <b>Song</b> in the map. On the phrase row press <b>+ phrase…</b> and choose a copy: A2. Open it and change only the last two bars, so the antecedent ends on the dominant (A) and the consequent on the tonic: bar 3 B♭ (roots B♭1, inner voices as before), bar 4 D minor with the melody landing on D5. Section A now reads <code>A1 A2</code>.</li>
+  <li><b>A contrasting section.</b> <b>+ section…</b>, new: section B with phrase B1. On B's bar set its key to F major, the relative major: same notes, new tonic, and the degree keys now count from F. Lighten the texture: pizzicato in the low strings (art <kbd>4</kbd>), the melody on Flute alone, Horns out. Over F · B♭ · C · F write it the same way, bass first.</li>
+  <li><b>Return.</b> <b>+ section…</b>, and choose section A from the list of existing sections: the arrangement reads <code>A B A</code>. Set A's repeat to ×2 with its <b>×</b> field if you want the period heard twice before B. Put the cursor on the first row and press <kbd>Space</kbd>: Play from here goes through every repeat and stops at the end, and the section bars count 1/2, 2/2.</li>
+  <li><b>The pulse as a pattern.</b> Back in A1, select Timpani rows 0–15 and press <b>Make pattern</b>: the bar becomes <code>▸Timpani</code>. Copy the tag (<kbd>⌘C</kbd> with the cursor on it) and paste it on rows 16, 32 and 48 of each phrase; on each tag, <kbd>,</kbd> and <kbd>.</kbd> shift it by scale degrees: <kbd>,</kbd> twice for B♭ (D down to B♭ in D minor), <kbd>.</kbd> three times for G, four for A. The rhythm is written once and follows the harmony; edit the pattern (Enter on a tag) and every bar changes.</li>
+  <li><b>Ritardando into the end.</b> In the last phrase, the gutter's bpm cell on row 48: type 72 then <kbd>L</kbd>; row 63: 52. Then <b>Files → Export .mid</b> to take it into a DAW with a marker at each section, or enable MIDI in Connect and play it straight into your library.</li>
+</ol>
+
+<h3 id="tut-jazz">A twelve-bar blues in F</h3>
+<p>Compare: <i>Blue in F</i>. The twelve bars are <b>F7 · B♭7 · F7 · F7 | B♭7 · B♭7 · F7 · F7 | C7 · B♭7 · F7 · C7</b>: three four-bar phrases in one section, the head, played twice, then solos.</p>
+<h4>Set up</h4>
+<ol class="steps">
+  <li><b>Files → New.</b> In Instruments open <b>Sounds</b> at the foot of the panel and click <b>Jazz combo</b> in its banks bar; the sounds appear in the list. Add Upright bass, Drum kit, Piano, Guitar, Tenor sax.</li>
+  <li>bpm 132. Song key: F, mixolydian: the flat seventh is in the scale, so the pad and the degree keys agree with a dominant-seventh blues. The blue notes (A♭, B) are outside it and you simply type them; a key never refuses a note.</li>
+  <li><b>Swing lives in the groove.</b> Press ▾ beside the phrase name: groove, <b>swing 8ths medium</b>. Rows stay straight eighths on screen; playback swings them. The three phrases each need it, so set it on this one before copying.</li>
+</ol>
+<h4>Rhythm section, one bar at a time</h4>
+<ol class="steps" start="4">
+  <li><b>Walking bass</b>, step 4, quarter notes. Bar 1 over F7: F2 A2 C3 D3, root, third, fifth and the sixth as an approach to the B♭ below; bar 2 over B♭7: B♭2 D3 F3 A♭3, where the ♭7 walks down to the A of the next F7; bars 3–4 F7 again: F2 A2 C3 D3, F2 A2 C3 E♭3. Chord tones on 1 and 3, an approach note into every new root. <kbd>Space</kbd> after the first bar and keep writing over the loop.</li>
+  <li><b>Drums in columns.</b> The kit is a map: kick C2, snare D2, closed hat F♯2, pedal hat G♯2, ride D♯3 (the status line names the piece under the cursor). Give the kit three columns (<kbd>⇧]</kbd> twice). Column 1, step 2: D♯3 on every eighth, the ride; select bar 1's ride and press <b>Fill</b> to repeat the first row every step. Column 2, step 8, starting row 4: G♯2, the pedal hat on 2 and 4. Column 3, step 8, from row 0: C2 at velocity <code>38</code>, the feathered kick on 1 and 3. Velocities are hex in the vel cell, so the ride at <code>54</code>, the hat at <code>46</code>.</li>
+  <li><b>Piano comping</b> in the Charleston rhythm: hits on the "and of 2" (row 6) and beat 4 (row 12). Four columns for a rootless voicing; over F7: A3 E♭4 F4 A4 (third, seventh, root, third: the bass has the root, the third and seventh say the chord). Type each note on row 6 with step 2 and shorten to 2 rows with <kbd>[</kbd>, then on row 12 lengthen to 3. B♭7: A♭3 D4 F4 B♭4; C7: B♭3 E4 G4 C5. Notice the voice leading: E♭→D, A→A♭, one note moves.</li>
+  <li><b>Guitar four-to-the-bar</b>, three-note shells, step 4, each note 2 rows: F7 A2 E♭3 A3; B♭7 A♭2 D3 F3; C7 B♭2 E3 G3. Dyn hold at <code>46</code>: it sits under the piano.</li>
+  <li><b>Twelve bars.</b> With bar 1's rhythm section done, select all four bars' worth and copy the bar down (<kbd>⌘D</kbd> duplicates a selection right below), then fix the chords of bars 2 and 4 by the tables above. Press <b>+</b> in the phrase settings twice for phrases A2 and A3 (empty, shaped like A1, in the same section); copy A1 into each with <kbd>⌘A</kbd> twice, <kbd>⌘C</kbd>, <kbd>⌘V</kbd>, and rewrite their bars: A2 is B♭7 B♭7 F7 F7, A3 is C7 B♭7 F7 C7. A pattern would do it faster: select the bass's F7 bar, Make pattern, and place it with <kbd>.</kbd> shifts of +3 (B♭) and +4 (C) in F mixolydian; the walk keeps its shape and its scale.</li>
+</ol>
+<h4>The head and the form</h4>
+<ol class="steps" start="9">
+  <li><b>The head on tenor sax</b>, step 2. A call in A1: C4 · E♭4 F4 F♯4 G4 (held 4) · · F4 E♭4 C4 (held 4), the F♯ being the blue ♯4 passing to the fifth; leave bars 3–4 to breathe, or answer in bar 3. A reply in A2 a fourth up over B♭7: B♭4 · A♭4 F4 D4 F4… and a turnaround in A3 that lands on C. Velocity the accents: <code>60</code> on the long notes, <code>50</code> on the passing ones. Dyn ramp <code>5A</code> to <code>6E</code> across A3.</li>
+  <li><b>Lay back.</b> On the snare's or a sax note's fx cell type <kbd>D</kbd> then <code>20</code>: <code>DEL 20</code> pushes that row an eighth of a row behind the beat. <b>Humanize</b> on a selection of hats does this at random. A fill: on rows 62–63 of A3, snare D2 in the kick column with <code>RET 04</code> then <code>RET 08</code> in the fx cell.</li>
+  <li><b>Head twice, then solos.</b> In the Song view rename the section Head and set its × to 2. <b>+ section…</b> new: Solo. Add its phrases with <b>+ phrase…</b> → copy of A1, A2, A3 (a copy, not a reuse, because the sax line changes); clear the sax in each. Sketch a chorus on the Vibraphone: select 8 bars of its note column, <b>Rnd pitch</b> draws in-key pitches within the selection's range, and <b>Rnd vel</b> loosens it; then keep the good bars and rewrite the rest. Arrangement: Head, Solo ×2, Head. Loop the Solo section (⟳ loop on its bar) while you play along over MIDI in, or arm ● Rec and let the phrase take what you play.</li>
+</ol>
+
+<h3 id="tut-folk">A reel in D</h3>
+<p>Compare: <i>Crossroads reel</i>, <i>Reel</i>. A reel is a tune in continuous eighths over two-chord-a-bar simplicity, A part and B part each played twice: <b>AABB</b>. The chords here are <b>D · G · D · A</b> in the A part and <b>D · G · A · D</b> in the B.</p>
+<h4>Set up</h4>
+<ol class="steps">
+  <li><b>Files → New.</b> In Sounds load <b>Folk group</b>. Add Fiddle, Irish flute, Banjo, Folk harp, Harmonica, Frame drum, Hand percussion. Then, on the Fiddle's row, press <b>⧉</b>: Fiddle II, the same sound as a second player. In ⋯ set the first's pan to 40 and cents −6, the second's pan 88, cents +7, trim −2.</li>
+  <li>bpm 112, key D major. The phrase's 64 rows are four bars; a reel part is eight, so each part will be a phrase with a repeat, or two phrases: your choice. This tutorial uses one four-bar phrase per part and lets the repeats do the rest.</li>
+</ol>
+<h4>The tune and its players</h4>
+<ol class="steps" start="3">
+  <li><b>The tune on Fiddle</b>, step 2, arpeggiating each bar's chord with passing notes: bar 1 (D) D5 F♯5 A5 F♯5 D5 F♯5 A5 B5; bar 2 (G) A5 F♯5 D5 F♯5 E5 D5 C♯5 E5; bar 3 D5 F♯5 A5 F♯5 D5 F♯5 A5 B5; bar 4 (A) A5 F♯5 E5 C♯5 D5 (held 4) · D5 (2). Art cell on row 0: <kbd>2</kbd>, stc, for the bowed attack of a dance tune. Vel <code>64</code>.</li>
+  <li><b>Make it a pattern.</b> <kbd>⌘A</kbd> on the Fiddle, <b>Make pattern</b>, and in the Song view's pattern list rename it Reel A. Now Fiddle II: put the cursor on the tag, <kbd>⌘C</kbd>, move to Fiddle II row 0, <kbd>⌘V</kbd>: the same pattern placed on the second player. On its tag press <kbd>⇧-</kbd> for an octave down and <kbd>&lt;</kbd> a few times for softer. Two fiddles, one tune, written once; edit the pattern and both follow. The Irish flute doubles at pitch the same way, sus articulation, softer.</li>
+  <li><b>Banjo rolls, one per chord.</b> Bar 1, step 2, a forward roll on D: D4 F♯4 A4 D5 F♯4 A4 D5 F♯5. Select the bar, Make pattern, rename it Roll. Paste the tag on rows 16, 32 and 48, then shift: <kbd>.</kbd> three times on bar 2's tag (up to G, the fourth degree of D major), none on bar 3, <kbd>.</kbd> four times on bar 4's (A). The shift is diatonic, so a roll shifted to the sixth degree would come out B minor by itself: that is what shift is for, and why it beats transposing by semitones here.</li>
+  <li><b>Harp</b> step 4, a broken chord per bar: D3 A3 D4 F♯4, then the same on G (G3 D4 G4 B4) and A (A3 E4 A4 C♯5), or a pattern with the same shifts. <b>Harmonica</b> holds a drone: two columns, D5 and A4, one note per bar lengthened to 16 rows (<kbd>]</kbd>, or step 16); on the A bar swap to A4 and E5. Dyn hold <code>3C</code>.</li>
+  <li><b>Bodhrán on the Frame drum</b>, step 2 across the bar: C2 (large hit) G2 G2 G2 C2 G2 G2 D2, that is the low hit on 1 and 3, small hits on the eighths between and a muted low on the "and of 4"; velocities <code>64 3C 32 46 60 3C 32 50</code>. <b>Hand percussion</b>: a shaker (C3) on every eighth at <code>38</code>, and a tambourine (F♯2) on row 12. The status line names each piece as you move over the kit.</li>
+</ol>
+<h4>Form and feel</h4>
+<ol class="steps" start="8">
+  <li><b>The B part.</b> Song view, <b>+ phrase…</b>, copy: B1. Clear the Fiddle's tag and write the B tune an octave up over D · G · A · D: D6 C♯6 B5 A5 B5 A5 F♯5 A5 | G5 F♯5 E5 F♯5 G5 A5 B5 C♯6 | D6 C♯6 B5 A5 B5 A5 F♯5 A5 | G5 E5 C♯5 E5 D5 (4) · D5 (2). Make it a pattern too, Reel B, and give it to Fiddle II and the flute as before. Fix the roll shifts for the new chord order.</li>
+  <li><b>AABB.</b> Move B1 into its own section: <b>+ section…</b> new (B), then on the A section remove B1 and on B add it with + phrase… → existing. Set each section's × to 2. The arrangement reads <code>A×2 B×2</code>; <kbd>Space</kbd> on the top row plays the whole thing and stops, or ⟳ loop keeps one part going while you tune a line.</li>
+  <li><b>Lift.</b> A reel is straight, but a light lilt is a groove: try <b>swing 8ths light</b> on both phrases and decide by ear. Accent the tune's downbeats with vel <code>6A</code> on rows 0, 8 and so on, and give the frame drum a crescendo into the B part with a dyn ramp over its last bar.</li>
+</ol>
+
+<h3 id="tut-electronica">An electronica track in A minor</h3>
+<p>Compare: <i>Night drive</i>. Four on the floor over <b>Am · F · C · G</b> (i, VI, III, VII), built from one bar of drums and one bass riff that a pattern carries through the changes; a Verse and a Drop.</p>
+<h4>Set up</h4>
+<ol class="steps">
+  <li><b>Files → New.</b> Load <b>Electronica</b> in Sounds; the orchestra's synths stay on offer too. Add Drum machine, Synth bass, Pad, Synth arp, Pluck, FM piano, Clavisynth, Lead.</li>
+  <li>bpm 124, key A natural minor. The phrase's four bars are the four chords.</li>
+</ol>
+<h4>One bar of drums, one bar of bass</h4>
+<ol class="steps" start="3">
+  <li><b>The beat</b> on the Drum machine, four columns (<kbd>⇧]</kbd> three times). Column 1, step 4: C2, the kick, on rows 0 4 8 12 at <code>6E</code>. Column 2, step 8 from row 4: D♯2, the clap, on 2 and 4. Column 3, step 4 from row 2: F♯2, the closed hat on the offbeats at <code>46</code>. Column 4, step 2 from row 1: F♯2 on every odd row at <code>28</code>, the ghost hats; then on each of those rows' fx cell type <kbd>C</kbd> <code>70</code>: <code>CHA 70</code> plays the row about 45% of the time, so the hats shimmer instead of tick. Press <kbd>Space</kbd>: one bar loops.</li>
+  <li><b>Four bars from one.</b> Select the drum machine's rows 0–15 and <b>Make pattern</b>: Beat. On its tag press <kbd>]</kbd> three times: <code>▸Beat ×4</code>, one placement covering the phrase. A change to the pattern changes every bar; the loop grows to four bars on its own.</li>
+  <li><b>The riff.</b> Synth bass, step 2, octave 1: A1 A2 A1 A2 A1 A2 A1 A2 across bar 1, the low notes at <code>64</code> and the high at <code>54</code>, art <kbd>2</kbd> stc so they pump. Select the bar, Make pattern, rename it Riff. Paste its tag on rows 16, 32 and 48, and shift each by scale degrees to follow the chords: bar 2 <kbd>,</kbd> twice (A down to F in A minor), bar 3 <kbd>.</kbd> twice (up to C), bar 4 <kbd>,</kbd> once (G). The tags read <code>▸Riff −2</code>, <code>+2</code>, <code>−1</code>; the riff is written once and stays in A minor under every chord. Transpose (<kbd>-</kbd> <kbd>=</kbd>) would move it by semitones instead, when you want it chromatic.</li>
+</ol>
+<h4>Harmony, colour, movement</h4>
+<ol class="steps" start="6">
+  <li><b>The pad</b> holds each triad for its bar in three columns, step 16: A3 C4 E4 · F3 A3 C4 · C4 E4 G4 · G3 B3 D4. Chord tones one step apart between bars: that is voice leading, and the pad sounds smooth because of it. On row 0 of each bar's fx cell type <kbd>E</kbd> <code>1C</code>: <code>EXP</code> shape 1 (a swell) at depth C inside every held note. Dyn ramp <code>3C</code> to <code>60</code> across the phrase so the whole bed rises into the repeat.</li>
+  <li><b>An arpeggio without writing it.</b> Synth arp, step 16, one note per bar: A4 F4 C5 G4, the chord roots up an octave. On each bar's fx cell type <kbd>A</kbd> <code>37</code>: <code>ARP 37</code> cycles the note, +3 and +7 semitones every row: root, minor third, fifth. For the major chords (F, C, G) use <code>47</code>: the nibbles are the intervals, so a major triad is 4 and 7.</li>
+  <li><b>Pluck</b> on the offbeats (rows 2 6 10 14, step 4), the fifth of each chord: E4 · C4 · G4 · D4, stc, <code>46</code>. <b>FM piano</b> stabs on beat 1 of each bar, the triad in three columns, 6 rows long, then again on row 8 for 4.</li>
+  <li><b>A fill into the repeat.</b> Rows 62 and 63 in the kick column: D2, the snare, at <code>5A</code> and <code>6E</code>, with <code>RET 04</code> and <code>RET 08</code> in the fx cell: four then eight hits inside one row. The pattern's last row keeps its ghost hat but loses the <code>CHA</code>, so the fill always lands.</li>
+</ol>
+<h4>Verse, Drop, form</h4>
+<ol class="steps" start="10">
+  <li><b>The Drop.</b> Song view, <b>+ section…</b> new: Drop, then on its phrase row choose a copy of the Verse phrase. In the Drop: open hats (A♯2) on rows 6 and 14 in the clap column at <code>50</code>, a crash (C♯3) on row 0, Clavisynth stabs (the triad, 1 row long, stc) on the "and of 2" and beat 4 instead of the FM piano, and the Lead: step 2, A minor pentatonic (A C D E G), E5 · G5 A5 (held 4) · · G5 E5 D5 (4) · · C5 D5 E5 (6), then an answer that climbs to B5 and lands on A5. Sketch it with <b>Rnd pitch</b> over a selection if you like, then keep what works.</li>
+  <li><b>Arrangement.</b> Set the Drop's phrase × to 2, and add the Verse again after it with <b>+ section…</b> → existing: <code>Verse Drop Verse</code>, with the Drop phrase playing twice. Cursor on the first row, <kbd>Space</kbd>: Play from here runs through it and stops. ⟳ loop on the Drop while you work on the lead.</li>
+  <li><b>Mix.</b> Tick <b>mixer</b> in ⚙ View. Pad down to 70, panned a little left; press <b>⧉</b> on the pad's Instruments row for a second pad, cents +8, panned right, and place the same held notes an octave down on it for width. Kick and bass stay centred and loudest. Solo the drums (⇧-click the name) to check the fill, and mute the lead in the Verse by simply leaving it out there: what an instrument plays in a phrase is all in that phrase.</li>
+</ol>
 
 </main>
 </body>
