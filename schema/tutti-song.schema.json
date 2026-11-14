@@ -440,9 +440,27 @@
             }
           ],
           "description": "null means the instrument's default articulation."
+        },
+        "chance": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "The note's own chance of playing, in percent. Absent means 100. Takes the place of CHA on its row for this note."
+        },
+        "retrigger": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8,
+          "description": "How many times the note plays, evenly spaced across its length. Absent means 1. Takes the place of RET on its row for this note."
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": -50,
+          "maximum": 50,
+          "description": "How far the note's start moves, in percent of a row; negative is earlier. Absent means 0. Takes the place of DEL on its row for this note."
         }
       },
-      "description": "A pitch at a tick in a note column with velocity, length and articulation."
+      "description": "A pitch at a tick in a note column with velocity, length and articulation, and optionally its own chance, retrigger and offset."
     },
     "material": {
       "type": "object",

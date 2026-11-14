@@ -1,7 +1,7 @@
 // Editing primitives on phrase material: note lookup and indexing, the note-overlap rules, length limits,
 // and lane point edits. Pure functions on the song model; no UI state, so every host edits the same way.
 import { clamp } from './constants.js';
-import { materialOf } from './song.js';
+import { materialOf, copyNoteCommands, barRows, beatRows } from './song.js';
 
 const rowOf = (phr, tick) => Math.floor(tick / phr.ticksPerRow);
 
@@ -68,7 +68,7 @@ export function putNote(phr, instrumentId, col, tick, n) {
   const pt = materialOf(phr, instrumentId);
   pt.notes = pt.notes.filter(e => !(e.col === col && e.tick === tick));
   for (const e of pt.notes) if (e.col === col && e.tick < tick && e.tick + e.len > tick) e.len = tick - e.tick;
-  const ev = { tick, len: clamp(n.len, phr.ticksPerRow, maxLength(phr, instrumentId, col, tick)), pitch: n.pitch, vel: n.vel, col, art: n.art || null };
+  const ev = copyNoteCommands({ tick, len: clamp(n.len, phr.ticksPerRow, maxLength(phr, instrumentId, col, tick)), pitch: n.pitch, vel: n.vel, col, art: n.art || null }, n);
   pt.notes.push(ev);
   return ev;
 }
@@ -80,6 +80,39 @@ export function removeNotesAt(phr, instrumentId, col, row) {
 export function resizeNote(phr, instrumentId, ev, dRows) {
   ev.len = clamp(ev.len + dRows * phr.ticksPerRow, phr.ticksPerRow, maxLength(phr, instrumentId, ev.col, ev.tick));
   return ev;
+}
+
+// ---- Notes on a line (the Sequencer) ---------------------------------------------------------
+// The Sequencer shows an instrument with a line per pitch and time running across. It writes and removes notes
+// through these two functions, so the column rule lives here and not in a view.
+// The loose note of this pitch that is sounding on the row (it starts there, or is held across it).
+export function lineNoteAt(phr, instrumentId, pitch, row) {
+  const pt = phr.material[instrumentId]; if (!pt) return null;
+  return pt.notes.find(e => e.pitch === pitch && rowOf(phr, e.tick) <= row && rowOf(phr, e.tick + e.len - 1) >= row) || null;
+}
+// Remove the note of this pitch sounding on the row, or write one starting there: `rows` long (cut short where the
+// column's next note starts), velocity 100, in the lowest note column where no note is sounding on that row, so
+// nothing already written is cut. Returns { removed: note }, { added: note } or { full: true } when `columns` note
+// columns are all taken on the row.
+export function toggleLineNote(phr, instrumentId, pitch, row, columns = 4, rows = 1) {
+  const pt = materialOf(phr, instrumentId), there = lineNoteAt(phr, instrumentId, pitch, row);
+  if (there) { pt.notes.splice(pt.notes.indexOf(there), 1); return { removed: there }; }
+  const tick = row * phr.ticksPerRow;
+  for (let col = 0; col < Math.min(4, columns); col++) {
+    if (noteCovering(phr, instrumentId, col, row)) continue;
+    const ev = { tick, len: clamp(Math.max(1, rows) * phr.ticksPerRow, phr.ticksPerRow, maxLength(phr, instrumentId, col, tick)), pitch, vel: 100, col, art: null };
+    pt.notes.push(ev);
+    return { added: ev };
+  }
+  return { full: true };
+}
+// How many rows a page of the Sequencer holds when `fit` cells fit across: the whole phrase when it fits, else the
+// largest of four bars, two bars, one bar, half a bar (when that is a whole number of beats) and one beat.
+export function pageRows(phr, fit) {
+  if (phr.rows <= fit) return phr.rows;
+  const bar = barRows(phr), beat = beatRows(phr), half = bar % 2 === 0 && (bar / 2) % beat === 0 ? bar / 2 : 0;
+  const size = [bar * 4, bar * 2, bar, half, beat].find(n => n > 0 && n <= fit) || beat;
+  return Math.max(1, Math.min(phr.rows, size));
 }
 
 // ---- FX column ------------------------------------------------------------------------------

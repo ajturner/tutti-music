@@ -12,7 +12,9 @@ import { registerSound, unregisterSound } from '../src/core/sounds.js';
 import { readdir } from 'node:fs/promises';
 import { midiFileBytes } from '../src/core/midifile.js';
 import { EXAMPLES, line } from '../src/core/examples.js';
-import { setNote, putNote, resizeNote, removeNotesAt, noteAt, noteCovering, notesIn, maxLength } from '../src/core/edit.js';
+import { setNote, putNote, resizeNote, removeNotesAt, noteAt, noteCovering, notesIn, maxLength, lineNoteAt, toggleLineNote, pageRows } from '../src/core/edit.js';
+import { NOTE_COMMANDS, setNoteCommand, noteCommands, noteCommandText, normalizeNote } from '../src/core/song.js';
+import { kitLines, scaleLines, sequencerLines, lineName } from '../src/core/sounds.js';
 
 import { VERSION } from '../src/version.js';
 import { readFile } from 'node:fs/promises';
@@ -437,6 +439,99 @@ for (const ex of EXAMPLES) {
   check('render: trim plays the written rows and says so in the start', cut.lengthTicks === 32 * tpr && cut.starts[0].rows === 32 && full.lengthTicks === 64 * tpr && full.starts[0].rows === 64);
   check('render: trim never touches the arrangement or a section', renderSong(s, { trim: true }).lengthTicks === 64 * tpr && renderSong(s, { section: s.sections[0].id, trim: true }).lengthTicks === 64 * tpr);
   check('render: the phrase itself is left as it was', phr.rows === 64);
+}
+
+// A note's own commands: chance, retrigger, offset
+{
+  const n = { tick: 0, len: 240, pitch: 36, vel: 100, col: 0, art: null };
+  check('note commands: defaults when absent', JSON.stringify(noteCommands(n)) === JSON.stringify({ chance: 100, retrigger: 1, offset: 0 }) && noteCommandText(n) === '');
+  setNoteCommand(n, 'chance', 40); setNoteCommand(n, 'retrigger', 3); setNoteCommand(n, 'offset', -12.4);
+  check('note commands: set and read', n.chance === 40 && n.retrigger === 3 && n.offset === -12);
+  check('note commands: text names the ones in use', noteCommandText(n) === 'chance 40% retrigger ×3 offset −12%' && noteCommandText({ offset: 25 }, ', ') === 'offset +25%', noteCommandText(n));
+  setNoteCommand(n, 'chance', 100); setNoteCommand(n, 'retrigger', 1); setNoteCommand(n, 'offset', 0);
+  check('note commands: a default removes the field', !('chance' in n) && !('retrigger' in n) && !('offset' in n));
+  setNoteCommand(n, 'chance', -5); setNoteCommand(n, 'retrigger', 99); setNoteCommand(n, 'offset', 80);
+  check('note commands: clamped to their ranges', n.chance === 0 && n.retrigger === 8 && n.offset === 50);
+  check('note commands: an unknown field is ignored', !('swing' in setNoteCommand({}, 'swing', 3)) && Object.keys(NOTE_COMMANDS).join() === 'chance,retrigger,offset');
+  const odd = normalizeNote({ tick: 0, len: 240, pitch: 36, vel: 100, col: 0, chance: 250, retrigger: 0, offset: -80 });
+  check('note commands: the loader clamps and drops defaults', !('chance' in odd) && !('retrigger' in odd) && odd.offset === -50, JSON.stringify(odd));
+  check('note commands: the loader drops what is not a number', !('chance' in normalizeNote({ chance: '50' })) && !('offset' in normalizeNote({ offset: null })));
+
+  const tpr = 240, base = { tick: 480, len: 240, pitch: 36, vel: 100 };
+  check('note commands: retrigger 4 splits a one-row note into quarters', (() => { const r = applyFx({ ...base, retrigger: 4 }, null, 0, tpr, () => 0); return r.length === 4 && r[1].tick === 540 && r[3].end === 720; })());
+  check('note commands: offset -25 starts a quarter row early', applyFx({ ...base, tick: 960, offset: -25 }, null, 0, tpr, () => 0)[0].tick === 900);
+  check('note commands: an early note never starts before the phrase', (() => { const r = applyFx({ ...base, tick: 0, offset: -50 }, null, 0, tpr, () => 0)[0]; return r.tick === 0 && r.end === 240; })());
+  check('note commands: retrigger and offset together', (() => { const r = applyFx({ ...base, retrigger: 2, offset: 50 }, null, 0, tpr, () => 0); return r.length === 2 && r[0].tick === 600 && r[0].end === 720 && r[1].end === 840; })());
+  check('note commands: chance 0 never plays, chance 50 plays half the rolls', applyFx({ ...base, chance: 0 }, null, 0, tpr, () => 0).length === 0 && applyFx({ ...base, chance: 50 }, null, 0, tpr, () => 0.49).length === 1 && applyFx({ ...base, chance: 50 }, null, 0, tpr, () => 0.5).length === 0);
+  check('note commands: the note\'s chance takes the place of CHA on its row', applyFx({ ...base, chance: 50 }, { cmd: 'CHA', value: 0 }, 0, tpr, () => 0.2).length === 1 && applyFx(base, { cmd: 'CHA', value: 0 }, 0, tpr, () => 0.2).length === 0);
+  check('note commands: the note\'s offset takes the place of DEL', applyFx({ ...base, offset: 25 }, { cmd: 'DEL', value: 0x80 }, 0, tpr, () => 0)[0].tick === 540);
+  check('note commands: the note\'s retrigger takes the place of RET and ignores ARP', applyFx({ ...base, retrigger: 2 }, { cmd: 'RET', value: 4 }, 0, tpr, () => 0).length === 2 && applyFx({ ...base, len: 480, retrigger: 2 }, { cmd: 'ARP', value: 0x47 }, 0, tpr, () => 0).every(x => x.pitch === 36));
+  check('note commands: a row command still reaches a note without its own', applyFx(base, { cmd: 'RET', value: 4 }, 0, tpr, () => 0).length === 4);
+
+  // through the renderer, on a kit: kick and hat on one row with different chances
+  installBank(JSON.parse(await readFile(new URL('../banks/jazz/bank.json', import.meta.url))), 'file:///banks/jazz/bank.json');
+  const s = newSong(); const kit = addInstrument(s, 'drum-kit'); kit.columns = 2;
+  const p = s.phrases[0], m = materialOf(p, kit.id);
+  m.notes.push({ tick: 0, len: 240, pitch: 36, vel: 100, col: 0, art: null }, { tick: 0, len: 240, pitch: 42, vel: 90, col: 1, art: null, chance: 0 }, { tick: 960, len: 240, pitch: 38, vel: 100, col: 0, art: null, retrigger: 2, offset: -25 });
+  const ons = renderSong(s, { random: () => 0.5 }).events.filter(e => e.type === 'on');
+  check('note commands: render gives each note on a row its own chance', ons.some(e => e.pitch === 36) && !ons.some(e => e.pitch === 42));
+  check('note commands: render retriggers and moves the snare early', JSON.stringify(ons.filter(e => e.pitch === 38).map(e => e.tick)) === '[900,1020]', JSON.stringify(ons.filter(e => e.pitch === 38).map(e => e.tick)));
+  const ptn = makePattern(s, p, kit.id, 4, 7, 'Snare');
+  check('note commands: a pattern keeps them and a placement plays them', ptn.material.notes[0].retrigger === 2 && expandPlacement(s, p, { pattern: ptn.id, row: 8 }, 2)[`notes`][0].offset === -25);
+  const loaded = normalizeSong(JSON.parse(JSON.stringify(Object.assign(s, { phrases: [Object.assign(p, { material: { [kit.id]: { notes: [{ tick: 0, len: 240, pitch: 36, vel: 100, col: 0, art: null, chance: 250, retrigger: 0, offset: -80 }], dyn: [], expr: [], fx: [], placements: [] } } })] }))));
+  const ln = loaded.phrases[0].material[kit.id].notes[0];
+  check('note commands: normalizeSong cleans the notes of phrases and patterns', !('chance' in ln) && !('retrigger' in ln) && ln.offset === -50 && loaded.patterns[0].material.notes[0].retrigger === 2);
+  const pasted = putNote(p, kit.id, 0, 8 * 240, { pitch: 38, len: 240, vel: 90, art: null, retrigger: 3, chance: 60 });
+  check('note commands: putNote keeps them', pasted.retrigger === 3 && pasted.chance === 60 && !('offset' in pasted));
+}
+
+// Notes on a line: the Sequencer's primitives
+{
+  const s = newSong(); const kit = addInstrument(s, 'drum-kit'); const p = s.phrases[0], id = kit.id;
+  const a = toggleLineNote(p, id, 36, 0), b = toggleLineNote(p, id, 36, 8), c = toggleLineNote(p, id, 42, 0);
+  const notes = materialOf(p, id).notes;
+  check('lines: toggleLineNote writes one-row notes at velocity 100', notes.length === 3 && a.added.len === p.ticksPerRow && a.added.vel === 100 && b.added.tick === 8 * p.ticksPerRow);
+  check('lines: a second sound on a row takes the next column', a.added.col === 0 && c.added.col === 1);
+  check('lines: lineNoteAt finds by pitch and row', lineNoteAt(p, id, 42, 0) === c.added && lineNoteAt(p, id, 42, 1) === null && lineNoteAt(p, 'nobody', 36, 0) === null);
+  const gone = toggleLineNote(p, id, 36, 8);
+  check('lines: toggleLineNote on a note removes it', gone.removed === b.added && materialOf(p, id).notes.length === 2 && !lineNoteAt(p, id, 36, 8));
+  toggleLineNote(p, id, 38, 0); toggleLineNote(p, id, 46, 0);
+  const fifth = toggleLineNote(p, id, 49, 0);
+  check('lines: a fifth hit on a row is refused', fifth.full === true && materialOf(p, id).notes.filter(n => n.tick === 0).length === 4);
+  check('lines: the column limit can be lower', toggleLineNote(p, id, 36, 20, 1).added.col === 0 && toggleLineNote(p, id, 38, 20, 1).full === true);
+  const long = setNote(p, id, 0, 30 * p.ticksPerRow, 51, 4 * p.ticksPerRow), over = toggleLineNote(p, id, 36, 32);
+  check('lines: a sounding note is not cut; the hit takes the next column', long.len === 4 * p.ticksPerRow && over.added.col === 1);
+
+  // held notes on a pitched instrument
+  const fl = addInstrument(s, 'flute'), fid = fl.id, T = p.ticksPerRow;
+  const held = toggleLineNote(p, fid, 72, 4, 4, 4).added;
+  check('lines: a new note can be several rows long', held.len === 4 * T && held.tick === 4 * T && held.col === 0);
+  check('lines: lineNoteAt finds a note where it starts and where it is held', lineNoteAt(p, fid, 72, 4) === held && lineNoteAt(p, fid, 72, 7) === held && lineNoteAt(p, fid, 72, 8) === null && lineNoteAt(p, fid, 74, 5) === null);
+  const second = toggleLineNote(p, fid, 76, 6, 4, 4).added;
+  check('lines: a note written while another sounds takes the next column', second.col === 1 && second.len === 4 * T);
+  const cut = toggleLineNote(p, fid, 79, 2, 4, 8).added;
+  check('lines: a new note stops where the column\'s next note starts', cut.col === 0 && cut.len === 2 * T, JSON.stringify(cut));
+  check('lines: toggling on a held row removes the whole note', toggleLineNote(p, fid, 72, 6).removed === held && !lineNoteAt(p, fid, 72, 4));
+  const cMajor = { root: 0, scale: 'major' }, flute = SOUND.flute;
+  check('scale lines: the notes of the key over the range, highest first', scaleLines({ range: [60, 72] }, cMajor).join() === '72,71,69,67,65,64,62,60');
+  check('scale lines: a used note outside the key or the range keeps its line', scaleLines({ range: [60, 64] }, cMajor, [61, 70]).join() === '70,64,62,61,60');
+  check('scale lines: all shows every semitone; no key shows every semitone', scaleLines({ range: [60, 72] }, cMajor, [], true).length === 13 && scaleLines({ range: [60, 72] }, null).length === 13);
+  check('sequencer lines: a kit gets its sounds, any other instrument its scale', sequencerLines(SOUND['drum-kit'], cMajor)[0] === 36 && sequencerLines(flute, cMajor)[0] === flute.range[1] && sequencerLines(flute, cMajor).every(x => [0, 2, 4, 5, 7, 9, 11].includes(x % 12)));
+  check('line names: the kit\'s word for a sound, a note name otherwise', lineName(SOUND['drum-kit'], 36) === 'kick' && lineName(flute, 60) === 'C-4' && lineName(flute, 61) === 'C#4');
+
+  const ph = newPhrase('A', 64, 240, [4, 4]);
+  check('pages: the largest whole size that fits', pageRows(ph, 20) === 16 && pageRows(ph, 40) === 32 && pageRows(ph, 9) === 8 && pageRows(ph, 5) === 4 && pageRows(ph, 2) === 4);
+  check('pages: the whole phrase when it fits', pageRows(ph, 64) === 64 && pageRows(ph, 200) === 64 && pageRows(newPhrase('B', 12), 14) === 12);
+  check('pages: four bars of a long phrase', pageRows(newPhrase('C', 128), 70) === 64);
+  const seven = newPhrase('D', 56, 240, [7, 8]);
+  check('pages: 7/8 goes bar, then beat (no half bar)', pageRows(seven, 30) === 28 && pageRows(seven, 20) === 14 && pageRows(seven, 10) === 2);
+
+  installBank(JSON.parse(await readFile(new URL('../banks/electronica/bank.json', import.meta.url))), 'file:///banks/electronica/bank.json');
+  const jazz = SOUND['drum-kit'], machine = SOUND['drum-machine'];
+  check('kit lines: a small kit shows every sound in note order', kitLines(jazz).join() === Object.keys(jazz.kit).map(Number).sort((x, y) => x - y).join() && kitLines(jazz)[0] === 36);
+  check('kit lines: a large kit shows eight, the usual ones first', kitLines(machine).join() === '36,38,39,42,45,46,49,51', kitLines(machine).join());
+  check('kit lines: used sounds stay in view', kitLines(machine, [56, 70]).includes(56) && kitLines(machine, [56, 70]).includes(70) && kitLines(machine, [56, 70]).length === 8);
+  check('kit lines: all shows every sound', kitLines(machine, [], true).length === Object.keys(machine.kit).length && kitLines(SOUND.flute).length === 0);
 }
 console.log(fails.length ? `\n${fails.length} FAILED` : '\nALL PASSED');
 process.exit(fails.length ? 1 : 0);

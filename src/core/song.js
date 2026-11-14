@@ -11,7 +11,8 @@ import { effectiveKey, transposeDiatonic } from './scales.js';
 // phrase      { id, name, rows, ticksPerRow, meter:[beats, unit], groove, key, tempo:[point], material:{ instrumentId: material } }
 //             a few bars for every instrument; the unit the grid shows and the only owner of time
 // material    { notes:[note], dyn:[point], expr:[point], fx:[fx], placements:[placement] }
-// note        { tick, len, pitch, vel, col, art }   ticks relative to the phrase or pattern; col = note column
+// note        { tick, len, pitch, vel, col, art, chance?, retrigger?, offset? }   ticks relative to the phrase or pattern;
+//             col = note column; the last three are the note's own commands (NOTE_COMMANDS)
 // point       { tick, value, interp }               interp 'lin' ramps to the next point, 'step' holds
 // pattern     { id, name, rows, ticksPerRow, columns, material }   one voice's reusable line; only placed
 // placement   { pattern, row, transpose, shift, octave, dynamics, repeat }   one use of a pattern, with its transformations
@@ -37,6 +38,33 @@ export function orchestraSong() {
   const song = newSong(); song.banks = ['orchestra']; song.instruments = ORCHESTRA.map(t => instrumentDefaults(Object.assign({}, t)));
   return song;
 }
+// ---- A note's own commands -----------------------------------------------------------------------
+// A note may carry its own chance (percent it plays), retrigger (times it plays, evenly across its length) and
+// offset (percent of a row its start moves; negative is earlier). Each takes the place of the row's CHA, RET or
+// DEL for that note only. A field at its default is absent, so files without them are unchanged.
+export const NOTE_COMMANDS = { chance: [0, 100, 100], retrigger: [1, 8, 1], offset: [-50, 50, 0] };   // lowest, highest, default
+export function setNoteCommand(note, field, value) {
+  const spec = NOTE_COMMANDS[field]; if (!spec) return note;
+  const v = typeof value === 'number' ? value : NaN;
+  if (!Number.isFinite(v)) { delete note[field]; return note; }
+  const c = Math.min(spec[1], Math.max(spec[0], Math.round(v)));
+  if (c === spec[2]) delete note[field]; else note[field] = c;
+  return note;
+}
+// The three values with their defaults filled in.
+export const noteCommands = n => ({ chance: n.chance == null ? 100 : n.chance, retrigger: n.retrigger == null ? 1 : n.retrigger, offset: n.offset == null ? 0 : n.offset });
+// How a note's own commands read on screen, only the ones in use: "chance 50%", "retrigger ×2", "offset +25%".
+export function noteCommandParts(n) {
+  const c = noteCommands(n), parts = [];
+  if (c.chance < 100) parts.push('chance ' + c.chance + '%');
+  if (c.retrigger > 1) parts.push('retrigger \u00d7' + c.retrigger);
+  if (c.offset) parts.push('offset ' + (c.offset > 0 ? '+' : '\u2212') + Math.abs(c.offset) + '%');
+  return parts;
+}
+export const noteCommandText = (n, sep = ' ') => noteCommandParts(n).join(sep);
+// Carry the commands of one note onto another (paste, detach).
+export function copyNoteCommands(to, from) { for (const f of Object.keys(NOTE_COMMANDS)) setNoteCommand(to, f, from ? from[f] : undefined); return to; }
+export function normalizeNote(n) { for (const f of Object.keys(NOTE_COMMANDS)) if (f in n) setNoteCommand(n, f, n[f]); return n; }
 const fillMaterial = m => { m.notes = m.notes || []; m.dyn = m.dyn || []; m.expr = m.expr || []; m.fx = m.fx || []; m.placements = m.placements || []; return m; };
 const clampInt = (v, lo, hi, d) => { const n = Number.isFinite(+v) ? Math.round(+v) : d; return Math.min(hi, Math.max(lo, n)); };
 export const slug = (s, dflt) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || dflt;
@@ -58,13 +86,13 @@ export function normalizeSong(s, fallbackTitle) {
   if (!out.uid) out.uid = newUid();
   if (!out.title) out.title = fallbackTitle || 'Untitled';
   if (!Array.isArray(out.patterns)) out.patterns = [];
-  out.patterns = out.patterns.filter(p => p && typeof p.id === 'string').map(p => { const m = fillMaterial(p.material || {}); m.placements = []; return Object.assign({ name: p.id, rows: 16, ticksPerRow: 240, columns: 1 }, p, { material: m }); });
+  out.patterns = out.patterns.filter(p => p && typeof p.id === 'string').map(p => { const m = fillMaterial(p.material || {}); m.placements = []; m.notes.forEach(normalizeNote); return Object.assign({ name: p.id, rows: 16, ticksPerRow: 240, columns: 1 }, p, { material: m }); });
   for (const phr of out.phrases) {
     if (!phr.name) phr.name = 'A';
     if (!phr.meter) phr.meter = [4, 4];
     if (!phr.tempo) phr.tempo = [];
     if (!phr.material) phr.material = {};
-    for (const m of Object.values(phr.material)) { fillMaterial(m); normalizePlacements(out, m); }
+    for (const m of Object.values(phr.material)) { fillMaterial(m); m.notes.forEach(normalizeNote); normalizePlacements(out, m); }
   }
   ensureStructure(out);
   out.instruments = out.instruments.map(instrumentDefaults);

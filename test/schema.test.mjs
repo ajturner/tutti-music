@@ -50,6 +50,14 @@ withPattern.patterns[0].material.placements = [];
 withPattern.arrangement[0].follows = { fl: 1 };
 check('schema: follows is gone', !validSong(withPattern));
 {
+  const cmd = orchestraSong(); cmd.phrases[0].material.fl = { notes: [{ tick: 0, len: 240, pitch: 60, vel: 100, col: 0, art: null, chance: 50, retrigger: 2, offset: 25 }], dyn: [], expr: [], fx: [], placements: [] };
+  check('schema: a note may carry its own chance, retrigger and offset', validSong(cmd), errs(validSong));
+  for (const [f, v] of [['retrigger', 9], ['retrigger', 0], ['chance', 101], ['offset', -51], ['offset', 2.5]]) {
+    const badCmd = JSON.parse(JSON.stringify(cmd)); badCmd.phrases[0].material.fl.notes[0][f] = v;
+    check('schema: rejects ' + f + ' ' + v, !validSong(badCmd));
+  }
+}
+{
   const { normalizeSong, arrangementText } = await import('../src/core/song.js');
   const md = await readFile(new URL('../docs/domain.md', import.meta.url), 'utf8');
   const example = JSON.parse(md.match(/```json\n([\s\S]*?)```/)[1].replace('"c1f0…"', '"c1f0"'));

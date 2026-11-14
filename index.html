@@ -37,7 +37,7 @@
       <button id="rec" title="Record notes played on the MIDI input into the loop (⇧Return). Choose an input in Connect.">● Rec</button>
       <label for="bpm">bpm</label><input id="bpm" type="number" min="20" max="300" value="100" title="Tempo">
     </div>
-    <div class="group phrasesel" data-label="phrase"><select id="phrase" title="Open a phrase; they are listed under their sections"></select></div>
+    <div class="group phrasesel" data-label="phrase"><select id="phrase" title="Open a phrase; they are listed under their sections"></select><button id="seqBtn" aria-pressed="false" title="Sequencer: the phrase for one instrument, a line per pitch and time across (\)">Sequencer</button></div>
   </div>
 </header>
 <div id="panels">
@@ -162,6 +162,24 @@
 <div id="workspace">
   <button id="emptyAdd" class="primary" hidden title="A new song has no instruments yet: choose its players">+ instrument</button>
   <main><canvas id="grid" tabindex="0" aria-label="Phrase grid"></canvas></main>
+  <section id="sequencer" tabindex="0" hidden aria-label="Sequencer: a line per pitch, a cell per row">
+    <div id="sqBar">
+      <b id="sqName"></b>
+      <select id="sqInst" title="Instrument (Tab)" aria-label="Instrument" hidden></select>
+      <button id="sqAll" hidden></button>
+      <span id="sqPager" hidden><button id="sqPrev" title="Previous page (PgUp)" aria-label="Previous page">‹</button><span id="sqPage"></span><button id="sqNext" title="Next page (PgDn)" aria-label="Next page">›</button></span>
+    </div>
+    <div id="sqLines" role="grid"></div>
+    <div id="sqStrip" aria-label="The note under the cursor">
+      <b id="sqWhat"></b>
+      <span class="sqVal" data-field="vel" title="Velocity (- =)"><button data-d="-1" aria-label="vel −">−</button><output></output><button data-d="1" aria-label="vel +">+</button></span>
+      <span class="sqVal" data-field="length" title="Length in rows ([ ])"><button data-d="-1" aria-label="length −">−</button><output></output><button data-d="1" aria-label="length +">+</button></span>
+      <span class="sqVal" data-field="art" title="Articulation (A)"><button data-d="-1" aria-label="articulation −">−</button><output></output><button data-d="1" aria-label="articulation +">+</button></span>
+      <span class="sqVal" data-field="chance" title="Chance the note plays (&lt; &gt;)"><button data-d="-1" aria-label="chance −">−</button><output></output><button data-d="1" aria-label="chance +">+</button></span>
+      <span class="sqVal" data-field="retrigger" title="Times the note plays across its length (; ')"><button data-d="-1" aria-label="retrigger −">−</button><output></output><button data-d="1" aria-label="retrigger +">+</button></span>
+      <span class="sqVal" data-field="offset" title="Earlier or later, in percent of a row (, .)"><button data-d="-1" aria-label="offset −">−</button><output></output><button data-d="1" aria-label="offset +">+</button></span>
+    </div>
+  </section>
   <section id="songView" tabindex="0" hidden aria-label="Song overview: sections, phrases and instruments"><div id="songBody"></div></section>
   <aside id="mixer" hidden aria-label="Mixer">
     <div class="mixHead"><b>Mixer</b><span class="spacer"></span><button id="mixerInstruments" title="Open Instruments">Instruments…</button><button id="mixerClose" title="Hide the mixer">✕</button></div>
@@ -221,6 +239,8 @@
           <tr><td><kbd>PgUp</kbd><kbd>PgDn</kbd> · <kbd>Home</kbd><kbd>End</kbd></td><td>bar · first/last row</td></tr>
           <tr><td><kbd>Space</kbd> <kbd>⇧Space</kbd> <kbd>Return</kbd> <kbd>⇧Return</kbd> <kbd>Esc</kbd></td><td>loop · from cursor · song · record · stop</td></tr>
           <tr><td><kbd>Enter</kbd> · <kbd>`</kbd></td><td>in a level (song › phrase › pattern) · back out</td></tr>
+          <tr><td><kbd>\</kbd> · <kbd>X</kbd> · <kbd>-</kbd><kbd>=</kbd> <kbd>[</kbd><kbd>]</kbd> <kbd>A</kbd></td><td>Sequencer · note · its velocity, length, articulation</td></tr>
+          <tr><td><kbd>&lt;</kbd><kbd>&gt;</kbd> <kbd>;</kbd><kbd>'</kbd> <kbd>,</kbd><kbd>.</kbd></td><td>Sequencer: a note's chance, retrigger, offset</td></tr>
         </table>
       </div>
       <div>

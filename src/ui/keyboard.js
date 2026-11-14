@@ -7,6 +7,7 @@ import { clearSel, copySel, cutSel, deselect, duplicateSel, lengthSel, pasteSel,
 import { changeColumns, changeLength, clearCell } from './edit.js';
 import { currentCell } from './layout.js';
 import { playPhrase, playSong, stopAll, toggleRecord } from './transport.js';
+import { seqKey, sequencerOn, toggleSequencer } from './sequencer.js';
 
 // ---- Keyboard -----------------------------------------------------------------------------
 // macOS constraints this scheme is built around:
@@ -35,6 +36,9 @@ export function handleKey(e) {
     if (k === '?' || (code === 'Slash' && sh)) { if (e.ctrlKey || e.metaKey) openGuide(); else toggleQuickKeys(); return true; }
     return songKey(e);
   }
+  // The backslash key swaps the tracker grid and the Sequencer; while the Sequencer shows, its keys come first.
+  if (code === 'Backslash' && !e.ctrlKey && !e.metaKey) { toggleSequencer(); return true; }
+  if (sequencerOn() && seqKey(e)) return true;
   if (e.ctrlKey || e.metaKey) {
     const lower = k.toLowerCase();
     if (lower === 'z' && !sh) { undo(); return true; }

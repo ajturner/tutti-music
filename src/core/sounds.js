@@ -1,4 +1,6 @@
 // Instrument table (ranges, articulations, keyswitches, controller mapping, GM programs) and the default instrument roster.
+import { noteName } from './constants.js';
+import { inScale } from './scales.js';
 // Instrument definitions. Pitches are MIDI numbers with 60 = C4 (Kontakt shows 60 as C3).
 // keyswitches: articulation -> MIDI note sent just before a note whose articulation changed.
 // dynCC / exprCC: controllers driven by the dynamics lane (most libraries: CC1 = timbre layer, CC11 = level).
@@ -85,3 +87,28 @@ export const SYNTHS = [
   ['sa', 'Synth arp',  'synth-arp',  16, 1],
 ].map(([id, name, sound, channel, columns]) => ({ id, name, sound, channel, columns, mute: false }));
 export function addInstruments(song, instruments) { for (const t of instruments) if (!song.instruments.some(x => x.id === t.id)) song.instruments.push(Object.assign({}, t)); return song; }
+
+// ---- The lines of the Sequencer --------------------------------------------------------------
+// A kit instrument has a line per sound of the kit, in ascending note order. A kit of more than 12 sounds shows first
+// the sounds in `used` plus the usual ones (kick, snare, closed hat, open hat, clap, crash, low tom, ride) until eight
+// show; `all` shows every one.
+export const KIT_FIRST = [36, 38, 42, 46, 39, 49, 45, 51];
+export function kitLines(ins, used = [], all = false) {
+  const pitches = Object.keys((ins && ins.kit) || {}).map(Number).sort((a, b) => a - b);
+  if (all || pitches.length <= 12) return pitches;
+  const keep = new Set(used.filter(p => ins.kit[p]));
+  for (const p of KIT_FIRST) { if (keep.size >= 8) break; if (ins.kit[p]) keep.add(p); }
+  for (const p of pitches) { if (keep.size >= 8) break; keep.add(p); }
+  return pitches.filter(p => keep.has(p));
+}
+// Any other instrument has a line per pitch of its range, highest first: the pitches of the key, plus any pitch in
+// `used` so a note outside the key is never hidden; `all` shows every semitone.
+export function scaleLines(ins, key, used = [], all = false) {
+  const [lo, hi] = (ins && ins.range) || [0, 127], out = [];
+  for (let p = Math.min(127, hi); p >= Math.max(0, lo); p--) if (all || inScale(key, p) || used.includes(p)) out.push(p);
+  for (const p of used) if (!out.includes(p) && p >= 0 && p <= 127) out.push(p);   // a note outside the range still has a line
+  return out.sort((a, b) => b - a);
+}
+export const sequencerLines = (ins, key, used = [], all = false) => (ins && ins.kit ? kitLines(ins, used, all) : scaleLines(ins, key, used, all));
+// What a line is called: the kit's name for the sound, or the note name.
+export const lineName = (ins, pitch) => (ins && ins.kit ? ins.kit[pitch] || noteName(pitch) : noteName(pitch));

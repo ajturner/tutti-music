@@ -52,6 +52,7 @@ export const state = {
   mixer: false,          // mixer sidebar shown
   patternEdit: null,      // { id, instrumentId, back:{ phr, row, instrument, cell, scrollX } } while a pattern is open in the grid
   panel: null,           // open workflow panel: 'files' | 'instruments' | 'level' | 'connect' | 'view' | null
+  seq: null,             // { pitch, all, len } while the Sequencer is chosen in place of the tracker grid: the cursor's line, every line of the instrument, the length in rows of the next new note
   record: false,         // real-time MIDI record while the phrase loops
   show: { vel: true, art: true, dyn: true, fx: true },   // grid columns shown per instrument (note columns always)
   sound: 'samples',      // preview sound: 'samples' (bundled orchestra, synth fallback) or 'synth'
