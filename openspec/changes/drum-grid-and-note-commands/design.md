@@ -48,7 +48,7 @@ See proposal.md for the motivation. What shapes the approach:
 
 ### 4. Hits use the existing note columns
 
-`toggleHit(phr, instrumentId, pitch, row, columns = 4)` removes the loose note of that pitch starting on the row, or writes a one-row note in the lowest column where no note sounds on that row. It returns `{ removed }`, `{ added }` or `{ full: true }`.
+`toggleHit(phr, instrumentId, pitch, row, columns = 4)` removes the loose note of that pitch starting on the row, or writes a one-row note in the lowest column where no note sounds on that row. It returns `{ removed }`, `{ added }` or `{ full: true }`. The UI checks for a free column before it opens an undo step, so a refused hit leaves no step behind.
 
 The UI raises `instrument.columns` (and the open pattern's `columns`) when the hit landed in a column the instrument does not have yet. That change is outside the phrase undo snapshot: after an undo the instrument keeps an empty column. This is harmless and is the same state the `⇧]` key produces in the tracker.
 
@@ -56,7 +56,7 @@ The UI raises `instrument.columns` (and the open pattern's `columns`) when the h
 
 ### 5. The Drum grid is a DOM view, `src/ui/drums.js`
 
-`<section id="drumGrid">` sits in `#workspace` beside the canvas. `body[data-drums="on"]` hides `main`, the entry pad and the selection toolbar with CSS. `syncDrums()` is called from the draw loop next to `syncSongView()`. It rebuilds the lines when a signature changes (song revision, phrase, instrument, page, cells across, cursor, the all-sounds switch) and otherwise only moves the playhead class.
+`<section id="drumGrid">` sits in `#workspace` beside the canvas. `body[data-drums="on"]` hides `main`, the entry pad and the selection toolbar with CSS. `state.drums` is the choice (`{ pitch, all, live }`); `live` is false while the song has no kit to show, for example while a kit's sound bank is still loading, and the tracker grid shows until it is true. Every reader goes through `drumsOn()`. `syncDrums()` is called from the draw loop next to `syncSongView()`. It rebuilds the lines when a signature changes (song revision, phrase, instrument, page, cells across, cursor, the all-sounds switch) and otherwise only moves the playhead class.
 
 Cells are `<button>` elements in a CSS grid: `grid-template-columns: var(--dgLabel) repeat(var(--dgCols), minmax(0, 1fr))`. The width never exceeds the container, so there is no sideways scroll at any size.
 
@@ -66,7 +66,7 @@ The cursor is `state.cursor.row` (shared with the tracker) plus `state.drums.pit
 
 ### 6. Page size is a core function
 
-`pageRows(phr, fit)` returns the first of `bar×4, bar×2, bar, bar/2, beat` (in rows; the half bar only when it is a whole number of beats) that is ≤ `fit`, capped at `phr.rows`, and never less than one beat. The UI computes `fit` from the measured width: `(width − label) / minCell`, with `minCell` 24 px, or 34 px when `(pointer: coarse)` matches. A `ResizeObserver` on the view marks the state dirty.
+`pageRows(phr, fit)` returns the first of `bar×4, bar×2, bar, bar/2, beat` (in rows; the half bar only when it is a whole number of beats) that is ≤ `fit`, capped at `phr.rows`, and never less than one beat. The UI computes `fit` from the measured width: `(width − label) / minCell`, where `minCell` is a cell with its gap: 24 px, or 34 px when `(pointer: coarse)` matches. The label column is 112 px, or 72 px when the view is under 520 px wide, so a 360 px phone still gets eight cells. A `ResizeObserver` on the view marks the state dirty.
 
 ### 7. Change detection
 
@@ -76,10 +76,23 @@ The cursor is `state.cursor.row` (shared with the tracker) plus `state.drums.pit
 
 `handleKey` in `keyboard.js` hands the event to `drumKey(e)` first when the Drum grid shows and the level is not Song. `drumKey` returns false for keys it does not own (Space, Return, Esc, ⌘Z, `?`), which then fall through to the existing handler. `\` is handled before both, in either view. Letters other than `X` are swallowed so that a stray key does not type a note into a grid the user cannot see.
 
+### 9. One play position for both grids
+
+The canvas draw worked out the playing row and, with follow on, moved the open phrase to the one playing. That code moved to `playPosition()` in `transport.js`; the canvas and the Drum grid both call it, so the phrase follows the song in either view.
+
+### 10. The Drums button moves on a phone
+
+The button lives in the phrase group of the transport bar, so the header keeps its two groups. At 390 px that bar is already full, so below 760 px the same element is moved into the tools of the top bar (the pattern the phone panels already use: one control, moved, never duplicated).
+
+### 11. Rows inside a placement
+
+The tracker refuses note entry on any row a placement covers, because those cells show the pattern. The Drum grid follows the same rule for every cell of those rows. Allowing loose hits there would create notes the tracker cannot reach.
+
 ## Risks / Trade-offs
 
 - [Four hits per row] → The fifth is refused with a message. The limit is stated in the guide. Lifting it is a separate change to the column model.
 - [A game controller still drives the tracker's cursor while the Drum grid shows] → Left and right would move lines in the tracker's terms. The controller is left as it is and the guide says the Drum grid is for pointer and keyboard; controller support is a follow-up.
 - [Large kits rebuild 38 lines × 64 cells of buttons] → About 2,400 buttons at the largest size, rebuilt only on a signature change, not per frame. The default view of a large kit is eight lines.
 - [`\` on non-US layouts] → Matched on `e.code === 'Backslash'` as well as the key, as the existing punctuation bindings are.
+- [`package-lock.json` says version 0.1.0] → It was already out of step with `package.json` before this change and no test reads it. It is left alone.
 - [Chance at export] → A MIDI export rolls each chance once, as it already does for CHA.

@@ -19,7 +19,8 @@ The aim is a song you can read top to bottom in the words musicians already use:
 | **Placement** | One use of a pattern: on a instrument of a phrase, at a row, with its transformations. Editing the pattern changes every placement. | a statement of the motif; the riff again, a fourth up | material.placements |
 | **Transformation** | How a placement changes the pattern it plays: transpose (semitones), shift (scale degrees in the key in force), octave, dynamics (a velocity offset), repeat. | transposition, sequence, octave displacement, dynamic marking | placement fields |
 | **Modulation** | A section or phrase taking its own key. Never a property of a placement. A key does not move typed notes; it decides what is in scale and where a shift lands. | modulation | section.key, phrase.key |
-| **Note** | A pitch at a tick in a note column with velocity, length and articulation. "Notes" is the field; "events" is what the renderer emits. | note | material.notes |
+| **Note** | A pitch at a tick in a note column with velocity, length and articulation, and optionally its own **chance**, **retrigger** and **offset**, which take the place of the row's CHA, RET and DEL for that note. "Notes" is the field; "events" is what the renderer emits. | note | material.notes |
+| **Hit** | A note of a kit sound: one row long, written and removed in the Drum grid. It is a note in every other respect. | hit, stroke | material.notes |
 | **Lane** | A stepped or ramped controller line: dynamics (`dyn`) and expression (`expr`) per instrument, `tempo` per phrase. | hairpins, tempo marks | material, phrase |
 | **Bank** | A set of sounds a song can name and load. | ensemble, library | song.banks |
 | **Render** | Turning the arrangement into timed events for playback, MIDI out and file export. | performance | core |
@@ -38,6 +39,8 @@ A song has four levels, and the **map** bar under the header shows them with the
 | Section | the same view, on that section | | |
 | Phrase | the grid: every instrument, the phrase's rows | Enter on a pattern tag opens the pattern | the backquote key, or a crumb |
 | Pattern | the same grid with one instrument and the pattern's rows | | the backquote key, Esc, or a crumb |
+
+The **Drum grid** is the Phrase and Pattern levels seen for one kit instrument: a line per sound of the kit, a cell per row, time running across. It is a second renderer over the same phrase, cursor and undo history as the grid, switched with **Drums** or the backslash key, and it stores nothing of its own in the song.
 
 The **monitor** shows the note each instrument is sounding while the song plays: beside the instrument name in the grid header, in the Song view's instrument headers, and on the mixer strips. The map also says where the playhead is, in the song's own words: `▶ Bridge › B1`.
 
@@ -203,6 +206,7 @@ Rules the loader enforces, in this order:
 4. A section's slots naming a missing phrase are dropped, and a section left empty is dropped. With no section left, one section **A** holds every phrase in order.
 5. Phrases in no section are gathered into a section **Spare** that is not arranged, so nothing is lost and nothing plays that was not asked for.
 6. Arrangement items naming a missing section are dropped. An empty arrangement plays every section once.
+7. A note's `chance` (0 to 100), `retrigger` (1 to 8) and `offset` (−50 to 50, percent of a row) are rounded and clamped; a field at its default (100, 1, 0), or one that is not a number, is removed. The fields are optional and came after the first release of format 4, so files without them are unchanged.
 
 Within format 4, before its release: tracks became **instruments** made from **sounds**, and tuning, trim and release moved from the browser into the instrument, so they travel with the song and two instruments can share a sound. What changed from version 3, all deliberate: the words pattern and phrase swapped (a phrase is the block for every instrument, a pattern the reusable line); `sections` and an arrangement of sections replaced the arrangement of entries; `follows` is gone, because a looping part is a placement with a repeat in plain sight; placements gained `shift`, `octave` and `dynamics`; a section may carry a `key`. The exported .mid carries a marker at every section.
 
@@ -295,6 +299,7 @@ Words the roadmap (docs/roadmap.md) will add, fixed now so specs and labels agre
 - A JSON field is spelled exactly like the term: `arrangement`, `sections`, `phrases`, `patterns`, `material`, `placements`, `notes`. New fields join the vocabulary table first.
 - Transpose, shift, octave, dynamics and repeat are properties of a placement, never of a pattern. Repeat is also a property of a section's phrase slot and of an arrangement item, never of a phrase or section itself.
 - Only a phrase has a tempo lane, groove and meter.
+- Chance, retrigger and offset on a note read the same everywhere: `chance 50%`, `retrigger ×2`, `offset +25%`. The Drum grid's columns are the phrase's rows; "step" stays the cursor's advance in the grid.
 - A tag, the status line, the map and the Song view name a placement the same way: `Riff ↑3 +5 8va+1 v−16 ×2`.
 - The map's levels are always Song, Section, Phrase, Pattern, in that order.
 - Patterns are the song's; there is no store across songs.

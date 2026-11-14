@@ -7,11 +7,14 @@ A view of the open phrase or pattern for one kit instrument, with one line per k
 ## ADDED Requirements
 
 ### Requirement: Switching to the Drum grid
-The transport bar SHALL hold a **Drums** button, and the `\` key SHALL do the same thing: show the Drum grid in place of the tracker grid, or go back. The button SHALL be disabled when no instrument shown at this level is made from a kit sound. Turning it on SHALL keep the cursor's instrument when it is a kit and otherwise move the cursor to the first kit instrument. The phrase, the cursor row and the undo history SHALL be the same in both views. The Song view SHALL be unchanged.
+A **Drums** button SHALL sit beside the phrase selector, and below 760 px in the top bar beside ⚙. The button and the `\` key SHALL show the Drum grid in place of the tracker grid, or go back. The button SHALL be disabled when no instrument shown at this level is made from a kit sound. The Song view SHALL be unchanged.
 
 #### Scenario: Turn it on
 - **WHEN** Blue in F (jazz) is open on a phrase and the user presses Drums
 - **THEN** the tracker grid is replaced by the Drum grid for the instrument Drum kit, the Drums button is pressed, and the cursor is on the same row as before
+
+### Requirement: One cursor for both grids
+Turning the Drum grid on SHALL keep the cursor's instrument when it is a kit and otherwise move the cursor to the first kit instrument. The phrase, the cursor row and the undo history SHALL be the same in both views.
 
 #### Scenario: Go back
 - **WHEN** the Drum grid shows and the user presses `\`
@@ -21,8 +24,15 @@ The transport bar SHALL hold a **Drums** button, and the `\` key SHALL do the sa
 - **WHEN** a song whose instruments are all orchestral is open
 - **THEN** the Drums button is disabled
 
+### Requirement: The choice across songs
+The choice of the Drum grid SHALL be kept when another song or phrase is opened. A song with a kit SHALL show in the Drum grid on its first kit instrument, as soon as the kit's sound bank has loaded; a song with no kit SHALL show in the tracker grid.
+
+#### Scenario: Another song with a kit
+- **WHEN** the Drum grid shows and the user opens a song that has a Drum machine
+- **THEN** the Drum grid shows that song's phrase for the Drum machine
+
 ### Requirement: Lines and cells
-The Drum grid SHALL show one line per sound of the kit, in ascending MIDI note order, labelled with the sound's kit name, and one cell per row of the phrase. A cell SHALL be filled when a note of that sound starts on that row, brighter for a higher velocity. Cells SHALL be shaded by beat and the first cell of every bar SHALL be marked. An instrument selector SHALL list the kit instruments when there is more than one.
+The Drum grid SHALL show one line per sound of the kit, in ascending MIDI note order, labelled with the sound's kit name, and one cell per row of the phrase. A cell SHALL be filled when a note of that sound starts on that row, brighter for a higher velocity. Cells SHALL be shaded by beat, the first cell of every bar SHALL be marked, and a ruler above the lines SHALL number the first row of every beat. An instrument selector SHALL list the kit instruments when there is more than one.
 
 #### Scenario: Reading a beat
 - **WHEN** the Drum kit holds a kick (36) on rows 0 and 8 and a closed hat (42) on every second row
@@ -40,7 +50,7 @@ A kit of more than 12 sounds SHALL first show the sounds that have a hit in the 
 - **THEN** eight lines show and a button reads `all 38`
 
 ### Requirement: Cells across fit the screen
-The number of cells across SHALL be the largest of four bars, two bars, one bar, half a bar and one beat of the phrase's rows whose cells are each at least 24 px wide, or 34 px on a touch screen, and never more than the phrase's rows. The grid SHALL NOT scroll sideways. The count SHALL be worked out again when the window changes size.
+The number of cells across SHALL be the largest of four bars, two bars, one bar, half a bar and one beat of the phrase's rows whose cells, each with the gap beside it, are at least 24 px wide, or 34 px on a touch screen; a phrase that fits is shown whole. The grid SHALL NOT scroll sideways. The count SHALL be worked out again when the window changes size.
 
 #### Scenario: Desktop
 - **WHEN** the Drum grid shows a 64-row phrase in 4/4 with sixteenth rows in a 1400 px wide window
@@ -58,7 +68,7 @@ When the phrase has more rows than cells across, a pager SHALL show `‹`, the r
 - **THEN** the cursor is on row 19 and the pager reads `17–32 / 64`
 
 ### Requirement: Writing and removing hits
-A tap or click on an empty cell SHALL write a hit: a note of that line's pitch starting on that row, one row long, velocity 100, in the lowest note column that has no note sounding on that row. It SHALL sound the hit and move the cursor to the cell. A tap or click on a hit SHALL remove it. Each SHALL be one undo step. The instrument SHALL gain a note column when the hit needs one, up to four; a fifth hit on one row SHALL be refused with the message `Four hits already start on this row`.
+A tap or click on an empty cell SHALL write a hit: a note of that line's pitch starting on that row, one row long, velocity 100, in the lowest note column that has no note sounding on that row. It SHALL sound the hit and move the cursor to the cell. A tap or click on a hit SHALL remove it. Each SHALL be one undo step.
 
 #### Scenario: Tap a beat
 - **WHEN** the user taps the cells at rows 0, 4, 8 and 12 of the line kick on an empty phrase
@@ -67,6 +77,13 @@ A tap or click on an empty cell SHALL write a hit: a note of that line's pitch s
 #### Scenario: Tap again
 - **WHEN** the user taps the filled cell at row 4 of the line kick
 - **THEN** that note is gone and ⌘Z brings it back
+
+### Requirement: Hits and note columns
+The instrument SHALL gain a note column when a hit needs one, up to four. When all four are taken on a row a further hit SHALL be refused with the message `All four note columns are taken on this row` and no undo step.
+
+#### Scenario: Fifth hit
+- **WHEN** four hits start on row 0 and the user taps row 0 of a fifth line
+- **THEN** no note is written and the message shows
 
 #### Scenario: Second sound on a row
 - **WHEN** a kick starts on row 0 in column 0 and the user taps row 0 of the line closed hat on an instrument with one note column
@@ -80,7 +97,7 @@ A long press, or a click with Shift held, SHALL move the cursor to a cell withou
 - **THEN** the hit is still there and the hit strip shows its values
 
 ### Requirement: Keys
-The arrow keys SHALL move the cursor by one row of the phrase (left, right) or one line (up, down); Home and End SHALL go to the first and last row; Tab SHALL go to the next kit instrument. `X` SHALL write or remove a hit under the cursor; Delete SHALL remove it. Space, Return, Esc, the backquote key, ⌘Z and ⌘⇧Z SHALL do what they do in the tracker grid.
+The arrow keys SHALL move the cursor by one row of the phrase (left, right) or one line (up, down); Home and End SHALL go to the first and last row; Tab SHALL go to the next kit instrument. `X` SHALL write or remove a hit under the cursor; Delete SHALL remove it; other letters SHALL do nothing. Space, Return, Esc, the backquote key, ⌘Z and ⌘⇧Z SHALL do what they do in the tracker grid.
 
 #### Scenario: Keyboard beat
 - **WHEN** the cursor is on row 0 of the line snare and the user presses → four times and then X
@@ -111,12 +128,16 @@ A hit with a retrigger above 1 SHALL show the count in its cell. A hit with a ch
 - **WHEN** a kick on row 6 has velocity 100, retrigger 3 and offset 25
 - **THEN** its cell shows `3`, has a bar on its right edge, and is named `kick, row 6, vel 100, retrigger ×3, offset +25%`
 
-### Requirement: Hits from a placement
-Hits that a placement produces SHALL show dimmed. A tap on one SHALL NOT change it and SHALL show the message the tracker shows for a note inside a pattern. Return on one SHALL open its pattern, which then shows in the Drum grid with its own rows.
+### Requirement: Rows inside a placement
+Hits that a placement produces SHALL show dimmed, with `in pattern` and the pattern's name in their accessible name, and the hit strip SHALL show their values with its buttons disabled. As in the tracker grid, the rows a placement covers belong to its pattern: a tap or a key on any cell of those rows SHALL NOT change anything and SHALL show the message the tracker shows for a note inside a pattern. Return there SHALL open the pattern, which then shows in the Drum grid with its own rows.
 
 #### Scenario: Placed ride
-- **WHEN** the pattern Ride is placed on the Drum kit and the user taps one of its hits in the Drum grid
+- **WHEN** the pattern Ride is placed on rows 16 to 19 of the Drum kit and the user taps one of its hits, and then an empty cell on row 17
 - **THEN** nothing changes and the status line reads `Inside pattern Ride: Enter edits the pattern, Detach makes these notes loose`
+
+#### Scenario: Into the pattern
+- **WHEN** the cursor is on row 16 and the user presses Return
+- **THEN** the pattern Ride shows in the Drum grid with four cells to a line, and a tap writes a hit into the pattern
 
 ### Requirement: Playhead
 While the phrase or the song plays, the cells of the playing row SHALL be lit on the page that holds it.

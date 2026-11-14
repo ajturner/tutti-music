@@ -41,7 +41,7 @@ The fx column also gets in the way of a beat. It holds one command per row for t
 ## Impact
 
 - Core: `src/core/song.js` (loader), `src/core/render.js` (command precedence), `src/core/edit.js` (hit primitives, paste), `schema/tutti-song.schema.json` (three optional note properties).
-- UI: a new module `src/ui/drums.js`; small changes to `index.html`, `styles.css`, `src/ui/draw.js`, `src/ui/keyboard.js`, `src/ui/selection.js`, `src/ui/map.js`, `src/main.js`; `sw.js` lists the new module.
+- UI: a new module `src/ui/drums.js`; small changes to `index.html`, `styles.css`, `src/ui/draw.js`, `src/ui/keyboard.js`, `src/ui/selection.js`, `src/ui/map.js`, `src/ui/transport.js`, `src/ui/state.js`, `src/main.js`; `sw.js` lists the new module.
 - Docs: `docs/domain.md` (vocabulary: hit, Drum grid, the note's own commands), `help.html`, `README.md`.
 - Tests: core and schema tests under Node; browser tests at desktop and phone sizes.
 - Version 4.3.0. Files saved by 4.3.0 that use the new fields still open in 4.2.0, which ignores them when it plays.

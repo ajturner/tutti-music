@@ -52,6 +52,7 @@ export const state = {
   mixer: false,          // mixer sidebar shown
   patternEdit: null,      // { id, instrumentId, back:{ phr, row, instrument, cell, scrollX } } while a pattern is open in the grid
   panel: null,           // open workflow panel: 'files' | 'instruments' | 'level' | 'connect' | 'view' | null
+  drums: null,           // { pitch, all, live } while the Drum grid is chosen in place of the tracker grid: the cursor's line, every sound of a large kit, a kit is there to show
   record: false,         // real-time MIDI record while the phrase loops
   show: { vel: true, art: true, dyn: true, fx: true },   // grid columns shown per instrument (note columns always)
   sound: 'samples',      // preview sound: 'samples' (bundled orchestra, synth fallback) or 'synth'

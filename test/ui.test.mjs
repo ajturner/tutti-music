@@ -949,6 +949,169 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, instrument: st
   check('phone: no errors after interaction', errors.length === 0, errors.join(' | '));
   await ctx.close();
 }
+
+// ---------- Drum grid and a note's own commands (openspec/specs/drum-grid, fx-column)
+const cellSel = (pitch, row) => `.dgCell[data-pitch="${pitch}"][data-row="${row}"]`;
+// Open Blue in F (its jazz bank has the Drum kit), on a new empty phrase, with the cursor away from the kit.
+async function openKitSong(page) {
+  await page.evaluate(() => { tutti.selectSong(state.songs.findIndex(s => s.title.startsWith('Blue in F'))); state.preview = false; });
+  await page.waitForFunction(() => tutti.SOUND['drum-kit'] && tutti.SOUND['drum-kit'].kit, null, { timeout: 5000 });
+  await page.evaluate(() => {
+    const song = state.song, phr = tutti.addPhrase(song, 'Beat', song.phrases[0]);
+    phr.groove = []; tutti.addSlot(song, song.sections[0], phr.id);
+    song.instruments.find(t => t.sound === 'drum-kit').columns = 1;
+    tutti.openPhrase(song.phrases.indexOf(phr), 0, 0); state.cursor.row = 5; state.dirty = true;
+  });
+  await page.waitForTimeout(80);
+}
+const kitNotes = page => page.evaluate(() => { const t = state.song.instruments.find(x => x.sound === 'drum-kit'); return JSON.parse(JSON.stringify((tutti.curPhrase().material[t.id] || { notes: [] }).notes)).sort((a, b) => a.tick - b.tick || a.col - b.col); });
+{
+  const { ctx, page, errors } = await open({ viewport: { width: 1400, height: 900 } }, 'drums');
+  const mod = process.platform === 'darwin' ? 'Meta' : 'Control', tick = 240;
+  await page.evaluate(() => { tutti.selectSong(state.songs.findIndex(s => s.instruments.length && !s.instruments.some(t => (tutti.SOUND[t.sound] || {}).kit))); });
+  await page.waitForTimeout(150);
+  check('drums: the button is disabled in a song with no kit', await page.isDisabled('#drumsBtn') && !(await page.isVisible('#drumGrid')));
+  await openKitSong(page);
+  check('drums: the button is enabled when the song has a kit', !(await page.isDisabled('#drumsBtn')) && (await page.getAttribute('#drumsBtn', 'aria-pressed')) === 'false');
+  await page.click('#drumsBtn'); await page.waitForTimeout(100);
+  let st = await page.evaluate(() => ({ on: tutti.drumsOn(), kit: tutti.curInstrument().name, row: state.cursor.row, grid: getComputedStyle(document.querySelector('main')).display, pressed: document.getElementById('drumsBtn').getAttribute('aria-pressed') }));
+  check('drums: Drums shows the Drum grid for the kit, same row, in place of the tracker', st.on && st.kit === 'Drum kit' && st.row === 5 && st.grid === 'none' && st.pressed === 'true' && await page.isVisible('#drumGrid'), JSON.stringify(st));
+  let lay = await page.evaluate(() => ({ lines: document.querySelectorAll('.dgLine:not(.dgRuler)').length, labels: [...document.querySelectorAll('.dgLabel')].map(b => b.textContent), cells: document.querySelectorAll('.dgLine:not(.dgRuler)')[0].querySelectorAll('.dgCell').length, w: Math.min(...[...document.querySelectorAll('.dgCell')].map(c => c.getBoundingClientRect().width)), pager: document.getElementById('dgPage').textContent, over: document.documentElement.scrollWidth > innerWidth || document.getElementById('dgLines').scrollWidth > document.getElementById('dgLines').clientWidth }));
+  check('drums: a line per kit sound in note order, named by the kit', lay.lines === 10 && lay.labels[0] === 'kick' && lay.labels[1] === 'snare' && lay.labels.includes('closed hat'), JSON.stringify(lay.labels));
+  check('drums: 32 cells across a 64-row phrase at 1400 px, each at least 22 px, nothing scrolls sideways', lay.cells === 32 && lay.w >= 22 && !lay.over && lay.pager === '1–32 / 64', JSON.stringify(lay));
+  for (const r of [0, 4, 8, 12]) { await page.click(cellSel(36, r)); await page.waitForTimeout(40); }
+  let notes = await kitNotes(page);
+  check('drums: tapping four cells writes four one-row kicks at velocity 100', notes.length === 4 && notes.every((n, i) => n.pitch === 36 && n.tick === i * 4 * tick && n.len === tick && n.vel === 100 && n.col === 0), JSON.stringify(notes));
+  check('drums: the cells are filled and the cursor is on the last one', await page.evaluate(sel => document.querySelector(sel).classList.contains('on'), cellSel(36, 8)) && await page.evaluate(sel => document.querySelector(sel).classList.contains('cur'), cellSel(36, 12)));
+  await page.click(cellSel(36, 4)); await page.waitForTimeout(40);
+  check('drums: tapping a hit removes it', (await kitNotes(page)).length === 3);
+  await page.keyboard.press(mod + '+z'); await page.waitForTimeout(60);
+  check('drums: undo brings it back', (await kitNotes(page)).length === 4 && await page.evaluate(sel => document.querySelector(sel).classList.contains('on'), cellSel(36, 4)));
+  await page.click(cellSel(42, 0)); await page.waitForTimeout(40);
+  notes = await kitNotes(page);
+  check('drums: a second sound on a row takes column 1 and the instrument gains the column', notes.some(n => n.pitch === 42 && n.tick === 0 && n.col === 1) && await page.evaluate(() => tutti.curInstrument().columns) === 2, JSON.stringify(notes.slice(0, 2)));
+  await page.click(cellSel(38, 0)); await page.click(cellSel(39, 0)); await page.waitForTimeout(40);
+  const before = (await kitNotes(page)).length, undoBefore = await page.evaluate(() => state.undo.length);
+  await page.click(cellSel(45, 0)); await page.waitForTimeout(40);
+  check('drums: a fifth hit on a row is refused with a message and no undo step', (await kitNotes(page)).length === before && (await page.evaluate(() => state.message)) === 'All four note columns are taken on this row' && (await page.evaluate(() => state.undo.length)) === undoBefore);
+  await page.click(cellSel(38, 0)); await page.click(cellSel(39, 0)); await page.waitForTimeout(40);
+  // the cursor without a change, and the hit strip
+  await page.click(cellSel(36, 8), { modifiers: ['Shift'] }); await page.waitForTimeout(60);
+  let strip = await page.evaluate(() => ({ what: document.getElementById('dgWhat').textContent, vals: [...document.querySelectorAll('.dgVal output')].map(o => o.textContent), off: [...document.querySelectorAll('.dgVal button')].some(b => b.disabled), row: state.cursor.row }));
+  check('drums: Shift-click moves the cursor and keeps the hit', (await kitNotes(page)).some(n => n.pitch === 36 && n.tick === 8 * tick) && strip.row === 8, JSON.stringify(strip));
+  check('drums: the strip names the line and row and shows the four values', strip.what === 'kick · row 8' && strip.vals.join('|') === 'vel 100|chance 100%|retrigger ×1|offset 0%' && !strip.off, JSON.stringify(strip));
+  for (let i = 0; i < 5; i++) { await page.click('.dgVal[data-field="chance"] button[data-d="-1"]'); await page.waitForTimeout(30); }
+  const hit = () => page.evaluate(() => JSON.parse(JSON.stringify(tutti.hitHere())));
+  check('drums: chance − five times reads chance 50% and is "chance": 50 in the song', (await hit()).chance === 50 && (await page.textContent('.dgVal[data-field="chance"] output')) === 'chance 50%' && await page.evaluate(sel => document.querySelector(sel).classList.contains('maybe'), cellSel(36, 8)));
+  for (let i = 0; i < 5; i++) { await page.keyboard.press('Shift+Period'); await page.waitForTimeout(20); }
+  check('drums: > raises the chance; at 100 the field is gone', !('chance' in await hit()));
+  const undoAtTop = await page.evaluate(() => state.undo.length);
+  await page.keyboard.press('Shift+Period'); await page.waitForTimeout(20);
+  check('drums: a value at the end of its range adds no undo step', (await page.evaluate(() => state.undo.length)) === undoAtTop);
+  await page.click('.dgVal[data-field="retrigger"] button[data-d="1"]'); await page.waitForTimeout(30);
+  check('drums: retrigger + writes "retrigger": 2', (await hit()).retrigger === 2);
+  await page.click('.dgVal[data-field="retrigger"] button[data-d="-1"]'); await page.waitForTimeout(30);
+  check('drums: retrigger − back to ×1 removes the field', !('retrigger' in await hit()) && (await page.textContent('.dgVal[data-field="retrigger"] output')) === 'retrigger ×1');
+  await page.keyboard.press(']'); await page.keyboard.press(']');
+  for (let i = 0; i < 5; i++) await page.keyboard.press('.');
+  await page.keyboard.press('-'); await page.waitForTimeout(60);
+  const h = await hit(), mark = await page.evaluate(sel => { const c = document.querySelector(sel); return { name: c.getAttribute('aria-label'), text: c.textContent, late: c.classList.contains('late'), early: c.classList.contains('early') }; }, cellSel(36, 8));
+  check('drums: keys ] . - set retrigger 3, offset +25 and velocity 92', h.retrigger === 3 && h.offset === 25 && h.vel === 92, JSON.stringify(h));
+  check('drums: the cell shows the count and a bar on its late edge, and is named in full', mark.text === '3' && mark.late && !mark.early && mark.name === 'kick, row 8, vel 92, retrigger ×3, offset +25%', JSON.stringify(mark));
+  for (let i = 0; i < 12; i++) await page.keyboard.press(',');
+  await page.waitForTimeout(40);
+  check('drums: , moves the hit early, down to −50', (await hit()).offset === -35 && await page.evaluate(sel => document.querySelector(sel).classList.contains('early'), cellSel(36, 8)));
+  // keys: move, write, clear, page, leave
+  await page.keyboard.press('Home'); await page.keyboard.press('ArrowDown');
+  for (let i = 0; i < 5; i++) await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('x'); await page.waitForTimeout(50);
+  check('drums: arrows move by row and line, X writes a hit', (await kitNotes(page)).some(n => n.pitch === 38 && n.tick === 5 * tick) && (await page.evaluate(() => state.drums.pitch)) === 38);
+  await page.keyboard.press('z'); await page.keyboard.press('q'); await page.waitForTimeout(30);
+  check('drums: note letters type nothing', (await kitNotes(page)).filter(n => n.tick === 5 * tick).length === 1);
+  await page.keyboard.press('Delete'); await page.waitForTimeout(40);
+  check('drums: Delete removes the hit under the cursor', !(await kitNotes(page)).some(n => n.pitch === 38));
+  await page.keyboard.press('PageDown'); await page.waitForTimeout(60);
+  check('drums: PageDown moves the cursor a page on and the pager follows', (await page.evaluate(() => state.cursor.row)) === 37 && (await page.textContent('#dgPage')) === '33–64 / 64' && await page.isDisabled('#dgNext') && (await page.$(cellSel(36, 37))) !== null && (await page.$(cellSel(36, 8))) === null);
+  await page.click('#dgPrev'); await page.waitForTimeout(60);
+  check('drums: ‹ goes back a page', (await page.evaluate(() => state.cursor.row)) === 5 && (await page.textContent('#dgPage')) === '1–32 / 64');
+  // playhead
+  await page.keyboard.press('Space'); await page.waitForTimeout(350);
+  const lit = await page.evaluate(() => ({ playing: tutti.sched.playing, n: document.querySelectorAll('.dgCell.play').length, rows: new Set([...document.querySelectorAll('.dgCell.play')].map(c => c.dataset.row)).size }));
+  check('drums: Space loops the phrase and one column is lit', lit.playing && lit.n === 10 && lit.rows === 1, JSON.stringify(lit));
+  await page.keyboard.press('Space'); await page.waitForTimeout(80);
+  check('drums: Space stops and the playhead goes', !(await page.evaluate(() => tutti.sched.playing)) && (await page.$$('.dgCell.play')).length === 0);
+  // back to the tracker and its status line; copy keeps a note's own commands
+  await page.click(cellSel(36, 8), { modifiers: ['Shift'] }); await page.keyboard.press('\\'); await page.waitForTimeout(120);
+  st = await page.evaluate(() => { const tr = tutti.curInstrument(); state.cursor.cell = tutti.cellKinds(tr).findIndex(k => k.kind === 'note' && k.col === tutti.hitAt(tutti.curPhrase(), tr.id, 36, 8).col); state.dirty = true; return { on: tutti.drumsOn(), kit: tr.name, row: state.cursor.row, grid: getComputedStyle(document.querySelector('main')).display }; });
+  await page.waitForTimeout(80);
+  check('drums: \\ returns to the tracker on the kit at the same row', !st.on && st.kit === 'Drum kit' && st.row === 8 && st.grid !== 'none' && !(await page.isVisible('#drumGrid')), JSON.stringify(st));
+  const status = await page.textContent('#status');
+  check('tracker: the status line names the note\'s own commands', status.includes('retrigger ×3') && status.includes('offset −35%') && !status.includes('chance'), status.slice(0, 160));
+  await page.keyboard.press(mod + '+c'); await page.evaluate(() => { state.cursor.row = 40; state.dirty = true; }); await page.keyboard.press(mod + '+v'); await page.waitForTimeout(60);
+  const pasted = (await kitNotes(page)).find(n => n.tick === 40 * tick);
+  check('tracker: copy and paste keep a note\'s own commands', !!pasted && pasted.retrigger === 3 && pasted.offset === -35 && pasted.pitch === 36, JSON.stringify(pasted));
+  // a placement: its rows belong to the pattern
+  await page.evaluate(() => { const tr = tutti.curInstrument(), phr = tutti.curPhrase(); tutti.toggleHit(phr, tr.id, 51, 16); tutti.toggleHit(phr, tr.id, 51, 18); tutti.makePattern(state.song, phr, tr.id, 16, 19, 'Ride'); state.cursor.row = 16; state.dirty = true; });
+  await page.keyboard.press('\\'); await page.waitForTimeout(120);
+  const placedBefore = await kitNotes(page);
+  await page.click(cellSel(51, 16)); await page.click(cellSel(36, 17)); await page.waitForTimeout(60);
+  const pl = await page.evaluate(sel => ({ placed: document.querySelector(sel).classList.contains('placed'), name: document.querySelector(sel).getAttribute('aria-label'), msg: state.message, off: [...document.querySelectorAll('.dgVal button')].every(b => b.disabled) }), cellSel(51, 16));
+  check('drums: a placed hit shows dimmed and a tap changes nothing', pl.placed && pl.name === 'ride bell, row 16, vel 100, in pattern Ride' && JSON.stringify(await kitNotes(page)) === JSON.stringify(placedBefore), JSON.stringify(pl));
+  check('drums: the message is the tracker\'s for a note inside a pattern', pl.msg === 'Inside pattern Ride: Enter edits the pattern, Detach makes these notes loose');
+  await page.click(cellSel(51, 16), { modifiers: ['Shift'] }); await page.keyboard.press('Enter'); await page.waitForTimeout(120);
+  const inPtn = await page.evaluate(() => ({ ptn: state.patternEdit && state.patternEdit.id, on: tutti.drumsOn(), cells: document.querySelectorAll('.dgLine:not(.dgRuler)')[0].querySelectorAll('.dgCell').length, hits: document.querySelectorAll('.dgCell.on:not(.placed)').length }));
+  check('drums: Return opens the pattern in the Drum grid with its own rows', inPtn.ptn === 'ride' && inPtn.on && inPtn.cells === 4 && inPtn.hits === 2 && await page.isVisible('#drumGrid'), JSON.stringify(inPtn));
+  await page.click(cellSel(51, 1)); await page.waitForTimeout(50);
+  check('drums: a hit written there goes into the pattern', await page.evaluate(() => state.song.patterns.find(p => p.id === 'ride').material.notes.length) === 3);
+  await page.keyboard.press('Backquote'); await page.waitForTimeout(100);
+  check('drums: the backquote key returns to the phrase, still in the Drum grid', await page.evaluate(() => !state.patternEdit && tutti.drumsOn()) && await page.evaluate(sel => document.querySelector(sel).classList.contains('placed'), cellSel(51, 17)));
+  // the Song view is unchanged by it, and a large kit shows eight lines first
+  await page.keyboard.press('Backquote'); await page.waitForTimeout(100);
+  check('drums: the Song view shows as before', await page.isVisible('#songView') && !(await page.isVisible('#drumGrid')));
+  await page.evaluate(() => { tutti.selectSong(state.songs.findIndex(s => s.instruments.some(t => t.sound === 'drum-machine'))); state.preview = false; });
+  await page.waitForFunction(() => tutti.SOUND['drum-machine'] && tutti.SOUND['drum-machine'].kit, null, { timeout: 5000 });
+  await page.evaluate(() => { const song = state.song, phr = tutti.addPhrase(song, 'Empty', song.phrases[0]); tutti.addSlot(song, song.sections[0], phr.id); tutti.openPhrase(song.phrases.indexOf(phr), 0, 0); });
+  await page.waitForTimeout(100);
+  const big = async () => page.evaluate(() => ({ on: tutti.drumsOn(), kit: tutti.curInstrument().sound, lines: document.querySelectorAll('.dgLine:not(.dgRuler)').length, all: document.getElementById('dgAll').textContent, hidden: document.getElementById('dgAll').hidden }));
+  let b = await big();
+  check('drums: the grid stays on in another song and moves to its kit', b.on && b.kit === 'drum-machine', JSON.stringify(b));
+  check('drums: a 38-sound kit shows eight lines and a button reading all 38', b.lines === 8 && b.all === 'all 38' && !b.hidden, JSON.stringify(b));
+  await page.click('#dgAll'); await page.waitForTimeout(80); b = await big();
+  check('drums: all 38 shows every sound and then reads fewer', b.lines === 38 && b.all === 'fewer', JSON.stringify(b));
+  await page.setViewportSize({ width: 700, height: 900 }); await page.waitForTimeout(200);
+  const narrow = await page.evaluate(() => document.querySelectorAll('.dgLine:not(.dgRuler)')[0].querySelectorAll('.dgCell').length);
+  check('drums: a narrower window shows fewer cells across', narrow === 16, String(narrow));
+  check('drums: no errors', errors.length === 0, errors.join(' | '));
+  await ctx.close();
+}
+{
+  const iphone = devices['iPhone 13'];
+  const { ctx, page, errors } = await open({ ...iphone, viewport: { width: 390, height: 844 } }, 'drums-phone');
+  await openKitSong(page);
+  check('drums phone: the entry pad shows with the tracker', await page.isVisible('#pad'));
+  check('drums phone: the Drums button sits in the top bar and the transport bar fits', await page.evaluate(() => !!document.querySelector('#topbar .tools #drumsBtn') && document.documentElement.scrollWidth <= innerWidth));
+  await page.tap('#drumsBtn'); await page.waitForTimeout(150);
+  const ph = await page.evaluate(() => ({ cells: document.querySelectorAll('.dgLine:not(.dgRuler)')[0].querySelectorAll('.dgCell').length, w: Math.min(...[...document.querySelectorAll('.dgCell')].map(c => c.getBoundingClientRect().width)), h: document.querySelector('.dgCell').getBoundingClientRect().height, page: document.documentElement.scrollWidth, strip: document.getElementById('dgHit').getBoundingClientRect().right, lines: document.getElementById('dgLines').scrollWidth - document.getElementById('dgLines').clientWidth, pager: document.getElementById('dgPage').textContent }));
+  check('drums phone: 8 cells across, each wide and tall enough for a finger', ph.cells === 8 && ph.w >= 30 && ph.h >= 34 && ph.pager === '1–8 / 64', JSON.stringify(ph));
+  check('drums phone: nothing is wider than the screen', ph.page <= 390 && ph.strip <= 390 && ph.lines <= 0, JSON.stringify(ph));
+  check('drums phone: the entry pad and the selection toolbar are hidden', !(await page.isVisible('#pad')) && !(await page.isVisible('#selbar')) && await page.evaluate(() => state.pad));
+  await page.tap(cellSel(36, 0)); await page.tap(cellSel(42, 2)); await page.waitForTimeout(80);
+  let notes = await kitNotes(page);
+  check('drums phone: a tap writes a hit', notes.length === 2 && notes[0].pitch === 36 && notes[1].pitch === 42 && notes[1].tick === 480, JSON.stringify(notes));
+  await page.dispatchEvent(cellSel(36, 0), 'pointerdown', { pointerType: 'touch', pointerId: 7 }); await page.waitForTimeout(650);
+  await page.dispatchEvent('#dgLines', 'pointerup', { pointerType: 'touch', pointerId: 7 }); await page.waitForTimeout(60);
+  check('drums phone: a long press moves the cursor and keeps the hit', (await kitNotes(page)).length === 2 && await page.evaluate(() => state.cursor.row === 0 && state.drums.pitch === 36) && (await page.textContent('.dgVal[data-field="vel"] output')) === 'vel 100');
+  await page.tap('.dgVal[data-field="offset"] button[data-d="1"]'); await page.waitForTimeout(60);
+  check('drums phone: the strip\'s + changes the hit', (await kitNotes(page))[0].offset === 5);
+  await page.tap('#dgNext'); await page.waitForTimeout(80);
+  check('drums phone: › shows the next 8 rows', (await page.textContent('#dgPage')) === '9–16 / 64' && (await page.$(cellSel(36, 8))) !== null);
+  await page.tap('.dgLabel[data-label="38"]'); await page.waitForTimeout(60);
+  check('drums phone: a label moves the cursor to its line', await page.evaluate(() => state.drums.pitch) === 38 && (await kitNotes(page)).length === 2);
+  await page.tap('#drumsBtn'); await page.waitForTimeout(150);
+  check('drums phone: the pad returns with the tracker grid', await page.isVisible('#pad') && !(await page.isVisible('#drumGrid')) && await page.evaluate(() => tutti.curInstrument().name === 'Drum kit'));
+  check('drums phone: no errors', errors.length === 0, errors.join(' | '));
+  await ctx.close();
+}
 await browser.close(); server.close();
 console.log(fails.length ? `\n${fails.length} FAILED` : '\nALL PASSED');
 process.exit(fails.length ? 1 : 0);

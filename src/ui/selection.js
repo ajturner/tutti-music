@@ -1,7 +1,7 @@
 // Block selection over the grid and the batch operations that act on it.
 import { clamp } from '../core/constants.js';
 import { SOUND } from '../core/sounds.js';
-import { laneRemove, laneSet, laneValueAt, materialOf, makePattern, detachPlacement, placementAt, patternById, normalizePlacements } from '../core/song.js';
+import { laneRemove, laneSet, laneValueAt, materialOf, makePattern, detachPlacement, placementAt, patternById, normalizePlacements, copyNoteCommands } from '../core/song.js';
 import { activeKey, curPhrase, curInstrument, state, instrumentsShown } from './state.js';
 import { currentCell, cellKinds } from './layout.js';
 import { audition, noteAt, noteCovering, notesStartingAt, withUndo, withSongUndo } from './edit.js';
@@ -78,7 +78,7 @@ export function captureRect(rect) {
       const tr = instrumentsShown()[c.instrument], pt = phr.material[tr.id];
       if (c.kind === 'note' && c.col === 0 && pt) out.placements = (pt.placements || []).filter(p => p.row >= rect.r0 && p.row <= rect.r1).map(p => Object.assign({}, p, { row: p.row - rect.r0 }));
       if (c.kind === 'dyn') out.items = pt ? pt.dyn.filter(p => p.tick >= t0 && p.tick < t1).map(p => ({ tick: p.tick - t0, value: p.value, interp: p.interp })) : [];
-      else if (c.kind === 'note') out.items = notesIn(phr, tr.id, c.col, rect.r0, rect.r1).map(e => ({ tick: e.tick - t0, len: e.len, pitch: e.pitch, vel: e.vel, art: e.art }));
+      else if (c.kind === 'note') out.items = notesIn(phr, tr.id, c.col, rect.r0, rect.r1).map(e => copyNoteCommands({ tick: e.tick - t0, len: e.len, pitch: e.pitch, vel: e.vel, art: e.art }, e));
       else if (c.kind === 'vel') out.items = notesIn(phr, tr.id, c.col, rect.r0, rect.r1).map(e => ({ tick: e.tick - t0, vel: e.vel }));
       else if (c.kind === 'art') out.items = (pt ? pt.notes : []).filter(e => e.art && e.tick >= t0 && e.tick < t1).map(e => ({ tick: e.tick - t0, art: e.art }));
       else if (c.kind === 'fx') out.items = (pt && pt.fx ? pt.fx : []).filter(f => f.tick >= t0 && f.tick < t1).map(f => ({ tick: f.tick - t0, cmd: f.cmd, value: f.value }));
@@ -123,7 +123,7 @@ function pasteInto(row, g, clip) {
       if (cc.kind === 'tempo') laneSet(phr.tempo, tick, it.value, it.interp);
       else if (cc.kind === 'dyn') laneSet(materialOf(phr, tr.id).dyn, tick, it.value, it.interp);
       else if (cc.kind === 'fx') setFx(phr, tr.id, tick, it.cmd, it.value);
-      else if (cc.kind === 'note') putNote(phr, tr.id, c.col, tick, { pitch: it.pitch, len: Math.round(it.len * scale), vel: it.vel, art: it.art });
+      else if (cc.kind === 'note') putNote(phr, tr.id, c.col, tick, copyNoteCommands({ pitch: it.pitch, len: Math.round(it.len * scale), vel: it.vel, art: it.art }, it));
       else if (cc.kind === 'vel') { const ev = noteAt(phr, tr.id, c.col, Math.floor(tick / tpr)); if (ev) ev.vel = it.vel; }
       else if (cc.kind === 'art') notesStartingAt(phr, tr.id, Math.floor(tick / tpr)).forEach(e => { if (SOUND[tr.sound].articulations.includes(it.art)) e.art = it.art; });
     }

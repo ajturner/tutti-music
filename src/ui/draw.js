@@ -1,12 +1,12 @@
 // Canvas drawing of the grid, the status line, and the animation-frame loop.
 import { FAMILIES, clamp, hex2, noteName } from '../core/constants.js';
 import { SOUND } from '../core/sounds.js';
-import { laneValueAt, expandPlacements, patternById, placementLabel, placementRows } from '../core/song.js';
+import { laneValueAt, expandPlacements, patternById, placementLabel, placementRows, noteCommandText } from '../core/song.js';
 import { $, COLORS, activeKey, applyDensity, canvas, ctx, curPhrase, curPattern, curSection, curInstrument, midi, rowsPerBar, rowsPerStrongBeat, sched, state, instrumentsShown, view, loopRowsOf } from './state.js';
 import { computeLayout, currentCell, HEADER_ROWS, CELL_LABEL } from './layout.js';
 import { indexInstrument, noteCovering, patternStatus } from './edit.js';
 import { indexMaterial } from '../core/edit.js';
-import { rowAtTick, grooveOf, FX_HELP } from '../core/render.js';
+import { grooveOf, FX_HELP } from '../core/render.js';
 import { fxAtRow } from '../core/edit.js';
 import { keyName } from '../core/scales.js';
 import { inSel } from './selection.js';
@@ -17,7 +17,9 @@ import { syncMixer } from './mixer.js';
 import { syncMap } from './map.js';
 import { songStatus, syncSongView } from './songview.js';
 import { soundingNow } from './monitor.js';
-import { esc, syncPhraseUI } from './sync.js';
+import { esc } from './sync.js';
+import { playPosition } from './transport.js';
+import { drumStatus, drumsOn, syncDrums } from './drums.js';
 
 // ---- Drawing ---------------------------------------------------------------------------------
 export function resize() {
@@ -37,20 +39,14 @@ function fitText(text, maxW) {
   return text.slice(0, n);
 }
 export function draw() {
-  if (!canvas.clientWidth || !canvas.clientHeight) { syncPad(); syncSelBar(); syncMixer(); syncMap(); syncSongView(); updateStatus(null); return; }   // the Song view or a phone panel is up: keep the DOM views in step
+  if (!canvas.clientWidth || !canvas.clientHeight) { syncDrums(); syncPad(); syncSelBar(); syncMixer(); syncMap(); syncSongView(); updateStatus(drumsOn() && state.level !== 'song' ? playPosition().row : null); return; }   // the Song view, the Drum grid or a phone panel is up: keep the DOM views in step
   const dpr = window.devicePixelRatio || 1;
   if (canvas.width !== Math.floor(canvas.clientWidth * dpr) || canvas.height !== Math.floor(canvas.clientHeight * dpr)) resize();
   const W = canvas.clientWidth, H = canvas.clientHeight;
   ctx.font = view.FONT; ctx.textBaseline = 'middle';
   const song = state.song;
-  const playTick = sched.positionTick();
-  let playRow = null, playPhr = null, playStart = null;
+  const { row: playRow, phr: playPhr } = playPosition();
   const phr = curPhrase();
-  if (playTick != null && sched.rendered) {
-    if (sched.rendered.pattern) { if (state.patternEdit && sched.rendered.pattern === state.patternEdit.id) { playPhr = state.phr; playRow = rowAtTick(phr, playTick); } }   // the open pattern looping on its own
-    else for (const s of sched.rendered.starts) if (playTick >= s.tick && playTick < s.tick + s.rows * s.ticksPerRow) { playPhr = s.phrase; playStart = s; playRow = rowAtTick(song.phrases[s.phrase], playTick - s.tick); }
-    if (state.follow && !state.patternEdit && playPhr != null && playPhr !== state.phr) { state.phr = playPhr; const si = playStart ? song.sections.findIndex(x => x.id === playStart.section) : -1; if (si >= 0) state.section = si; syncPhraseUI(); }
-  }
   const L = computeLayout();
   const headerH = view.ROW_H * HEADER_ROWS + 8;
   const visible = Math.max(1, Math.floor((H - headerH) / view.ROW_H));
@@ -226,7 +222,7 @@ export function draw() {
   ctx.fillText('bpm', L.gutter.tempoX, labelY);
 
   view.lastDraw = { L, top, headerH };
-  syncPad(); syncSelBar(); syncMixer(); syncMap(); syncSongView();
+  syncDrums(); syncPad(); syncSelBar(); syncMixer(); syncMap(); syncSongView();
   updateStatus(playRow);
 }
 
@@ -237,18 +233,19 @@ export function updateStatus(playRow) {
   if (state.level === 'song') { const st = songStatus(); if (st) parts.push(st); if (sched.playing) parts.push('<b>playing</b>'); if (state.message) parts.push('<span class="warn">' + state.message + '</span>'); const h = parts.map(x => '<span>' + x + '</span>').join(''); if (h !== lastStatus) { $('status').innerHTML = h; lastStatus = h; } return; }
   if (state.patternEdit) parts.push('<b class="warn">pattern ' + esc((curPattern() || {}).name || '') + '</b> Esc returns to phrase ' + state.phr);
   const ps = patternStatus(); if (ps) parts.push(ps);
-  if (tr) {
+  if (drumsOn()) parts.push(drumStatus());
+  else if (tr) {
     const ins = SOUND[tr.sound];
     let s = '<b>' + tr.name + '</b> col ' + ((cell.col | 0) + 1) + ' row ' + row;
     const ev = noteCovering(phr, tr.id, cell.col | 0, row);
-    if (ev) s += ' <b>' + noteName(ev.pitch) + '</b>' + (ins.kit && ins.kit[ev.pitch] ? ' ' + esc(ins.kit[ev.pitch]) : '') + ' vel ' + ev.vel + ' len ' + (ev.len / phr.ticksPerRow) + ' rows ' + (ev.art || ins.articulations[0]);
+    if (ev) s += ' <b>' + noteName(ev.pitch) + '</b>' + (ins.kit && ins.kit[ev.pitch] ? ' ' + esc(ins.kit[ev.pitch]) : '') + ' vel ' + ev.vel + ' len ' + (ev.len / phr.ticksPerRow) + ' rows ' + (ev.art || ins.articulations[0]) + (noteCommandText(ev) ? ' ' + noteCommandText(ev) : '');
     if (ins.kit && !ev) s += ' kit: ' + Object.entries(ins.kit).map(([n, l]) => noteName(+n) + ' ' + esc(l)).join(', ');
     parts.push(s);
     parts.push('articulations ' + ins.articulations.map((a, i) => '<b>' + (i + 1) + '</b>' + a).join(' '));
     parts.push('range ' + noteName(ins.range[0]) + '–' + noteName(ins.range[1]));
   } else parts.push('<b>tempo</b> row ' + row + ' (digits, L ramp, S hold)');
-  if (cell.kind === 'fx') { const f = fxAtRow(phr, tr.id, row); parts.push('fx ' + (f ? '<b>' + f.cmd + ' ' + hex2(f.value) + '</b> ' + FX_HELP[f.cmd] : 'C R D A T pick a command, hex sets its value')); }
-  parts.push('octave <b>' + state.octave + '</b> step <b>' + state.step + '</b>');
+  if (!drumsOn() && cell.kind === 'fx') { const f = fxAtRow(phr, tr.id, row); parts.push('fx ' + (f ? '<b>' + f.cmd + ' ' + hex2(f.value) + '</b> ' + FX_HELP[f.cmd] : 'C R D A T pick a command, hex sets its value')); }
+  if (!drumsOn()) parts.push('octave <b>' + state.octave + '</b> step <b>' + state.step + '</b>');
   parts.push('key <b>' + keyName(activeKey()) + '</b>' + (phr.key ? ' (phrase)' : (curSection() && curSection().key) ? ' (section)' : '') + (grooveOf(phr) ? ' | groove <b>on</b>' : ''));
   if (state.queued != null) parts.push('next <b>' + state.queued + ' ' + (state.song.phrases[state.queued] || {}).name + '</b>');
   parts.push('<a data-panel="view" title="Open View: preview and sound">preview ' + (state.preview ? (state.sound === 'samples' ? 'samples' : 'synth') + (state.loadingSamples ? ' <span class="warn">loading ' + esc(state.loadingSamples) + '</span>' : '') : 'off') + '</a> | <a data-panel="connect" title="Open Connect">MIDI ' + (midi.out ? '<b>' + esc(midi.out.name) + '</b>' : 'off') + '</a>');

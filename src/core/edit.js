@@ -1,7 +1,7 @@
 // Editing primitives on phrase material: note lookup and indexing, the note-overlap rules, length limits,
 // and lane point edits. Pure functions on the song model; no UI state, so every host edits the same way.
 import { clamp } from './constants.js';
-import { materialOf } from './song.js';
+import { materialOf, copyNoteCommands, barRows, beatRows } from './song.js';
 
 const rowOf = (phr, tick) => Math.floor(tick / phr.ticksPerRow);
 
@@ -68,7 +68,7 @@ export function putNote(phr, instrumentId, col, tick, n) {
   const pt = materialOf(phr, instrumentId);
   pt.notes = pt.notes.filter(e => !(e.col === col && e.tick === tick));
   for (const e of pt.notes) if (e.col === col && e.tick < tick && e.tick + e.len > tick) e.len = tick - e.tick;
-  const ev = { tick, len: clamp(n.len, phr.ticksPerRow, maxLength(phr, instrumentId, col, tick)), pitch: n.pitch, vel: n.vel, col, art: n.art || null };
+  const ev = copyNoteCommands({ tick, len: clamp(n.len, phr.ticksPerRow, maxLength(phr, instrumentId, col, tick)), pitch: n.pitch, vel: n.vel, col, art: n.art || null }, n);
   pt.notes.push(ev);
   return ev;
 }
@@ -80,6 +80,36 @@ export function removeNotesAt(phr, instrumentId, col, row) {
 export function resizeNote(phr, instrumentId, ev, dRows) {
   ev.len = clamp(ev.len + dRows * phr.ticksPerRow, phr.ticksPerRow, maxLength(phr, instrumentId, ev.col, ev.tick));
   return ev;
+}
+
+// ---- Hits (the Drum grid) ---------------------------------------------------------------------
+// A hit is a note of a kit sound: one pitch, starting on a row. The Drum grid writes and removes them through
+// these two functions, so the column rule lives here and not in a view.
+export function hitAt(phr, instrumentId, pitch, row) {
+  const pt = phr.material[instrumentId]; if (!pt) return null;
+  return pt.notes.find(e => e.pitch === pitch && rowOf(phr, e.tick) === row) || null;
+}
+// Remove the hit of this pitch starting on the row, or write one: a row long, velocity 100, in the lowest note
+// column where no note is sounding on that row, so nothing already written is cut. Returns { removed: note },
+// { added: note } or { full: true } when `columns` note columns are all taken on the row.
+export function toggleHit(phr, instrumentId, pitch, row, columns = 4) {
+  const pt = materialOf(phr, instrumentId), hit = hitAt(phr, instrumentId, pitch, row);
+  if (hit) { pt.notes.splice(pt.notes.indexOf(hit), 1); return { removed: hit }; }
+  for (let col = 0; col < Math.min(4, columns); col++) {
+    if (noteCovering(phr, instrumentId, col, row)) continue;
+    const ev = { tick: row * phr.ticksPerRow, len: phr.ticksPerRow, pitch, vel: 100, col, art: null };
+    pt.notes.push(ev);
+    return { added: ev };
+  }
+  return { full: true };
+}
+// How many rows a page of the Drum grid holds when `fit` cells fit across: the whole phrase when it fits, else the
+// largest of four bars, two bars, one bar, half a bar (when that is a whole number of beats) and one beat.
+export function pageRows(phr, fit) {
+  if (phr.rows <= fit) return phr.rows;
+  const bar = barRows(phr), beat = beatRows(phr), half = bar % 2 === 0 && (bar / 2) % beat === 0 ? bar / 2 : 0;
+  const size = [bar * 4, bar * 2, bar, half, beat].find(n => n > 0 && n <= fit) || beat;
+  return Math.max(1, Math.min(phr.rows, size));
 }
 
 // ---- FX column ------------------------------------------------------------------------------

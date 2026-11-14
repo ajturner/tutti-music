@@ -1,7 +1,21 @@
 // Loop the phrase, loop a section, play the song, stop.
-import { renderSong, rowTicks } from '../core/render.js';
+import { renderSong, rowTicks, rowAtTick } from '../core/render.js';
 import { curPhrase, curPattern, curSection, sched, state, synth, preloadSamples } from './state.js';
 import { withUndo } from './edit.js';
+import { syncPhraseUI } from './sync.js';
+
+// Where playback is, in the open view's terms: the row playing, the phrase it is in and that phrase's start in the
+// render. With follow on, the open phrase follows the song to the phrase that is playing. Both grids draw from this.
+export function playPosition() {
+  const tick = sched.positionTick(), r = sched.rendered, song = state.song;
+  let row = null, phr = null, start = null;
+  if (tick != null && r) {
+    if (r.pattern) { if (state.patternEdit && r.pattern === state.patternEdit.id) { phr = state.phr; row = rowAtTick(curPhrase(), tick); } }   // the open pattern looping on its own
+    else for (const s of r.starts) if (tick >= s.tick && tick < s.tick + s.rows * s.ticksPerRow) { phr = s.phrase; start = s; row = rowAtTick(song.phrases[s.phrase], tick - s.tick); }
+    if (state.follow && !state.patternEdit && phr != null && phr !== state.phr) { state.phr = phr; const si = start ? song.sections.findIndex(x => x.id === start.section) : -1; if (si >= 0) state.section = si; syncPhraseUI(); }
+  }
+  return { row, phr, start };
+}
 
 // ---- Transport ----------------------------------------------------------------------------
 // The loop of the open phrase, or of the open pattern alone on its instrument through its stand-in: what is written,

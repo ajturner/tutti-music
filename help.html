@@ -52,6 +52,7 @@
     <li><a href="#patterns">Patterns</a></li>
     <li><a href="#key">Key and scale</a></li>
     <li><a href="#fx">FX column</a></li>
+    <li><a href="#drums">Drum grid</a></li>
     <li><a href="#groove">Groove</a></li>
     <li><a href="#arrange">Sections, arrangement, live</a></li>
     <li><a href="#mixer">Mixer and instruments</a></li>
@@ -199,6 +200,23 @@
   <tr><td><code>TSP</code> transpose</td><td>signed byte</td><td>shift the instrument from this row until the next TSP (F9 is −7)</td></tr>
   <tr><td><code>EXP</code> expression</td><td>shape, depth</td><td>1 swell, 2 sfz, 3 fade in, 4 fade out; then depth 0–F</td></tr>
 </table>
+<p>A note can also carry its own <b>chance</b> (0 to 100 %), <b>retrigger</b> (×1 to ×8) and <b>offset</b> (−50 to +50 % of a row; negative is early). For that note they take the place of <code>CHA</code>, <code>RET</code> and <code>DEL</code> on its row, so a kick and a hat on the same row can each have their own. A retriggered note is not arpeggiated. They are set in the <a href="#drums">Drum grid</a>; in the tracker the status line names them when the cursor is on the note, and copy and paste keep them.</p>
+
+<h2 id="drums">Drum grid</h2>
+<p><b>Drums</b>, beside the phrase selector (in the top bar on a phone), or the <kbd>\</kbd> key, shows the open phrase for one drum kit the other way round: a line per sound of the kit, a cell per row of the phrase, time running left to right. It is the same phrase, cursor and undo history as the tracker grid, so you can go back and forth; the button is disabled in a song with no kit instrument. A pattern opened from the Drum grid shows in it too.</p>
+<p>The grid shows as many cells across as the screen holds, in whole beats or bars: four bars on a wide screen, half a bar of sixteenths on a phone held upright. <b>‹</b> and <b>›</b> page through the rest, and the page follows playback while <b>follow playback</b> is on. A kit of more than twelve sounds shows the ones in use and the usual ones first; <b>all 38</b> shows every sound.</p>
+<table class="keys">
+  <tr><th>do</th><th>pointer</th><th>keys</th></tr>
+  <tr><td>write a hit, or remove the one there</td><td>tap or click the cell</td><td><kbd>X</kbd>; <kbd>Delete</kbd> removes</td></tr>
+  <tr><td>move the cursor without a change</td><td>long press, or <kbd>⇧</kbd> click</td><td>arrows; <kbd>Home</kbd> <kbd>End</kbd>; <kbd>PgUp</kbd> <kbd>PgDn</kbd> by page</td></tr>
+  <tr><td>hear a sound</td><td>tap its name</td><td></td></tr>
+  <tr><td>velocity, by 8</td><td>vel − +</td><td><kbd>-</kbd> <kbd>=</kbd></td></tr>
+  <tr><td>chance, by 10 %</td><td>chance − +</td><td><kbd>&lt;</kbd> <kbd>&gt;</kbd></td></tr>
+  <tr><td>retrigger, ×1 to ×8</td><td>retrigger − +</td><td><kbd>[</kbd> <kbd>]</kbd></td></tr>
+  <tr><td>offset, by 5 % of a row</td><td>offset − +</td><td><kbd>,</kbd> <kbd>.</kbd></td></tr>
+  <tr><td>next kit instrument</td><td>the selector above the grid</td><td><kbd>Tab</kbd></td></tr>
+</table>
+<p>The strip under the grid shows the hit under the cursor. In a cell, a number is the retrigger count, a dashed outline is a chance below 100 %, and a bar on the left or right edge is an early or late offset. Space, Return, Esc, the backquote key and undo work as in the tracker. Hits are ordinary notes: a new hit takes the lowest free note column, the instrument gains columns as it needs them, and since an instrument has four, a fifth hit on one row is refused. Rows inside a placement belong to the pattern and show dimmed: Return opens the pattern. The game controller still drives the tracker grid.</p>
 
 <h2 id="groove">Groove</h2>
 <p>A groove stretches and shrinks rows in a cycle without moving notes. Choose a preset in the phrase's settings (<b>▾</b> beside its name in the map: swing 8ths light, medium, hard; swing 16ths) or type a custom list of multipliers such as <code>1.33 0.67</code>. Playback, export and the playing-row highlight all follow it.</p>

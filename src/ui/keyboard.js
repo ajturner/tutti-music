@@ -7,6 +7,7 @@ import { clearSel, copySel, cutSel, deselect, duplicateSel, lengthSel, pasteSel,
 import { changeColumns, changeLength, clearCell } from './edit.js';
 import { currentCell } from './layout.js';
 import { playPhrase, playSong, stopAll, toggleRecord } from './transport.js';
+import { drumKey, drumsOn, toggleDrums } from './drums.js';
 
 // ---- Keyboard -----------------------------------------------------------------------------
 // macOS constraints this scheme is built around:
@@ -35,6 +36,9 @@ export function handleKey(e) {
     if (k === '?' || (code === 'Slash' && sh)) { if (e.ctrlKey || e.metaKey) openGuide(); else toggleQuickKeys(); return true; }
     return songKey(e);
   }
+  // The backslash key swaps the tracker grid and the Drum grid; while the Drum grid shows, its keys come first.
+  if (code === 'Backslash' && !e.ctrlKey && !e.metaKey) { toggleDrums(); return true; }
+  if (drumsOn() && drumKey(e)) return true;
   if (e.ctrlKey || e.metaKey) {
     const lower = k.toLowerCase();
     if (lower === 'z' && !sh) { undo(); return true; }

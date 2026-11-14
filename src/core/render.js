@@ -94,13 +94,18 @@ export const FX_HELP = {
 const signedByte = v => (v & 0xFF) > 127 ? (v & 0xFF) - 256 : (v & 0xFF);
 export function fxAt(fx, tick) { return fx.find(f => f.tick === tick) || null; }
 // Expand one note through the FX on its row and the instrument's running transpose. Returns [{tick, end, pitch, vel}].
+// The note's own chance, offset and retrigger, when it has them, take the place of the row's CHA, DEL and RET for
+// this note; a retriggered note is not arpeggiated.
 export function applyFx(note, fx, transpose, tpr, random) {
   let pitch = clamp(note.pitch + transpose, 0, 127);
   let start = note.tick, end = note.tick + note.len;
-  if (fx && fx.cmd === 'CHA' && random() * 255 >= (fx.value & 0xFF)) return [];
-  if (fx && fx.cmd === 'DEL') { const d = Math.round((fx.value & 0xFF) / 256 * tpr); start += d; end += d; }
-  if (fx && fx.cmd === 'RET' && (fx.value & 0xFF) > 1) {
-    const n = fx.value & 0xFF, span = (end - start) / n, out = [];
+  if (note.chance != null) { if (random() * 100 >= note.chance) return []; }
+  else if (fx && fx.cmd === 'CHA' && random() * 255 >= (fx.value & 0xFF)) return [];
+  if (note.offset != null) { const d = Math.max(-start, Math.round(note.offset / 100 * tpr)); start += d; end += d; }   // never before the phrase starts
+  else if (fx && fx.cmd === 'DEL') { const d = Math.round((fx.value & 0xFF) / 256 * tpr); start += d; end += d; }
+  const ret = note.retrigger != null ? note.retrigger : (fx && fx.cmd === 'RET' ? fx.value & 0xFF : 1);
+  if (ret > 1) {
+    const n = ret, span = (end - start) / n, out = [];
     for (let i = 0; i < n; i++) out.push({ tick: Math.round(start + i * span), end: Math.round(start + (i + 1) * span), pitch, vel: note.vel });
     return out;
   }
@@ -146,7 +151,7 @@ export function renderSong(song, opts = {}) {
         const ks = ins.keyswitches[art];
         let transpose = 0; for (const f of tsp) { if (f.tick <= e.tick) transpose = signedByte(f.value); else break; }
         const rowFx = fx.find(f => f.tick === e.tick && f.cmd !== 'TSP') || null;
-        const parts = applyFx({ tick: e.tick, len: Math.min(e.tick + e.len, len) - e.tick, pitch: e.pitch, vel: e.vel }, rowFx, transpose, tpr, random);
+        const parts = applyFx({ tick: e.tick, len: Math.min(e.tick + e.len, len) - e.tick, pitch: e.pitch, vel: e.vel, chance: e.chance, retrigger: e.retrigger, offset: e.offset }, rowFx, transpose, tpr, random);
         if (!parts.length) continue;
         if (art !== lastArt && ks != null) {
           events.push({ tick: offset + Math.max(0, map(parts[0].tick) - KS_LEAD_TICKS), type: 'ks', instrument: tr.id, pitch: ks });

@@ -85,3 +85,16 @@ export const SYNTHS = [
   ['sa', 'Synth arp',  'synth-arp',  16, 1],
 ].map(([id, name, sound, channel, columns]) => ({ id, name, sound, channel, columns, mute: false }));
 export function addInstruments(song, instruments) { for (const t of instruments) if (!song.instruments.some(x => x.id === t.id)) song.instruments.push(Object.assign({}, t)); return song; }
+
+// ---- Kits: the lines of the Drum grid ------------------------------------------------------
+// The sounds of a kit in ascending note order. A kit of more than 12 sounds shows first the sounds in `used` plus
+// the usual ones (kick, snare, closed hat, open hat, clap, crash, low tom, ride) until eight show; `all` shows every one.
+export const KIT_FIRST = [36, 38, 42, 46, 39, 49, 45, 51];
+export function kitLines(ins, used = [], all = false) {
+  const pitches = Object.keys((ins && ins.kit) || {}).map(Number).sort((a, b) => a - b);
+  if (all || pitches.length <= 12) return pitches;
+  const keep = new Set(used.filter(p => ins.kit[p]));
+  for (const p of KIT_FIRST) { if (keep.size >= 8) break; if (ins.kit[p]) keep.add(p); }
+  for (const p of pitches) { if (keep.size >= 8) break; keep.add(p); }
+  return pitches.filter(p => keep.has(p));
+}
