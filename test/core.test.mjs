@@ -12,9 +12,9 @@ import { registerSound, unregisterSound } from '../src/core/sounds.js';
 import { readdir } from 'node:fs/promises';
 import { midiFileBytes } from '../src/core/midifile.js';
 import { EXAMPLES, line } from '../src/core/examples.js';
-import { setNote, putNote, resizeNote, removeNotesAt, noteAt, noteCovering, notesIn, maxLength, hitAt, toggleHit, pageRows } from '../src/core/edit.js';
+import { setNote, putNote, resizeNote, removeNotesAt, noteAt, noteCovering, notesIn, maxLength, lineNoteAt, toggleLineNote, pageRows } from '../src/core/edit.js';
 import { NOTE_COMMANDS, setNoteCommand, noteCommands, noteCommandText, normalizeNote } from '../src/core/song.js';
-import { kitLines } from '../src/core/sounds.js';
+import { kitLines, scaleLines, sequencerLines, lineName } from '../src/core/sounds.js';
 
 import { VERSION } from '../src/version.js';
 import { readFile } from 'node:fs/promises';
@@ -485,22 +485,39 @@ for (const ex of EXAMPLES) {
   check('note commands: putNote keeps them', pasted.retrigger === 3 && pasted.chance === 60 && !('offset' in pasted));
 }
 
-// Hits: the Drum grid's primitives
+// Notes on a line: the Sequencer's primitives
 {
   const s = newSong(); const kit = addInstrument(s, 'drum-kit'); const p = s.phrases[0], id = kit.id;
-  const a = toggleHit(p, id, 36, 0), b = toggleHit(p, id, 36, 8), c = toggleHit(p, id, 42, 0);
+  const a = toggleLineNote(p, id, 36, 0), b = toggleLineNote(p, id, 36, 8), c = toggleLineNote(p, id, 42, 0);
   const notes = materialOf(p, id).notes;
-  check('hits: toggleHit writes one-row notes at velocity 100', notes.length === 3 && a.added.len === p.ticksPerRow && a.added.vel === 100 && b.added.tick === 8 * p.ticksPerRow);
-  check('hits: a second sound on a row takes the next column', a.added.col === 0 && c.added.col === 1);
-  check('hits: hitAt finds by pitch and row', hitAt(p, id, 42, 0) === c.added && hitAt(p, id, 42, 1) === null && hitAt(p, 'nobody', 36, 0) === null);
-  const gone = toggleHit(p, id, 36, 8);
-  check('hits: toggleHit on a hit removes it', gone.removed === b.added && materialOf(p, id).notes.length === 2 && !hitAt(p, id, 36, 8));
-  toggleHit(p, id, 38, 0); toggleHit(p, id, 46, 0);
-  const fifth = toggleHit(p, id, 49, 0);
-  check('hits: a fifth hit on a row is refused', fifth.full === true && materialOf(p, id).notes.filter(n => n.tick === 0).length === 4);
-  check('hits: the column limit can be lower', toggleHit(p, id, 36, 20, 1).added.col === 0 && toggleHit(p, id, 38, 20, 1).full === true);
-  const long = setNote(p, id, 0, 30 * p.ticksPerRow, 51, 4 * p.ticksPerRow), over = toggleHit(p, id, 36, 32);
-  check('hits: a sounding note is not cut; the hit takes the next column', long.len === 4 * p.ticksPerRow && over.added.col === 1);
+  check('lines: toggleLineNote writes one-row notes at velocity 100', notes.length === 3 && a.added.len === p.ticksPerRow && a.added.vel === 100 && b.added.tick === 8 * p.ticksPerRow);
+  check('lines: a second sound on a row takes the next column', a.added.col === 0 && c.added.col === 1);
+  check('lines: lineNoteAt finds by pitch and row', lineNoteAt(p, id, 42, 0) === c.added && lineNoteAt(p, id, 42, 1) === null && lineNoteAt(p, 'nobody', 36, 0) === null);
+  const gone = toggleLineNote(p, id, 36, 8);
+  check('lines: toggleLineNote on a note removes it', gone.removed === b.added && materialOf(p, id).notes.length === 2 && !lineNoteAt(p, id, 36, 8));
+  toggleLineNote(p, id, 38, 0); toggleLineNote(p, id, 46, 0);
+  const fifth = toggleLineNote(p, id, 49, 0);
+  check('lines: a fifth hit on a row is refused', fifth.full === true && materialOf(p, id).notes.filter(n => n.tick === 0).length === 4);
+  check('lines: the column limit can be lower', toggleLineNote(p, id, 36, 20, 1).added.col === 0 && toggleLineNote(p, id, 38, 20, 1).full === true);
+  const long = setNote(p, id, 0, 30 * p.ticksPerRow, 51, 4 * p.ticksPerRow), over = toggleLineNote(p, id, 36, 32);
+  check('lines: a sounding note is not cut; the hit takes the next column', long.len === 4 * p.ticksPerRow && over.added.col === 1);
+
+  // held notes on a pitched instrument
+  const fl = addInstrument(s, 'flute'), fid = fl.id, T = p.ticksPerRow;
+  const held = toggleLineNote(p, fid, 72, 4, 4, 4).added;
+  check('lines: a new note can be several rows long', held.len === 4 * T && held.tick === 4 * T && held.col === 0);
+  check('lines: lineNoteAt finds a note where it starts and where it is held', lineNoteAt(p, fid, 72, 4) === held && lineNoteAt(p, fid, 72, 7) === held && lineNoteAt(p, fid, 72, 8) === null && lineNoteAt(p, fid, 74, 5) === null);
+  const second = toggleLineNote(p, fid, 76, 6, 4, 4).added;
+  check('lines: a note written while another sounds takes the next column', second.col === 1 && second.len === 4 * T);
+  const cut = toggleLineNote(p, fid, 79, 2, 4, 8).added;
+  check('lines: a new note stops where the column\'s next note starts', cut.col === 0 && cut.len === 2 * T, JSON.stringify(cut));
+  check('lines: toggling on a held row removes the whole note', toggleLineNote(p, fid, 72, 6).removed === held && !lineNoteAt(p, fid, 72, 4));
+  const cMajor = { root: 0, scale: 'major' }, flute = SOUND.flute;
+  check('scale lines: the notes of the key over the range, highest first', scaleLines({ range: [60, 72] }, cMajor).join() === '72,71,69,67,65,64,62,60');
+  check('scale lines: a used note outside the key or the range keeps its line', scaleLines({ range: [60, 64] }, cMajor, [61, 70]).join() === '70,64,62,61,60');
+  check('scale lines: all shows every semitone; no key shows every semitone', scaleLines({ range: [60, 72] }, cMajor, [], true).length === 13 && scaleLines({ range: [60, 72] }, null).length === 13);
+  check('sequencer lines: a kit gets its sounds, any other instrument its scale', sequencerLines(SOUND['drum-kit'], cMajor)[0] === 36 && sequencerLines(flute, cMajor)[0] === flute.range[1] && sequencerLines(flute, cMajor).every(x => [0, 2, 4, 5, 7, 9, 11].includes(x % 12)));
+  check('line names: the kit\'s word for a sound, a note name otherwise', lineName(SOUND['drum-kit'], 36) === 'kick' && lineName(flute, 60) === 'C-4' && lineName(flute, 61) === 'C#4');
 
   const ph = newPhrase('A', 64, 240, [4, 4]);
   check('pages: the largest whole size that fits', pageRows(ph, 20) === 16 && pageRows(ph, 40) === 32 && pageRows(ph, 9) === 8 && pageRows(ph, 5) === 4 && pageRows(ph, 2) === 4);

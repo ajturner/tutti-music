@@ -20,7 +20,7 @@ The aim is a song you can read top to bottom in the words musicians already use:
 | **Transformation** | How a placement changes the pattern it plays: transpose (semitones), shift (scale degrees in the key in force), octave, dynamics (a velocity offset), repeat. | transposition, sequence, octave displacement, dynamic marking | placement fields |
 | **Modulation** | A section or phrase taking its own key. Never a property of a placement. A key does not move typed notes; it decides what is in scale and where a shift lands. | modulation | section.key, phrase.key |
 | **Note** | A pitch at a tick in a note column with velocity, length and articulation, and optionally its own **chance**, **retrigger** and **offset**, which take the place of the row's CHA, RET and DEL for that note. "Notes" is the field; "events" is what the renderer emits. | note | material.notes |
-| **Hit** | A note of a kit sound: one row long, written and removed in the Drum grid. It is a note in every other respect. | hit, stroke | material.notes |
+| **Line** | One pitch of an instrument as the Sequencer draws it: a sound of a kit, or a note of the key. Not stored; it is a way of seeing the notes. | lane (a lane is a controller curve), track | — |
 | **Lane** | A stepped or ramped controller line: dynamics (`dyn`) and expression (`expr`) per instrument, `tempo` per phrase. | hairpins, tempo marks | material, phrase |
 | **Bank** | A set of sounds a song can name and load. | ensemble, library | song.banks |
 | **Render** | Turning the arrangement into timed events for playback, MIDI out and file export. | performance | core |
@@ -40,7 +40,7 @@ A song has four levels, and the **map** bar under the header shows them with the
 | Phrase | the grid: every instrument, the phrase's rows | Enter on a pattern tag opens the pattern | the backquote key, or a crumb |
 | Pattern | the same grid with one instrument and the pattern's rows | | the backquote key, Esc, or a crumb |
 
-The **Drum grid** is the Phrase and Pattern levels seen for one kit instrument: a line per sound of the kit, a cell per row, time running across. It is a second renderer over the same phrase, cursor and undo history as the grid, switched with **Drums** or the backslash key, and it stores nothing of its own in the song.
+The **Sequencer** is the Phrase and Pattern levels seen for one instrument: a line per pitch (a sound of a kit, or a note of the key over the instrument's range), a cell per row, time running across, a held note drawn as a bar. It is a second renderer over the same phrase, cursor and undo history as the grid, switched with **Sequencer** or the backslash key, and it stores nothing of its own in the song.
 
 The **monitor** shows the note each instrument is sounding while the song plays: beside the instrument name in the grid header, in the Song view's instrument headers, and on the mixer strips. The map also says where the playhead is, in the song's own words: `▶ Bridge › B1`.
 
@@ -299,7 +299,7 @@ Words the roadmap (docs/roadmap.md) will add, fixed now so specs and labels agre
 - A JSON field is spelled exactly like the term: `arrangement`, `sections`, `phrases`, `patterns`, `material`, `placements`, `notes`. New fields join the vocabulary table first.
 - Transpose, shift, octave, dynamics and repeat are properties of a placement, never of a pattern. Repeat is also a property of a section's phrase slot and of an arrangement item, never of a phrase or section itself.
 - Only a phrase has a tempo lane, groove and meter.
-- Chance, retrigger and offset on a note read the same everywhere: `chance 50%`, `retrigger ×2`, `offset +25%`. The Drum grid's columns are the phrase's rows; "step" stays the cursor's advance in the grid.
+- Chance, retrigger and offset on a note read the same everywhere: `chance 50%`, `retrigger ×2`, `offset +25%`. The Sequencer's columns are the phrase's rows and its rows are lines; "step" stays the cursor's advance in the grid.
 - A tag, the status line, the map and the Song view name a placement the same way: `Riff ↑3 +5 8va+1 v−16 ×2`.
 - The map's levels are always Song, Section, Phrase, Pattern, in that order.
 - Patterns are the song's; there is no store across songs.

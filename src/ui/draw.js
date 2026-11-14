@@ -19,7 +19,7 @@ import { songStatus, syncSongView } from './songview.js';
 import { soundingNow } from './monitor.js';
 import { esc } from './sync.js';
 import { playPosition } from './transport.js';
-import { drumStatus, drumsOn, syncDrums } from './drums.js';
+import { seqStatus, sequencerOn, syncSequencer } from './sequencer.js';
 
 // ---- Drawing ---------------------------------------------------------------------------------
 export function resize() {
@@ -39,7 +39,7 @@ function fitText(text, maxW) {
   return text.slice(0, n);
 }
 export function draw() {
-  if (!canvas.clientWidth || !canvas.clientHeight) { syncDrums(); syncPad(); syncSelBar(); syncMixer(); syncMap(); syncSongView(); updateStatus(drumsOn() && state.level !== 'song' ? playPosition().row : null); return; }   // the Song view, the Drum grid or a phone panel is up: keep the DOM views in step
+  if (!canvas.clientWidth || !canvas.clientHeight) { syncSequencer(); syncPad(); syncSelBar(); syncMixer(); syncMap(); syncSongView(); updateStatus(sequencerOn() && state.level !== 'song' ? playPosition().row : null); return; }   // the Song view, the Sequencer or a phone panel is up: keep the DOM views in step
   const dpr = window.devicePixelRatio || 1;
   if (canvas.width !== Math.floor(canvas.clientWidth * dpr) || canvas.height !== Math.floor(canvas.clientHeight * dpr)) resize();
   const W = canvas.clientWidth, H = canvas.clientHeight;
@@ -222,7 +222,7 @@ export function draw() {
   ctx.fillText('bpm', L.gutter.tempoX, labelY);
 
   view.lastDraw = { L, top, headerH };
-  syncDrums(); syncPad(); syncSelBar(); syncMixer(); syncMap(); syncSongView();
+  syncSequencer(); syncPad(); syncSelBar(); syncMixer(); syncMap(); syncSongView();
   updateStatus(playRow);
 }
 
@@ -233,7 +233,7 @@ export function updateStatus(playRow) {
   if (state.level === 'song') { const st = songStatus(); if (st) parts.push(st); if (sched.playing) parts.push('<b>playing</b>'); if (state.message) parts.push('<span class="warn">' + state.message + '</span>'); const h = parts.map(x => '<span>' + x + '</span>').join(''); if (h !== lastStatus) { $('status').innerHTML = h; lastStatus = h; } return; }
   if (state.patternEdit) parts.push('<b class="warn">pattern ' + esc((curPattern() || {}).name || '') + '</b> Esc returns to phrase ' + state.phr);
   const ps = patternStatus(); if (ps) parts.push(ps);
-  if (drumsOn()) parts.push(drumStatus());
+  if (sequencerOn()) parts.push(seqStatus());
   else if (tr) {
     const ins = SOUND[tr.sound];
     let s = '<b>' + tr.name + '</b> col ' + ((cell.col | 0) + 1) + ' row ' + row;
@@ -244,8 +244,8 @@ export function updateStatus(playRow) {
     parts.push('articulations ' + ins.articulations.map((a, i) => '<b>' + (i + 1) + '</b>' + a).join(' '));
     parts.push('range ' + noteName(ins.range[0]) + '–' + noteName(ins.range[1]));
   } else parts.push('<b>tempo</b> row ' + row + ' (digits, L ramp, S hold)');
-  if (!drumsOn() && cell.kind === 'fx') { const f = fxAtRow(phr, tr.id, row); parts.push('fx ' + (f ? '<b>' + f.cmd + ' ' + hex2(f.value) + '</b> ' + FX_HELP[f.cmd] : 'C R D A T pick a command, hex sets its value')); }
-  if (!drumsOn()) parts.push('octave <b>' + state.octave + '</b> step <b>' + state.step + '</b>');
+  if (!sequencerOn() && cell.kind === 'fx') { const f = fxAtRow(phr, tr.id, row); parts.push('fx ' + (f ? '<b>' + f.cmd + ' ' + hex2(f.value) + '</b> ' + FX_HELP[f.cmd] : 'C R D A T pick a command, hex sets its value')); }
+  if (!sequencerOn()) parts.push('octave <b>' + state.octave + '</b> step <b>' + state.step + '</b>');
   parts.push('key <b>' + keyName(activeKey()) + '</b>' + (phr.key ? ' (phrase)' : (curSection() && curSection().key) ? ' (section)' : '') + (grooveOf(phr) ? ' | groove <b>on</b>' : ''));
   if (state.queued != null) parts.push('next <b>' + state.queued + ' ' + (state.song.phrases[state.queued] || {}).name + '</b>');
   parts.push('<a data-panel="view" title="Open View: preview and sound">preview ' + (state.preview ? (state.sound === 'samples' ? 'samples' : 'synth') + (state.loadingSamples ? ' <span class="warn">loading ' + esc(state.loadingSamples) + '</span>' : '') : 'off') + '</a> | <a data-panel="connect" title="Open Connect">MIDI ' + (midi.out ? '<b>' + esc(midi.out.name) + '</b>' : 'off') + '</a>');

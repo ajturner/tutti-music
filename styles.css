@@ -452,51 +452,56 @@ body.pocket { overflow: hidden; }
 .pkAb .pkA { background: #2A2A40; }
 @media (min-width: 761px) { #pocket { max-width: 430px; margin: 0 auto; border-left: 1px solid var(--line); border-right: 1px solid var(--line); } }
 
-/* Drum grid: a line per kit sound, a cell per row of the phrase, as many cells across as the screen holds */
-#drumGrid { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; background: var(--bg); outline: none; --dgLabel: 112px; --dgCols: 16; --dgRow: 28px; --dgHit: #D98C8C; }
-#drumGrid[hidden] { display: none; }
-body[data-drums="on"] main { display: none; }
-body[data-drums="on"] #pad, body[data-drums="on"] #selbar { display: none !important; }
-body[data-level="song"] #drumGrid { display: none; }
-#drumsBtn.on { color: var(--accent); border-color: var(--accent); }
-#dgBar { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; padding: 6px 10px; border-bottom: 1px solid var(--line); background: var(--header, var(--panel)); min-height: 24px; }
-#dgBar [hidden] { display: none; }
-#dgName { color: var(--dgHit); font-weight: normal; }
-#dgPager { margin-left: auto; display: flex; gap: 8px; align-items: center; color: var(--dim); }
-#dgPager button { padding: 1px 9px; }
-#dgLines { flex: 1; min-height: 0; overflow-x: hidden; overflow-y: auto; padding: 6px 10px; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
-.dgLine { display: grid; grid-template-columns: var(--dgLabel) repeat(var(--dgCols), minmax(0, 1fr)); gap: 2px; margin-bottom: 2px; }
-.dgRuler span { font-size: 10px; line-height: 14px; color: var(--dim); overflow: hidden; white-space: nowrap; padding-left: 2px; }
-.dgRuler span.bar { color: var(--accent); }
-#drumGrid .dgLabel { height: var(--dgRow); min-height: 0; padding: 0 6px 0 2px; background: none; border-color: transparent; color: var(--dim); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; touch-action: manipulation; }
-#drumGrid .dgLabel.cur { color: var(--accent); }
-#drumGrid .dgCell { position: relative; height: var(--dgRow); min-height: 0; min-width: 0; padding: 0; border: 1px solid transparent; border-radius: 3px; background: #1D2445; color: var(--bg); font: 600 11px/1 var(--mono); touch-action: manipulation; cursor: pointer; }
-#drumGrid .dgCell.alt { background: #171C36; }
-#drumGrid .dgCell.bar { border-left-color: #4A5590; }
-#drumGrid .dgCell.covered { background-image: linear-gradient(rgba(217,140,140,.07), rgba(217,140,140,.07)); }
-#drumGrid .dgCell.on::before { content: ""; position: absolute; inset: 2px; border-radius: 2px; background: var(--dgHit); opacity: calc(.35 + .65 * var(--v, 1)); }
-#drumGrid .dgCell.on.placed::before { opacity: .28; }
-#drumGrid .dgCell.maybe::before { border: 2px dashed var(--bg); }
-#drumGrid .dgCell.early::after, #drumGrid .dgCell.late::after { content: ""; position: absolute; top: 2px; bottom: 2px; width: 3px; background: var(--accent); }
-#drumGrid .dgCell.early::after { left: 0; }
-#drumGrid .dgCell.late::after { right: 0; }
-#drumGrid .dgCell i { position: relative; z-index: 1; font-style: normal; }
-#drumGrid .dgCell.play { background: #303A6E; }
-#drumGrid .dgCell.cur { border-color: var(--accent); }
-#drumGrid .dgCell:focus-visible, #drumGrid .dgLabel:focus-visible { outline: 1px solid var(--accent); outline-offset: 1px; }
-#dgHit { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; padding: 6px 10px; border-top: 1px solid var(--line); background: var(--panel); }
-#dgWhat { color: var(--accent); font-weight: normal; min-width: 11em; }
-.dgVal { display: inline-flex; align-items: center; gap: 4px; }
-.dgVal output { min-width: 8.2em; text-align: center; }
-.dgVal.off output { color: var(--dim); }
-.dgVal button { padding: 1px 9px; }
-@media (pointer: coarse) { #drumGrid { --dgRow: 36px; } }
+/* Sequencer: a line per pitch, a cell per row of the phrase, as many cells across as the screen holds */
+#sequencer { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; background: var(--bg); outline: none; --sqLabel: 112px; --sqCols: 16; --sqRow: 28px; --sqHit: #D98C8C; }
+#sequencer[hidden] { display: none; }
+body[data-seq="on"] main { display: none; }
+body[data-seq="on"] #pad, body[data-seq="on"] #selbar { display: none !important; }
+body[data-level="song"] #sequencer { display: none; }
+#seqBtn.on { color: var(--accent); border-color: var(--accent); }
+#sqBar { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; padding: 6px 10px; border-bottom: 1px solid var(--line); background: var(--header, var(--panel)); min-height: 24px; }
+#sqBar [hidden], #sqStrip [hidden] { display: none; }
+#sqName { color: var(--sqHit); font-weight: normal; }
+#sqPager { margin-left: auto; display: flex; gap: 8px; align-items: center; color: var(--dim); }
+#sqPager button { padding: 1px 9px; }
+#sqLines { position: relative; flex: 1; min-height: 0; overflow-x: hidden; overflow-y: auto; padding: 0 10px 6px; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.sqLine { display: grid; grid-template-columns: var(--sqLabel) repeat(var(--sqCols), minmax(0, 1fr)); gap: 2px; margin-bottom: 2px; }
+.sqRuler { position: sticky; top: 0; z-index: 2; background: var(--bg); padding: 4px 0 2px; margin-bottom: 0; }
+.sqRuler span { font-size: 10px; line-height: 12px; color: var(--dim); overflow: hidden; white-space: nowrap; padding-left: 2px; }
+.sqRuler span.bar { color: var(--accent); }
+#sequencer .sqLabel { height: var(--sqRow); min-height: 0; padding: 0 6px 0 2px; background: none; border-color: transparent; color: var(--dim); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; touch-action: manipulation; }
+#sequencer .sqLabel.tonic { color: var(--text, #E6E3D6); }
+#sequencer .sqLabel.out { opacity: .55; }
+#sequencer .sqLabel.cur { color: var(--accent); opacity: 1; }
+#sequencer .sqCell { position: relative; height: var(--sqRow); min-height: 0; min-width: 0; padding: 0; border: 1px solid transparent; border-radius: 3px; background: #1D2445; color: var(--bg); font: 600 11px/1 var(--mono); touch-action: manipulation; cursor: pointer; }
+#sequencer .sqCell.alt { background: #171C36; }
+#sequencer .sqCell.bar { border-left-color: #4A5590; }
+#sequencer .sqCell.covered { background-image: linear-gradient(rgba(217,140,140,.07), rgba(217,140,140,.07)); }
+#sequencer .sqCell.on::before { content: ""; position: absolute; inset: 2px; border-radius: 2px; background: var(--sqHit); opacity: calc(.35 + .65 * var(--v, 1)); }
+#sequencer .sqCell.held::before { left: -5px; border-radius: 0 2px 2px 0; }
+#sequencer .sqCell.on.placed::before { opacity: .28; }
+#sequencer .sqCell.maybe::before { border: 2px dashed var(--bg); }
+#sequencer .sqCell.held.maybe::before { border-left: 0; }
+#sequencer .sqCell.early::after, #sequencer .sqCell.late::after { content: ""; position: absolute; top: 2px; bottom: 2px; width: 3px; background: var(--accent); }
+#sequencer .sqCell.early::after { left: 0; }
+#sequencer .sqCell.late::after { right: 0; }
+#sequencer .sqCell i { position: relative; z-index: 1; font-style: normal; }
+#sequencer .sqCell.play { background: #303A6E; }
+#sequencer .sqCell.cur { border-color: var(--accent); }
+#sequencer .sqCell:focus-visible, #sequencer .sqLabel:focus-visible { outline: 1px solid var(--accent); outline-offset: 1px; }
+#sqStrip { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; padding: 6px 10px; border-top: 1px solid var(--line); background: var(--panel); }
+#sqWhat { color: var(--accent); font-weight: normal; min-width: 9em; }
+.sqVal { display: inline-flex; align-items: center; gap: 4px; }
+.sqVal output { min-width: 8.2em; text-align: center; }
+.sqVal.off output { color: var(--dim); }
+.sqVal button { padding: 1px 9px; }
+@media (pointer: coarse) { #sequencer { --sqRow: 36px; } }
 @media (max-width: 760px) {
-  #dgLines { padding: 6px; }
-  #drumGrid .dgLabel { font-size: 11px; padding: 0 2px 0 0; }
-  #dgBar, #dgHit { padding: 5px 6px; }
-  #dgHit { gap: 4px 8px; }
-  #dgWhat { min-width: 100%; }
-  .dgVal output { min-width: 6.6em; font-size: 12px; }
-  .dgVal button { padding: 2px 10px; }
+  #sqLines { padding: 0 6px 6px; }
+  #sequencer .sqLabel { font-size: 11px; padding: 0 2px 0 0; }
+  #sqBar, #sqStrip { padding: 5px 6px; }
+  #sqStrip { gap: 4px 8px; }
+  #sqWhat { min-width: 100%; }
+  .sqVal output { min-width: 6.6em; font-size: 12px; }
+  .sqVal button { padding: 2px 10px; }
 }

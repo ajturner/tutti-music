@@ -31,7 +31,7 @@ A note's own chance, retrigger or offset SHALL take the place of the row's CHA, 
 ### Requirement: Status line names a note's own commands
 In the tracker grid, the status line SHALL name the commands of the note under the cursor that are not at their default, after its velocity and length, as `chance 50%`, `retrigger ×2` and `offset +25%`.
 
-#### Scenario: Cursor on a hit
+#### Scenario: Cursor on a note with commands
 - **WHEN** the cursor is on a note with `"chance": 50` and `"offset": -10`
 - **THEN** the status line includes `chance 50%` and `offset −10%` and does not include `retrigger`
 

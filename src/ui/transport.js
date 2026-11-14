@@ -5,7 +5,7 @@ import { withUndo } from './edit.js';
 import { syncPhraseUI } from './sync.js';
 
 // Where playback is, in the open view's terms: the row playing, the phrase it is in and that phrase's start in the
-// render. With follow on, the open phrase follows the song to the phrase that is playing. Both grids draw from this.
+// render. With follow on, the open phrase follows the song to the phrase that is playing. The tracker grid and the Sequencer both draw from this.
 export function playPosition() {
   const tick = sched.positionTick(), r = sched.rendered, song = state.song;
   let row = null, phr = null, start = null;

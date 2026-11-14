@@ -82,28 +82,31 @@ export function resizeNote(phr, instrumentId, ev, dRows) {
   return ev;
 }
 
-// ---- Hits (the Drum grid) ---------------------------------------------------------------------
-// A hit is a note of a kit sound: one pitch, starting on a row. The Drum grid writes and removes them through
-// these two functions, so the column rule lives here and not in a view.
-export function hitAt(phr, instrumentId, pitch, row) {
+// ---- Notes on a line (the Sequencer) ---------------------------------------------------------
+// The Sequencer shows an instrument with a line per pitch and time running across. It writes and removes notes
+// through these two functions, so the column rule lives here and not in a view.
+// The loose note of this pitch that is sounding on the row (it starts there, or is held across it).
+export function lineNoteAt(phr, instrumentId, pitch, row) {
   const pt = phr.material[instrumentId]; if (!pt) return null;
-  return pt.notes.find(e => e.pitch === pitch && rowOf(phr, e.tick) === row) || null;
+  return pt.notes.find(e => e.pitch === pitch && rowOf(phr, e.tick) <= row && rowOf(phr, e.tick + e.len - 1) >= row) || null;
 }
-// Remove the hit of this pitch starting on the row, or write one: a row long, velocity 100, in the lowest note
-// column where no note is sounding on that row, so nothing already written is cut. Returns { removed: note },
-// { added: note } or { full: true } when `columns` note columns are all taken on the row.
-export function toggleHit(phr, instrumentId, pitch, row, columns = 4) {
-  const pt = materialOf(phr, instrumentId), hit = hitAt(phr, instrumentId, pitch, row);
-  if (hit) { pt.notes.splice(pt.notes.indexOf(hit), 1); return { removed: hit }; }
+// Remove the note of this pitch sounding on the row, or write one starting there: `rows` long (cut short where the
+// column's next note starts), velocity 100, in the lowest note column where no note is sounding on that row, so
+// nothing already written is cut. Returns { removed: note }, { added: note } or { full: true } when `columns` note
+// columns are all taken on the row.
+export function toggleLineNote(phr, instrumentId, pitch, row, columns = 4, rows = 1) {
+  const pt = materialOf(phr, instrumentId), there = lineNoteAt(phr, instrumentId, pitch, row);
+  if (there) { pt.notes.splice(pt.notes.indexOf(there), 1); return { removed: there }; }
+  const tick = row * phr.ticksPerRow;
   for (let col = 0; col < Math.min(4, columns); col++) {
     if (noteCovering(phr, instrumentId, col, row)) continue;
-    const ev = { tick: row * phr.ticksPerRow, len: phr.ticksPerRow, pitch, vel: 100, col, art: null };
+    const ev = { tick, len: clamp(Math.max(1, rows) * phr.ticksPerRow, phr.ticksPerRow, maxLength(phr, instrumentId, col, tick)), pitch, vel: 100, col, art: null };
     pt.notes.push(ev);
     return { added: ev };
   }
   return { full: true };
 }
-// How many rows a page of the Drum grid holds when `fit` cells fit across: the whole phrase when it fits, else the
+// How many rows a page of the Sequencer holds when `fit` cells fit across: the whole phrase when it fits, else the
 // largest of four bars, two bars, one bar, half a bar (when that is a whole number of beats) and one beat.
 export function pageRows(phr, fit) {
   if (phr.rows <= fit) return phr.rows;
