@@ -626,7 +626,7 @@ const cur = page => page.evaluate(() => ({ row: state.cursor.row, instrument: st
   // --- sound banks ---
   await page.click('#instrumentsBtn'); await page.waitForTimeout(80);
   if (!(await page.evaluate(() => document.getElementById('soundBrowser').open))) await page.click('#soundBrowser > summary');
-  await page.waitForTimeout(600);
+  await page.waitForFunction(() => document.querySelectorAll('#bankList .bank').length >= 4, null, { timeout: 8000 }).catch(() => {});   // the catalogue can queue behind sample fetches after the offline reload
   const bankBtns = await page.$$eval('#bankList .bank', b => b.map(x => x.dataset.bank));
   check('banks: catalogue lists the bundled banks', ['orchestra', 'jazz', 'folk', 'electronica'].every(id => bankBtns.includes(id)), bankBtns.join(','));
   check('banks: orchestra is on and styled like any bank', await page.$eval('#bankList [data-bank="orchestra"]', b => b.classList.contains('on') && !b.classList.contains('builtin')));
